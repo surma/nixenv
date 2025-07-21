@@ -13,6 +13,7 @@ in
 
     ../common/signal
     ../common/obs
+    ../common/obsidian
   ];
 
   system.stateVersion = 5;
@@ -28,6 +29,7 @@ in
 
   programs.signal.enable = true;
   programs.obs.enable = true;
+  programs.obsidian.enable = true;
 
   home-manager.users.${config.system.primaryUser} =
     { config, inputs, ... }:
