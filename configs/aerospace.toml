@@ -72,6 +72,8 @@ ctrl-alt-cmd-period = 'move-workspace-to-monitor next'
 ctrl-alt-cmd-comma = 'move-workspace-to-monitor prev'
 ctrl-alt-cmd-minus = 'resize smart -50'
 ctrl-alt-cmd-equal = 'resize smart +50'
+ctrl-alt-cmd-slash = 'layout accordion horizontal vertical'
+ctrl-alt-cmd-shift-slash = 'layout tiles horizontal vertical'
 
 # [mode.move.binding]
 # ctrl-alt-shift-cmd-space = 'mode main'
