@@ -30,7 +30,6 @@ in
       "slack"
       "zulip"
       "android-file-transfer"
-      "syncthing"
       "nightfall"
       "karabiner-elements"
     ];

@@ -198,6 +198,7 @@
 
         services.syncthing.enable = true;
         defaultConfigs.syncthing.enable = true;
+        services.syncthing.tray.enable = true;
 
         programs.opencode.enable = true;
         defaultConfigs.opencode.enable = true;

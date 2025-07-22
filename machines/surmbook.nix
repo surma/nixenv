@@ -40,6 +40,7 @@ in
 
         ../home-manager/opencode
         ../home-manager/claude-code
+        ../home-manager/syncthing
 
         ../home-manager/unfree-apps.nix
 
@@ -92,6 +93,11 @@ in
       xdg.configFile = {
         "dump/config.json".text = builtins.toJSON { server = "http://10.0.0.2:8081"; };
       };
+
+      services.syncthing.enable = true;
+      defaultConfigs.syncthing.enable = true;
+      defaultConfigs.syncthing.knownFolders.scratch.enable = true;
+      defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
 
     };
 
