@@ -13,7 +13,7 @@ in
   system.stateVersion = 5;
 
   nix.extraOptions = ''
-    !include nix.conf.d/shopify.conf
+    !include nix.conf.d/dev.conf
   '';
 
   programs.obs.enable = true;
