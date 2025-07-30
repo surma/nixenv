@@ -9,7 +9,7 @@
 {
   imports = [
     ../home-manager/unfree-apps.nix
-    ./surmrock-hardware.nix
+    ./surmedge-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
   ];
@@ -19,7 +19,7 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = "surmrock";
+  networking.hostName = "surmedge";
   networking.networkmanager.enable = true;
 
   programs.zsh.enable = true;
@@ -63,7 +63,7 @@
 
         home.stateVersion = "25.05";
 
-        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmrock";
+        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmedge";
 
         programs.claude-code.enable = true;
         defaultConfigs.claude-code.enable = true;

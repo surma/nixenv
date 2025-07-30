@@ -101,6 +101,10 @@
           system = "aarch64-linux";
           machine = ./machines/surmrock.nix;
         };
+        surmedge = loadNixos {
+          system = "aarch64-linux";
+          machine = ./machines/surmedge.nix;
+        };
       };
     }
     // (flake-utils.lib.eachDefaultSystem (system: rec {
