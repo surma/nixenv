@@ -12,6 +12,7 @@ in
   imports = [
     ../scripts
     ./zellij.nix
+    ./ssh-keys.nix
   ];
 
   nix = {

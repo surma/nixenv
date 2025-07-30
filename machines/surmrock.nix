@@ -27,7 +27,7 @@
   users.users.surma = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = import ../ssh-public-keys.nix;
+    openssh.authorizedKeys.keys = pkgs.callPackage (import ../ssh-public-keys.nix) { };
   };
 
   home-manager.users.surma =
