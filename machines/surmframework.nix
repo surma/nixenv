@@ -39,6 +39,16 @@
 
   services.libinput.touchpad.disableWhileTyping = true;
 
+  networking.networkmanager.enable = true;
+  programs.nm-applet.enable = true;
+  services.pulseaudio.enable = false;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
   services.keyd = {
     enable = true;
     treat-as-internal-keyboard = true;

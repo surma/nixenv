@@ -28,18 +28,7 @@
   };
 
   programs.nix-ld.enable = true;
-  networking.networkmanager.enable = true;
-
-  programs.nm-applet.enable = true;
-
-  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
 
   programs.git.enable = true;
   programs.zsh.enable = true;

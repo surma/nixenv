@@ -22,7 +22,8 @@ let
 
     set -e
 
-    find ${"$"}{SECRETS:-$HOME/.secrets} | cpio -o | age -p -a -e
+    cd $HOME/.secrets
+    find . | cpio -o | age -p -a -e
   '';
 in
 symlinkJoin {

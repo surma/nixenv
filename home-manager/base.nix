@@ -70,6 +70,7 @@ in
   programs.helix = import ../configs/helix.nix;
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
+  programs.gpg.enable = true;
   programs.zsh = import ../configs/zsh.nix;
   programs.ssh = {
     enable = true;

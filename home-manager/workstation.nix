@@ -33,15 +33,4 @@ in
       (callPackage (import ../extra-pkgs/wasmtime) { })
       (callPackage (import ../extra-pkgs/just) { })
     ];
-  # Shadowing MacOS's clang breaks all kind of shit
-  # ++ (
-  #   with llvm_19;
-  #   (lib.lists.map lib.getDev [
-  #     lld
-  #     llvm
-  #     libllvm
-  #     libclang
-  #     clang
-  #   ])
-  # );
 }

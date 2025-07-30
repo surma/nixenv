@@ -68,13 +68,6 @@
           system = "aarch64-linux";
           machine = ./machines/surmpi.nix;
         };
-
-        # surmframework = {
-        #   modules = [
-        #     nix-system-graphics.systemModules.default
-        #     ./system-manager/base.nix
-        #   ];
-        # };
       };
 
       homeConfigurations = {
@@ -103,6 +96,10 @@
         surmframework = loadNixos {
           system = "x86_64-linux";
           machine = ./machines/surmframework.nix;
+        };
+        surmrock = loadNixos {
+          system = "aarch64-linux";
+          machine = ./machines/surmrock.nix;
         };
       };
     }
