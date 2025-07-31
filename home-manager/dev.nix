@@ -26,7 +26,7 @@
     userName = "Surma";
     userEmail = "surma@surma.dev";
     signing = {
-      key = "0x0F58C405";
+      key = "0xE46E2194CAC89068";
       signByDefault = true;
     };
     diff-so-fancy = {

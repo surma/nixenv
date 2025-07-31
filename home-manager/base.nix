@@ -13,6 +13,7 @@ in
     ../scripts
     ./zellij.nix
     ./ssh-keys.nix
+    ./gpg-keys.nix
   ];
 
   nix = {
