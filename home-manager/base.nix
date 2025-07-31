@@ -79,7 +79,7 @@ in
     addKeysToAgent = "yes";
     matchBlocks = {
       "*" = {
-        identityFile = "${config.home.homeDirectory}/.secrets/id_rsa";
+        identityFile = "${config.home.homeDirectory}/.ssh/id_ed25519";
       };
     };
   };

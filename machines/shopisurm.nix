@@ -13,7 +13,7 @@ in
   system.stateVersion = 5;
 
   nix.extraOptions = ''
-    !include nix.conf.d/dev.conf
+    !include nix.conf.d/shopify.conf
   '';
 
   programs.obs.enable = true;
@@ -101,7 +101,7 @@ in
           export PATH=$HOME/.local/state/nix/profiles/wb/bin:$PATH
 
           # Added by //areas/tools/world-up
-          [[ -x ~/.local/state/nix/profiles/world/init ]] && eval "$(~/.local/state/nix/profiles/world/init zsh)"
+          [[ -x ~/world/.tectonix/init ]] && eval "$(~/world/.tectonix/init zsh)"         
         '';
       };
       programs.ssh = {
