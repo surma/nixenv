@@ -31,8 +31,3 @@ $ nix --extra-experimental-features 'nix-command flakes' \
   switch --flake 'github:surma/home-manager-config#generic-android'
 ```
 
-### Decrypt secrets
-
-```
-$ decrypt-secrets
-```

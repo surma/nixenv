@@ -39,10 +39,7 @@ in
       nushell
       zoxide
     ]
-    ++ [ (callPackage (import ../extra-pkgs/dprint) { }) ]
-    ++ [
-      (callPackage (import ../secrets) { })
-    ];
+    ++ [ (callPackage (import ../extra-pkgs/dprint) { }) ];
 
   home.file = {
     ".gnupg/gpg-agent.conf".text = ''
