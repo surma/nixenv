@@ -33,4 +33,14 @@
   programs.git.enable = true;
   programs.zsh.enable = true;
   services.openssh.enable = true;
+
+  
+  users.defaultUserShell = pkgs.zsh;
+  users.users.surma = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+    openssh.authorizedKeys.keys = [
+      ../ssh-keys/id_ed25519.pub
+    ];
+  };
 }

@@ -23,18 +23,11 @@
   networking.networkmanager.enable = true;
 
   programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
-  users.users.surma = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = pkgs.callPackage (import ../ssh-public-keys.nix) { };
-  };
 
   home-manager.users.surma =
     {
       config,
       pkgs,
-      lib,
       ...
     }:
     {
