@@ -5,17 +5,15 @@
   ...
 }:
 {
-  home.packages =
-    with pkgs;
-    [
-      git
-      gitui
-      lazygit
-      git-lfs
-      tig
-      nodejs_24.pkgs.typescript-language-server
-    ]
-    ++ [ (callPackage (import ../extra-pkgs/dprint) { }) ];
+  home.packages = with pkgs; [
+    git
+    gitui
+    lazygit
+    git-lfs
+    tig
+    nodejs_24.pkgs.typescript-language-server
+    dprint
+  ];
 
   home.file = {
     ".npmrc".source = ../configs/npmrc;

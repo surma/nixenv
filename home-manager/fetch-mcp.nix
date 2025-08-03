@@ -5,8 +5,7 @@
   ...
 }:
 let
-  inherit (pkgs) callPackage;
-  package = callPackage (import ../extra-pkgs/fetch-mcp) { };
+  inherit (pkgs) fetch-mcp;
 in
 with lib;
 {
@@ -15,7 +14,7 @@ with lib;
       enable = mkEnableOption "";
       package = mkOption {
         type = types.package;
-        default = package;
+        default = fetch-mcp;
       };
     };
   };

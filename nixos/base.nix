@@ -34,7 +34,6 @@
   programs.zsh.enable = true;
   services.openssh.enable = true;
 
-  
   users.defaultUserShell = pkgs.zsh;
   users.users.surma = {
     isNormalUser = true;

@@ -4,10 +4,6 @@
   lib,
   ...
 }@args:
-let
-  inherit (pkgs) callPackage;
-  karabiner-elements = callPackage (import ../extra-pkgs/karabiner-elements) { };
-in
 {
 
   nixpkgs.config.allowUnfree = true;
@@ -35,14 +31,8 @@ in
     ];
   };
 
-  # services.karabiner-elements = {
-  #   enable = true;
-  #   package = karabiner-elements;
-  # };
-
   # networking.computerName = "";
   # networking.hostName = "";
-  # system.configurationRevision = self.rev or self.dirtyRev or null;
 
   system.primaryUser = "surma";
 

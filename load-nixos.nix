@@ -8,6 +8,13 @@ let
   extraModule =
 
     {
+      # nixpkgs.pks = import nixpkgs {
+      #   overlays = [
+      #     (final: prev: {
+      #       surmtest
+      #     })
+      #   ]
+      # };
       home-manager.extraSpecialArgs = {
         inherit inputs;
         systemManager = "home-manager";

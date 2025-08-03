@@ -2,6 +2,7 @@
   nixpkgs,
   nix-darwin,
   home-manager,
+  overlays,
   ...
 }@inputs:
 { machine, system }:
@@ -10,6 +11,11 @@ let
     { config, ... }:
     {
       config = {
+        nixpkgs.overlays = [
+          overlays.unstable
+          overlays.extra-pkgs
+        ];
+
         users.users.${config.system.primaryUser} = {
           name = config.system.primaryUser;
           home = "/Users/${config.system.primaryUser}";
