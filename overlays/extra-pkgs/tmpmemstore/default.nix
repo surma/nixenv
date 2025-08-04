@@ -1,4 +1,4 @@
-{ fetchFromGitHub, callPackage }:
+{ fetchFromGitHub, callPackage, ... }:
 let
   tmpmemstoreSrc = fetchFromGitHub {
     owner = "surma";

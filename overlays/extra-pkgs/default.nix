@@ -1,4 +1,5 @@
 {
+  inputs,
   ...
 }:
 final: prev:
@@ -10,5 +11,4 @@ let
 in
 extraPkgs
 |> lib.filterAttrs (name: value: value == "directory")
-|> lib.mapAttrs (name: value: callPackage (import "${extraPkgsSrc}/${name}") { })
-|> lib.traceVal
+|> lib.mapAttrs (name: value: callPackage (import "${extraPkgsSrc}/${name}") { inherit inputs; })

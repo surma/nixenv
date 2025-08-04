@@ -1,9 +1,8 @@
 {
-  amber-upstream,
-  lib,
+  inputs,
   system,
 }:
 let
-  amber-lang = amber-upstream.packages.${system}.default;
+  amber-lang = inputs.amber-upstream.packages.${system}.default;
 in
 amber-lang

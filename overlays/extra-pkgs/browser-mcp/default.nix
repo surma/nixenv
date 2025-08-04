@@ -5,6 +5,7 @@
   makeWrapper,
   writeShellScriptBin,
   nodejs ? args.nodejs_24,
+  ...
 }@args:
 let
   src = ./.;

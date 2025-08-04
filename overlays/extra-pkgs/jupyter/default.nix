@@ -1,10 +1,10 @@
 {
-  lib,
   deno,
   writeTextFile,
   python3,
   symlinkJoin,
   writeShellScriptBin,
+  ...
 }:
 let
   # NOTE: I tried to install jupyter via `python3.withPackages` previously,

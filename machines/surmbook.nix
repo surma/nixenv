@@ -38,8 +38,8 @@ in
         ../common/spotify
         ../common/telegram
 
-        # ../home-manager/opencode
-        # ../home-manager/claude-code
+        ../home-manager/opencode
+        ../home-manager/claude-code
         ../home-manager/syncthing
 
         ../home-manager/unfree-apps.nix
@@ -63,6 +63,7 @@ in
 
       allowedUnfreeApps = [
         "spotify"
+        "claude-code"
       ];
 
       home.packages = (
@@ -77,18 +78,11 @@ in
           amber
         ]
       );
-      # ++ [
-      #   (callPackage (import ../extra-pkgs/jupyter) { })
-      #   (callPackage (import ../extra-pkgs/tmpmemstore) { })
-      #   (callPackage (import ../extra-pkgs/amber) { amber-upstream = inputs.amber-upstream; })
-      # ];
 
       programs.spotify.enable = true;
       programs.telegram.enable = true;
-      # programs.opencode.enable = true;
-      # defaultConfigs.opencode.enable = true;
-      # programs.claude-code.enable = true;
-      # defaultConfigs.claude-code.enable = true;
+      programs.claude-code.enable = true;
+      defaultConfigs.claude-code.enable = true;
 
       customScripts.hms.enable = true;
       customScripts.denix.enable = true;

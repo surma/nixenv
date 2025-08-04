@@ -1,12 +1,15 @@
 {
-  nixpkgs,
-  nix-darwin,
-  home-manager,
+  inputs,
   overlays,
   ...
-}@inputs:
+}:
 { machine, system }:
 let
+  inherit (inputs)
+    nix-darwin
+    home-manager
+    ;
+
   extraModule =
     { config, ... }:
     {
@@ -22,6 +25,15 @@ let
         };
 
         home-manager = {
+          sharedModules = [
+            {
+
+              nixpkgs.overlays = [
+                overlays.unstable
+                overlays.extra-pkgs
+              ];
+            }
+          ];
           backupFileExtension = "bak";
           extraSpecialArgs = {
             inherit inputs;

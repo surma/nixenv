@@ -3,6 +3,7 @@
   fetchFromGitHub,
   lib,
   writeShellScriptBin,
+  ...
 }:
 let
   src = fetchFromGitHub {

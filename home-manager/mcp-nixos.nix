@@ -4,9 +4,6 @@
   lib,
   ...
 }:
-let
-  inherit (pkgs) mcp-nixos;
-in
 with lib;
 {
   options = {
@@ -14,7 +11,7 @@ with lib;
       enable = mkEnableOption "";
       package = mkOption {
         type = types.package;
-        default = mcp-nixos;
+        default = pkgs.mcp-nixos;
       };
     };
   };

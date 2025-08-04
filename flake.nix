@@ -47,15 +47,15 @@
     }:
     let
       overlays = {
-        unstable = import ./overlays/unstable inputs;
-        extra-pkgs = import ./overlays/extra-pkgs inputs;
+        unstable = import ./overlays/unstable { inherit inputs; };
+        extra-pkgs = import ./overlays/extra-pkgs { inherit inputs; };
       };
 
-      loadHomeManager = import ./load-home-manager.nix inputs;
-      loadLinux = import ./load-linux.nix inputs;
-      loadDarwin = import ./load-darwin.nix (inputs // { inherit overlays; });
-      loadAndroid = import ./load-android.nix inputs;
-      loadNixos = import ./load-nixos.nix inputs;
+      loadHomeManager = import ./load-home-manager.nix { inherit inputs; };
+      loadLinux = import ./load-linux.nix { inherit inputs; };
+      loadDarwin = import ./load-darwin.nix { inherit inputs overlays; };
+      loadAndroid = import ./load-android.nix { inherit inputs; };
+      loadNixos = import ./load-nixos.nix { inherit inputs; };
     in
     {
       inherit overlays;

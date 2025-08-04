@@ -6,11 +6,7 @@
 }:
 let
   inherit (config.programs) claude-code;
-  inherit (pkgs) writeShellScriptBin callPackage;
-
-  orElse = def: v: if v == null then def else v;
-
-  package = callPackage (import ../../extra-pkgs/claude-code) { };
+  inherit (pkgs) writeShellScriptBin;
 
   mcpServerType = import ../../lib/module-types/mcp-server.nix lib;
 
@@ -52,7 +48,7 @@ with lib;
       };
       package = mkOption {
         type = types.package;
-        default = package;
+        default = pkgs.claude-code;
       };
       mcps = mkOption {
         type = types.attrsOf mcpServerType;
