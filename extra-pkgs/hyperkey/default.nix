@@ -5,11 +5,11 @@
   stdenv,
 }:
 let
-  version = "0.38";
+  version = "0.50";
   url = "https://hyperkey.app/downloads/Hyperkey${version}.dmg";
   dmgFile = fetchurl {
     inherit url;
-    hash = "sha256-GZ7tZ6FreB/9z0gBQy11xbKYA1QCLt19CM3TDnLPb5I=";
+    hash = "sha256-xTbqwrbyDxD6TfbRzED/ISvyuqJlx8Csn97d06uqc9c=";
   };
 in
 stdenv.mkDerivation rec {
