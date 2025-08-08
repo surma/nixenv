@@ -20,7 +20,6 @@ with lib;
   };
 
   config = {
-
     programs.fetch-mcp.enable = mkIf isEnabled true;
     programs.browser-mcp.enable = mkIf isEnabled true;
     programs.mcp-nixos.enable = mkIf isEnabled true;

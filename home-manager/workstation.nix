@@ -15,8 +15,9 @@ in
 
   home.sessionPath = [ "$CARGO_HOME/bin" ];
 
-  home.packages =
-    (with pkgs; [
+  home.packages = (
+    with pkgs;
+    [
       binaryen
       rustup
       brotli
@@ -28,9 +29,8 @@ in
       uv
       mprocs
       dua
-    ])
-    ++ [
-      (callPackage (import ../extra-pkgs/wasmtime) { })
-      (callPackage (import ../extra-pkgs/just) { })
-    ];
+      wasmtime
+      just
+    ]
+  );
 }

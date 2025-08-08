@@ -1,12 +1,7 @@
 {
-  pkgs,
-  config,
   lib,
   ...
 }:
-let
-  package = pkgs.callPackage (import ../../extra-pkgs/wezterm) { };
-in
 with lib;
 {
   imports = [
@@ -59,11 +54,6 @@ with lib;
           ];
         default = "auto";
       };
-    };
-  };
-  config = {
-    programs.wezterm = {
-      package = mkDefault package;
     };
   };
 }

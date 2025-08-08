@@ -38,20 +38,22 @@
     inputs@{
       flake-utils,
       nixpkgs,
-      system-manager,
-      nix-system-graphics,
-      nixos-hardware,
-      home-manager,
       ...
     }:
     let
-      loadHomeManager = import ./load-home-manager.nix inputs;
-      loadLinux = import ./load-linux.nix inputs;
-      loadDarwin = import ./load-darwin.nix inputs;
-      loadAndroid = import ./load-android.nix inputs;
-      loadNixos = import ./load-nixos.nix inputs;
+      overlays = {
+        unstable = import ./overlays/unstable { inherit inputs; };
+        extra-pkgs = import ./overlays/extra-pkgs { inherit inputs; };
+      };
+
+      loadHomeManager = import ./load-home-manager.nix { inherit inputs; };
+      loadLinux = import ./load-linux.nix { inherit inputs; };
+      loadDarwin = import ./load-darwin.nix { inherit inputs overlays; };
+      loadAndroid = import ./load-android.nix { inherit inputs; };
+      loadNixos = import ./load-nixos.nix { inherit inputs; };
     in
     {
+      inherit overlays;
       darwinConfigurations = {
         surmbook = loadDarwin {
           system = "aarch64-darwin";
@@ -106,16 +108,22 @@
           machine = ./machines/surmedge.nix;
         };
       };
+
     }
     // (flake-utils.lib.eachDefaultSystem (system: rec {
       packages = {
-        jupyterDeno = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/jupyter { };
-        opencode = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/opencode { };
-        claude = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/claude-code { };
-        fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/fetch-mcp { };
-        browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/browser-mcp { };
+        jupyterDeno = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/jupyter { };
+        opencode = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/opencode { };
+        claude = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/claude-code { };
+        fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/fetch-mcp { };
+        browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/browser-mcp { };
+        nixenv = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/nixenv { };
       };
       apps = {
+        nixenv = {
+          type = "app";
+          program = "${packages.nixenv}/bin/nixenv";
+        };
         jupyterDeno = {
           type = "app";
           program = "${packages.jupyterDeno}/bin/jupyter-start";

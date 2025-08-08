@@ -4,21 +4,16 @@
   lib,
   ...
 }:
-let
-  inherit (pkgs) callPackage;
-
-  podman = (callPackage (import ../extra-pkgs/podman) { });
-in
 {
-  home.packages =
-    (with pkgs; [
+  home.packages = (
+    with pkgs;
+    [
       google-cloud-sdk
       opentofu
-    ])
-    ++ [
-      podman.podman
-      podman.podman-compose
-    ];
+      podman
+      podman-compose
+    ]
+  );
 
   xdg.configFile = {
     "containers/policy.json".text = builtins.toJSON {

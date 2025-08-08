@@ -5,8 +5,7 @@
   ...
 }:
 let
-  inherit (pkgs) callPackage wl-clipboard;
-  package = callPackage (import ../extra-pkgs/zellij) { };
+  inherit (pkgs) wl-clipboard;
 in
 with lib;
 {
@@ -15,7 +14,6 @@ with lib;
   };
   config = {
     programs.zellij = {
-      inherit package;
 
       enable = true;
       settings = {

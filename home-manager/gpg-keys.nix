@@ -12,10 +12,10 @@ in
 {
   config = {
     home.activation = {
-      # --batch surpressed prompting for the key's passphrase
-      gpgKeys = lib.hm.dag.entryAfter [ "sshKeys" ] ''
+      # --batch surpresses prompting for the key's passphrase
+      gpgKeys = lib.hm.dag.entryAfter [ "write-boundary" ] ''
         ${gpg}/bin/gpg --batch --import ${publicKey}        
-        cat ${privateKey} | ${pkgs.age}/bin/age --decrypt --identity ${config.home.homeDirectory}/.ssh/id_ed25519 | ${gpg}/bin/gpg --import --batch -
+        ${pkgs.badage}/bin/badage decrypt -p "$(${pkgs.tmpmemstore}/bin/tmpmemstore retrieve -s ${config.home.homeDirectory}/.cache/tmpmemstore/nixenv.socket)" -i ${privateKey} -o - | ${gpg}/bin/gpg --import --batch -
       '';
     };
   };

@@ -20,26 +20,24 @@ in
     package = lib.mkDefault pkgs.nix;
     settings.experimental-features = "nix-command flakes pipe-operators";
   };
-  home.packages =
-    with pkgs;
-    [
-      age
-      gawk
-      htop
-      btop
-      mosh
-      openssh
-      rsync
-      tig
-      tree
-      pinentry-curses
-      chafa
-      yazi
-      fzf
-      nushell
-      zoxide
-    ]
-    ++ [ (callPackage (import ../extra-pkgs/dprint) { }) ];
+  home.packages = with pkgs; [
+    age
+    gawk
+    htop
+    btop
+    mosh
+    openssh
+    rsync
+    tig
+    tree
+    pinentry-curses
+    chafa
+    yazi
+    fzf
+    nushell
+    zoxide
+    dprint
+  ];
 
   home.file = {
     ".gnupg/gpg-agent.conf".text = ''
@@ -51,7 +49,6 @@ in
     EDITOR = "hx";
   };
 
-  customScripts.hms.enable = true;
   customScripts.denix.enable = true;
   customScripts.ghclone.enable = true;
 

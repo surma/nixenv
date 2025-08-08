@@ -30,7 +30,7 @@ with lib;
       enable = mkEnableOption "";
       package = mkOption {
         type = types.package;
-        default = pkgs.callPackage (import ../../extra-pkgs/opencode) { };
+        default = pkgs.opencode;
       };
       extraConfig = mkOption {
         type = types.attrs;

@@ -4,9 +4,6 @@
   config,
   ...
 }:
-let
-  inherit (pkgs) callPackage;
-in
 {
   imports = [
     ../darwin/base.nix
@@ -32,7 +29,7 @@ in
   programs.obsidian.enable = true;
 
   home-manager.users.${config.system.primaryUser} =
-    { config, inputs, ... }:
+    { config, ... }:
     {
       imports = [
         ../common/spotify
@@ -63,28 +60,28 @@ in
 
       allowedUnfreeApps = [
         "spotify"
+        "claude-code"
       ];
 
-      home.packages =
-        (with pkgs; [
+      home.packages = (
+        with pkgs;
+        [
           openscad
           jqp
-        ])
-        ++ [
-          (callPackage (import ../extra-pkgs/ollama) { })
-          (callPackage (import ../extra-pkgs/jupyter) { })
-          (callPackage (import ../extra-pkgs/qbittorrent) { })
-          (callPackage (import ../extra-pkgs/amber) { amber-upstream = inputs.amber-upstream; })
-        ];
+          ollama
+          qbittorrent
+          jupyter
+          tmpmemstore
+          amber
+          badage
+        ]
+      );
 
       programs.spotify.enable = true;
       programs.telegram.enable = true;
-      programs.opencode.enable = true;
-      defaultConfigs.opencode.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
 
-      customScripts.hms.enable = true;
       customScripts.denix.enable = true;
       customScripts.ghclone.enable = true;
       customScripts.wallpaper-shuffle.enable = true;

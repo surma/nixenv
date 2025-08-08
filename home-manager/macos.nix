@@ -4,9 +4,6 @@
   lib,
   ...
 }:
-let
-  inherit (pkgs) callPackage;
-in
 {
   imports = [
     ./unfree-apps.nix
@@ -17,14 +14,14 @@ in
     home.homeDirectory = lib.mkDefault "/Users/surma";
 
     allowedUnfreeApps = [ "raycast" ];
-    home.packages =
-      (with pkgs; [
+    home.packages = (
+      with pkgs;
+      [
         raycast
-      ])
-      ++ [
-        (callPackage (import ../extra-pkgs/hyperkey) { })
-        (callPackage (import ../extra-pkgs/aerospace-bin) { })
-      ];
+        # hyperkey
+        aerospace
+      ]
+    );
 
     home.file.".config/aerospace/aerospace.toml".source = ../configs/aerospace.toml;
 

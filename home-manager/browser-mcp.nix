@@ -4,10 +4,6 @@
   lib,
   ...
 }:
-let
-  inherit (pkgs) callPackage;
-  package = callPackage (import ../extra-pkgs/browser-mcp) { };
-in
 with lib;
 {
   options = {
@@ -15,7 +11,7 @@ with lib;
       enable = mkEnableOption "";
       package = mkOption {
         type = types.package;
-        default = package;
+        default = pkgs.browser-mcp;
       };
     };
   };
