@@ -112,12 +112,12 @@
     }
     // (flake-utils.lib.eachDefaultSystem (system: rec {
       packages = {
-        jupyterDeno = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/jupyter { };
-        opencode = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/opencode { };
-        claude = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/claude-code { };
-        fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/fetch-mcp { };
-        browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/browser-mcp { };
-        nixenv = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/nixenv { };
+        jupyterDeno = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/jupyter { };
+        opencode = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/opencode { };
+        claude = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/claude-code { };
+        fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/fetch-mcp { };
+        browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/browser-mcp { };
+        nixenv = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/nixenv { };
       };
       apps = {
         nixenv = {

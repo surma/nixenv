@@ -82,7 +82,6 @@
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
 
-      customScripts.hms.enable = true;
       customScripts.denix.enable = true;
       customScripts.ghclone.enable = true;
       customScripts.wallpaper-shuffle.enable = true;

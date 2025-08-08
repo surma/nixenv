@@ -49,7 +49,6 @@ in
     EDITOR = "hx";
   };
 
-  customScripts.hms.enable = true;
   customScripts.denix.enable = true;
   customScripts.ghclone.enable = true;
 

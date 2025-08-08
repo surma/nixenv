@@ -1,19 +1,23 @@
 {
-	stdenv
+  stdenv,
+  nushell,
 }:
 let
-	script = ./nixenv;
+  script = ./nixenv;
 in
 stdenv.mkDerivation {
-	src = script;
-	buildScript = ''
-		runHook preBuild
+  name = "nixenv";
+  buildInputs = [ nushell ];
+  src = script;
+  dontUnpack = true;
+  buildPhase = ''
+    runHook preBuild
 
-		mkdir -p $out/bin
-		cp nixenv $out/bin
+    mkdir -p $out/bin
+    cp $src $out/bin/nixenv
 
-		patchShebands $out/bin/nixenv
+    patchShebangs $out/bin/nixenv
 
-		runHook postBuild
-	'';
+    runHook postBuild
+  '';
 }
