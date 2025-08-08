@@ -14,10 +14,7 @@ in
     home.activation = {
       sshKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         KEY="${config.home.homeDirectory}/.ssh/id_ed25519"
-        if [ ! -f "$KEY" ]; then
-          echo "Decrypting SSH key..."
-          cat ${privateKey} | ${pkgs.age}/bin/age --decrypt > "$KEY"
-        fi
+        ${pkgs.badage}/bin/badage decrypt -p "$(${pkgs.tmpmemstore}/bin/tmpmemstore retrieve -s ${config.home.homeDirectory}/.cache/tmpmemstore/nixenv.socket)" -i ${privateKey} -o "$KEY"
       '';
     };
   };

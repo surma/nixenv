@@ -4,9 +4,6 @@
   config,
   ...
 }:
-let
-  inherit (pkgs) callPackage;
-in
 {
   imports = [
     ../darwin/base.nix
@@ -32,7 +29,7 @@ in
   programs.obsidian.enable = true;
 
   home-manager.users.${config.system.primaryUser} =
-    { config, inputs, ... }:
+    { config, ... }:
     {
       imports = [
         ../common/spotify
@@ -76,6 +73,7 @@ in
           jupyter
           tmpmemstore
           amber
+          badage
         ]
       );
 
