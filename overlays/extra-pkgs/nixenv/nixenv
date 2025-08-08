@@ -1,0 +1,32 @@
+#!/usr/bin/env nu
+
+
+def detectSystemManager [] {
+	if (which nixos-rebuild | length | $in > 0) {
+		return "nixos";
+	} else if (which darwin-rebuild | length | $in > 0) {
+		return "nix-darwin";
+	} else if (which system-manager | length | $in > 0) {
+		return "system-manager";
+	}
+}
+
+def main [
+	--system-manager: string
+] {
+mut command = ["switch" "--flake" $env.FLAKE_CONFIG_URI];
+let sm = if $system_manager == null { detectSystemManager } else $system_manager;
+if $sm == "nixos" {
+	$command = ["nixos-rebuild" ...$command]
+} else if $sm == "nix-darwin" {
+	$command = ["darwin-rebuild" ...$command]
+} else if $sm == "system-manager" {
+	$command = ["system-manager" ...$command]
+} else {
+	error make {
+		msg: $"Unsupported system configuration ($sm)"
+	}
+}
+
+run-external ...["sudo" "tmpmemstore" "run" "-s" $"(env.HOME)/.cache/tmpmemstore/nixenv.socket" "--" ...$command]
+}

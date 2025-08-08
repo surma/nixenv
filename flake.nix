@@ -38,11 +38,6 @@
     inputs@{
       flake-utils,
       nixpkgs,
-      system-manager,
-      nix-system-graphics,
-      nixos-hardware,
-      home-manager,
-      amber-upstream,
       ...
     }:
     let
@@ -122,8 +117,13 @@
         claude = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/claude-code { };
         fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/fetch-mcp { };
         browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/browser-mcp { };
+        nixenv = nixpkgs.legacyPackages.${system}.callPackage ./extra-pkgs/nixenv { };
       };
       apps = {
+        nixenv = {
+          type = "app";
+          program = "${packages.nixenv}/bin/nixenv";
+        };
         jupyterDeno = {
           type = "app";
           program = "${packages.jupyterDeno}/bin/jupyter-start";
