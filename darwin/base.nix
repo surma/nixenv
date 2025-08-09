@@ -20,9 +20,8 @@
     enable = true;
     casks = [
       "arc"
-      "superwhisper"
       "barrier"
-      "nvidia-geforce-now"
+      # "nvidia-geforce-now"
       "slack"
       "zulip"
       "android-file-transfer"

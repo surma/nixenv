@@ -1,13 +1,17 @@
 {
   stdenv,
   nushell,
+  tmpmemstore,
 }:
 let
   script = ./nixenv;
 in
 stdenv.mkDerivation {
   name = "nixenv";
-  buildInputs = [ nushell ];
+  buildInputs = [
+    nushell
+    tmpmemstore
+  ];
   src = script;
   dontUnpack = true;
   buildPhase = ''

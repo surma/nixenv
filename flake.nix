@@ -111,15 +111,27 @@
 
     }
     // (flake-utils.lib.eachDefaultSystem (system: rec {
-      packages = {
-        jupyterDeno = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/jupyter { };
-        opencode = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/opencode { };
-        claude = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/claude-code { };
-        fetch-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/fetch-mcp { };
-        browser-mcp = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/browser-mcp { };
-        nixenv = nixpkgs.legacyPackages.${system}.callPackage ./overlays/extra-pkgs/nixenv { };
-      };
+      packages =
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              overlays.unstable
+              overlays.extra-pkgs
+            ];
+          };
+          inherit (pkgs) callPackage;
+        in
+        {
+          jupyterDeno = callPackage ./overlays/extra-pkgs/jupyter { };
+          opencode = callPackage ./overlays/extra-pkgs/opencode { };
+          claude = callPackage ./overlays/extra-pkgs/claude-code { };
+          fetch-mcp = callPackage ./overlays/extra-pkgs/fetch-mcp { };
+          browser-mcp = callPackage ./overlays/extra-pkgs/browser-mcp { };
+          nixenv = callPackage ./overlays/extra-pkgs/nixenv { };
+        };
       apps = {
+        default = apps.nixenv;
         nixenv = {
           type = "app";
           program = "${packages.nixenv}/bin/nixenv";
