@@ -3,8 +3,8 @@ let
   tmpmemstoreSrc = fetchFromGitHub {
     owner = "surma";
     repo = "tmpmemstore";
-    rev = "47980469499c50e809b75bf49e78484b61e0de68";
-    hash = "sha256-ttAguaB/5flhFNJt2MuOqtGKSAhw2gCZsTZNt7U5H0s=";
+    rev = "574fa61300cdecf7b393dddf4987b324957d9ff";
+    hash = "sha256-JjbKOnTLoqm2+XIiL7xnmFitxXGPlEi60c3ULSYHP5M=";
   };
   tmpmemstore = callPackage (import tmpmemstoreSrc) { };
 in
