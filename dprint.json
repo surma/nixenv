@@ -3,6 +3,10 @@
   "exec": {
     "commands": [
       {
+        "command": "rustfmt --edition 2024 --config unstable_features=true --config format_code_in_doc_comments=true",
+        "exts": ["rs"]
+      },
+      {
         "command": "nixfmt",
         "exts": ["nix"]
       }
