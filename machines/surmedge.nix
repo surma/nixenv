@@ -40,6 +40,7 @@
         ../home-manager/nixdev.nix
         ../home-manager/linux.nix
         ../home-manager/workstation.nix
+        ../home-manager/cloud.nix
 
         ../home-manager/unfree-apps.nix
       ];
@@ -52,6 +53,7 @@
         home.packages = (
           with pkgs;
           [
+            nftables
           ]
         );
 
@@ -64,6 +66,29 @@
       };
     };
 
+  networking.firewall.enable = false;
+  networking.nftables.enable = true;
+  networking.nftables.ruleset = ''
+    table inet filter {
+      chain output {
+        type filter hook output priority 0;
+        policy accept;
+      }
+      chain input {
+        type filter hook input priority 0;
+        policy drop;
+        iif "lo" accept
+        tcp dport {80, 22, 8080} accept
+        ct state established,related accept
+      }
+    }
+    table ip nat {
+      chain prerouting {
+        type nat hook prerouting priority 0;
+        tcp dport 80 dnat to :8080
+      }
+    }
+  '';
   services.openssh.enable = true;
 
   system.stateVersion = "25.05";
