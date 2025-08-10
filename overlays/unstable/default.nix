@@ -16,7 +16,6 @@ let
 in
 {
   inherit (pkgs-unstable)
-    gdb
     zig
     zls
     just

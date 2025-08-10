@@ -28,5 +28,5 @@ if $sm == "nixos" {
 	}
 }
 
-run-external ...["sudo" "tmpmemstore" "run" "-s" $"($env.HOME)/.cache/tmpmemstore/nixenv.socket" "--" ...$command]
+run-external ...["sudo" "tmpmemstore" "run" "--no-pid-check" "-s" $"($env.HOME)/.cache/tmpmemstore/nixenv.socket" "--" ...$command]
 }

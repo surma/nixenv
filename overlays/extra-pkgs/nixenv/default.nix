@@ -1,6 +1,8 @@
 {
   stdenv,
+  lib,
   nushell,
+  makeWrapper,
   tmpmemstore,
 }:
 let
@@ -10,7 +12,9 @@ stdenv.mkDerivation {
   name = "nixenv";
   buildInputs = [
     nushell
-    tmpmemstore
+  ];
+  nativeBuildInputs = [
+    makeWrapper
   ];
   src = script;
   dontUnpack = true;
@@ -23,5 +27,9 @@ stdenv.mkDerivation {
     patchShebangs $out/bin/nixenv
 
     runHook postBuild
+  '';
+  postFixup = ''
+    wrapProgram $out/bin/nixenv \
+     --prefix PATH ":" ${lib.makeBinPath [ tmpmemstore ]}
   '';
 }

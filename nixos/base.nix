@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   inputs,
   ...
 }:
@@ -39,7 +40,7 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = [
-      ../ssh-keys/id_ed25519.pub
+      (../ssh-keys/id_ed25519.pub |> lib.readFile)
     ];
   };
 }

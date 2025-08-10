@@ -1,23 +1,33 @@
 {
-  nixpkgs,
-  home-manager,
+  inputs,
+  overlays,
   ...
-}@inputs:
+}:
 { machine, system }:
 let
+  inherit (inputs) nixpkgs home-manager;
   extraModule =
 
     {
-      # nixpkgs.pks = import nixpkgs {
-      #   overlays = [
-      #     (final: prev: {
-      #       surmtest
-      #     })
-      #   ]
-      # };
-      home-manager.extraSpecialArgs = {
-        inherit inputs;
-        systemManager = "home-manager";
+      nixpkgs.overlays = [
+        overlays.unstable
+        overlays.extra-pkgs
+      ];
+
+      home-manager = {
+
+        sharedModules = [
+          {
+            nixpkgs.overlays = [
+              overlays.unstable
+              overlays.extra-pkgs
+            ];
+          }
+        ];
+        extraSpecialArgs = {
+          inherit inputs;
+          systemManager = "home-manager";
+        };
       };
     };
 in

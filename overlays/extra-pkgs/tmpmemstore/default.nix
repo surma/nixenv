@@ -1,11 +1,24 @@
-{ fetchFromGitHub, callPackage, ... }:
+{
+  lib,
+  rustPlatform,
+  nix-gitignore,
+  pkg-config,
+  ...
+}:
+
 let
-  tmpmemstoreSrc = fetchFromGitHub {
-    owner = "surma";
-    repo = "tmpmemstore";
-    rev = "574fa61300cdecf7b393dddf4987b324957d9ff";
-    hash = "sha256-JjbKOnTLoqm2+XIiL7xnmFitxXGPlEi60c3ULSYHP5M=";
-  };
-  tmpmemstore = callPackage (import tmpmemstoreSrc) { };
+  src = nix-gitignore.gitignoreSource [ ] ./.;
+  cargoToml = lib.importTOML "${src}/Cargo.toml";
 in
-tmpmemstore
+rustPlatform.buildRustPackage rec {
+  pname = cargoToml.package.name;
+  version = cargoToml.package.version;
+
+  inherit src;
+
+  cargoLock = {
+    lockFile = "${src}/Cargo.lock";
+  };
+
+  nativeBuildInputs = [ pkg-config ];
+}

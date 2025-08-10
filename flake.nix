@@ -50,7 +50,7 @@
       loadLinux = import ./load-linux.nix { inherit inputs; };
       loadDarwin = import ./load-darwin.nix { inherit inputs overlays; };
       loadAndroid = import ./load-android.nix { inherit inputs; };
-      loadNixos = import ./load-nixos.nix { inherit inputs; };
+      loadNixos = import ./load-nixos.nix { inherit inputs overlays; };
     in
     {
       inherit overlays;
