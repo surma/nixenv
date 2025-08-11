@@ -7,7 +7,15 @@
 let
   # As of now, need to downgrade v4l2loopback because v0.14 is incompatible with OBS' virtual cam.
   # OBS Version: 31.0.3, Latest attempt: 2025-07-03
-  v4l2loopback-0132 = pkgs.callPackage ../extra-pkgs/v4l2loopback-0132 { inherit config; };
+  v4l2loopback = config.boot.kernelPackages.v4l2loopback.overrideAttrs (oldAttrs: rec {
+    version = "0.13.2";
+    src = pkgs.fetchFromGitHub {
+      owner = "umlaeute";
+      repo = "v4l2loopback";
+      rev = "v${version}";
+      sha256 = "sha256-rcwgOXnhRPTmNKUppupfe/2qNUBDUqVb3TeDbrP5pnU=";
+    };
+  });
 in
 with lib;
 {
@@ -21,7 +29,7 @@ with lib;
       "v4l2loopback"
     ];
     boot.extraModulePackages = [
-      v4l2loopback-0132
+      v4l2loopback
     ];
 
     boot.extraModprobeConfig = ''
