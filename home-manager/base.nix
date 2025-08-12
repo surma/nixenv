@@ -18,7 +18,7 @@ in
 
   nix = {
     package = lib.mkDefault pkgs.nix;
-    settings.experimental-features = "nix-command flakes pipe-operators";
+    settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
   };
   home.packages = with pkgs; [
     age

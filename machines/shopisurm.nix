@@ -13,7 +13,7 @@ in
   system.stateVersion = 5;
 
   nix.extraOptions = ''
-    !include nix.conf.d/shopify.conf
+    !include nix.conf.d/dev.conf
   '';
 
   programs.obs.enable = true;
@@ -42,32 +42,30 @@ in
       ];
 
       home.stateVersion = "24.05";
-
+      nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
       home.sessionVariables.FLAKE_CONFIG_URI = "${config.home.homeDirectory}/src/github.com/surma/nixenv#shopisurm";
 
       allowedUnfreeApps = [
         "spotify"
       ];
 
-      home.packages =
-        (with pkgs; [
+      home.packages = (
+        with pkgs;
+        [
           # graphite-cli
           keycastr
+          jupyter
           (python3.withPackages (ps: [
             ps.distutils
           ]))
-        ])
-        ++ [
-          (callPackage (import ../extra-pkgs/ollama) { })
-          (callPackage (import ../extra-pkgs/jupyter) { })
-        ];
+        ]
+      );
 
       programs.opencode.enable = true;
       defaultConfigs.opencode.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
 
-      customScripts.hms.enable = true;
       customScripts.denix.enable = true;
       customScripts.ghclone.enable = true;
       customScripts.wallpaper-shuffle.enable = true;

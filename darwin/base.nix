@@ -10,7 +10,7 @@
 
   nix.enable = true;
 
-  nix.settings.experimental-features = "nix-command flakes pipe-operators";
+  nix.settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
 
   fonts.packages = with pkgs; [ fira-code ];
 
