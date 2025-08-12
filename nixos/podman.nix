@@ -7,6 +7,7 @@
   config = {
     environment.systemPackages = with pkgs; [
       podman
+      shadow
     ];
 
     environment.etc."containers/policy.json".text =

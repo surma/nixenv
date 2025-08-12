@@ -26,6 +26,8 @@
   programs.zsh.enable = true;
 
   users.users.surma.linger = true;
+
+  users.users.root.openssh.authorizedKeys.keys = [ (../ssh-keys/id_ed25519.pub |> lib.readFile) ];
   home-manager.users.surma =
     {
       config,
@@ -72,6 +74,9 @@
             [Unit]
             Description=Test
 
+            [Service]
+            Environment="PATH=/run/wrappers/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:$PATH"
+
             [Container]
             Image=docker.io/lipanski/docker-static-website:latest
             PublishPort=3000:3000
@@ -81,8 +86,8 @@
             WantedBy=multi-user.target default.target
           '';
           onChange = ''
-            systemctl --user daemon-reload
-            systemctl --user restart test.service
+            ${pkgs.systemd}/bin/systemctl --user daemon-reload
+            ${pkgs.systemd}/bin/systemctl --user restart test.service
           '';
         };
       };
