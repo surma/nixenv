@@ -73,6 +73,7 @@
           text = ''
             [Unit]
             Description=Test
+            After=local-fs.target
 
             [Service]
             Environment="PATH=/run/wrappers/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:$PATH"
