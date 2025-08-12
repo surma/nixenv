@@ -12,6 +12,7 @@
     ./surmedge-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
+    ../nixos/podman.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -24,6 +25,7 @@
 
   programs.zsh.enable = true;
 
+  users.users.surma.linger = true;
   home-manager.users.surma =
     {
       config,
@@ -40,7 +42,7 @@
         ../home-manager/nixdev.nix
         ../home-manager/linux.nix
         ../home-manager/workstation.nix
-        ../home-manager/cloud.nix
+        # ../home-manager/cloud.nix
 
         ../home-manager/unfree-apps.nix
       ];
@@ -63,6 +65,26 @@
 
         programs.claude-code.enable = true;
         defaultConfigs.claude-code.enable = true;
+
+        xdg.configFile."containers/systemd/test.container" = {
+
+          text = ''
+            [Unit]
+            Description=Test
+
+            [Container]
+            Image=docker.io/lipanski/docker-static-website:latest
+            PublishPort=3000:3000
+            Volume=/home/surma/src:/home/static
+
+            [Install]
+            WantedBy=multi-user.target default.target
+          '';
+          onChange = ''
+            systemctl --user daemon-reload
+            systemctl --user restart test.service
+          '';
+        };
       };
     };
 
@@ -92,4 +114,5 @@
   services.openssh.enable = true;
 
   system.stateVersion = "25.05";
+
 }
