@@ -22,5 +22,5 @@ let
   };
 in
 writeShellScriptBin "claude" ''
-  node ${nodeBundle}/lib/node_modules/${packageJson.name}/node_modules/.bin/claude "$@"
+  ${nodejs}/bin/node ${nodeBundle}/lib/node_modules/${packageJson.name}/node_modules/.bin/claude "$@"
 ''

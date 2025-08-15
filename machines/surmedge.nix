@@ -91,24 +91,28 @@
 
   services.traefik = {
     enable = true;
+    group = "podman";
     staticConfigOptions = {
       api = { };
-    };
-    dynamicConfigOptions = {
+      providers.docker = {
+        # endpoint = "unix:///run/docker.sock";
+      };
       entryPoints = {
         web.address = ":80";
         websecure.address = ":443";
       };
-      providers.docker = {
-        endpoint = "/run/docker.sock";
-      };
+    };
+    dynamicConfigOptions = {
       http.routers.api = {
         service = "api@internal";
+        # entryPoints = ["web" "websecure" ];
         # rule = "HostRegexp(`.*`)";
         rule = "HostRegexp(`^dashboard\\.surmcluster`)";
       };
     };
   };
+
+  # systemd.services.traefik.serviceConfig.SupplementaryGroups = [ "podman" ];
 
   networking.firewall.enable = false;
   networking.nftables.enable = false;
