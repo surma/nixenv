@@ -98,8 +98,7 @@ in
           export NIX_PATH=world=$HOME/world/trees/root/src/.meta/substrate/nix
           export PATH=$HOME/.local/state/nix/profiles/wb/bin:$PATH
 
-          # Added by //areas/tools/world-up
-          [[ -x ~/world/.tectonix/init ]] && eval "$(~/world/.tectonix/init zsh)"         
+          [[ -x ~/world/.tectonix/nix-profiles/base/current/global/init ]] && eval "$(~/world/.tectonix/nix-profiles/base/current/global/init zsh)"
         '';
       };
       programs.ssh = {
