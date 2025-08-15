@@ -26,6 +26,7 @@
   programs.zsh.enable = true;
 
   users.users.surma.linger = true;
+  users.groups.podman.members = [ "surma" ];
 
   users.users.root.openssh.authorizedKeys.keys = [ (../ssh-keys/id_ed25519.pub |> lib.readFile) ];
   home-manager.users.surma =
@@ -67,35 +68,50 @@
 
         programs.claude-code.enable = true;
         defaultConfigs.claude-code.enable = true;
-
-        xdg.configFile."containers/systemd/test.container" = {
-
-          text = ''
-            [Unit]
-            Description=Test
-            After=local-fs.target
-
-            [Service]
-            Environment="PATH=/run/wrappers/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:$PATH"
-
-            [Container]
-            Image=docker.io/lipanski/docker-static-website:latest
-            PublishPort=3000:3000
-            Volume=/home/surma/src:/home/static
-
-            [Install]
-            WantedBy=multi-user.target default.target
-          '';
-          onChange = ''
-            ${pkgs.systemd}/bin/systemctl --user daemon-reload
-            ${pkgs.systemd}/bin/systemctl --user restart test.service
-          '';
-        };
       };
     };
 
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+    dockerSocket.enable = true;
+  };
+
+  virtualisation.oci-containers.containers.test = {
+    image = "docker.io/lipanski/docker-static-website:latest";
+    volumes = [
+      "/home/surma/src:/home/static"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.services.test.loadbalancer.server.port" = "3000";
+      "traefik.http.routers.test.rule" = "HostRegexp(`^dump\\.surmcluster`)";
+    };
+  };
+
+  services.traefik = {
+    enable = true;
+    staticConfigOptions = {
+      api = { };
+    };
+    dynamicConfigOptions = {
+      entryPoints = {
+        web.address = ":80";
+        websecure.address = ":443";
+      };
+      providers.docker = {
+        endpoint = "/run/docker.sock";
+      };
+      http.routers.api = {
+        service = "api@internal";
+        # rule = "HostRegexp(`.*`)";
+        rule = "HostRegexp(`^dashboard\\.surmcluster`)";
+      };
+    };
+  };
+
   networking.firewall.enable = false;
-  networking.nftables.enable = true;
+  networking.nftables.enable = false;
   networking.nftables.ruleset = ''
     table inet filter {
       chain output {
