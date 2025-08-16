@@ -2,7 +2,7 @@
 
 def main [
 	--nixpkgs: string = "release-25.05"
-	--out: string = "default"
+	--out: string = "result"
 	file: string = "./default.nix"
 ] {
 	let pkgs = ($nixpkgs | default "release-25.05")
