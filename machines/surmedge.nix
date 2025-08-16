@@ -84,7 +84,26 @@
     labels = {
       "traefik.enable" = "true";
       "traefik.http.services.test.loadbalancer.server.port" = "3000";
-      "traefik.http.routers.test.rule" = "HostRegexp(`^dump\\.surmcluster`)";
+      "traefik.http.routers.test.rule" = "HostRegexp(`^test\\.surmcluster`)";
+    };
+  };
+  virtualisation.oci-containers.containers.test2 = {
+    image = "docker-test:latest";
+    imageFile = pkgs.dockerTools.buildImage {
+      name = "docker-test";
+      tag = "latest";
+      copyToRoot = pkgs.buildEnv {
+        name = "root";
+        paths = [ (pkgs.callPackage (import ../testserver/default.nix) { }) ];
+      };
+      config = {
+        Cmd = [ "req-dump-server" ];
+      };
+    };
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.services.test2.loadbalancer.server.port" = "8000";
+      "traefik.http.routers.test2.rule" = "HostRegexp(`^test2\\.surmcluster`)";
     };
   };
 
