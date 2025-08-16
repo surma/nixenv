@@ -12,8 +12,10 @@
     ./surmedge-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
+    ../nixos/writing-prompt.nix
   ];
 
+  nix.settings.require-sigs = false;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -76,53 +78,32 @@
     dockerSocket.enable = true;
   };
 
-  virtualisation.oci-containers.containers.test = {
-    image = "docker.io/lipanski/docker-static-website:latest";
-    volumes = [
-      "/home/surma/src:/home/static"
-    ];
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.services.test.loadbalancer.server.port" = "3000";
-      "traefik.http.routers.test.rule" = "HostRegexp(`^test\\.surmcluster`)";
-    };
-  };
-  virtualisation.oci-containers.containers.test2 = {
-    image = "docker-test:latest";
-    imageFile = pkgs.dockerTools.buildImage {
-      name = "docker-test";
-      tag = "latest";
-      copyToRoot = pkgs.buildEnv {
-        name = "root";
-        paths = [ (pkgs.callPackage (import ../testserver/default.nix) { }) ];
-      };
-      config = {
-        Cmd = [ "req-dump-server" ];
-      };
-    };
-    labels = {
-      "traefik.enable" = "true";
-      "traefik.http.services.test2.loadbalancer.server.port" = "8000";
-      "traefik.http.routers.test2.rule" = "HostRegexp(`^test2\\.surmcluster`)";
-    };
-  };
-
   services.traefik = {
     enable = true;
     group = "podman";
     staticConfigOptions = {
-      api = { };
+      api = {
+        dashboard = false;
+      };
       providers.docker = { };
       entryPoints = {
         web.address = ":80";
-        websecure.address = ":443";
+        websecure = {
+          address = ":443";
+          asDefault = true;
+          http.tls.certResolver = "letsencrypt";
+        };
+      };
+      certificatesResolvers.letsencrypt.acme = {
+        email = "surma@surma.dev";
+        storage = "/var/lib/traefik/acme.json";
+        httpChallenge.entryPoint = "web";
       };
     };
     dynamicConfigOptions = {
       http.routers.api = {
         service = "api@internal";
-        # entryPoints = ["web" "websecure" ];
-        # rule = "HostRegexp(`.*`)";
+        entryPoints = [ "web" ];
         rule = "HostRegexp(`^dashboard\\.surmcluster`)";
       };
     };

@@ -1,0 +1,3 @@
+[submodule "apps/writing-prompt"]
+	path = apps/writing-prompt
+	url = ssh://git@github.com/surma/writing-prompt
