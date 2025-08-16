@@ -12,7 +12,6 @@
     ./surmedge-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
-    ../nixos/podman.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
