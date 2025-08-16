@@ -51,6 +51,8 @@ in
 
   customScripts.denix.enable = true;
   customScripts.ghclone.enable = true;
+  customScripts.nix-build-pkg.enable = true;
+  customScripts.build-nixpkg-pkg.enable = true;
 
   programs.home-manager.enable = true;
   programs.bat.enable = true;
