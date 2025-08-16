@@ -93,9 +93,7 @@
     group = "podman";
     staticConfigOptions = {
       api = { };
-      providers.docker = {
-        # endpoint = "unix:///run/docker.sock";
-      };
+      providers.docker = { };
       entryPoints = {
         web.address = ":80";
         websecure.address = ":443";
@@ -111,31 +109,13 @@
     };
   };
 
-  # systemd.services.traefik.serviceConfig.SupplementaryGroups = [ "podman" ];
-
-  networking.firewall.enable = false;
-  networking.nftables.enable = false;
-  networking.nftables.ruleset = ''
-    table inet filter {
-      chain output {
-        type filter hook output priority 0;
-        policy accept;
-      }
-      chain input {
-        type filter hook input priority 0;
-        policy drop;
-        iif "lo" accept
-        tcp dport {80, 22, 8080} accept
-        ct state established,related accept
-      }
-    }
-    table ip nat {
-      chain prerouting {
-        type nat hook prerouting priority 0;
-        tcp dport 80 dnat to :8080
-      }
-    }
-  '';
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [
+    22
+    80
+    443
+  ];
+  networking.nftables.enable = true;
   services.openssh.enable = true;
 
   system.stateVersion = "25.05";
