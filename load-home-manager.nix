@@ -1,12 +1,17 @@
-{ nixpkgs, home-manager, ... }@inputs:
+{ inputs,... }:
 { system, machine }:
 let
+  inherit (inputs) home-manager nixpkgs agenix;
   pkgs = nixpkgs.legacyPackages.${system};
+
 in
 home-manager.lib.homeManagerConfiguration {
   inherit pkgs;
 
-  modules = [ machine ];
+  modules = [
+    agenix.homeManagerModules.default
+    machine
+  ];
 
   extraSpecialArgs = {
     inherit inputs system;

@@ -5,7 +5,7 @@
 }:
 { machine, system }:
 let
-  inherit (inputs) nixpkgs home-manager;
+  inherit (inputs) nixpkgs home-manager agenix;
   extraModule =
 
     {
@@ -15,8 +15,8 @@ let
       ];
 
       home-manager = {
-
         sharedModules = [
+          agenix.homeManagerModules.default
           {
             nixpkgs.overlays = [
               overlays.unstable
@@ -25,7 +25,7 @@ let
           }
         ];
         extraSpecialArgs = {
-          inherit inputs;
+          inherit inputs system;
           systemManager = "home-manager";
         };
       };
@@ -35,6 +35,7 @@ nixpkgs.lib.nixosSystem rec {
   inherit system;
   modules = [
     machine
+    agenix.nixosModules.default
     home-manager.nixosModules.home-manager
     extraModule
   ];

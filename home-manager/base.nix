@@ -2,6 +2,8 @@
   config,
   pkgs,
   lib,
+  inputs,
+  system,
   ...
 }:
 let
@@ -37,6 +39,7 @@ in
     nushell
     zoxide
     dprint
+    inputs.agenix.packages.${system}.default
   ];
 
   home.file = {

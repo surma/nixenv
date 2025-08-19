@@ -8,6 +8,7 @@ let
   inherit (inputs)
     nix-darwin
     home-manager
+    agenix
     ;
 
   extraModule =
@@ -26,8 +27,8 @@ let
 
         home-manager = {
           sharedModules = [
+            agenix.homeManagerModules.default
             {
-
               nixpkgs.overlays = [
                 overlays.unstable
                 overlays.extra-pkgs
@@ -36,7 +37,7 @@ let
           ];
           backupFileExtension = "bak";
           extraSpecialArgs = {
-            inherit inputs;
+            inherit inputs system;
             systemManager = "home-manager";
           };
         };
