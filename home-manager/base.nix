@@ -12,14 +12,14 @@ in
   imports = [
     ../scripts
     ./zellij.nix
-    ./ssh-keys.nix
-    ./gpg-keys.nix
+    ../secrets
   ];
 
   nix = {
     package = lib.mkDefault pkgs.nix;
     settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
   };
+
   home.packages = with pkgs; [
     age
     gawk
@@ -43,6 +43,23 @@ in
     ".gnupg/gpg-agent.conf".text = ''
       pinentry-program ${pkgs.pinentry-curses}/bin/pinentry
     '';
+  };
+
+  secrets.items = {
+    gpg-keys = {
+      contents = ../gpg-keys/key.sec.asc.age;
+      command = ''
+        ${pkgs.gnupg}/bin/gpg --batch --import ${../gpg-keys/key.pub.asc}
+        ${pkgs.gnupg}/bin/gpg --batch --import -
+      '';
+    };
+    ssh-keys = {
+      contents = ../ssh-keys/id_surma.age;
+      command = ''
+        cp ${../ssh-keys/id_surma.pub} ${config.home.homeDirectory}/.ssh/id_surma.pub
+        cat > ${config.home.homeDirectory}/.ssh/id_surma
+      '';
+    };
   };
 
   home.sessionVariables = {

@@ -40,7 +40,7 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = [
-      (../ssh-keys/id_ed25519.pub |> lib.readFile)
+      (../ssh-keys/id_surma.pub |> lib.readFile)
     ];
   };
 }
