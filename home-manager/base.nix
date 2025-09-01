@@ -11,8 +11,10 @@ in
 
   imports = [
     ../scripts
-    ./zellij.nix
     ../secrets
+    ./ssh-keys.nix
+    ./gpg-keys.nix
+    ./zellij.nix
   ];
 
   nix = {
@@ -43,23 +45,6 @@ in
     ".gnupg/gpg-agent.conf".text = ''
       pinentry-program ${pkgs.pinentry-curses}/bin/pinentry
     '';
-  };
-
-  secrets.items = {
-    gpg-keys = {
-      contents = ../gpg-keys/key.sec.asc.age;
-      command = ''
-        ${pkgs.gnupg}/bin/gpg --batch --import ${../gpg-keys/key.pub.asc}
-        ${pkgs.gnupg}/bin/gpg --batch --import -
-      '';
-    };
-    ssh-keys = {
-      contents = ../ssh-keys/id_surma.age;
-      command = ''
-        cp ${../ssh-keys/id_surma.pub} ${config.home.homeDirectory}/.ssh/id_surma.pub
-        cat > ${config.home.homeDirectory}/.ssh/id_surma
-      '';
-    };
   };
 
   home.sessionVariables = {
@@ -93,7 +78,7 @@ in
     addKeysToAgent = "yes";
     matchBlocks = {
       "*" = {
-        identityFile = "${config.home.homeDirectory}/.ssh/id_ed25519";
+        identityFile = "${config.home.homeDirectory}/.ssh/id_surma";
       };
     };
   };
