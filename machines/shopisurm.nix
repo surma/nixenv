@@ -75,17 +75,13 @@ in
       customScripts.update-shopify-key.asDesktopItem = true;
 
       programs.spotify.enable = true;
-      programs.git.extraConfig = {
-        # core = {
-        #   untrackedCache = true;
-        #   fsmonitor = true;
-        #   fsmonitorhookversion = 2;
-        # };
-        include = {
+      programs.git = {
+        maintenance.enable = true;
+        maintenance.repositories = [
+          "${config.home.homeDirectory}/world/git"
+        ];
+        extraConfig.include = {
           path = "${config.home.homeDirectory}/.config/dev/gitconfig";
-        };
-        maintenance = {
-          repo = "${config.home.homeDirectory}/world/git";
         };
       };
 
