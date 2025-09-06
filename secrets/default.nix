@@ -6,6 +6,8 @@
 }:
 with lib;
 let
+  secretsConfig = import ./config.nix;
+
   secretType = types.submodule {
     options = {
       contents = mkOption {
@@ -44,11 +46,12 @@ in
           |> lib.map (
             { value, name }:
             let
+              secret = secretsConfig.secrets.${name};
               command = if value.command != null then " | (${value.command})" else " > ${value.target}";
             in
             ''
               echo Decrypting ${name}
-              cat ${value.contents} | ${pkgs.age}/bin/age --decrypt -i ${config.secrets.identity} ${command}
+              cat ${secret.contents} | ${pkgs.age}/bin/age --decrypt -i ${config.secrets.identity} ${command}
             ''
           );
       in
