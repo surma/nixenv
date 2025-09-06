@@ -5,6 +5,8 @@
       keys = [
         "surma"
         "surmbook"
+        "surmedge"
+        "surmrock"
       ];
     };
     gpg-keys = {
@@ -12,6 +14,8 @@
       keys = [
         "surma"
         "surmbook"
+        "surmedge"
+        "surmrock"
       ];
     };
   };
