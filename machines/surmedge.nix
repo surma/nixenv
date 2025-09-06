@@ -29,7 +29,7 @@
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
-  users.users.root.openssh.authorizedKeys.keys = [ (../ssh-keys/id_ed25519.pub |> lib.readFile) ];
+  users.users.root.openssh.authorizedKeys.keys = [ (../ssh-keys/id_surma.pub |> lib.readFile) ];
   home-manager.users.surma =
     {
       config,

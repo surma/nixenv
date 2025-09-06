@@ -11,15 +11,17 @@ in
 
   imports = [
     ../scripts
-    ./zellij.nix
+    ../secrets
     ./ssh-keys.nix
     ./gpg-keys.nix
+    ./zellij.nix
   ];
 
   nix = {
     package = lib.mkDefault pkgs.nix;
     settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
   };
+
   home.packages = with pkgs; [
     age
     gawk
@@ -76,7 +78,7 @@ in
     addKeysToAgent = "yes";
     matchBlocks = {
       "*" = {
-        identityFile = "${config.home.homeDirectory}/.ssh/id_ed25519";
+        identityFile = "${config.home.homeDirectory}/.ssh/id_surma";
       };
     };
   };
