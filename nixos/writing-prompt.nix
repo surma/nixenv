@@ -33,7 +33,7 @@ in
 
     containers.writing-prompt = rec {
       config = {
-
+        system.stateVersion = "25.05";
         networking.firewall.enable = false;
         environment.systemPackages = [
           writingPrompt
@@ -47,7 +47,8 @@ in
             pkgs.bash
           ];
           script = ''
-            source /env
+            set -a
+            source /data/env
             cd ${writingPrompt}/lib/node_modules/writing
             npm start
           '';
@@ -62,11 +63,6 @@ in
       bindMounts.data = {
         mountPoint = "/data";
         hostPath = "/var/lib/writing-prompt";
-        isReadOnly = false;
-      };
-      bindMounts.env = {
-        mountPoint = "/env";
-        hostPath = "/var/lib/writing-prompt/env";
         isReadOnly = false;
       };
     };

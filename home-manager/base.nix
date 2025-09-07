@@ -78,7 +78,10 @@ in
     addKeysToAgent = "yes";
     matchBlocks = {
       "*" = {
-        identityFile = "${config.home.homeDirectory}/.ssh/id_surma";
+        identityFile = [
+          "${config.home.homeDirectory}/.ssh/id_surma"
+          "${config.home.homeDirectory}/.ssh/id_machine"
+        ];
       };
     };
   };
