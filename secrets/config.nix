@@ -1,4 +1,11 @@
 {
+  keys = {
+    surma = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBjljY7ksA49iEa/okN+JeqBTHUAVZ9Sr9Zu5fWqCt2N";
+    surmbook = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdkAzY2ZCWso0wySLMlcfY7r8C8JC8b4c0NPM3fnhSV";
+    shopisurm = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMK/fhQ4SEVrRem71dZtX0OVqNiZ7f51+XtIC/P30iO";
+    surmrock = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKJrS5BIQrThWaQK/rJSbFm7WGtsF/M6Z37jlYuO72bf";
+    surmedge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRS1TLlaWODfefGUvk0mYZEx6pE6Gr2xhsVGbsn91Uh";
+  };
   secrets = {
     ssh-keys = {
       contents = ../ssh-keys/id_surma.age;
@@ -18,12 +25,13 @@
         "surmrock"
       ];
     };
-  };
-  keys = {
-    surma = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBjljY7ksA49iEa/okN+JeqBTHUAVZ9Sr9Zu5fWqCt2N";
-    surmbook = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdkAzY2ZCWso0wySLMlcfY7r8C8JC8b4c0NPM3fnhSV";
-    shopisurm = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMK/fhQ4SEVrRem71dZtX0OVqNiZ7f51+XtIC/P30iO";
-    surmrock = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKJrS5BIQrThWaQK/rJSbFm7WGtsF/M6Z37jlYuO72bf";
-    surmedge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRS1TLlaWODfefGUvk0mYZEx6pE6Gr2xhsVGbsn91Uh";
+    writing-prompt = {
+      contents = ./writing-prompt.env.age;
+      keys = [
+        "surma"
+        "surmedge"
+        "surmrock"
+      ];
+    };
   };
 }

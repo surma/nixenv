@@ -2,17 +2,16 @@
   pkgs,
   lib,
   config,
+  systemManager,
   ...
 }:
 with lib;
 let
+  inherit (pkgs) writeShellApplication;
   secretsConfig = import ./config.nix;
 
   secretType = types.submodule {
     options = {
-      contents = mkOption {
-        type = types.path;
-      };
       command = mkOption {
         type = types.nullOr types.lines;
         default = null;
@@ -27,6 +26,10 @@ in
 {
   options = {
     secrets = {
+      keys = mkOption {
+        type = types.attrsOf types.str;
+        default = { };
+      };
       identity = mkOption {
         type = types.either types.str types.path;
         default = "~/.ssh/id_machine";
@@ -37,24 +40,54 @@ in
       };
     };
   };
-  config = {
-    home.activation.secrets =
-      let
-        commands =
-          config.secrets.items
-          |> lib.attrsToList
-          |> lib.map (
-            { value, name }:
-            let
-              secret = secretsConfig.secrets.${name};
-              command = if value.command != null then " | (${value.command})" else " > ${value.target}";
-            in
-            ''
-              echo Decrypting ${name}
-              cat ${secret.contents} | ${pkgs.age}/bin/age --decrypt -i ${config.secrets.identity} ${command}
-            ''
-          );
-      in
-      lib.hm.dag.entryAfter [ "write-boundary" ] (commands |> lib.concatLines);
-  };
+  config =
+    let
+      commands =
+        config.secrets.items
+        |> lib.attrsToList
+        |> lib.map (
+          { value, name }:
+          let
+            secret = secretsConfig.secrets.${name};
+            command = if value.command != null then " | (${value.command})" else " > ${value.target}";
+          in
+          ''
+            echo Decrypting ${name}
+            ${pkgs.age}/bin/age --decrypt -i ${config.secrets.identity} < ${secret.contents} ${command} 
+          ''
+        )
+        |> lib.concatLines;
+
+      writeSecrets = writeShellApplication {
+        name = "write-secrets";
+        text = commands;
+        runtimeInputs = [ pkgs.coreutils ];
+      };
+
+      writeTask =
+        if systemManager == "home-manager" then
+          {
+            home.activation.secrets = lib.hm.dag.entryAfter [
+              "write-boundary"
+            ] ''${writeSecrets}/bin/write-secrets'';
+          }
+        else if systemManager == "nixos" then
+          {
+            systemd.services.secrets = {
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = ''${writeSecrets}/bin/write-secrets'';
+                RemainAfterExit = true; # Remain “active” after completion (optional but common for oneshot)
+              };
+              wantedBy = [ "multi-user.target" ];
+            };
+
+          }
+        else
+          throw "Secrets not yet supported on ${systemManager}";
+    in
+    {
+      secrets.keys = secretsConfig.keys;
+    }
+    // writeTask;
 }

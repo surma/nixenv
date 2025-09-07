@@ -14,6 +14,18 @@ def "main recrypt" [] {
   }
 }
 
+def "main encrypt" [
+  --keep-original,
+  file
+] {
+  let out = $"($file).age"
+  open $file | age --encrypt -R ~/.ssh/id_machine.pub -a | save $out
+  if not $keep_original {
+    rm $file
+  }
+  $out
+}
+
 def "main genkey" [] {
   ssh-keygen -f ~/.ssh/id_machine -t ed25519 -N ""
   open ~/.ssh/id_machine.pub

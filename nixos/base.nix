@@ -39,8 +39,8 @@
   users.users.surma = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = [
-      (../ssh-keys/id_surma.pub |> lib.readFile)
+    openssh.authorizedKeys.keys = with config.secrets.keys; [
+      surma
     ];
   };
 }

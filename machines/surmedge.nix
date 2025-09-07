@@ -5,7 +5,6 @@
   inputs,
   ...
 }:
-
 {
   imports = [
     ../home-manager/unfree-apps.nix
@@ -13,6 +12,7 @@
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
     ../nixos/writing-prompt.nix
+    ../secrets
   ];
 
   nix.settings.require-sigs = false;
@@ -29,7 +29,11 @@
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
-  users.users.root.openssh.authorizedKeys.keys = [ (../ssh-keys/id_surma.pub |> lib.readFile) ];
+  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
+    surma
+    surmrock
+    surmbook
+  ];
   home-manager.users.surma =
     {
       config,

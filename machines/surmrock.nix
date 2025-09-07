@@ -12,6 +12,7 @@
     ./surmrock-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
+    ../secrets
   ];
 
   boot.loader.systemd-boot.enable = true;
