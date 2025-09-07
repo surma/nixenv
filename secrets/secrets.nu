@@ -6,9 +6,8 @@ def main [] {
 def "main recrypt" [] {
   let config = (nix eval --impure --json --expr "import ./secrets/config.nix" | from json)
   $config.secrets | values | each {|secret|
-    let contents = (open -r $secret.contents | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma)
     let recepients = ($secret.keys | each {|k| ["-r" ($config.keys | get $k)]} | flatten)
-    let resecret = ($contents | age --encrypt ...$recepients -a)
+    let resecret = (open -r $secret.contents | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma | age --encrypt ...$recepients -a)
     $resecret | save -rf $secret.contents
     $secret.contents
   }
