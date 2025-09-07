@@ -26,7 +26,7 @@
       ];
     };
     writing-prompt = {
-      contents = ./writing-prompt.env.age;
+      contents = ../apps/writing-prompt/env.age;
       keys = [
         "surma"
         "surmedge"

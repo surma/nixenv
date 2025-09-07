@@ -11,8 +11,10 @@
     ./surmedge-hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
-    ../nixos/writing-prompt.nix
+
     ../secrets
+
+    ../apps/writing-prompt
   ];
 
   nix.settings.require-sigs = false;

@@ -3,13 +3,36 @@
   ...
 }:
 let
-  inherit (pkgs) callPackage;
+  inherit (pkgs) callPackage writeShellApplication;
 
-  writingPrompt = callPackage (import ../apps/writing-prompt) { };
+  writingPrompt = callPackage (import ./repo) { };
+
+  writingPromptService = writeShellApplication {
+    name = "write-prompt-service";
+    text = ''
+      set -a
+      # shellcheck source=/dev/null
+      source /data/env
+      cd ${writingPrompt}/lib/node_modules/writing
+      npm start
+    '';
+  };
+  timer = writeShellApplication {
+    name = "timer";
+    runtimeInputs = [
+      pkgs.jwt-cli
+      pkgs.nushell
+    ];
+    text = ''
+      # shellcheck source=/dev/null
+      source /data/env
+      nu ${./trigger.nu}
+    '';
+  };
 in
 {
   imports = [
-    ../secrets
+    ../../secrets
   ];
   config = {
     secrets.identity = "/home/surma/.ssh/id_machine";
@@ -31,28 +54,29 @@ in
     networking.nat.externalInterface = "enp1s0";
     networking.nat.internalInterfaces = [ "ve-*" ];
 
-    containers.writing-prompt = rec {
+    containers.writing-prompt = {
       config = {
         system.stateVersion = "25.05";
         networking.firewall.enable = false;
-        environment.systemPackages = [
-          writingPrompt
-        ];
         systemd.services.writing-prompt = {
           enable = true;
+          script = "${writingPromptService}/bin/writing-prompt-service";
           wantedBy = [ "multi-user.target" ];
-
-          path = [
-            pkgs.nodejs
-            pkgs.bash
-          ];
-          script = ''
-            set -a
-            source /data/env
-            cd ${writingPrompt}/lib/node_modules/writing
-            npm start
-          '';
-          after = [ "multi-user.target" ];
+        };
+        systemd.services.timer = {
+          script = "${timer}/bin/timer";
+          serviceConfig = {
+            Type = "oneshot";
+            User = "root";
+          };
+        };
+        systemd.timers."timer" = {
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnCalendar = "Mon 10:00:00";
+            Persistent = true;
+            Unit = "timer.service";
+          };
         };
       };
       privateNetwork = true;
