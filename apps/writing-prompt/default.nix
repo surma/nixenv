@@ -7,8 +7,12 @@ let
 
   writingPrompt = callPackage (import ./repo) { };
 
-  writingPromptService = writeShellApplication {
-    name = "write-prompt-service";
+  service = writeShellApplication {
+    name = "service";
+    runtimeInputs = [
+      pkgs.nodejs
+      pkgs.bash
+    ];
     text = ''
       set -a
       # shellcheck source=/dev/null
@@ -17,8 +21,8 @@ let
       npm start
     '';
   };
-  timer = writeShellApplication {
-    name = "timer";
+  trigger = writeShellApplication {
+    name = "trigger";
     runtimeInputs = [
       pkgs.jwt-cli
       pkgs.nushell
@@ -60,22 +64,22 @@ in
         networking.firewall.enable = false;
         systemd.services.writing-prompt = {
           enable = true;
-          script = "${writingPromptService}/bin/writing-prompt-service";
+          script = "${service}/bin/service";
           wantedBy = [ "multi-user.target" ];
         };
-        systemd.services.timer = {
-          script = "${timer}/bin/timer";
+        systemd.services.writing-prompt-trigger = {
+          script = "${trigger}/bin/trigger";
           serviceConfig = {
             Type = "oneshot";
             User = "root";
           };
         };
-        systemd.timers."timer" = {
+        systemd.timers.writing-prompt-trigger = {
           wantedBy = [ "timers.target" ];
           timerConfig = {
             OnCalendar = "Mon 10:00:00";
             Persistent = true;
-            Unit = "timer.service";
+            Unit = "writing-prompt-trigger.service";
           };
         };
       };
