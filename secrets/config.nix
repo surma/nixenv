@@ -14,6 +14,7 @@
         "surmbook"
         "surmedge"
         "surmrock"
+        "shopisurm"
       ];
     };
     gpg-keys = {
@@ -23,6 +24,7 @@
         "surmbook"
         "surmedge"
         "surmrock"
+        "shopisurm"
       ];
     };
     writing-prompt = {
