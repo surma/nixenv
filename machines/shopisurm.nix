@@ -76,7 +76,7 @@ in
 
       programs.spotify.enable = true;
       programs.git = {
-        maintenance.enable = true;
+        maintenance.enable = false;
         maintenance.repositories = [
           "${config.home.homeDirectory}/world/git"
         ];
