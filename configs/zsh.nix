@@ -31,6 +31,7 @@ in
       ltt = "eza --tree --git-ignore";
       u = "cd ..";
       lg = "lazygit";
+      dp = "dprint fmt";
     }
     // uuuCommands;
     initContent = ''

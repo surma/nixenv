@@ -6,6 +6,8 @@
 }:
 let
   inherit (pkgs) callPackage;
+
+  not = x: !x;
 in
 {
 
@@ -15,6 +17,8 @@ in
     ./ssh-keys.nix
     ./gpg-keys.nix
     ./zellij.nix
+
+    ../home-manager/nushell
   ];
 
   nix = {
@@ -73,6 +77,19 @@ in
   programs.starship.enable = true;
   programs.gpg.enable = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
+  programs.nushell.enable = true;
+  programs.nushell.aliases =
+    config.programs.zsh.shellAliases
+    |> lib.filterAttrs (
+      name: _:
+      [
+        "cd"
+        "ls"
+      ]
+      |> lib.elem name
+      |> not
+    );
+
   programs.ssh = {
     enable = true;
     forwardAgent = true;
