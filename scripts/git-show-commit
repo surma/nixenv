@@ -1,0 +1,5 @@
+#!/usr/bin/env nu
+
+def main [ref = "HEAD"] {
+	git show '--format=format:%H' --no-patch $ref
+}

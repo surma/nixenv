@@ -55,6 +55,7 @@ in
   customScripts.ghclone.enable = true;
   customScripts.nix-build-pkg.enable = true;
   customScripts.build-nixpkg-pkg.enable = true;
+  customScripts.git-show-commit.enable = true;
 
   programs.home-manager.enable = true;
   programs.bat.enable = true;
@@ -71,7 +72,7 @@ in
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
   programs.gpg.enable = true;
-  programs.zsh = import ../configs/zsh.nix;
+  programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
   programs.ssh = {
     enable = true;
     forwardAgent = true;

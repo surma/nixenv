@@ -19,6 +19,11 @@
     ".npmrc".source = ../configs/npmrc;
   };
 
+  xdg.configFile."lazygit/config.yml".text = ''
+    git:
+      autoFetch: false
+  '';
+
   programs.git = {
     enable = true;
     userName = "Surma";
