@@ -40,9 +40,8 @@ in
     chafa
     yazi
     fzf
-    nushell
-    zoxide
     dprint
+    fd
   ];
 
   home.file = {
