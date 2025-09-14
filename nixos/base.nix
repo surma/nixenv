@@ -6,6 +6,11 @@
   ...
 }:
 {
+
+  imports = [
+    ../secrets
+  ];
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
