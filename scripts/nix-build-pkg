@@ -1,10 +1,9 @@
 #!/usr/bin/env nu
 
-def main [
+def --wrapped main [
 	--nixpkgs: string = "release-25.05"
-	--out: string = "result"
-	file: string = "./default.nix"
+	file: string
+	...args: string
 ] {
-	let pkgs = ($nixpkgs | default "release-25.05")
-	nix-build --out-link $out --expr $"let nixpkgs = builtins.getFlake ''github:nixos/nixpkgs/($nixpkgs)''; pkgs = import nixpkgs {}; in pkgs.callPackage \(import ($file)\) {}"
+	nix-build --expr $"let nixpkgs = builtins.getFlake ''github:nixos/nixpkgs/($nixpkgs)''; pkgs = import nixpkgs {}; in pkgs.callPackage \(import ($file)\) {}" ...$args
 }
