@@ -77,7 +77,7 @@ in
         systemd.timers.writing-prompt-trigger = {
           wantedBy = [ "timers.target" ];
           timerConfig = {
-            OnCalendar = "Mon 10:00:00";
+            OnCalendar = "Fri 10:00:00";
             Persistent = true;
             Unit = "writing-prompt-trigger.service";
           };
