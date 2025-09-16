@@ -52,6 +52,7 @@
         ../home-manager/nixdev.nix
         ../home-manager/javascript.nix
         ../home-manager/dev.nix
+        ../home-manager/godot.nix
       ];
 
       home.stateVersion = "24.05";
