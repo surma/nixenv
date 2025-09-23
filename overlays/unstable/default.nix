@@ -29,5 +29,6 @@ in
     aerospace
     karabiner-elements
     podman-compose
+    nushell
     ;
 }
