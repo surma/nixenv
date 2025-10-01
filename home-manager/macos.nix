@@ -42,8 +42,13 @@
 
     programs.zsh = {
       initContent = ''
-        export PATH=$PATH:/run/current-system/sw/bin
+        export PNPM_HOME="/Users/surma/Library/pnpm"
+        case ":$PATH:" in
+          *":$PNPM_HOME:"*) ;;
+          *) export PATH="$PNPM_HOME:$PATH" ;;
+        esac
       '';
+      # export PATH=$PATH:/run/current-system/sw/bin
     };
   };
 }
