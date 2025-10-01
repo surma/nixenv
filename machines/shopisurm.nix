@@ -13,7 +13,7 @@ in
   system.stateVersion = 5;
 
   nix.extraOptions = ''
-    !include nix.conf.d/dev.conf
+    !include nix.conf.d/shopify.conf
   '';
 
   programs.obs.enable = true;
@@ -93,6 +93,8 @@ in
 
           export NIX_PATH=world=$HOME/world/trees/root/src/.meta/substrate/nix
           export PATH=$HOME/.local/state/nix/profiles/wb/bin:$PATH
+
+          [[ -x $HOME/.local/state/tec/profiles/base/current/global/init ]] && eval "$($HOME/.local/state/tec/profiles/base/current/global/init zsh)"
         '';
       };
       programs.ssh = {
