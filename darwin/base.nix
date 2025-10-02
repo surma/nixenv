@@ -43,6 +43,7 @@
       NSAutomaticDashSubstitutionEnabled = false;
       NSAutomaticPeriodSubstitutionEnabled = false;
       NSAutomaticQuoteSubstitutionEnabled = false;
+      ApplePressAndHoldEnabled = false;
     };
     WindowManager = {
       StandardHideDesktopIcons = true;
