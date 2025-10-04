@@ -14,11 +14,13 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
+  boot.swraid.enable = true;
   boot.initrd.availableKernelModules = [
     "nvme"
     "usbhid"
+    "uas"
   ];
-  boot.initrd.kernelModules = [ ];
+  boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
@@ -34,6 +36,11 @@
       "fmask=0077"
       "dmask=0077"
     ];
+  };
+
+  fileSystems."/dump" = {
+    device = "/dev/disk/by-uuid/f2201068-c6cc-4179-be7f-2aa0b0e8c861";
+    fsType = "ext4";
   };
 
   swapDevices = [
