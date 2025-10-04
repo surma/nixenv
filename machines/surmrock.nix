@@ -38,12 +38,7 @@
 
     serviceName = "jellyfin-container";
     image = "jellyfin/jellyfin";
-    # podman.user = "traefik";
     podman.sdnotify = "healthy";
-    environment = {
-      # HEALTHCHECK_URL = "http://jellyfin.surmcluster.localtest.me/health";
-      HEALTHCHECK_URL = "http://localhost:8096/health";
-    };
     volumes = [
       "/dump/surmcluster/jellyfin:/config"
       "/dump/jellyfin/cache:/cache"
@@ -52,7 +47,6 @@
       "/dump/audiobooks:/media/audiobooks"
       "/dump/lol:/media/lol"
     ];
-    ports = [ "0.0.0.0:8096:8096" ];
     labels = {
       "traefik.enable" = "true";
       "traefik.http.services.jellyfin.loadbalancer.server.port" = "8096";
