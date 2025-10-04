@@ -26,8 +26,6 @@
   networking.hostName = "surmedge";
   networking.networkmanager.enable = true;
 
-  programs.zsh.enable = true;
-
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
@@ -36,6 +34,9 @@
     surmrock
     surmbook
   ];
+
+  secrets.identity = "/home/surma/.ssh/id_machine";
+
   home-manager.users.surma =
     {
       config,
@@ -65,7 +66,6 @@
         home.packages = (
           with pkgs;
           [
-            nftables
           ]
         );
 

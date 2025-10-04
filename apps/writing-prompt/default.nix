@@ -39,7 +39,6 @@ in
     ../../secrets
   ];
   config = {
-    secrets.identity = "/home/surma/.ssh/id_machine";
     secrets.items.writing-prompt.target = "/var/lib/writing-prompt/env";
     services.traefik.dynamicConfigOptions = {
       http = {
