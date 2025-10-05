@@ -15,7 +15,7 @@ let
       set -a
       # shellcheck source=/dev/null
       source ${config.secrets.items.hate.target}
-      ${app}/bin/hate
+      ${app}/bin/hate "$SERVER" "$TOKEN"
     '';
   };
 in
@@ -23,12 +23,13 @@ in
   options = {
     services.hate.enable = mkEnableOption "";
   };
-  config = lib.optionalAttrs (config.services.hate.enable) {
-    secrets.items.hate.target = "/run/secrets/hate/env";
-    systemd.services.hate = {
+  config = {
+    secrets.items.hate.target = "/run/secrets/hate-env";
+    systemd.services.hate = lib.optionalAttrs (config.services.hate.enable) {
       enable = true;
       script = "${service}/bin/service";
       wantedBy = [ "multi-user.target" ];
+      after = [ "secrets.service" ];
     };
   };
 }
