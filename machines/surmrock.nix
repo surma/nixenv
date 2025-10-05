@@ -13,6 +13,8 @@
     ../nixos/base.nix
 
     ../secrets
+
+    ../apps/hate
   ];
 
   nix.settings.require-sigs = false;
@@ -55,6 +57,7 @@
     };
   };
 
+  services.hate.enable = true;
   services.navidrome.enable = true;
   services.navidrome.settings = {
     MusicFolder = "/dump/music";

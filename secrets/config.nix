@@ -45,5 +45,12 @@
         "surmrock"
       ];
     };
+    hate = {
+      contents = ../apps/hate/env.age;
+      keys = [
+        "surma"
+        "surmrock"
+      ];
+    };
   };
 }
