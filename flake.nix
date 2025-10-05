@@ -66,17 +66,13 @@
       };
 
       systemConfigs = {
-        surmpi = loadLinux {
-          system = "aarch64-linux";
-          machine = ./machines/surmpi.nix;
-        };
+        # surmpi = loadLinux {
+        #   system = "aarch64-linux";
+        #   machine = ./machines/surmpi.nix;
+        # };
       };
 
       homeConfigurations = {
-        surmserver = loadHomeManager {
-          system = "aarch64-linux";
-          machine = ./machines/surmserver.nix;
-        };
         generic-aarch64-linux = loadHomeManager {
           system = "aarch64-linux";
           machine = ./machines/generic-linux.nix;
@@ -87,10 +83,6 @@
         generic-android = loadAndroid {
           system = "aarch64-linux";
           machine = ./machines/generic-android.nix;
-        };
-        surmpixel = loadAndroid {
-          system = "aarch64-linux";
-          machine = ./machines/surmpixel.nix;
         };
       };
 
