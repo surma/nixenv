@@ -60,7 +60,10 @@ in
 
       writeSecrets = writeShellApplication {
         name = "write-secrets";
-        text = commands;
+        text = ''
+          mkdir -p /run/secrets
+        ''
+        + commands;
         runtimeInputs = [ pkgs.coreutils ];
       };
 

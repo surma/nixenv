@@ -16,6 +16,7 @@
   ];
 
   nix.settings.require-sigs = false;
+  secrets.identity = "/home/surma/.ssh/id_machine";
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -51,6 +52,45 @@
       "traefik.enable" = "true";
       "traefik.http.services.jellyfin.loadbalancer.server.port" = "8096";
       "traefik.http.routers.jellyfin.rule" = "HostRegexp(`^jellyfin\\.surmcluster`)";
+    };
+  };
+
+  services.navidrome.enable = true;
+  services.navidrome.settings = {
+    MusicFolder = "/dump/music";
+    DataFolder = "/dump/state/navidrome";
+    DefaultDownloadableShare = true;
+    Port = 4533;
+  };
+  services.traefik.dynamicConfigOptions = {
+    http = {
+      routers.music = {
+        rule = "HostRegexp(`^music.surmcluster`)";
+        service = "music";
+      };
+
+      services.music.loadBalancer.servers = [
+        { url = "http://localhost:${builtins.toString config.services.navidrome.settings.Port}"; }
+      ];
+    };
+  };
+
+  secrets.items.aria2-token.target = "/run/secrets/aria2-token";
+  services.aria2.enable = true;
+  services.aria2.rpcSecretFile = config.secrets.items.aria2-token.target;
+  services.lidarr.enable = true;
+  services.lidarr.dataDir = "/dump/state/lidarr";
+  services.lidarr.settings.server.port = 4534;
+  services.traefik.dynamicConfigOptions = {
+    http = {
+      routers.lidarr = {
+        rule = "HostRegexp(`^lidarr.surmcluster`)";
+        service = "lidarr";
+      };
+
+      services.lidarr.loadBalancer.servers = [
+        { url = "http://localhost:${builtins.toString config.services.lidarr.settings.server.port}"; }
+      ];
     };
   };
 
