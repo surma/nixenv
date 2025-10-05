@@ -15,6 +15,9 @@
   ];
 
   boot.swraid.enable = true;
+  boot.swraid.mdadmConf = ''
+    MAILADDR root
+  '';
   boot.initrd.availableKernelModules = [
     "nvme"
     "usbhid"

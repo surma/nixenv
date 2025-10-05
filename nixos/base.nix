@@ -33,6 +33,10 @@
     LC_TIME = "en_GB.UTF-8";
   };
 
+  environment.systemPackages = with pkgs; [
+    nftables
+  ];
+
   programs.nix-ld.enable = true;
   security.rtkit.enable = true;
 

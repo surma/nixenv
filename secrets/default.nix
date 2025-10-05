@@ -49,7 +49,11 @@ in
           { value, name }:
           let
             secret = secretsConfig.secrets.${name};
-            command = if value.command != null then " | (${value.command})" else " > ${value.target}";
+            command =
+              if value.command != null then
+                " | (${value.command})"
+              else
+                " > ${value.target}; chmod 0600 ${value.target}";
           in
           ''
             echo Decrypting ${name}
@@ -60,7 +64,10 @@ in
 
       writeSecrets = writeShellApplication {
         name = "write-secrets";
-        text = commands;
+        text = ''
+          mkdir -p /run/secrets
+        ''
+        + commands;
         runtimeInputs = [ pkgs.coreutils ];
       };
 
