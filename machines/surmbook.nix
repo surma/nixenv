@@ -35,7 +35,6 @@
         ../common/spotify
         ../common/telegram
 
-        ../home-manager/opencode
         ../home-manager/claude-code
         ../home-manager/syncthing
 

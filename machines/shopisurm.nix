@@ -24,6 +24,7 @@ in
     {
       imports = [
         ../common/spotify
+        ../common/telegram
 
         ../home-manager/opencode
         ../home-manager/claude-code
@@ -61,10 +62,9 @@ in
         ]
       );
 
-      programs.opencode.enable = true;
-      defaultConfigs.opencode.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
+      programs.telegram.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.ghclone.enable = true;
