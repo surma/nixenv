@@ -38,13 +38,6 @@
         "surmrock"
       ];
     };
-    aria2-token = {
-      contents = ../lidarr/aria2-token.age;
-      keys = [
-        "surma"
-        "surmrock"
-      ];
-    };
     hate = {
       contents = ../apps/hate/env.age;
       keys = [

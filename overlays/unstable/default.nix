@@ -3,12 +3,12 @@
 }:
 final: prev:
 let
-  # nixpkgs-unstable @ Aug 6, 2025
+  # nixpkgs-unstable @ Oct 6, 2025
   nixpkgs-unstable-rev = {
     owner = "nixos";
     repo = "nixpkgs";
-    rev = "cab778239e705082fe97bb4990e0d24c50924c04";
-    hash = "sha256-lgmUyVQL9tSnvvIvBp7x1euhkkCho7n3TMzgjdvgPoU=";
+    rev = "d7f52a7a640bc54c7bb414cca603835bf8dd4b10";
+    hash = "sha256-krgZxGAIIIKFJS+UB0l8do3sYUDWJc75M72tepmVMzE=";
   };
   pkgs-unstable = import (fetchFromGitHub nixpkgs-unstable-rev) { inherit system; };
 
@@ -30,5 +30,7 @@ in
     karabiner-elements
     podman-compose
     nushell
+    prowlarr
+    lidarr
     ;
 }
