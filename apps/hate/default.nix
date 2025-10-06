@@ -30,6 +30,10 @@ in
       script = "${service}/bin/service";
       wantedBy = [ "multi-user.target" ];
       after = [ "secrets.service" ];
+      serviceConfig = {
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
     };
   };
 }
