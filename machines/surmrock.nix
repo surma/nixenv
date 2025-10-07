@@ -15,44 +15,7 @@
     ../secrets
 
     ../apps/hate
-    (
-      {
-        config,
-        lib,
-        ...
-      }:
-      with lib;
-      let
-        cfg = config.services.traefik.quickExpose;
-      in
-      {
-        options = {
-          services.traefik.quickExpose = mkOption {
-            type = types.attrsOf types.int;
-            default = { };
-          };
-        };
-        config = {
-          services.traefik.dynamicConfigOptions.http =
-            cfg
-            |> lib.attrsToList
-            |> map (
-              { name, value }:
-              {
-                routers.${name} = {
-                  rule = "HostRegexp(`^${name}.surmcluster`)";
-                  service = name;
-                };
-
-                services.${name}.loadBalancer.servers = [
-                  { url = "http://localhost:${builtins.toString value}"; }
-                ];
-              }
-            )
-            |> lib.fold (a: b: lib.recursiveUpdate a b) { };
-        };
-      }
-    )
+    ../apps/traefik.nix
   ];
 
   nix.settings.require-sigs = false;
@@ -76,7 +39,6 @@
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
-
     serviceName = "jellyfin-container";
     image = "jellyfin/jellyfin";
     podman.sdnotify = "healthy";
@@ -103,7 +65,7 @@
     DefaultDownloadableShare = true;
     Port = 4533;
   };
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     music = config.services.navidrome.settings.Port;
   };
 
@@ -118,7 +80,7 @@
   services.lidarr.user = "arr";
   services.lidarr.dataDir = "/dump/state/lidarr";
   services.lidarr.settings.server.port = 4534;
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     lidarr = config.services.lidarr.settings.server.port;
   };
 
@@ -126,7 +88,7 @@
   services.radarr.user = "arr";
   services.radarr.dataDir = "/dump/state/radarr";
   services.radarr.settings.server.port = 4535;
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     radarr = config.services.radarr.settings.server.port;
   };
 
@@ -134,13 +96,13 @@
   services.sonarr.user = "arr";
   services.sonarr.dataDir = "/dump/state/sonarr";
   services.sonarr.settings.server.port = 4536;
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     sonarr = config.services.sonarr.settings.server.port;
   };
 
   services.prowlarr.enable = true;
   services.prowlarr.settings.server.port = 4537;
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     prowlarr = config.services.prowlarr.settings.server.port;
   };
 
@@ -148,7 +110,7 @@
   services.qbittorrent.user = "arr";
   services.qbittorrent.webuiPort = 4538;
   services.qbittorrent.profileDir = "/dump/state/qbittorrent";
-  services.traefik.quickExpose = {
+  services.surmhosting.portExpose = {
     torrent = config.services.qbittorrent.webuiPort;
   };
 
@@ -191,43 +153,10 @@
       };
     };
 
-  services.traefik = {
-    enable = true;
-    group = "podman";
-    staticConfigOptions = {
-      api = {
-        dashboard = true;
-      };
-      providers.docker = { };
-      entryPoints = {
-        web.address = ":80";
-        #   websecure = {
-        #     address = ":443";
-        #     asDefault = true;
-        #     http.tls.certResolver = "letsencrypt";
-        #   };
-      };
-      #   certificatesResolvers.letsencrypt.acme = {
-      #     email = "surma@surma.dev";
-      #     storage = "/var/lib/traefik/acme.json";
-      #     httpChallenge.entryPoint = "web";
-      #   };
-    };
-    dynamicConfigOptions = {
-      http.routers.api = {
-        service = "api@internal";
-        entryPoints = [ "web" ];
-        rule = "HostRegexp(`^dashboard\\.surmcluster`)";
-      };
-    };
-  };
+  services.surmhosting.enable = true;
+  services.surmhosting.dashboard.enable = true;
 
   networking.firewall.enable = false;
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-    dockerSocket.enable = true;
-  };
 
   services.openssh.enable = true;
 
