@@ -1,8 +1,10 @@
 #!/usr/bin/env nu
 def --wrapped main [
   --branch: string = "nixpkgs-unstable",
+  --out: string
   pkg: string
   ...args: string
 ] {
-  nix build $"github:nixos/nixpkgs/($branch)#($pkg)" ...$args
+  let $outlink = $out | default $pkg
+  nix build --out-link $outlink $"github:nixos/nixpkgs/($branch)#($pkg)" ...$args
 }
