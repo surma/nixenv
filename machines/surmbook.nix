@@ -71,9 +71,7 @@
           ollama
           qbittorrent
           jupyter
-          tmpmemstore
           amber
-          badage
         ]
       );
 
