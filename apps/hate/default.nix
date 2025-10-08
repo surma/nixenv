@@ -31,7 +31,7 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "secrets.service" ];
       serviceConfig = {
-        Restart = "on-failure";
+        Restart = "always";
         RestartSec = 5;
       };
     };
