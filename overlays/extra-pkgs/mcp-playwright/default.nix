@@ -20,8 +20,11 @@ let
 
     dontNpmBuild = true;
     inherit src nodejs;
-    # npmDepsHash = "";
-    npmDeps = importNpmLock { npmRoot = src; };
+    npmDeps = importNpmLock {
+      npmRoot = src;
+    };
+
+    npmConfigHook = importNpmLock.npmConfigHook;
   };
 in
 writeShellScriptBin "mcp-playwright" ''
