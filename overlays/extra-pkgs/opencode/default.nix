@@ -4,7 +4,7 @@
   ...
 }:
 let
-  version = "0.1.166";
+  version = "0.14.6";
 
   opencodeMeta = {
     "x86_64-linux" = {

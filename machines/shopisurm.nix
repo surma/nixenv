@@ -62,6 +62,8 @@ in
         ]
       );
 
+      programs.opencode.enable = true;
+      defaultConfigs.opencode.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
       programs.telegram.enable = true;
