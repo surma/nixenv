@@ -4,10 +4,30 @@
   lib,
   ...
 }:
+with lib;
 let
   inherit (config.programs) opencode;
 
-  mcpServerType = import ../../lib/module-types/mcp-server.nix lib;
+  mcpServerDefinition = {
+    options = {
+      type = mkOption {
+        type = types.enum [ "local" ];
+      };
+      command = mkOption {
+        type =
+          with types;
+          oneOf [
+            str
+            (listOf str)
+          ];
+        apply = (s: if builtins.isString s then [ s ] else s);
+      };
+      environment = mkOption {
+        type = with types; attrsOf str;
+        default = { };
+      };
+    };
+  };
 
   baseConfig = {
     "$schema" = "https://opencode.ai/config.json";
@@ -37,7 +57,7 @@ with lib;
         default = { };
       };
       mcps = mkOption {
-        type = types.attrsOf mcpServerType;
+        type = types.attrsOf (types.submodule mcpServerDefinition);
         default = { };
       };
     };
