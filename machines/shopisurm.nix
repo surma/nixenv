@@ -63,6 +63,18 @@ in
       );
 
       programs.opencode.enable = true;
+      programs.opencode.extraConfig = {
+        provider.shopify = {
+          npm = "@ai-sdk/openai-compatible";
+          options.baseURL = "https://proxy-shopify-ai.local.shop.dev/v1/";
+          name = "Shopify AI Proxy";
+          models = {
+            "anthropic:claude-sonnet-4-5" = {
+              name = "Claude Sonnet 4.5";
+            };
+          };
+        };
+      };
       defaultConfigs.opencode.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
