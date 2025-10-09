@@ -40,7 +40,7 @@ in
   };
   config = {
 
-    virtualisation.podman = lib.optionalAttrs (cfg.enable) {
+    virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
       dockerCompat = true;
       dockerSocket.enable = true;

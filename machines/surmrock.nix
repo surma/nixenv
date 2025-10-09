@@ -17,7 +17,6 @@
     ../apps/hate
     ../apps/traefik.nix
   ];
-
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
 
@@ -28,6 +27,7 @@
 
   networking.hostName = "surmrock";
   networking.networkmanager.enable = true;
+  services.tailscale.enable = true;
 
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
@@ -36,6 +36,10 @@
     surma
     surmbook
   ];
+
+  services.surmhosting.enable = true;
+  services.surmhosting.dashboard.enable = true;
+  services.surmhosting.docker.enable = true;
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
@@ -152,9 +156,6 @@
         defaultConfigs.claude-code.enable = true;
       };
     };
-
-  services.surmhosting.enable = true;
-  services.surmhosting.dashboard.enable = true;
 
   networking.firewall.enable = false;
 
