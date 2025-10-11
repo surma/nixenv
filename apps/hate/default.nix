@@ -24,7 +24,7 @@ in
     services.hate.enable = mkEnableOption "";
   };
   config = {
-    secrets.items.hate.target = "/run/secrets/hate-env";
+    secrets.items.hate.target = "/var/lib/hate/hate-env";
     systemd.services.hate = lib.optionalAttrs (config.services.hate.enable) {
       enable = true;
       script = "${service}/bin/service";

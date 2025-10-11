@@ -49,14 +49,16 @@ in
           { value, name }:
           let
             secret = secretsConfig.secrets.${name};
-            command =
-              if value.command != null then
-                " | (${value.command})"
-              else
-                " > ${value.target}; chmod 0600 ${value.target}";
+            command = if value.command != null then " | (${value.command})" else " > ${value.target}";
+            prelude = lib.optionalString (value.target != null) ''
+              mkdir -p ${value.target |> builtins.dirOf}
+              touch ${value.target}
+              chmod 0600 ${value.target}
+            '';
           in
           ''
             echo Decrypting ${name}
+            ${prelude}
             ${pkgs.age}/bin/age --decrypt -i ${config.secrets.identity} < ${secret.contents} ${command} 
           ''
         )
