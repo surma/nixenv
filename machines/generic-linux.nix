@@ -3,6 +3,7 @@
   imports = [
 
     ../home-manager/base.nix
+    ../home-manager/dev.nix
     ../home-manager/linux.nix
   ];
   home.packages = (with pkgs; [ ]);
