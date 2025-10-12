@@ -77,6 +77,10 @@
           system = "aarch64-linux";
           machine = ./machines/generic-linux.nix;
         };
+        surmturntable = loadHomeManager {
+          system = "aarch64-linux";
+          machine = ./machines/surmturntable.nix;
+        };
       };
 
       nixOnDroidConfigurations = {

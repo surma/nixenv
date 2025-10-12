@@ -5,6 +5,10 @@
   ...
 }:
 {
+  imports = [
+    ./nixdev.nix
+  ];
+
   home.packages = with pkgs; [
     git
     gitui
