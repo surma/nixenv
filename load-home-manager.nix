@@ -1,7 +1,7 @@
 { inputs, ... }:
 { system, machine }:
 let
-  inherit (inputs) home-manager;
+  inherit (inputs) home-manager nixpkgs;
 
   pkgs = nixpkgs.legacyPackages.${system};
 in
