@@ -4,7 +4,6 @@
 
     ../home-manager/base.nix
     ../home-manager/linux.nix
-    ../home-manager/workstation.nix
   ];
   home.packages = (with pkgs; [ ]);
 

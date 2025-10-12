@@ -8,6 +8,12 @@ let
 in
 {
 
+  imports = [
+    ./ssh-keys.nix
+    ./gpg-keys.nix
+
+  ];
+
   home.sessionVariables = {
     RUSTUP_HOME = "${config.home.homeDirectory}/.rustup";
     CARGO_HOME = "${config.home.homeDirectory}/.cargo";

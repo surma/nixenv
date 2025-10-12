@@ -14,8 +14,6 @@ in
   imports = [
     ../scripts
     ../secrets
-    ./ssh-keys.nix
-    ./gpg-keys.nix
     ./zellij.nix
 
     ../home-manager/nushell
