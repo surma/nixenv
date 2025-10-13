@@ -1,0 +1,31 @@
+#!/usr/bin/env nu
+
+def parse_audio_device_listing [] {
+	lines |
+		skip 1 |
+		chunks 3 |
+		each {|c|
+			$c |
+			str join " " |
+			parse -r 'card\s+(?<card>[0-9]+):\s*(?<name>[^,]+), device\s+(?<device>[0-9]+):(?:.|\n)+Subdevice\s+#(?<subdevice>[0-9]+)'
+		} |
+		flatten |
+		str trim
+}
+
+echo ====
+id
+groups
+echo ====
+
+let input = arecord -l | parse_audio_device_listing | first
+let output = aplay -l | parse_audio_device_listing  | where name =~ AudioQuest | first
+
+print $input
+print $output
+
+amixer -c $output.card set PCM 100%
+amixer -c $input.card set Mic 100%
+# ecasound  -B:rtlowlatency -b:512 -f:s16_le,2,48000 $"-i:alsahw,($input.card),($input.device),($input.subdevice)" -f:s16_le,2,48000 $"-o:alsahw,($output.card),($output.device),($output.subdevice)"
+
+ecasound -B:rtlowlatency -b:512 -f:s16_le,2,48000 -i:alsahw,3,0 -f:s16_le,2,48000 -o:alsahw,0,0
