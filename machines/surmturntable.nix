@@ -18,10 +18,19 @@ let
     name = "respot";
     runtimeInputs = with pkgs; [
       librespot
-      zsh
     ];
     text = ''
       librespot -b 320 -n SurmTurntable -R 100
+    '';
+  };
+
+  shairportService = writeShellApplication {
+    name = "shairport";
+    runtimeInputs = with pkgs; [
+      shairport-sync
+    ];
+    text = ''
+      shairport-sync -a SurmTurntable
     '';
   };
 in
@@ -58,6 +67,18 @@ in
       Type = "simple";
       ExecStart = ''
         ${respotService}/bin/respot
+      '';
+    };
+  };
+
+  systemd.user.services.shairport = {
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = ''
+        ${shairportService}/bin/shairport
       '';
     };
   };
