@@ -32,5 +32,6 @@ in
     nushell
     prowlarr
     lidarr
+    librespot
     ;
 }
