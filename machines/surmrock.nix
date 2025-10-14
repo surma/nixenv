@@ -118,6 +118,9 @@
     torrent = config.services.qbittorrent.webuiPort;
   };
 
+  services.vsftpd.enable = true;
+  services.vsftpd.localUsers = true;
+
   home-manager.users.surma =
     {
       config,
