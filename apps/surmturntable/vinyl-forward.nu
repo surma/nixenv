@@ -20,4 +20,4 @@ print {input: $input, output: $output}
 
 amixer -c $output.card set PCM 100%
 amixer -c $input.card set Mic 100%
-ecasound  -B:rtlowlatency -b:512 -f:s16_le,2,48000 $"-i:alsahw,($input.card),($input.device),($input.subdevice)" -f:s16_le,2,48000 $"-o:alsahw,($output.card),($output.device),($output.subdevice)"
+ecasound  -B:rtlowlatency -b:512 -f:s16_le,2,48000 $"-i:alsahw,($input.card),($input.device),($input.subdevice)" -f:s16_le,2,48000 -o:alsa,plug:dmix

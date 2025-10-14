@@ -46,10 +46,10 @@
         extra-pkgs = import ./overlays/extra-pkgs { inherit inputs; };
       };
 
-      loadHomeManager = import ./load-home-manager.nix { inherit inputs; };
-      loadLinux = import ./load-linux.nix { inherit inputs; };
+      loadHomeManager = import ./load-home-manager.nix { inherit inputs overlays; };
+      loadLinux = import ./load-linux.nix { inherit inputs overlays; };
       loadDarwin = import ./load-darwin.nix { inherit inputs overlays; };
-      loadAndroid = import ./load-android.nix { inherit inputs; };
+      loadAndroid = import ./load-android.nix { inherit inputs overlays; };
       loadNixos = import ./load-nixos.nix { inherit inputs overlays; };
     in
     {

@@ -13,6 +13,17 @@ let
       nu ${../apps/surmturntable/vinyl-forward.nu}
     '';
   };
+
+  respotService = writeShellApplication {
+    name = "respot";
+    runtimeInputs = with pkgs; [
+      librespot
+      zsh
+    ];
+    text = ''
+      librespot -b 320 -n SurmTurntable -R 100
+    '';
+  };
 in
 {
   imports = [
@@ -36,6 +47,18 @@ in
       Environment = [
         "TERM=xterm"
       ];
+    };
+  };
+
+  systemd.user.services.respot = {
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = ''
+        ${respotService}/bin/respot
+      '';
     };
   };
 
