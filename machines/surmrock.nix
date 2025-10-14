@@ -41,6 +41,13 @@
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 
+  services.mosquitto.enable = true;
+  services.mosquitto.listeners = [
+    {
+      users.ha.hashedPassword = "$7$101$7KOip01uJDP71vA0$y9vhvHE/pxka3/eQiP+Fs4EVjaXCJ4gwChMtFxiCH/jTDricu5MW3BjMx3XTyo2vXAVgUd/QHKuwoejw8h1OuQ==";
+    }
+  ];
+
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
     serviceName = "jellyfin-container";

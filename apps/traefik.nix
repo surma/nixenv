@@ -47,7 +47,6 @@ in
     };
   };
   config = {
-
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
       dockerCompat = true;
