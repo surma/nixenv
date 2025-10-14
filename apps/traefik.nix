@@ -30,6 +30,14 @@ in
     services.surmhosting = {
       enable = mkEnableOption "";
       tls.enable = mkEnableOption "";
+      tls.email = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+      };
+      tls.acmeFile = mkOption {
+        type = types.str;
+        default = "/var/lib/traefik/acme.json";
+      };
       dashboard.enable = mkEnableOption "";
       docker.enable = mkEnableOption "";
       portExpose = mkOption {
@@ -66,8 +74,8 @@ in
         });
         certificatesResolvers.letsencrypt = lib.optionalAttrs cfg.tls.enable {
           acme = {
-            email = "surma@surma.dev";
-            storage = "/var/lib/traefik/acme.json";
+            email = cfg.tls.email;
+            storage = cfg.tls.acmeFile;
             httpChallenge.entryPoint = "web";
           };
         };

@@ -15,6 +15,7 @@
     ../secrets
 
     ../apps/writing-prompt
+    ../apps/traefik.nix
   ];
 
   nix.settings.require-sigs = false;
@@ -56,6 +57,7 @@
         # ../home-manager/cloud.nix
 
         ../home-manager/unfree-apps.nix
+
       ];
 
       config = {
@@ -72,11 +74,16 @@
         home.stateVersion = "25.05";
 
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmedge";
-
-        programs.claude-code.enable = true;
-        defaultConfigs.claude-code.enable = true;
       };
     };
+
+  services.surmhosting.enable = true;
+  services.surmhosting.dashboard.enable = false;
+  services.surmhosting.tls.enable = true;
+  services.surmhosting.tls.email = "surma@surma.dev";
+  services.surmhosting.docker.enable = true;
+
+  virtualisation.oci-containers.backend = "podman";
 
   virtualisation.podman = {
     enable = true;
@@ -85,34 +92,6 @@
   };
 
   services.traefik = {
-    enable = true;
-    group = "podman";
-    staticConfigOptions = {
-      api = {
-        dashboard = false;
-      };
-      providers.docker = { };
-      entryPoints = {
-        web.address = ":80";
-        websecure = {
-          address = ":443";
-          asDefault = true;
-          http.tls.certResolver = "letsencrypt";
-        };
-      };
-      certificatesResolvers.letsencrypt.acme = {
-        email = "surma@surma.dev";
-        storage = "/var/lib/traefik/acme.json";
-        httpChallenge.entryPoint = "web";
-      };
-    };
-    dynamicConfigOptions = {
-      http.routers.api = {
-        service = "api@internal";
-        entryPoints = [ "web" ];
-        rule = "HostRegexp(`^dashboard\\.surmcluster`)";
-      };
-    };
   };
 
   networking.firewall.enable = true;
