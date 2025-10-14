@@ -36,6 +36,7 @@
         ../common/telegram
 
         ../home-manager/claude-code
+        ../home-manager/opencode
         ../home-manager/syncthing
 
         ../home-manager/unfree-apps.nix
@@ -79,6 +80,8 @@
       programs.telegram.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;
+      programs.opencode.enable = true;
+      defaultConfigs.opencode.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.ghclone.enable = true;

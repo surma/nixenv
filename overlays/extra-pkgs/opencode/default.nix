@@ -4,7 +4,7 @@
   ...
 }:
 let
-  version = "0.14.6";
+  version = "0.15.1";
 
   opencodeMeta = {
     "x86_64-linux" = {
@@ -13,7 +13,7 @@ let
     };
     "aarch64-darwin" = {
       platform = "darwin-arm64";
-      hash = "sha256:0whiz26dviymjxqrz37clnm3giijvy9mnm0qjqzyi7ppxzxhw2ag";
+      hash = "sha256:1avh01zbrzzd6fvca7jliiadbjjy26yzr91khv8hzfn2bsas8rr1";
     };
   };
 
