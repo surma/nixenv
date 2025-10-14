@@ -91,7 +91,17 @@
     dockerSocket.enable = true;
   };
 
-  services.traefik = {
+  services.traefik.dynamicConfigOptions = {
+    http = {
+      routers.music = {
+        rule = "Host(`music.surma.technology`)";
+        service = "music";
+      };
+
+      services.music.loadBalancer.servers = [
+        { url = "http://music.surmcluster.100.80.204.111.nip.io"; }
+      ];
+    };
   };
 
   networking.firewall.enable = true;
