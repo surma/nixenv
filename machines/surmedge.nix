@@ -108,13 +108,24 @@
         rule = "Host(`music.surma.technology`)";
         service = "music";
       };
+      services.music.loadBalancer = {
+        servers = [
+          {
+            url = "http://music.surmcluster.100.80.204.111.nip.io";
+          }
+        ];
+        passHostHeader = false;
+      };
 
-      services.music.loadBalancer.servers = [
+      routers.ha = {
+        rule = "Host(`ha.surma.technology`)";
+        service = "ha";
+      };
+      services.ha.loadBalancer.servers = [
         {
-          url = "http://music.surmcluster.100.80.204.111.nip.io";
+          url = "http://100.97.65.42:8123";
         }
       ];
-      services.music.loadBalancer.passHostHeader = false;
     };
   };
 
