@@ -91,6 +91,17 @@
     dockerSocket.enable = true;
   };
 
+  services.traefik.staticConfigOptions.tracing = {
+    serviceName = "traefik-edge";
+    sampleRate = 1.0;
+    otlp = {
+      http = {
+        endpoint = "http://100.80.204.111:4318/v1/traces";
+      };
+    };
+
+  };
+
   services.traefik.dynamicConfigOptions = {
     http = {
       routers.music = {
@@ -99,11 +110,15 @@
       };
 
       services.music.loadBalancer.servers = [
-        { url = "http://music.surmcluster.100.80.204.111.nip.io"; }
+        {
+          url = "http://music.surmcluster.100.80.204.111.nip.io";
+        }
       ];
+      services.music.loadBalancer.passHostHeader = false;
     };
   };
 
+  services.tailscale.enable = true;
   networking.firewall.enable = true;
   networking.firewall.allowedTCPPorts = [
     22

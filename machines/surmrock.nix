@@ -47,6 +47,8 @@
       users.ha.hashedPassword = "$7$101$7KOip01uJDP71vA0$y9vhvHE/pxka3/eQiP+Fs4EVjaXCJ4gwChMtFxiCH/jTDricu5MW3BjMx3XTyo2vXAVgUd/QHKuwoejw8h1OuQ==";
     }
   ];
+  services.mosquitto.dataDir = "/dump/state/mosquitto";
+  services.mosquitto.persistence = false;
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
@@ -65,6 +67,30 @@
       "traefik.enable" = "true";
       "traefik.http.services.jellyfin.loadbalancer.server.port" = "8096";
       "traefik.http.routers.jellyfin.rule" = "HostRegexp(`^jellyfin\\.surmcluster`)";
+    };
+  };
+
+  virtualisation.oci-containers.containers.jaeger = {
+    serviceName = "jaeger-container";
+    image = "cr.jaegertracing.io/jaegertracing/jaeger:2.11.0";
+    ports = [
+      "4318:4318"
+    ];
+    labels = {
+      "traefik.enable" = "true";
+      "traefik.http.services.jaeger.loadbalancer.server.port" = "16686";
+      "traefik.http.routers.jaeger.rule" = "HostRegexp(`^jaeger\\.surmcluster`)";
+    };
+  };
+  networking.firewall.allowedTCPPorts = [ 4318 ];
+
+  services.traefik.staticConfigOptions.tracing = {
+    serviceName = "traefik-rock";
+    sampleRate = 1.0;
+    otlp = {
+      http = {
+        endpoint = "http://localhost:4318/v1/traces";
+      };
     };
   };
 
