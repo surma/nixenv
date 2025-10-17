@@ -16,6 +16,68 @@
 
     ../apps/writing-prompt
     ../apps/traefik.nix
+    (
+      { pkgs, ... }:
+      let
+        inherit (pkgs) writeShellApplication;
+        port = 4900;
+        service = writeShellApplication {
+          name = "service";
+          runtimeInputs = with pkgs; [
+            traefik-forward-auth
+          ];
+          text = ''
+            set -a
+            # shellcheck source=/dev/null
+            # source /data/env
+            traefik-forward-auth \
+              --default-provider=generic-oauth \
+              --providers.generic-oauth.client-id=Ov23liTpbIqiJ6BQARoW \
+              --providers.generic-oauth.client-secret=f896355e0ddb980394d682c54161e7a3e87ca3fb \
+              --providers.generic-oauth.auth-url=https://github.com/login/oauth/authorize \
+              --providers.generic-oauth.token-url=https://github.com/login/oauth/access_token \
+              --providers.generic-oauth.user-url=https://api.github.com/user \
+              --auth-host=auth.surmedge.hosts.surma.link \
+              --port=${port |> builtins.toString} \
+              --insecure-cookie \
+              --secret=test123
+          '';
+        };
+      in
+      {
+        config = {
+          systemd.services.traefik-forward-auth = {
+            enable = true;
+            script = "${service}/bin/service";
+            wantedBy = [ "default.target" ];
+          };
+
+          # services.surmhosting.portExpose = {
+          #   auth = port;
+          # };
+          services.traefik.dynamicConfigOptions = {
+            http = {
+              routers.auth = {
+                rule = "HostRegexp(`^auth.surmedge.hosts`)";
+                service = "auth";
+              };
+              services.auth.loadBalancer = {
+                servers = [
+                  {
+                    url = "http://localhost:${port |> builtins.toString}";
+                  }
+                ];
+              };
+              middlewares.auth.forwardauth = {
+                address = "http://localhost:${port |> builtins.toString}";
+                trustForwardHeader = true;
+                authResponseHeaders = [ "X-Forwarded-User" ];
+              };
+            };
+          };
+        };
+      }
+    )
   ];
 
   nix.settings.require-sigs = false;
@@ -108,6 +170,11 @@
       routers.music = {
         rule = "Host(`music.surma.technology`)";
         service = "music";
+      };
+      routers.music2 = {
+        rule = "HostRegexp(`^music.surmedge.hosts`)";
+        service = "music";
+        middlewares = [ "auth" ];
       };
       services.music.loadBalancer = {
         servers = [
