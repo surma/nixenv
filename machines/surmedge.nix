@@ -78,6 +78,7 @@
     };
 
   services.surmhosting.enable = true;
+  services.surmhosting.hostname = "surmedge";
   services.surmhosting.dashboard.enable = false;
   services.surmhosting.tls.enable = true;
   services.surmhosting.tls.email = "surma@surma.dev";
@@ -111,7 +112,7 @@
       services.music.loadBalancer = {
         servers = [
           {
-            url = "http://music.surmcluster.100.80.204.111.nip.io";
+            url = "http://music.surmrock.hosts.100.80.204.111.nip.io";
           }
         ];
         passHostHeader = false;

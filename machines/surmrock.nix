@@ -38,6 +38,7 @@
   ];
 
   services.surmhosting.enable = true;
+  services.surmhosting.hostname = "surmrock";
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 

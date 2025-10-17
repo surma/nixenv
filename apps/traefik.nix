@@ -14,7 +14,7 @@ let
       { name, value }:
       {
         routers.${name} = {
-          rule = "HostRegexp(`^${name}.surmcluster`)";
+          rule = "HostRegexp(`^${name}.${cfg.hostname}.hosts`)";
           service = name;
         };
 
@@ -40,6 +40,9 @@ in
       };
       dashboard.enable = mkEnableOption "";
       docker.enable = mkEnableOption "";
+      hostname = mkOption {
+        type = types.str;
+      };
       portExpose = mkOption {
         type = types.attrsOf types.int;
         default = { };

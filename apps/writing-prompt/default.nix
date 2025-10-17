@@ -9,9 +9,9 @@ let
 
   service = writeShellApplication {
     name = "service";
-    runtimeInputs = [
-      pkgs.nodejs
-      pkgs.bash
+    runtimeInputs = with pkgs; [
+      nodejs
+      bash
     ];
     text = ''
       set -a
@@ -23,9 +23,9 @@ let
   };
   trigger = writeShellApplication {
     name = "trigger";
-    runtimeInputs = [
-      pkgs.jwt-cli
-      pkgs.nushell
+    runtimeInputs = with pkgs; [
+      jwt-cli
+      nushell
     ];
     text = ''
       # shellcheck source=/dev/null
