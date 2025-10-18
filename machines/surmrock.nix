@@ -16,6 +16,7 @@
 
     ../apps/hate
     ../apps/traefik.nix
+    ../apps/music
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -96,17 +97,6 @@
   };
 
   services.hate.enable = true;
-  services.navidrome.enable = true;
-  services.navidrome.settings = {
-    MusicFolder = "/dump/music";
-    DataFolder = "/dump/state/navidrome";
-    DefaultDownloadableShare = true;
-    Port = 4533;
-  };
-  services.surmhosting.portExpose = {
-    music = config.services.navidrome.settings.Port;
-  };
-
   users.users.arr = {
     createHome = false;
     group = "arr";
