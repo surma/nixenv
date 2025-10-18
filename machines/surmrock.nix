@@ -17,6 +17,7 @@
     ../apps/hate
     ../apps/traefik.nix
     ../apps/music
+    ../apps/torrent
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -132,14 +133,6 @@
   services.prowlarr.settings.server.port = 4537;
   services.surmhosting.portExpose = {
     prowlarr = config.services.prowlarr.settings.server.port;
-  };
-
-  services.qbittorrent.enable = true;
-  services.qbittorrent.user = "arr";
-  services.qbittorrent.webuiPort = 4538;
-  services.qbittorrent.profileDir = "/dump/state/qbittorrent";
-  services.surmhosting.portExpose = {
-    torrent = config.services.qbittorrent.webuiPort;
   };
 
   services.vsftpd.enable = true;
