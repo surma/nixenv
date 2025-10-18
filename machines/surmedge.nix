@@ -21,6 +21,7 @@
       let
         inherit (pkgs) writeShellApplication;
         port = 4900;
+        authCookieName = "_forwardAuth";
         service = writeShellApplication {
           name = "service";
           runtimeInputs = with pkgs; [
@@ -31,6 +32,7 @@
             # shellcheck source=/dev/null
             # source /data/env
             traefik-forward-auth \
+              --port=${port |> builtins.toString} \
               --default-provider=generic-oauth \
               --providers.generic-oauth.client-id=Ov23liTpbIqiJ6BQARoW \
               --providers.generic-oauth.client-secret=f896355e0ddb980394d682c54161e7a3e87ca3fb \
@@ -38,8 +40,8 @@
               --providers.generic-oauth.token-url=https://github.com/login/oauth/access_token \
               --providers.generic-oauth.user-url=https://api.github.com/user \
               --auth-host=auth.surmedge.hosts.surma.link \
-              --port=${port |> builtins.toString} \
-              --insecure-cookie \
+              --cookie-domain=surmedge.hosts.surma.link \
+              --cookie-name=${authCookieName} \
               --secret=test123
           '';
         };
@@ -72,6 +74,7 @@
                 address = "http://localhost:${port |> builtins.toString}";
                 trustForwardHeader = true;
                 authResponseHeaders = [ "X-Forwarded-User" ];
+                addAuthCookiesToResponse = [authCookieName];
               };
             };
           };
