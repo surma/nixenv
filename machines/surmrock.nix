@@ -18,6 +18,7 @@
     ../apps/traefik.nix
     ../apps/music
     ../apps/torrent
+    ../apps/lidarr
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -104,14 +105,6 @@
     isSystemUser = true;
   };
   users.groups.arr = { };
-
-  services.lidarr.enable = true;
-  services.lidarr.user = "arr";
-  services.lidarr.dataDir = "/dump/state/lidarr";
-  services.lidarr.settings.server.port = 4534;
-  services.surmhosting.portExpose = {
-    lidarr = config.services.lidarr.settings.server.port;
-  };
 
   services.radarr.enable = true;
   services.radarr.user = "arr";
