@@ -146,7 +146,7 @@
     }:
     {
       imports = [
-        ../home-manager/claude-code
+        ../home-manager/opencode
 
         ../home-manager/base.nix
         ../home-manager/dev.nix
@@ -172,8 +172,8 @@
 
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmrock";
 
-        programs.claude-code.enable = true;
-        defaultConfigs.claude-code.enable = true;
+        programs.opencode.enable = true;
+        defaultConfigs.opencode.enable = true;
       };
     };
 

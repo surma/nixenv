@@ -11,6 +11,10 @@ let
       platform = "linux-x64";
       hash = "";
     };
+    "aarch64-linux" = {
+      platform = "linux-arm64";
+      hash = "sha256:0b7f9hzcrj4fmvrfiijnh83mghqi5pyvp4mhb7gkmxkhmynny43y";
+    };
     "aarch64-darwin" = {
       platform = "darwin-arm64";
       hash = "sha256:1avh01zbrzzd6fvca7jliiadbjjy26yzr91khv8hzfn2bsas8rr1";
@@ -30,7 +34,12 @@ stdenv.mkDerivation {
   inherit version src;
 
   installPhase = ''
-    mkdir -p $out/bin
-    cp -r . $out/
+    runHook preInstall
+
+    mkdir $out
+    cp -r ./. $out/
+
+    runHook postInstall
   '';
+  dontFixup = true;
 }

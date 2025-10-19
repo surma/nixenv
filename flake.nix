@@ -116,15 +116,16 @@
               overlays.extra-pkgs
             ];
           };
-          inherit (pkgs) callPackage;
         in
         {
-          jupyterDeno = callPackage ./overlays/extra-pkgs/jupyter { };
-          opencode = callPackage ./overlays/extra-pkgs/opencode { };
-          claude = callPackage ./overlays/extra-pkgs/claude-code { };
-          fetch-mcp = callPackage ./overlays/extra-pkgs/fetch-mcp { };
-          browser-mcp = callPackage ./overlays/extra-pkgs/browser-mcp { };
-          nixenv = callPackage ./overlays/extra-pkgs/nixenv { };
+          inherit (pkgs)
+            jupyterDeno
+            opencode
+            claude
+            fetch-mcp
+            browser-mcp
+            nixenv
+            ;
         };
       apps = {
         default = apps.nixenv;
