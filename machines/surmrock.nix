@@ -19,6 +19,9 @@
     ../apps/music
     ../apps/torrent
     ../apps/lidarr
+    ../apps/prowlarr
+    ../apps/sonarr
+    ../apps/radarr
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -105,28 +108,6 @@
     isSystemUser = true;
   };
   users.groups.arr = { };
-
-  services.radarr.enable = true;
-  services.radarr.user = "arr";
-  services.radarr.dataDir = "/dump/state/radarr";
-  services.radarr.settings.server.port = 4535;
-  services.surmhosting.portExpose = {
-    radarr = config.services.radarr.settings.server.port;
-  };
-
-  services.sonarr.enable = true;
-  services.sonarr.user = "arr";
-  services.sonarr.dataDir = "/dump/state/sonarr";
-  services.sonarr.settings.server.port = 4536;
-  services.surmhosting.portExpose = {
-    sonarr = config.services.sonarr.settings.server.port;
-  };
-
-  services.prowlarr.enable = true;
-  services.prowlarr.settings.server.port = 4537;
-  services.surmhosting.portExpose = {
-    prowlarr = config.services.prowlarr.settings.server.port;
-  };
 
   services.vsftpd.enable = true;
   services.vsftpd.localUsers = true;
