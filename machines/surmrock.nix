@@ -41,6 +41,7 @@
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "surmrock";
+  services.surmhosting.externalInterface = "enP4p65s0";
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 
@@ -85,7 +86,6 @@
       "traefik.http.routers.jaeger.rule" = "HostRegexp(`^jaeger\\.surmcluster`)";
     };
   };
-  networking.firewall.allowedTCPPorts = [ 4318 ];
 
   services.traefik.staticConfigOptions.tracing = {
     serviceName = "traefik-rock";

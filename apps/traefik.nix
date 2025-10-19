@@ -29,6 +29,9 @@ in
   options = {
     services.surmhosting = {
       enable = mkEnableOption "";
+      externalInterface = mkOption {
+        type = types.str;
+      };
       tls.enable = mkEnableOption "";
       tls.email = mkOption {
         type = types.nullOr types.str;
@@ -49,14 +52,18 @@ in
       };
     };
   };
-  config = {
+  config = mkIf cfg.enable {
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
       dockerCompat = true;
       dockerSocket.enable = true;
     };
 
-    services.traefik = lib.optionalAttrs (cfg.enable) {
+    networking.nat.enable = true;
+    networking.nat.externalInterface = cfg.externalInterface;
+    networking.nat.internalInterfaces = [ "ve-+" ];
+
+    services.traefik = {
       enable = true;
       group = "podman";
       staticConfigOptions = {

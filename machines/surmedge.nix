@@ -78,6 +78,8 @@
     };
 
   services.surmhosting.enable = true;
+  services.surmhosting.externalInterface = "enp1s0";
+
   services.surmhosting.hostname = "surmedge";
   services.surmhosting.dashboard.enable = false;
   services.surmhosting.tls.enable = true;

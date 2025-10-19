@@ -53,10 +53,6 @@ in
       };
     };
 
-    networking.nat.enable = true;
-    networking.nat.externalInterface = "enp1s0";
-    networking.nat.internalInterfaces = [ "ve-*" ];
-
     containers.writing-prompt = {
       config = {
         system.stateVersion = "25.05";

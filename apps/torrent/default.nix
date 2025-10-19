@@ -24,9 +24,8 @@ in
       };
     };
 
-    networking.nat.enable = true;
-    networking.nat.externalInterface = "enp1s0";
-    networking.nat.internalInterfaces = [ "ve-*" ];
+    networking.firewall.allowedTCPPorts = [ torrentingPort ];
+    networking.firewall.allowedUDPPorts = [ torrentingPort ];
 
     containers.${name} = {
       config = {
@@ -55,6 +54,11 @@ in
           containerPort = torrentingPort;
           hostPort = torrentingPort;
           protocol = "tcp";
+        }
+        {
+          containerPort = torrentingPort;
+          hostPort = torrentingPort;
+          protocol = "udp";
         }
       ];
 
