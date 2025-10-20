@@ -1,0 +1,18 @@
+[
+  "anthropic:claude-haiku-4-5"
+  "anthropic:claude-opus-4-1"
+  "anthropic:claude-sonnet-4-5"
+  "google:gemini-2.5-flash"
+  "google:gemini-2.5-flash-lite"
+  "google:gemini-2.5-pro"
+  "openai:gpt-4.1"
+  "openai:gpt-4.1-mini"
+  "openai:gpt-4.1-nano"
+  "openai:gpt-4o"
+  "openai:gpt-4o-mini"
+  "openai:gpt-5"
+  "openai:gpt-5-mini"
+  "openai:gpt-5-nano"
+  "openai:o1"
+  "openai:o3-mini"
+]

@@ -6,9 +6,12 @@
 }:
 let
   isEnabled = config.defaultConfigs.opencode.enable;
+
+  models = import ../../overlays/extra-pkgs/opencode/models.nix;
 in
 with lib;
 {
+
   imports = [
     ../mcp-nixos.nix
     ../mcp-playwright.nix
@@ -24,19 +27,23 @@ with lib;
     programs.mcp-playwright.enable = mkIf isEnabled true;
     programs.opencode = {
       extraConfig = {
-        # provider = {
-        #   litellm = {
-        #     models = {
-        #       "shopify:anthropic:claude-sonnet-4" = { };
-        #       "shopify:google:gemini-2.5-pro-preview-05-06" = { };
-        #     };
-        #     npm = "@ai-sdk/openai-compatible";
-        #     options = {
-        #       baseURL = "http://litellm.surmcluster.10.0.0.2.nip.io";
-        #     };
-        #   };
-        # };
-
+        provider = {
+          shopify = {
+            name = "Shopify";
+            npm = "@ai-sdk/openai-compatible";
+            options = {
+              apiKey = "{env:SHOPIFY_API_KEY}";
+              baseURL = "https://proxy.shopify.ai/v1";
+            };
+            models =
+              models
+              |> map (name: {
+                inherit name;
+                value = { inherit name; };
+              })
+              |> lib.listToAttrs;
+          };
+        };
       };
       mcps = {
         mcp-nixos = {
