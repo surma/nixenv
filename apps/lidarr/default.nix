@@ -13,7 +13,7 @@ in
     services.traefik.dynamicConfigOptions = {
       http = {
         routers.${name} = {
-          rule = "HostRegexp(`^${name}\.surmrock\.hosts\.`)";
+          rule = "HostRegexp(`^${name}\\.surmrock\\.hosts\\.`)";
           service = name;
         };
 
@@ -25,6 +25,7 @@ in
 
     containers.${name} = {
       config = {
+        nixpkgs.pkgs = pkgs;
         system.stateVersion = "25.05";
         users.users.containeruser = {
           inherit uid;

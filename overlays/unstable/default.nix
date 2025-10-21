@@ -32,6 +32,8 @@ in
     nushell
     prowlarr
     lidarr
+    sonarr
+    radarr
     librespot
     ;
 }
