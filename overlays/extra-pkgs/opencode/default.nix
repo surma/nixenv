@@ -9,7 +9,7 @@ let
   opencodeMeta = {
     "x86_64-linux" = {
       platform = "linux-x64";
-      hash = "";
+      hash = "sha256:1p5abcdsl147b40vibglvy3n16y67j36a6p7rppfsm09j0qifv1r";
     };
     "aarch64-linux" = {
       platform = "linux-arm64";
