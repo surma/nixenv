@@ -1,45 +1,48 @@
 {
-  system,
   stdenv,
+  lib,
+  runCommand,
+  curl,
+  cacert,
   ...
 }:
 let
   version = "0.15.1";
+  hash = "sha256-miPXZZSp5N+HT6+jWcFkE8MXjEPVBkwRN11hYet9kC4=";
 
-  opencodeMeta = {
-    "x86_64-linux" = {
-      platform = "linux-x64";
-      hash = "sha256:1p5abcdsl147b40vibglvy3n16y67j36a6p7rppfsm09j0qifv1r";
-    };
-    "aarch64-linux" = {
-      platform = "linux-arm64";
-      hash = "sha256:0b7f9hzcrj4fmvrfiijnh83mghqi5pyvp4mhb7gkmxkhmynny43y";
-    };
-    "aarch64-darwin" = {
-      platform = "darwin-arm64";
-      hash = "sha256:1avh01zbrzzd6fvca7jliiadbjjy26yzr91khv8hzfn2bsas8rr1";
-    };
+  platforms = {
+    "x86_64-linux" = "linux-x64";
+    "aarch64-linux" = "linux-arm64";
+    "aarch64-darwin" = "darwin-arm64";
   };
 
-  meta = opencodeMeta.${system};
+  urls =
+    platforms
+    |> lib.attrsToList
+    |> map (
+      { name, value }:
+      ''
+        mkdir -p "$out/${name}"
+        curl "https://registry.npmjs.org/opencode-${value}/-/opencode-${value}-${version}.tgz" | tar -xzf - -C "$out/${name}"
+      ''
+    );
 
-  src = fetchTarball {
-    url = "https://registry.npmjs.org/opencode-${meta.platform}/-/opencode-${meta.platform}-${version}.tgz";
-    sha256 = meta.hash;
-  };
+  srcs =
+    runCommand "opencode-binaries"
+      {
+        nativeBuildInputs = [
+          curl
+          cacert
+        ];
+        outputHash = hash;
+        outputHashAlgo = "sha256";
+        outputHashMode = "recursive";
+      }
+      ''
+        ${urls |> lib.concatLines}
+      '';
 in
-
-stdenv.mkDerivation {
-  pname = "opencode";
-  inherit version src;
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir $out
-    cp -r ./. $out/
-
-    runHook postInstall
-  '';
-  dontFixup = true;
-}
+runCommand "opencode" { } ''
+  mkdir -p $out/bin
+  ln -sf ${srcs}/${stdenv.system}/package/bin/opencode $out/bin/opencode
+''
