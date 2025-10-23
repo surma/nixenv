@@ -103,6 +103,10 @@
           system = "aarch64-linux";
           machine = ./machines/surmedge.nix;
         };
+        testcontainer = loadNixos {
+          system = "aarch64-linux";
+          machine = ./machines/testcontainer.nix;
+        };
       };
 
     }

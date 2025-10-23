@@ -7,19 +7,38 @@ with lib;
 let
   cfg = config.services.surmhosting;
 
-  portExposeConfig =
-    cfg.portExpose
+  targetConfig = {
+    options = {
+      rule = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+      };
+      target = mkOption {
+        type = types.either types.int types.str;
+      };
+    };
+  };
+
+  serverExposeConfig =
+    cfg.serverExpose
     |> lib.attrsToList
     |> map (
       { name, value }:
+      let
+        url =
+          if builtins.typeOf value.target == "int" then
+            "http://localhost:${value.target |> builtins.toString}"
+          else
+            value.target;
+      in
       {
         routers.${name} = {
-          rule = "HostRegexp(`^${name}.${cfg.hostname}.hosts`)";
+          rule = if value.rule == null then "HostRegexp(`^${name}.${cfg.hostname}`)" else value.rule;
           service = name;
         };
 
         services.${name}.loadBalancer.servers = [
-          { url = "http://localhost:${builtins.toString value}"; }
+          { inherit url; }
         ];
       }
     )
@@ -46,8 +65,8 @@ in
       hostname = mkOption {
         type = types.str;
       };
-      portExpose = mkOption {
-        type = types.attrsOf types.int;
+      serverExpose = mkOption {
+        type = types.attrsOf (types.submodule targetConfig);
         default = { };
       };
     };
@@ -65,7 +84,7 @@ in
 
     services.traefik = {
       enable = true;
-      group = "podman";
+      group = mkIf (cfg.docker.enable) "podman";
       staticConfigOptions = {
         api = {
           dashboard = cfg.dashboard.enable;
@@ -98,7 +117,8 @@ in
               rule = "HostRegexp(`^dashboard\\.surmcluster`)";
             };
           }
-          |> lib.recursiveUpdate portExposeConfig;
+          # TODO: MkMerge???
+          |> lib.recursiveUpdate serverExposeConfig;
       };
     };
   };
