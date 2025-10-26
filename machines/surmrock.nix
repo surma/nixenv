@@ -61,14 +61,19 @@
   services.mosquitto.dataDir = "/dump/state/mosquitto";
   services.mosquitto.persistence = false;
 
+  environment.systemPackages = with pkgs; [
+    smartmontools
+    e2fsprogs
+  ];
+
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
     serviceName = "jellyfin-container";
     image = "jellyfin/jellyfin";
     podman.sdnotify = "healthy";
     volumes = [
-      "/dump/surmcluster/jellyfin:/config"
-      "/dump/jellyfin/cache:/cache"
+      "/dump/state/jellyfin/config:/config"
+      "/dump/state/jellyfin/cache:/cache"
       "/dump/TV:/media/TV"
       "/dump/Movies:/media/Movies"
       "/dump/audiobooks:/media/audiobooks"
