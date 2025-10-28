@@ -35,5 +35,6 @@ in
     sonarr
     radarr
     librespot
+    yt-dlp
     ;
 }
