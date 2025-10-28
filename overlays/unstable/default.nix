@@ -7,8 +7,8 @@ let
   nixpkgs-unstable-rev = {
     owner = "nixos";
     repo = "nixpkgs";
-    rev = "d7f52a7a640bc54c7bb414cca603835bf8dd4b10";
-    hash = "sha256-krgZxGAIIIKFJS+UB0l8do3sYUDWJc75M72tepmVMzE=";
+    rev = "e52bb03cd8997f19c106f94602ecd503784883b0";
+    hash = "sha256-0gpUKn1cW7S6kp4b0d9zdXth4JJHGFV6cnsQ9Lo3PyY=";
   };
   pkgs-unstable = import (fetchFromGitHub nixpkgs-unstable-rev) { inherit system; };
 
