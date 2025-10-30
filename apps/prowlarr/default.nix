@@ -32,6 +32,7 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
 
         services.prowlarr.enable = true;
         services.prowlarr.settings.server.port = port;

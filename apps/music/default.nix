@@ -31,6 +31,8 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
+
         services.navidrome.enable = true;
         services.navidrome.user = "containeruser";
         services.navidrome.settings = {

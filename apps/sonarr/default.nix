@@ -32,6 +32,7 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
 
         services.sonarr.enable = true;
         services.sonarr.user = "containeruser";

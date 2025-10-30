@@ -32,6 +32,7 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
 
         services.radarr.enable = true;
         services.radarr.user = "containeruser";

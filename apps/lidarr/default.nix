@@ -32,6 +32,7 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
 
         services.lidarr.enable = true;
         services.lidarr.user = "containeruser";

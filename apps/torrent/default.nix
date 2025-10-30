@@ -35,6 +35,7 @@ in
           isNormalUser = true;
         };
         networking.firewall.enable = false;
+        networking.useHostResolvConf = true;
 
         services.qbittorrent.enable = true;
         services.qbittorrent.user = "containeruser";
