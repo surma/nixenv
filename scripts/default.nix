@@ -9,8 +9,8 @@ let
   inherit (pkgs)
     nushell
     stdenv
-    makeDesktopItem
     symlinkJoin
+    callPackage
     ;
 
   src = ./.;
@@ -32,7 +32,10 @@ in
       );
   };
   config = {
-    home.packages =
+    home.packages = [
+      (callPackage (import ./flacsplit) { })
+    ]
+    ++ (
       scripts
       |> lib.attrsToList
       |> lib.filter ({ name, ... }: config.customScripts.${name}.enable)
@@ -64,6 +67,7 @@ in
           inherit name;
           paths = [ script ] ++ lib.optional config.customScripts.${name}.asDesktopItem desktopItem;
         }
-      );
+      )
+    );
   };
 }
