@@ -14,14 +14,14 @@
 
     ../secrets
 
-    ../apps/hate
-    ../apps/traefik.nix
-    ../apps/music
-    ../apps/torrent
-    ../apps/lidarr
-    ../apps/prowlarr
-    ../apps/sonarr
-    ../apps/radarr
+    # ../apps/hate
+    # ../apps/traefik.nix
+    # ../apps/music
+    # ../apps/torrent
+    # ../apps/lidarr
+    # ../apps/prowlarr
+    # ../apps/sonarr
+    # ../apps/radarr
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -148,7 +148,7 @@
 
         home.stateVersion = "25.05";
 
-        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmrock";
+        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#nexus";
 
         programs.opencode.enable = true;
         defaultConfigs.opencode.enable = true;

@@ -85,7 +85,7 @@
           };
 
           homeConfigurations = {
-            generic-aarch64-linux = loadHomeManager {
+            generic-linux = loadHomeManager {
               inherit system;
               machine = ./machines/generic-linux.nix;
             };

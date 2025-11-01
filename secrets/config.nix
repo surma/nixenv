@@ -17,6 +17,7 @@
         "surmbook"
         "surmedge"
         "surmrock"
+        "nexus"
         "shopisurm"
         "surmframework"
         "surmturntable"
@@ -27,6 +28,7 @@
       keys = [
         "surma"
         "surmbook"
+        "nexus"
         "surmedge"
         "surmrock"
         "shopisurm"
