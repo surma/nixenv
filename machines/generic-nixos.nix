@@ -7,6 +7,7 @@
 }:
 {
   imports = [
+    /etc/nixos/hardware-configuration.nix
     ../home-manager/unfree-apps.nix
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
@@ -29,10 +30,7 @@
     surmbook
   ];
 
-  environment.systemPackages = with pkgs; [
-    helix
-    zeiilj
-  ];
+  environment.systemPackages = with pkgs; [ ];
 
   home-manager.users.surma =
     {

@@ -115,6 +115,10 @@
               inherit system;
               machine = ./machines/surmrock.nix;
             };
+            nexus = loadNixos {
+              inherit system;
+              machine = ./machines/nexus.nix;
+            };
             surmedge = loadNixos {
               inherit system;
               machine = ./machines/surmedge.nix;
