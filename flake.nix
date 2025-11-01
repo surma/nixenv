@@ -52,95 +52,87 @@
       loadAndroid = import ./load-android.nix { inherit inputs overlays; };
       loadNixos = import ./load-nixos.nix { inherit inputs overlays; };
     in
-    {
-      inherit overlays;
-      darwinConfigurations = {
-        surmbook = loadDarwin {
-          system = "aarch64-darwin";
-          machine = ./machines/surmbook.nix;
+    flake-utils.lib.eachSystem flake-utils.lib.defaultSystems (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            overlays.unstable
+            overlays.extra-pkgs
+          ];
         };
-        shopisurm = loadDarwin {
-          system = "aarch64-darwin";
-          machine = ./machines/shopisurm.nix;
-        };
-      };
-
-      systemConfigs = {
-        # surmpi = loadLinux {
-        #   system = "aarch64-linux";
-        #   machine = ./machines/surmpi.nix;
-        # };
-      };
-
-      homeConfigurations = {
-        generic-aarch64-linux = loadHomeManager {
-          system = "aarch64-linux";
-          machine = ./machines/generic-linux.nix;
-        };
-        surmturntable = loadHomeManager {
-          system = "aarch64-linux";
-          machine = ./machines/surmturntable.nix;
-        };
-      };
-
-      nixOnDroidConfigurations = {
-        generic-android = loadAndroid {
-          system = "aarch64-linux";
-          machine = ./machines/generic-android.nix;
-        };
-      };
-
-      nixosConfigurations = {
-        surmframework = loadNixos {
-          system = "x86_64-linux";
-          machine = ./machines/surmframework.nix;
-        };
-        surmrock = loadNixos {
-          system = "aarch64-linux";
-          machine = ./machines/surmrock.nix;
-        };
-        surmedge = loadNixos {
-          system = "aarch64-linux";
-          machine = ./machines/surmedge.nix;
-        };
-        testcontainer = loadNixos {
-          system = "aarch64-linux";
-          machine = ./machines/testcontainer.nix;
-        };
-      };
-
-    }
-    // (flake-utils.lib.eachDefaultSystem (system: rec {
-      packages =
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays = [
-              overlays.unstable
-              overlays.extra-pkgs
-            ];
+      in
+      rec {
+        inherit overlays;
+        packages = {
+          darwinConfigurations = {
+            surmbook = loadDarwin {
+              inherit system;
+              machine = ./machines/surmbook.nix;
+            };
+            shopisurm = loadDarwin {
+              inherit system;
+              machine = ./machines/shopisurm.nix;
+            };
           };
-        in
-        {
-          inherit (pkgs)
-            jupyterDeno
-            opencode
-            claude
-            fetch-mcp
-            browser-mcp
-            nixenv
-            ;
+
+          systemConfigs = {
+            # surmpi = loadLinux {
+            #   system = "aarch64-linux";
+            #   machine = ./machines/surmpi.nix;
+            # };
+          };
+
+          homeConfigurations = {
+            generic-aarch64-linux = loadHomeManager {
+              inherit system;
+              machine = ./machines/generic-linux.nix;
+            };
+            surmturntable = loadHomeManager {
+              inherit system;
+              machine = ./machines/surmturntable.nix;
+            };
+          };
+
+          nixOnDroidConfigurations = {
+            generic-android = loadAndroid {
+              inherit system;
+              machine = ./machines/generic-android.nix;
+            };
+          };
+
+          nixosConfigurations = {
+            surmframework = loadNixos {
+              inherit system;
+              machine = ./machines/surmframework.nix;
+            };
+            surmrock = loadNixos {
+              inherit system;
+              machine = ./machines/surmrock.nix;
+            };
+            surmedge = loadNixos {
+              inherit system;
+              machine = ./machines/surmedge.nix;
+            };
+            testcontainer = loadNixos {
+              inherit system;
+              machine = ./machines/testcontainer.nix;
+            };
+          };
         };
-      apps = {
-        default = apps.nixenv;
-        nixenv = {
-          type = "app";
-          program = "${packages.nixenv}/bin/nixenv";
+
+        apps = {
+          default = apps.nixenv;
+          nixenv = {
+            type = "app";
+            program = "${packages.nixenv}/bin/nixenv";
+          };
+          jupyterDeno = {
+            type = "app";
+            program = "${packages.jupyterDeno}/bin/jupyter-start";
+          };
         };
-        jupyterDeno = {
-          type = "app";
-          program = "${packages.jupyterDeno}/bin/jupyter-start";
-        };
-      };
-    }));
+      }
+    );
 }
