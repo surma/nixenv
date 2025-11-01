@@ -35,6 +35,8 @@
 
   environment.systemPackages = with pkgs; [
     nftables
+    helix
+    zeiilj
   ];
 
   programs.nix-ld.enable = true;

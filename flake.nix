@@ -103,6 +103,10 @@
           };
 
           nixosConfigurations = {
+            generic-nixos = loadNixos {
+              inherit system;
+              machine = ./machines/generic-nixos.nix;
+            };
             surmframework = loadNixos {
               inherit system;
               machine = ./machines/surmframework.nix;
