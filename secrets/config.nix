@@ -41,14 +41,14 @@
       keys = [
         "surma"
         "surmedge"
-        "surmrock"
+        "nexus"
       ];
     };
     hate = {
       contents = ../apps/hate/env.age;
       keys = [
         "surma"
-        "surmrock"
+        "nexus"
       ];
     };
   };
