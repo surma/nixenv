@@ -13,7 +13,7 @@ in
     services.traefik.dynamicConfigOptions = {
       http = {
         routers.music = {
-          rule = "HostRegexp(`^music\.surmrock\.hosts\.`)";
+          rule = "HostRegexp(`^music\.nexus\.hosts\.`)";
           service = "music";
         };
 
