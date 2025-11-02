@@ -99,7 +99,7 @@
     sampleRate = 1.0;
     otlp = {
       http = {
-        endpoint = "http://100.80.204.111:4318/v1/traces";
+        endpoint = "http://100.83.198.90:4318/v1/traces";
       };
     };
 
@@ -114,7 +114,7 @@
       services.music.loadBalancer = {
         servers = [
           {
-            url = "http://music.surmrock.hosts.100.80.204.111.nip.io";
+            url = "http://music.nexus.hosts.100.83.198.90.nip.io";
           }
         ];
         passHostHeader = false;
