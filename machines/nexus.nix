@@ -44,7 +44,7 @@
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
-  services.surmhosting.externalInterface = "enP4p65s0";
+  services.surmhosting.externalInterface = "enp2s0";
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 

@@ -37,6 +37,7 @@
     nftables
     helix
     zellij
+    nushell
   ];
 
   programs.nix-ld.enable = true;
