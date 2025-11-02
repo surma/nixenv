@@ -82,7 +82,7 @@
       "traefik.enable" = "true";
       "traefik.http.services.jellyfin.loadbalancer.server.port" = "8096";
       "traefik.http.routers.jellyfin.rule" =
-        "HostRegexp(`^jellyfin\\.surmcluster`) || HostRegexp(`^jellyfin\\.surmrock\\.hosts`)";
+        "HostRegexp(`^jellyfin\\.surmcluster`) || HostRegexp(`^jellyfin\\.nexus\\.hosts`)";
     };
   };
 
@@ -95,7 +95,8 @@
     labels = {
       "traefik.enable" = "true";
       "traefik.http.services.jaeger.loadbalancer.server.port" = "16686";
-      "traefik.http.routers.jaeger.rule" = "HostRegexp(`^jaeger\\.surmcluster`)";
+      "traefik.http.routers.jaeger.rule" =
+        "HostRegexp(`^jaeger\\.surmcluster`) || HostRegexp(`^jaeger\\.nexus\\.hosts`)";
     };
   };
 
