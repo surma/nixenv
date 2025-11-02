@@ -28,6 +28,10 @@
     "sdhci_pci"
   ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
+  # For some reason, the first LVM group gets activated successfully.
+  # The second group does not and requires this manual command
+  # so that booting can succeed.
+  boot.initrd.postDeviceCommands = "lvm vgchange -ay raid";
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
