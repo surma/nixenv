@@ -8,6 +8,7 @@
   imports = [
     ../home-manager/unfree-apps.nix
     ./nexus-hardware.nix
+    inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
     ../nixos/base.nix
 
