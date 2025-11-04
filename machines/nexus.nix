@@ -43,6 +43,17 @@
     surmbook
   ];
 
+  services.syncthing.enable = true;
+  services.syncthing.user = "surma";
+  services.syncthing.dataDir = "/dump/state/syncthing/data";
+  services.syncthing.configDir = "/dump/state/syncthing/config";
+  services.syncthing.databaseDir = "/dump/state/syncthing/db";
+  services.syncthing.settings.folders."audiobooks".path = "/dump/audiobooks";
+  services.syncthing.settings.folders."scratch".path = "/dump/scratch";
+  services.syncthing.settings.folders."ebooks".path = "/dump/ebooks";
+  services.syncthing.guiAddress = "0.0.0.0:4538";
+  services.surmhosting.serverExpose.syncthing.target = 4538;
+
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
   services.surmhosting.externalInterface = "enp2s0";
