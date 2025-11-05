@@ -51,5 +51,12 @@
         "nexus"
       ];
     };
+    nexus-syncthing = {
+      contents = ../machines/nexus/syncthing/key.pem.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

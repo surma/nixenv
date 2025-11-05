@@ -117,7 +117,7 @@
             };
             nexus = loadNixos {
               inherit system;
-              machine = ./machines/nexus.nix;
+              machine = ./machines/nexus;
             };
             surmedge = loadNixos {
               inherit system;

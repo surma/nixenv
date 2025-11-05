@@ -6,22 +6,23 @@
 }:
 {
   imports = [
-    ../home-manager/unfree-apps.nix
-    ./nexus-hardware.nix
+    ./hardware.nix
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
-    ../nixos/base.nix
+    ../../nixos/base.nix
 
-    ../secrets
+    ../../secrets
 
-    ../apps/hate
-    ../apps/traefik.nix
-    ../apps/music
-    ../apps/torrent
-    ../apps/lidarr
-    ../apps/prowlarr
-    ../apps/sonarr
-    ../apps/radarr
+    ../../apps/hate
+    ../../apps/traefik.nix
+    ../../apps/music
+    ../../apps/torrent
+    ../../apps/lidarr
+    ../../apps/prowlarr
+    ../../apps/sonarr
+    ../../apps/radarr
+
+    ../../home-manager/unfree-apps.nix
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";
@@ -43,11 +44,14 @@
     surmbook
   ];
 
+  secrets.items.nexus-syncthing.target = "/var/lib/syncthing/key.pem";
   services.syncthing.enable = true;
   services.syncthing.user = "surma";
   services.syncthing.dataDir = "/dump/state/syncthing/data";
   services.syncthing.configDir = "/dump/state/syncthing/config";
   services.syncthing.databaseDir = "/dump/state/syncthing/db";
+  services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
+  services.syncthing.key = config.secrets.items.nexus-syncthing.target;
   services.syncthing.settings.folders."audiobooks".path = "/dump/audiobooks";
   services.syncthing.settings.folders."scratch".path = "/dump/scratch";
   services.syncthing.settings.folders."ebooks".path = "/dump/ebooks";
@@ -136,15 +140,15 @@
     }:
     {
       imports = [
-        ../home-manager/opencode
+        ../../home-manager/opencode
 
-        ../home-manager/base.nix
-        ../home-manager/dev.nix
-        ../home-manager/nixdev.nix
-        ../home-manager/linux.nix
-        ../home-manager/workstation.nix
+        ../../home-manager/base.nix
+        ../../home-manager/dev.nix
+        ../../home-manager/nixdev.nix
+        ../../home-manager/linux.nix
+        ../../home-manager/workstation.nix
 
-        ../home-manager/unfree-apps.nix
+        ../../home-manager/unfree-apps.nix
       ];
 
       config = {
