@@ -7,6 +7,58 @@ with lib;
 let
   cfg = config.services.surmhosting;
 
+  exposedAppsConfig =
+    cfg.exposedApps
+    |> lib.attrsToList
+    |> map (
+      # i:
+      { name, value }:
+      { config, ... }:
+      let
+        i = 0;
+        isBasicForward = (value.target |> lib.attrByPath [ "port" ] null |> builtins.typeOf) == "int";
+        isContainer = !isBasicForward;
+
+        forwardPort = value.target |> lib.attrByPath [ "port" ] 8080;
+        forwardHost = value.target |> lib.attrByPath [ "host" ] "localhost";
+
+        url =
+          if isContainer then
+            "http://10.200.${i}.2:${port}"
+          else
+            "http://${forwardHost}:${forwardPort}" |> lib.traceVal;
+      in
+      {
+        services.traefik.dynamicConfigOptions.http = {
+          routers.${name} = {
+            rule =
+              if value.rule == null then
+                "HostRegexp(`^${name}.${config.services.surmhosting.hostname}`)"
+              else
+                value.rule;
+            service = name;
+          };
+
+          services.${name}.loadBalancer.servers = [
+            { inherit url; }
+          ];
+        };
+
+        containers."lab-container-${name}" = mkIf isContainer (
+          lib.optionalAttrs isContainer {
+            config = value.target.config;
+
+            privateNetwork = true;
+            localAddress = "10.200.${i}.2";
+            hostAddress = "10.200.${i}.1";
+            ephemeral = true;
+            autoStart = true;
+          }
+        );
+      }
+    )
+    |> lib.fold (a: b: lib.recursiveUpdate a b) { };
+
   targetConfig = {
     options = {
       rule = mkOption {
@@ -14,41 +66,10 @@ let
         default = null;
       };
       target = mkOption {
-        type = types.either types.anything types.str;
+        type = types.anything;
       };
     };
   };
-
-  serverExposeConfig =
-    cfg.serverExpose
-    |> lib.attrsToList
-    |> map (
-      { name, value }:
-      let
-        isContainer = builtins.typeOf value.target != "string";
-        url =
-          if isContainer then
-            ""
-          else
-            value.target;
-      in
-      {services.traefik.dynamicConfigOptions.http = {
-        routers.${name} = {
-          rule = if value.rule == null then "HostRegexp(`^${name}.${cfg.hostname}`)" else value.rule;
-          service = name;
-        };
-
-        services.${name}.loadBalancer.servers = [
-          { inherit url; }
-        ];
-      };
-
-        containers."lab-container-${name}" = mkIf isContainer {
-          config = value.target;
-        };
-      }
-    )
-    |> lib.fold (a: b: lib.recursiveUpdate a b) { };
 in
 {
   options = {
@@ -71,12 +92,13 @@ in
       hostname = mkOption {
         type = types.str;
       };
-      serverExpose = mkOption {
+      exposedApps = mkOption {
         type = types.attrsOf (types.submodule targetConfig);
         default = { };
       };
     };
   };
+  imports = exposedAppsConfig;
   config = mkIf cfg.enable {
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
@@ -88,8 +110,7 @@ in
     networking.nat.externalInterface = cfg.externalInterface;
     networking.nat.internalInterfaces = [ "ve-+" ];
 
-    services.traefik = mkMerge [
-      {
+    services.traefik = {
       enable = true;
       group = mkIf (cfg.docker.enable) "podman";
       staticConfigOptions = {
@@ -116,19 +137,15 @@ in
         };
       };
       dynamicConfigOptions = {
-        http =
-          {
-            routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
-              service = "api@internal";
-              entryPoints = [ "web" ];
-              rule = "HostRegexp(`^dashboard\\.surmcluster`)";
-            };
+        http = {
+          routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
+            service = "api@internal";
+            entryPoints = [ "web" ];
+            rule = "HostRegexp(`^dashboard\\.surmcluster`)";
           };
-          # TODO: MkMerge???
-          # |> lib.recursiveUpdate serverExposeConfig;
+        };
       };
-    }
-    serverExposeConfig
-    ];
+    };
   };
+  # |> lib.recursiveUpdate exposedAppsConfig);
 }

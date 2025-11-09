@@ -27,12 +27,24 @@
 
     ../../nixos/shopify-cloudflare-warp.nix
     ../../nixos/_1password-wrapper.nix
+
+    ../../apps/traefik.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernel.sysctl = {
     "kernel.dmesg_restrict" = 0;
+  };
+
+  services.surmhosting = {
+    enable = true;
+    externalInterface = "wlp192s0";
+    dashboard.enable = true;
+    hostname = "test123";
+    exposedApps = {
+      test1.target.port = 10001;
+    };
   };
 
   hardware.bluetooth.enable = true;
