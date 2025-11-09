@@ -53,8 +53,13 @@
   services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
   services.syncthing.key = config.secrets.items.nexus-syncthing.target;
   services.syncthing.settings.folders."audiobooks".path = "/dump/audiobooks";
+  services.syncthing.settings.folders."audiobooks".devices = ["dargoon" "arbiter"];
   services.syncthing.settings.folders."scratch".path = "/dump/scratch";
+  services.syncthing.settings.folders."scratch".devices = ["dargoon"];
   services.syncthing.settings.folders."ebooks".path = "/dump/ebooks";
+  services.syncthing.settings.folders."ebooks".devices = ["dargoon" "arbiter"];
+  services.syncthing.devices.dragoon.id = "TAYU7SA-CCAFI4R-ZLB6FNM-OCPMW5W-6KEYYPI-ANW52FK-DUHVT7Z-L2GYBAB";
+  services.syncthing.devices.arbiter.id = "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
   services.syncthing.guiAddress = "0.0.0.0:4538";
   services.surmhosting.serverExpose.syncthing.target = 4538;
 
