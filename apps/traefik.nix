@@ -14,7 +14,7 @@ let
         default = null;
       };
       target = mkOption {
-        type = types.either types.int types.str;
+        type = types.either types.anything types.str;
       };
     };
   };
@@ -25,13 +25,14 @@ let
     |> map (
       { name, value }:
       let
+        isContainer = builtins.typeOf value.target != "string";
         url =
-          if builtins.typeOf value.target == "int" then
-            "http://localhost:${value.target |> builtins.toString}"
+          if isContainer then
+            ""
           else
             value.target;
       in
-      {
+      {services.traefik.dynamicConfigOptions.http = {
         routers.${name} = {
           rule = if value.rule == null then "HostRegexp(`^${name}.${cfg.hostname}`)" else value.rule;
           service = name;
@@ -40,6 +41,11 @@ let
         services.${name}.loadBalancer.servers = [
           { inherit url; }
         ];
+      };
+
+        containers."lab-container-${name}" = mkIf isContainer {
+          config = value.target;
+        };
       }
     )
     |> lib.fold (a: b: lib.recursiveUpdate a b) { };
@@ -82,7 +88,8 @@ in
     networking.nat.externalInterface = cfg.externalInterface;
     networking.nat.internalInterfaces = [ "ve-+" ];
 
-    services.traefik = {
+    services.traefik = mkMerge [
+      {
       enable = true;
       group = mkIf (cfg.docker.enable) "podman";
       staticConfigOptions = {
@@ -116,10 +123,12 @@ in
               entryPoints = [ "web" ];
               rule = "HostRegexp(`^dashboard\\.surmcluster`)";
             };
-          }
+          };
           # TODO: MkMerge???
-          |> lib.recursiveUpdate serverExposeConfig;
+          # |> lib.recursiveUpdate serverExposeConfig;
       };
-    };
+    }
+    serverExposeConfig
+    ];
   };
 }
