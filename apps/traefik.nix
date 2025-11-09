@@ -7,15 +7,13 @@ with lib;
 let
   cfg = config.services.surmhosting;
 
-  exposedAppsConfig =
+  exposedAppsConfigs =
     cfg.exposedApps
     |> lib.attrsToList
-    |> map (
-      # i:
+    |> imap0 (
+      idx:
       { name, value }:
-      { config, ... }:
       let
-        i = 0;
         isBasicForward = (value.target |> lib.attrByPath [ "port" ] null |> builtins.typeOf) == "int";
         isContainer = !isBasicForward;
 
@@ -24,9 +22,9 @@ let
 
         url =
           if isContainer then
-            "http://10.200.${i}.2:${port}"
+            "http://10.200.${i}.2:${port |> builtins.toString}"
           else
-            "http://${forwardHost}:${forwardPort}" |> lib.traceVal;
+            "http://${forwardHost}:${forwardPort |> builtins.toString}" |> lib.traceVal;
       in
       {
         services.traefik.dynamicConfigOptions.http = {
@@ -56,8 +54,7 @@ let
           }
         );
       }
-    )
-    |> lib.fold (a: b: lib.recursiveUpdate a b) { };
+    );
 
   targetConfig = {
     options = {
@@ -98,7 +95,6 @@ in
       };
     };
   };
-  imports = exposedAppsConfig;
   config = mkIf cfg.enable {
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
@@ -110,42 +106,48 @@ in
     networking.nat.externalInterface = cfg.externalInterface;
     networking.nat.internalInterfaces = [ "ve-+" ];
 
-    services.traefik = {
-      enable = true;
-      group = mkIf (cfg.docker.enable) "podman";
-      staticConfigOptions = {
-        api = {
-          dashboard = cfg.dashboard.enable;
-        };
-        providers = lib.optionalAttrs cfg.docker.enable { docker = { }; };
-        entryPoints = {
-          web.address = ":80";
+    services.traefik = mkMerge (
+      [
+        {
+          enable = true;
+          group = mkIf (cfg.docker.enable) "podman";
+          staticConfigOptions = {
+            api = {
+              dashboard = cfg.dashboard.enable;
+            };
+            providers = lib.optionalAttrs cfg.docker.enable { docker = { }; };
+            entryPoints = {
+              web.address = ":80";
+            }
+            // (lib.optionalAttrs cfg.tls.enable {
+              websecure = {
+                address = ":443";
+                asDefault = true;
+                http.tls.certResolver = "letsencrypt";
+              };
+            });
+            certificatesResolvers.letsencrypt = lib.optionalAttrs cfg.tls.enable {
+              acme = {
+                email = cfg.tls.email;
+                storage = cfg.tls.acmeFile;
+                httpChallenge.entryPoint = "web";
+              };
+            };
+          };
+          dynamicConfigOptions = {
+            http = {
+              routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
+                service = "api@internal";
+                entryPoints = [ "web" ];
+                rule = "HostRegexp(`^dashboard\\.surmcluster`)";
+              };
+            };
+          };
         }
-        // (lib.optionalAttrs cfg.tls.enable {
-          websecure = {
-            address = ":443";
-            asDefault = true;
-            http.tls.certResolver = "letsencrypt";
-          };
-        });
-        certificatesResolvers.letsencrypt = lib.optionalAttrs cfg.tls.enable {
-          acme = {
-            email = cfg.tls.email;
-            storage = cfg.tls.acmeFile;
-            httpChallenge.entryPoint = "web";
-          };
-        };
-      };
-      dynamicConfigOptions = {
-        http = {
-          routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
-            service = "api@internal";
-            entryPoints = [ "web" ];
-            rule = "HostRegexp(`^dashboard\\.surmcluster`)";
-          };
-        };
-      };
-    };
+      ]
+      ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
+    );
+    containers = mkMerge (exposedAppsConfigs |> map (cfg: cfg.containers));
   };
   # |> lib.recursiveUpdate exposedAppsConfig);
 }
