@@ -6,14 +6,15 @@
 }:
 {
   imports = [
-    ../darwin/base.nix
+    ../../darwin/base.nix
 
-    ../common/signal
-    ../common/obs
-    ../common/obsidian
+    ../../common/signal
+    ../../common/obs
+    ../../common/obsidian
   ];
 
   system.stateVersion = 5;
+  networking.hostName = "dragoon";
 
   homebrew = {
     casks = [
@@ -32,27 +33,27 @@
     { config, ... }:
     {
       imports = [
-        ../common/spotify
-        ../common/telegram
+        ../../common/spotify
+        ../../common/telegram
 
-        ../home-manager/claude-code
-        ../home-manager/opencode
-        ../home-manager/syncthing
+        ../../home-manager/claude-code
+        ../../home-manager/opencode
+        ../../home-manager/syncthing
 
-        ../home-manager/unfree-apps.nix
+        ../../home-manager/unfree-apps.nix
 
-        ../home-manager/base.nix
-        ../home-manager/graphical.nix
-        ../home-manager/keyboard-dev.nix
-        ../home-manager/workstation.nix
-        ../home-manager/physical.nix
-        ../home-manager/macos.nix
-        ../home-manager/experiments.nix
-        ../home-manager/cloud.nix
-        ../home-manager/nixdev.nix
-        ../home-manager/javascript.nix
-        ../home-manager/dev.nix
-        ../home-manager/godot.nix
+        ../../home-manager/base.nix
+        ../../home-manager/graphical.nix
+        ../../home-manager/keyboard-dev.nix
+        ../../home-manager/workstation.nix
+        ../../home-manager/physical.nix
+        ../../home-manager/macos.nix
+        ../../home-manager/experiments.nix
+        ../../home-manager/cloud.nix
+        ../../home-manager/nixdev.nix
+        ../../home-manager/javascript.nix
+        ../../home-manager/dev.nix
+        ../../home-manager/godot.nix
       ];
 
       home.stateVersion = "24.05";

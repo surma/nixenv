@@ -41,7 +41,8 @@
 
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
     surma
-    surmbook
+    dragoon
+    archon
   ];
 
   secrets.items.nexus-syncthing.target = "/var/lib/syncthing/key.pem";

@@ -66,11 +66,12 @@
       rec {
         inherit overlays;
         packages = {
-          darwinConfigurations = {
-            surmbook = loadDarwin {
+          darwinConfigurations = rec {
+            dragoon = loadDarwin {
               inherit system;
-              machine = ./machines/surmbook.nix;
+              machine = ./machines/dragoon;
             };
+            surmbook = dragoon;
             shopisurm = loadDarwin {
               inherit system;
               machine = ./machines/shopisurm.nix;
@@ -102,15 +103,16 @@
             };
           };
 
-          nixosConfigurations = {
+          nixosConfigurations = rec {
             generic-nixos = loadNixos {
               inherit system;
               machine = ./machines/generic-nixos.nix;
             };
-            surmframework = loadNixos {
+            archon = loadNixos {
               inherit system;
-              machine = ./machines/surmframework.nix;
+              machine = ./machines/archon;
             };
+            surmframework = archon;
             surmrock = loadNixos {
               inherit system;
               machine = ./machines/surmrock.nix;

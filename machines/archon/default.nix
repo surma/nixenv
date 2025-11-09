@@ -7,24 +7,26 @@
 }:
 {
   imports = [
-    ../home-manager/unfree-apps.nix
-    ./surmframework-hardware.nix
     inputs.nixos-hardware.nixosModules.framework-amd-ai-300-series
     inputs.home-manager.nixosModules.home-manager
-    ../nixos/base.nix
-    ../nixos/hyprland.nix
 
-    ../common/signal
-    ../common/obs
-    ../common/keyd-as-internal
+    ./hardware.nix
 
-    ../nixos/obs-virtual-camera-fix.nix
+    ../../home-manager/unfree-apps.nix
+    ../../nixos/base.nix
+    ../../nixos/hyprland.nix
 
-    ../nixos/framework/suspend-fix.nix
-    ../nixos/framework/wifi-fix.nix
+    ../../common/signal
+    ../../common/obs
+    ../../common/keyd-as-internal
 
-    ../nixos/shopify-cloudflare-warp.nix
-    ../nixos/_1password-wrapper.nix
+    ../../nixos/obs-virtual-camera-fix.nix
+
+    ../../nixos/framework/suspend-fix.nix
+    ../../nixos/framework/wifi-fix.nix
+
+    ../../nixos/shopify-cloudflare-warp.nix
+    ../../nixos/_1password-wrapper.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -68,7 +70,7 @@
     };
   };
 
-  networking.hostName = "surmframework"; # Define your hostname.
+  networking.hostName = "archon"; # Define your hostname.
   allowedUnfreeApps = [
     "1password"
     "1password-cli"
@@ -119,33 +121,33 @@
     }:
     {
       imports = [
-        ../common/spotify
-        ../common/discord
-        ../common/telegram
-        ../common/obsidian
+        ../../common/spotify
+        ../../common/discord
+        ../../common/telegram
+        ../../common/obsidian
 
-        ../home-manager/opencode
-        ../home-manager/claude-code
-        ../home-manager/hyprland
-        ../home-manager/hyprsunset
-        ../home-manager/syncthing
-        ../home-manager/waybar
-        ../home-manager/hyprpaper
+        ../../home-manager/opencode
+        ../../home-manager/claude-code
+        ../../home-manager/hyprland
+        ../../home-manager/hyprsunset
+        ../../home-manager/syncthing
+        ../../home-manager/waybar
+        ../../home-manager/hyprpaper
 
-        ../scripts
+        ../../scripts
 
-        ../home-manager/base.nix
-        ../home-manager/dev.nix
-        ../home-manager/gamedev.nix
-        ../home-manager/nixdev.nix
-        ../home-manager/linux.nix
-        ../home-manager/graphical.nix
-        ../home-manager/workstation.nix
-        ../home-manager/experiments.nix
+        ../../home-manager/base.nix
+        ../../home-manager/dev.nix
+        ../../home-manager/gamedev.nix
+        ../../home-manager/nixdev.nix
+        ../../home-manager/linux.nix
+        ../../home-manager/graphical.nix
+        ../../home-manager/workstation.nix
+        ../../home-manager/experiments.nix
 
-        ../home-manager/unfree-apps.nix
-        ../home-manager/webapps.nix
-        ../home-manager/screenshot.nix
+        ../../home-manager/unfree-apps.nix
+        ../../home-manager/webapps.nix
+        ../../home-manager/screenshot.nix
       ];
 
       config = {
