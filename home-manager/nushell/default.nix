@@ -26,6 +26,10 @@ with lib;
       |> lib.attrsToList
       |> map ({ name, value }: ''alias ${name} = ${value}'')
       |> lib.concatStringsSep "\n"
-    );
+    ) + ''
+      def ngs [...args] {
+        git status --porcelain ...$args | from ssv -n -m 1 | rename status path | update path { [(git rev-parse --show-toplevel) $in] | path join }
+      }
+    '';
   };
 }
