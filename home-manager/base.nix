@@ -75,7 +75,7 @@ in
   programs.gpg.enable = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
   programs.nushell.enable = true;
-  programs.nushell.aliases =
+  programs.nushell.shellAliases =
     config.programs.zsh.shellAliases
     |> lib.filterAttrs (
       name: _:

@@ -9,24 +9,8 @@ let
 in
 with lib;
 {
-  imports = [
-  ];
-
-  options = {
-    programs.nushell = {
-      aliases = mkOption {
-        type = types.attrsOf types.lines;
-        default = { };
-      };
-    };
-  };
   config.programs.nushell = {
-    extraConfig = (
-      nushell.aliases
-      |> lib.attrsToList
-      |> map ({ name, value }: ''alias ${name} = ${value}'')
-      |> lib.concatStringsSep "\n"
-    ) + ''
+    extraConfig = ''
       def ngs [...args] {
         git status --porcelain ...$args | from ssv -n -m 1 | rename status path | update path { [(git rev-parse --show-toplevel) $in] | path join }
       }
