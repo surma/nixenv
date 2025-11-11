@@ -7,6 +7,57 @@ with lib;
 let
   cfg = config.services.surmhosting;
 
+  exposedAppsConfigs =
+    cfg.exposedApps
+    |> lib.attrsToList
+    |> imap0 (
+      i:
+      { name, value }:
+      let
+        isContainer = (value.target |> lib.attrByPath [ "config" ] null |> builtins.typeOf) != "null";
+
+        forwardPort = value.target |> lib.attrByPath [ "port" ] 8080;
+        forwardHost = value.target |> lib.attrByPath [ "host" ] "localhost";
+
+        url =
+          if isContainer then
+            "http://10.200.${i |> toString}.2:${forwardPort |> toString}"
+          else
+            "http://${forwardHost}:${forwardPort |> toString}";
+      in
+      {
+        services.traefik.dynamicConfigOptions.http = {
+          routers.${name} = {
+            rule =
+              if value.rule == null then
+                "HostRegexp(`^${name}.${config.services.surmhosting.hostname}`)"
+              else
+                value.rule;
+            service = name;
+          };
+
+          services.${name}.loadBalancer.servers = [
+            { inherit url; }
+          ];
+        };
+
+        containers."lc-${name |> lib.substring 0 10}" = mkIf isContainer {
+          config = mkMerge [
+            {
+              networking.firewall.enable = mkDefault false;
+            }
+            value.target.config
+          ];
+
+          privateNetwork = true;
+          localAddress = "10.200.${i |> toString}.2";
+          hostAddress = "10.200.${i |> toString}.1";
+          ephemeral = true;
+          autoStart = true;
+        };
+      }
+    );
+
   targetConfig = {
     options = {
       rule = mkOption {
@@ -14,35 +65,10 @@ let
         default = null;
       };
       target = mkOption {
-        type = types.either types.int types.str;
+        type = types.anything;
       };
     };
   };
-
-  serverExposeConfig =
-    cfg.serverExpose
-    |> lib.attrsToList
-    |> map (
-      { name, value }:
-      let
-        url =
-          if builtins.typeOf value.target == "int" then
-            "http://localhost:${value.target |> builtins.toString}"
-          else
-            value.target;
-      in
-      {
-        routers.${name} = {
-          rule = if value.rule == null then "HostRegexp(`^${name}.${cfg.hostname}`)" else value.rule;
-          service = name;
-        };
-
-        services.${name}.loadBalancer.servers = [
-          { inherit url; }
-        ];
-      }
-    )
-    |> lib.fold (a: b: lib.recursiveUpdate a b) { };
 in
 {
   options = {
@@ -65,7 +91,7 @@ in
       hostname = mkOption {
         type = types.str;
       };
-      serverExpose = mkOption {
+      exposedApps = mkOption {
         type = types.attrsOf (types.submodule targetConfig);
         default = { };
       };
@@ -82,44 +108,47 @@ in
     networking.nat.externalInterface = cfg.externalInterface;
     networking.nat.internalInterfaces = [ "ve-+" ];
 
-    services.traefik = {
-      enable = true;
-      group = mkIf (cfg.docker.enable) "podman";
-      staticConfigOptions = {
-        api = {
-          dashboard = cfg.dashboard.enable;
-        };
-        providers = lib.optionalAttrs cfg.docker.enable { docker = { }; };
-        entryPoints = {
-          web.address = ":80";
-        }
-        // (lib.optionalAttrs cfg.tls.enable {
-          websecure = {
-            address = ":443";
-            asDefault = true;
-            http.tls.certResolver = "letsencrypt";
-          };
-        });
-        certificatesResolvers.letsencrypt = lib.optionalAttrs cfg.tls.enable {
-          acme = {
-            email = cfg.tls.email;
-            storage = cfg.tls.acmeFile;
-            httpChallenge.entryPoint = "web";
-          };
-        };
-      };
-      dynamicConfigOptions = {
-        http =
-          {
-            routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
-              service = "api@internal";
-              entryPoints = [ "web" ];
-              rule = "HostRegexp(`^dashboard\\.surmcluster`)";
+    services.traefik = mkMerge (
+      [
+        {
+          enable = true;
+          group = mkIf (cfg.docker.enable) "podman";
+          staticConfigOptions = {
+            api = {
+              dashboard = cfg.dashboard.enable;
             };
-          }
-          # TODO: MkMerge???
-          |> lib.recursiveUpdate serverExposeConfig;
-      };
-    };
+            providers = lib.optionalAttrs cfg.docker.enable { docker = { }; };
+            entryPoints = {
+              web.address = ":80";
+            }
+            // (lib.optionalAttrs cfg.tls.enable {
+              websecure = {
+                address = ":443";
+                asDefault = true;
+                http.tls.certResolver = "letsencrypt";
+              };
+            });
+            certificatesResolvers.letsencrypt = lib.optionalAttrs cfg.tls.enable {
+              acme = {
+                email = cfg.tls.email;
+                storage = cfg.tls.acmeFile;
+                httpChallenge.entryPoint = "web";
+              };
+            };
+          };
+          dynamicConfigOptions = {
+            http = {
+              routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
+                service = "api@internal";
+                entryPoints = [ "web" ];
+                rule = "HostRegexp(`^dashboard\\.surmcluster`)";
+              };
+            };
+          };
+        }
+      ]
+      ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
+    );
+    containers = mkMerge (exposedAppsConfigs |> map (cfg: cfg.containers) |> lib.traceVal);
   };
 }
