@@ -72,6 +72,9 @@ in
   programs.helix = import ../configs/helix.nix;
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
+  programs.starship.settings = {
+    git_status.disabled = true;
+  };
   programs.gpg.enable = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
   programs.nushell.enable = true;
