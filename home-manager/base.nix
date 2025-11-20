@@ -53,6 +53,7 @@ in
   };
 
   customScripts.denix.enable = true;
+  customScripts.ssw_path.enable = true;
   customScripts.ghclone.enable = true;
   customScripts.nix-build-pkg.enable = true;
   customScripts.build-nixpkg-pkg.enable = true;
@@ -73,7 +74,19 @@ in
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
   programs.starship.settings = {
-    git_status.disabled = true;
+    add_newline = true;
+
+    format = ''${"$"}{custom.cwd} $git_branch${"\n"}$character'';
+
+    git_branch.format = "[$branch]($style)";
+    custom.cwd = {
+      command = "ssw_path";
+      when = "true";
+      format = "[$output]($style)";
+      style = "bold cyan";
+      disabled = false;
+      ignore_timeout = true;
+    };
   };
   programs.gpg.enable = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
