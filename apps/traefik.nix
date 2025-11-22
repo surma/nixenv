@@ -14,14 +14,14 @@ let
       i:
       { name, value }:
       let
-        isContainer = (value.target |> lib.attrByPath [ "config" ] null |> builtins.typeOf) != "null";
+        isContainer = (value.target |> lib.attrByPath [ "cfg" ] null |> builtins.typeOf) != "null";
 
         forwardPort = value.target |> lib.attrByPath [ "port" ] 8080;
         forwardHost = value.target |> lib.attrByPath [ "host" ] "localhost";
 
         url =
           if isContainer then
-            "http://10.200.${i |> toString}.2:${forwardPort |> toString}"
+            "http://10.201.${i |> toString}.2:${forwardPort |> toString}"
           else
             "http://${forwardHost}:${forwardPort |> toString}";
       in
@@ -41,20 +41,24 @@ let
           ];
         };
 
-        containers."lc-${name |> lib.substring 0 10}" = mkIf isContainer {
-          config = mkMerge [
-            {
-              networking.firewall.enable = mkDefault false;
-            }
-            value.target.config
-          ];
+        containers."lc-${name |> lib.substring 0 10}" = mkIf isContainer (mkMerge [
+          {
+            config = mkMerge [
+              {
+                networking.firewall.enable = mkDefault false;
+                networking.useHostResolvConf = mkDefault true;
+              }
+              value.target.cfg
+            ];
 
-          privateNetwork = true;
-          localAddress = "10.200.${i |> toString}.2";
-          hostAddress = "10.200.${i |> toString}.1";
-          ephemeral = true;
-          autoStart = true;
-        };
+            privateNetwork = true;
+            localAddress = "10.201.${i |> toString}.2";
+            hostAddress = "10.201.${i |> toString}.1";
+            ephemeral = true;
+            autoStart = true;
+          }
+          value.target.extraContainerCfg
+        ]);
       }
     );
 
@@ -64,8 +68,21 @@ let
         type = types.nullOr types.str;
         default = null;
       };
-      target = mkOption {
+      target.port = mkOption {
+        type = types.int;
+        default = 8080;
+      };
+      target.host = mkOption {
+        type = types.str;
+        default = "localhost";
+      };
+      target.cfg = mkOption {
         type = types.anything;
+        default = null;
+      };
+      target.extraContainerCfg = mkOption {
+        type = types.anything;
+        default = { };
       };
     };
   };
@@ -149,6 +166,6 @@ in
       ]
       ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
     );
-    containers = mkMerge (exposedAppsConfigs |> map (cfg: cfg.containers) |> lib.traceVal);
+    containers = mkMerge (exposedAppsConfigs |> map (cfg: cfg.containers));
   };
 }

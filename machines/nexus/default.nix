@@ -65,12 +65,12 @@
     "dragoon"
     "arbiter"
   ];
-  services.syncthing.devices.dragoon.id =
+  services.syncthing.settings.devices.dragoon.id =
     "TAYU7SA-CCAFI4R-ZLB6FNM-OCPMW5W-6KEYYPI-ANW52FK-DUHVT7Z-L2GYBAB";
-  services.syncthing.devices.arbiter.id =
+  services.syncthing.settings.devices.arbiter.id =
     "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
   services.syncthing.guiAddress = "0.0.0.0:4538";
-  services.surmhosting.serverExpose.syncthing.target = 4538;
+  services.surmhosting.exposedApps.syncthing.target.port = 4538;
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";

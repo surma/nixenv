@@ -4,59 +4,35 @@
   ...
 }:
 let
-  name = "sonarr";
-  port = 4534;
   uid = config.users.users.surma.uid;
 in
 {
-  config = {
-    services.traefik.dynamicConfigOptions = {
-      http = {
-        routers.${name} = {
-          rule = "HostRegexp(`^${name}\\.nexus\\.hosts\\.`)";
-          service = name;
-        };
-
-        services.${name}.loadBalancer.servers = [
-          { url = "http://10.200.5.2:${port |> builtins.toString}"; }
-        ];
+  services.surmhosting.exposedApps.sonarr.target = {
+    cfg = {
+      system.stateVersion = "25.05";
+      users.users.containeruser = {
+        inherit uid;
+        isNormalUser = true;
       };
+
+      services.sonarr.enable = true;
+      services.sonarr.package = pkgs.sonarr;
+      services.sonarr.user = "containeruser";
+      services.sonarr.dataDir = "/dump/state/sonarr";
+      services.sonarr.settings.server.port = 8080;
     };
-
-    containers.${name} = {
-      config = {
-        nixpkgs.pkgs = pkgs;
-        system.stateVersion = "25.05";
-        users.users.containeruser = {
-          inherit uid;
-          isNormalUser = true;
-        };
-        networking.firewall.enable = false;
-        networking.useHostResolvConf = true;
-
-        services.sonarr.enable = true;
-        services.sonarr.user = "containeruser";
-        services.sonarr.dataDir = "/dump/state/sonarr";
-        services.sonarr.settings.server.port = port;
-      };
-
-      privateNetwork = true;
-      localAddress = "10.200.5.2";
-      hostAddress = "10.200.5.1";
-      ephemeral = true;
-      autoStart = true;
-
-      bindMounts.state = {
+    extraContainerCfg.bindMounts = {
+      state = {
         mountPoint = "/dump/state/sonarr";
         hostPath = "/dump/state/sonarr";
         isReadOnly = false;
       };
-      bindMounts.series = {
+      series = {
         mountPoint = "/dump/TV";
         hostPath = "/dump/TV";
         isReadOnly = false;
       };
-      bindMounts.torrent = {
+      torrent = {
         mountPoint = "/dump/state/qbittorrent";
         hostPath = "/dump/state/qbittorrent";
         isReadOnly = false;
