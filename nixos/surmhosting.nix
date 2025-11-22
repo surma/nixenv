@@ -45,6 +45,10 @@ let
           {
             config = mkMerge [
               {
+                users.users.${cfg.containeruser.name} = {
+                  inherit (cfg.containeruser) uid;
+                  isNormalUser = true;
+                };
                 networking.firewall.enable = mkDefault false;
                 networking.useHostResolvConf = mkDefault true;
               }
@@ -93,6 +97,14 @@ in
       enable = mkEnableOption "";
       externalInterface = mkOption {
         type = types.str;
+      };
+      containeruser.name = mkOption {
+        type = types.str;
+        default = "containeruser";
+      };
+      containeruser.uid = mkOption {
+        type = types.nullOr types.int;
+        default = null;
       };
       tls.enable = mkEnableOption "";
       tls.email = mkOption {
