@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   lib,
   ...
 }:
@@ -14,7 +15,7 @@ let
       i:
       { name, value }:
       let
-        isContainer = (value.target |> lib.attrByPath [ "cfg" ] null |> builtins.typeOf) != "null";
+        isContainer = value.target.container != null;
 
         forwardPort = value.target |> lib.attrByPath [ "port" ] 8080;
         forwardHost = value.target |> lib.attrByPath [ "host" ] "localhost";
@@ -43,25 +44,23 @@ let
 
         containers."lc-${name |> lib.substring 0 10}" = mkIf isContainer (mkMerge [
           {
-            config = mkMerge [
-              {
-                users.users.${cfg.containeruser.name} = {
-                  inherit (cfg.containeruser) uid;
-                  isNormalUser = true;
-                };
-                networking.firewall.enable = mkDefault false;
-                networking.useHostResolvConf = mkDefault true;
-              }
-              value.target.cfg
-            ];
+            config = {
+              users.users.${cfg.containeruser.name} = mkDefault {
+                inherit (cfg.containeruser) uid;
+                isNormalUser = true;
+              };
+              networking.firewall.enable = mkDefault false;
+              networking.useHostResolvConf = mkDefault true;
+            };
 
-            privateNetwork = true;
-            localAddress = "10.201.${i |> toString}.2";
-            hostAddress = "10.201.${i |> toString}.1";
-            ephemeral = true;
-            autoStart = true;
+            nixpkgs = mkDefault pkgs.path;
+            privateNetwork = mkDefault true;
+            localAddress = mkDefault "10.201.${i |> toString}.2";
+            hostAddress = mkDefault "10.201.${i |> toString}.1";
+            ephemeral = mkDefault true;
+            autoStart = mkDefault true;
           }
-          value.target.extraContainerCfg
+          value.target.container
         ]);
       }
     );
@@ -80,13 +79,9 @@ let
         type = types.str;
         default = "localhost";
       };
-      target.cfg = mkOption {
-        type = types.anything;
+      target.container = mkOption {
+        type = types.nullOr types.attrs;
         default = null;
-      };
-      target.extraContainerCfg = mkOption {
-        type = types.anything;
-        default = { };
       };
     };
   };

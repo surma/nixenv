@@ -76,9 +76,11 @@ in
   programs.starship.settings = {
     add_newline = true;
 
-    format = ''${"$"}{custom.cwd} $git_branch${"\n"}$character'';
+    format = ''${"$"}{custom.cwd} $git_branch $hostname ${"\n"}$character'';
 
     git_branch.format = "[$branch]($style)";
+    hostname.style = "bold red";
+    hostname.format = "[$ssh_symbol$hostname]($style)";
     custom.cwd = {
       command = "ssw_path";
       when = "true";

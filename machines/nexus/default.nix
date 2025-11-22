@@ -5,6 +5,7 @@
   ...
 }:
 let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
   torrentingPort = 60123;
 in
 {
@@ -94,8 +95,8 @@ in
   services.mosquitto.dataDir = "/dump/state/mosquitto";
   services.mosquitto.persistence = false;
 
-  services.surmhosting.exposedApps.lidarr.target = {
-    cfg = {
+  services.surmhosting.exposedApps.lidarr.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.lidarr.enable = true;
@@ -105,7 +106,7 @@ in
       services.lidarr.settings.server.port = 8080;
     };
 
-    extraContainerCfg.bindMounts = {
+    bindMounts = {
       state = {
         mountPoint = "/dump/state/lidarr";
         hostPath = "/dump/state/lidarr";
@@ -124,8 +125,8 @@ in
     };
   };
 
-  services.surmhosting.exposedApps.radarr.target = {
-    cfg = {
+  services.surmhosting.exposedApps.radarr.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.radarr.enable = true;
@@ -135,7 +136,7 @@ in
       services.radarr.settings.server.port = 8080;
     };
 
-    extraContainerCfg.bindMounts = {
+    bindMounts = {
       state = {
         mountPoint = "/dump/state/radarr";
         hostPath = "/dump/state/radarr";
@@ -154,8 +155,8 @@ in
     };
   };
 
-  services.surmhosting.exposedApps.sonarr.target = {
-    cfg = {
+  services.surmhosting.exposedApps.sonarr.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.sonarr.enable = true;
@@ -164,7 +165,7 @@ in
       services.sonarr.dataDir = "/dump/state/sonarr";
       services.sonarr.settings.server.port = 8080;
     };
-    extraContainerCfg.bindMounts = {
+    bindMounts = {
       state = {
         mountPoint = "/dump/state/sonarr";
         hostPath = "/dump/state/sonarr";
@@ -183,17 +184,16 @@ in
     };
   };
 
-  services.surmhosting.exposedApps.prowlarr.target = {
-    cfg = {
+  services.surmhosting.exposedApps.prowlarr.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.prowlarr.enable = true;
       services.prowlarr.package = pkgs.prowlarr;
       services.prowlarr.settings.server.port = 8080;
-
     };
 
-    extraContainerCfg.bindMounts.state = {
+    bindMounts.state = {
       mountPoint = "/var/lib/private/prowlarr";
       hostPath = "/dump/state/prowlarr";
       isReadOnly = false;
@@ -202,8 +202,8 @@ in
 
   networking.firewall.allowedTCPPorts = [ torrentingPort ];
   networking.firewall.allowedUDPPorts = [ torrentingPort ];
-  services.surmhosting.exposedApps.torrent.target = {
-    cfg = {
+  services.surmhosting.exposedApps.torrent.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.qbittorrent.enable = true;
@@ -213,30 +213,27 @@ in
       services.qbittorrent.profileDir = "/dump/state/qbittorrent";
     };
 
-    extraContainerCfg = {
-      forwardPorts = [
-        {
-          containerPort = torrentingPort;
-          hostPort = torrentingPort;
-          protocol = "tcp";
-        }
-        {
-          containerPort = torrentingPort;
-          hostPort = torrentingPort;
-          protocol = "udp";
-        }
-      ];
-
-      bindMounts.state = {
-        mountPoint = "/dump/state/qbittorrent";
-        hostPath = "/dump/state/qbittorrent";
-        isReadOnly = false;
-      };
+    forwardPorts = [
+      {
+        containerPort = torrentingPort;
+        hostPort = torrentingPort;
+        protocol = "tcp";
+      }
+      {
+        containerPort = torrentingPort;
+        hostPort = torrentingPort;
+        protocol = "udp";
+      }
+    ];
+    bindMounts.state = {
+      mountPoint = "/dump/state/qbittorrent";
+      hostPath = "/dump/state/qbittorrent";
+      isReadOnly = false;
     };
   };
 
-  services.surmhosting.exposedApps.music.target = {
-    cfg = {
+  services.surmhosting.exposedApps.music.target.container = {
+    config = {
       system.stateVersion = "25.05";
 
       services.navidrome.enable = true;
@@ -250,7 +247,7 @@ in
       };
     };
 
-    extraContainerCfg.bindMounts = {
+    bindMounts = {
       music = {
         mountPoint = "/dump/music";
         hostPath = "/dump/music";
@@ -263,6 +260,29 @@ in
       };
     };
   };
+
+  # services.surmhosting.exposedApps.copyparty.target.container = {
+  #   config = (
+  #     { ... }:
+  #     {
+  #       imports = [
+  #         inputs.copyparty.nixosModules.default
+  #       ];
+  #       config = {
+  #         system.stateVersion = "25.05";
+  #         services.copyparty.enable = true;
+  #         services.copyparty.settings.p = [ 8080 ];
+  #       };
+
+  #     }
+  #   );
+
+  #   bindMounts.dump = {
+  #     mountPoint = "/dump";
+  #     hostPath = "/dump";
+  #     isReadOnly = false;
+  #   };
+  # };
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
