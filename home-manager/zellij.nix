@@ -2,10 +2,12 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
   inherit (pkgs) wl-clipboard;
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
 in
 with lib;
 {
@@ -16,6 +18,7 @@ with lib;
     programs.zellij = {
 
       enable = true;
+      package = pkgs-unstable.zellij;
       settings = {
         pane_frames = false;
         session_serialization = false;

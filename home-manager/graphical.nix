@@ -1,9 +1,12 @@
 {
-  config,
   pkgs,
-  lib,
+  inputs,
   ...
 }:
+let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+in
+
 {
 
   imports = [
@@ -27,6 +30,7 @@
     );
 
     programs.wezterm.enable = true;
+    programs.wezterm.package = pkgs-unstable.wezterm;
     defaultConfigs.wezterm.enable = true;
   };
 }

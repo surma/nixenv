@@ -19,7 +19,6 @@ let
         sharedModules = [
           {
             nixpkgs.overlays = [
-              overlays.unstable
               overlays.extra-pkgs
             ];
           }

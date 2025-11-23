@@ -2,12 +2,15 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
   inherit (pkgs) callPackage;
 
   not = x: !x;
+
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
 in
 {
 
@@ -93,6 +96,7 @@ in
   programs.gpg.enable = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
   programs.nushell.enable = true;
+  programs.nushell.package = pkgs-unstable.nushell;
   programs.nushell.shellAliases =
     config.programs.zsh.shellAliases
     |> lib.filterAttrs (

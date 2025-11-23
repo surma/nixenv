@@ -15,7 +15,6 @@ let
     {
       config = {
         nixpkgs.overlays = [
-          overlays.unstable
           overlays.extra-pkgs
         ];
 
@@ -29,7 +28,6 @@ let
             {
 
               nixpkgs.overlays = [
-                overlays.unstable
                 overlays.extra-pkgs
               ];
             }

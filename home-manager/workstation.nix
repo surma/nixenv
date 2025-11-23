@@ -4,7 +4,7 @@
   ...
 }:
 let
-  inherit (pkgs) callPackage;
+  inherit (pkgs) stdenv;
 in
 {
 
@@ -36,7 +36,6 @@ in
       mprocs
       dua
       wasmtime
-      just
     ]
   );
 }

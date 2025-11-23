@@ -2,8 +2,12 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
+let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+in
 {
   imports = [
     ./unfree-apps.nix
@@ -14,14 +18,13 @@
     home.homeDirectory = lib.mkDefault "/Users/surma";
 
     allowedUnfreeApps = [ "raycast" ];
-    home.packages = (
-      with pkgs;
-      [
-        raycast
-        # hyperkey
+    home.packages =
+      (with pkgs; [
+      ])
+      ++ (with pkgs-unstable; [
+        # raycast
         aerospace
-      ]
-    );
+      ]);
 
     home.file.".config/aerospace/aerospace.toml".source = ../configs/aerospace.toml;
 
