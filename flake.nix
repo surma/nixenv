@@ -127,10 +127,11 @@
               inherit system;
               machine = ./machines/nexus;
             };
-            surmedge = loadNixos {
+            pylon = loadNixos {
               inherit system;
-              machine = ./machines/surmedge.nix;
+              machine = ./machines/pylon;
             };
+            surmedge = pylon;
             testcontainer = loadNixos {
               inherit system;
               machine = ./machines/testcontainer.nix;

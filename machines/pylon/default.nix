@@ -7,15 +7,15 @@
 }:
 {
   imports = [
-    ../home-manager/unfree-apps.nix
-    ./surmedge-hardware.nix
+    ../../home-manager/unfree-apps.nix
+    ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
-    ../nixos/base.nix
+    ../../nixos/base.nix
+    ../../nixos/surmhosting.nix
 
-    ../secrets
+    ../../secrets
 
-    ../apps/writing-prompt
-    ../apps/traefik.nix
+    ../../apps/writing-prompt
   ];
 
   nix.settings.require-sigs = false;
@@ -24,7 +24,7 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = "surmedge";
+  networking.hostName = "pylon";
   networking.networkmanager.enable = true;
 
   users.users.surma.linger = true;
@@ -35,6 +35,18 @@
     surmrock
     surmbook
   ];
+
+  networking.interfaces.enp1s0.ipv6.addresses = [
+    {
+      address = "2a01:4f8:c17:731::1";
+      prefixLength = 64;
+    }
+  ];
+
+  networking.defaultGateway6 = {
+    address = "fe80::1";
+    interface = "enp1s0"; # Replace eth0 with your actual interface name
+  };
 
   secrets.identity = "/home/surma/.ssh/id_machine";
 
@@ -47,16 +59,16 @@
     }:
     {
       imports = [
-        ../home-manager/claude-code
+        ../../home-manager/claude-code
 
-        ../home-manager/base.nix
-        ../home-manager/dev.nix
-        ../home-manager/nixdev.nix
-        ../home-manager/linux.nix
-        ../home-manager/workstation.nix
-        # ../home-manager/cloud.nix
+        ../../home-manager/base.nix
+        ../../home-manager/dev.nix
+        ../../home-manager/nixdev.nix
+        ../../home-manager/linux.nix
+        ../../home-manager/workstation.nix
+        # ../../home-manager/cloud.nix
 
-        ../home-manager/unfree-apps.nix
+        ../../home-manager/unfree-apps.nix
 
       ];
 
@@ -73,7 +85,7 @@
 
         home.stateVersion = "25.05";
 
-        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmedge";
+        home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#pylon";
       };
     };
 
