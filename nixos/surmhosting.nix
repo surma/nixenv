@@ -18,13 +18,13 @@ let
         isContainer = value.target.container != null;
 
         forwardPort = value.target |> lib.attrByPath [ "port" ] 8080;
-        forwardHost = value.target |> lib.attrByPath [ "host" ] "localhost";
-
-        url =
+        forwardHost =
           if isContainer then
-            "http://10.201.${i |> toString}.2:${forwardPort |> toString}"
+            "10.201.${i |> toString}.2"
           else
-            "http://${forwardHost}:${forwardPort |> toString}";
+            value.target |> lib.attrByPath [ "host" ] "localhost";
+
+        url = "http://${forwardHost}:${forwardPort |> toString}";
       in
       {
         services.traefik.dynamicConfigOptions.http = {
@@ -55,7 +55,7 @@ let
 
             nixpkgs = mkDefault pkgs.path;
             privateNetwork = mkDefault true;
-            localAddress = mkDefault "10.201.${i |> toString}.2";
+            localAddress = mkDefault forwardHost;
             hostAddress = mkDefault "10.201.${i |> toString}.1";
             ephemeral = mkDefault true;
             autoStart = mkDefault true;

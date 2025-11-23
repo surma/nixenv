@@ -60,5 +60,12 @@
         "nexus"
       ];
     };
+    nexus-copyparty = {
+      contents = ../machines/nexus/copyparty/surma.passwd.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
