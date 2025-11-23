@@ -261,28 +261,34 @@ in
     };
   };
 
-  # services.surmhosting.exposedApps.copyparty.target.container = {
-  #   config = (
-  #     { ... }:
-  #     {
-  #       imports = [
-  #         inputs.copyparty.nixosModules.default
-  #       ];
-  #       config = {
-  #         system.stateVersion = "25.05";
-  #         services.copyparty.enable = true;
-  #         services.copyparty.settings.p = [ 8080 ];
-  #       };
+  services.surmhosting.exposedApps.copyparty.target.container = {
+    config = (
+      { ... }:
+      {
+        imports = [
+          inputs.copyparty.nixosModules.default
+        ];
+        config = {
+          system.stateVersion = "25.05";
+          services.copyparty.enable = true;
+          services.copyparty.package = inputs.copyparty.packages.${pkgs.stdenv.system}.copyparty;
+          services.copyparty = {
+            settings.p = [ 8080 ];
+            volumes."/" = {
+              path = "/dump";
+              access.r = "*";
+            };
+          };
+        };
+      }
+    );
 
-  #     }
-  #   );
-
-  #   bindMounts.dump = {
-  #     mountPoint = "/dump";
-  #     hostPath = "/dump";
-  #     isReadOnly = false;
-  #   };
-  # };
+    bindMounts.dump = {
+      mountPoint = "/dump";
+      hostPath = "/dump";
+      isReadOnly = false;
+    };
+  };
 
   virtualisation.oci-containers.backend = "podman";
   virtualisation.oci-containers.containers.jellyfin = {
