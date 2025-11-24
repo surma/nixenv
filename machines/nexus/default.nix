@@ -100,7 +100,7 @@ in
       system.stateVersion = "25.05";
 
       services.lidarr.enable = true;
-      services.lidarr.package = pkgs.lidarr;
+      services.lidarr.package = pkgs-unstable.lidarr;
       services.lidarr.user = "containeruser";
       services.lidarr.dataDir = "/dump/state/lidarr";
       services.lidarr.settings.server.port = 8080;
@@ -130,7 +130,7 @@ in
       system.stateVersion = "25.05";
 
       services.radarr.enable = true;
-      services.radarr.package = pkgs.radarr;
+      services.radarr.package = pkgs-unstable.radarr;
       services.radarr.user = "containeruser";
       services.radarr.dataDir = "/dump/state/radarr";
       services.radarr.settings.server.port = 8080;
@@ -160,7 +160,7 @@ in
       system.stateVersion = "25.05";
 
       services.sonarr.enable = true;
-      services.sonarr.package = pkgs.sonarr;
+      services.sonarr.package = pkgs-unstable.sonarr;
       services.sonarr.user = "containeruser";
       services.sonarr.dataDir = "/dump/state/sonarr";
       services.sonarr.settings.server.port = 8080;
@@ -189,7 +189,7 @@ in
       system.stateVersion = "25.05";
 
       services.prowlarr.enable = true;
-      services.prowlarr.package = pkgs.prowlarr;
+      services.prowlarr.package = pkgs-unstable.prowlarr;
       services.prowlarr.settings.server.port = 8080;
     };
 
@@ -207,6 +207,7 @@ in
       system.stateVersion = "25.05";
 
       services.qbittorrent.enable = true;
+      # services.qbittorrent.package = pkgs-unstable.qbittorrent;
       services.qbittorrent.user = "containeruser";
       services.qbittorrent.webuiPort = 8080;
       services.qbittorrent.torrentingPort = torrentingPort;
@@ -237,6 +238,7 @@ in
       system.stateVersion = "25.05";
 
       services.navidrome.enable = true;
+      services.navidrome.package = pkgs-unstable.navidrome;
       services.navidrome.user = "containeruser";
       services.navidrome.settings = {
         MusicFolder = "/dump/music";

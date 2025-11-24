@@ -48,7 +48,6 @@
     }:
     let
       overlays = {
-        unstable = import ./overlays/unstable { inherit inputs; };
         extra-pkgs = import ./overlays/extra-pkgs { inherit inputs; };
       };
 

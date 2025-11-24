@@ -10,7 +10,6 @@ let
 
     {
       nixpkgs.overlays = [
-        overlays.unstable
         overlays.extra-pkgs
       ];
 
