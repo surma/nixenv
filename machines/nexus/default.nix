@@ -104,6 +104,7 @@ in
       services.lidarr.user = "containeruser";
       services.lidarr.dataDir = "/dump/state/lidarr";
       services.lidarr.settings.server.port = 8080;
+      services.lidarr.settings.AUTH.AuthenticationEnabled = false;
     };
 
     bindMounts = {
@@ -134,6 +135,7 @@ in
       services.radarr.user = "containeruser";
       services.radarr.dataDir = "/dump/state/radarr";
       services.radarr.settings.server.port = 8080;
+      services.radarr.settings.AUTH.AuthenticationEnabled = false;
     };
 
     bindMounts = {
@@ -164,6 +166,7 @@ in
       services.sonarr.user = "containeruser";
       services.sonarr.dataDir = "/dump/state/sonarr";
       services.sonarr.settings.server.port = 8080;
+      services.sonarr.settings.AUTH.AuthenticationEnabled = false;
     };
     bindMounts = {
       state = {
@@ -191,6 +194,7 @@ in
       services.prowlarr.enable = true;
       services.prowlarr.package = pkgs-unstable.prowlarr;
       services.prowlarr.settings.server.port = 8080;
+      services.prowlarr.settings.AUTH.AuthenticationEnabled = false;
     };
 
     bindMounts.state = {
@@ -362,7 +366,7 @@ in
     };
   };
 
-  services.hate.enable = true;
+  # services.hate.enable = true;
 
   services.vsftpd.enable = true;
   services.vsftpd.localUsers = true;
