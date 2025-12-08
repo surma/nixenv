@@ -200,6 +200,25 @@ in
     };
   };
 
+  services.surmhosting.exposedApps.rss.target.port = 80;
+  services.surmhosting.exposedApps.rss.target.container = {
+    config = {
+      system.stateVersion = "25.05";
+
+      services.freshrss.enable = true;
+      services.freshrss.dataDir = "/dump/state/freshrss";
+      # services.freshrss.user = "containeruser";
+      services.freshrss.authType = "none";
+      services.freshrss.baseUrl = "http://rss.nexus.hosts.10.0.0.2.nip.io";
+    };
+
+    bindMounts.state = {
+      mountPoint = "/dump/state/freshrss";
+      hostPath = "/dump/state/freshrss";
+      isReadOnly = false;
+    };
+  };
+
   networking.firewall.allowedTCPPorts = [ torrentingPort ];
   networking.firewall.allowedUDPPorts = [ torrentingPort ];
   services.surmhosting.exposedApps.torrent.target.container = {
