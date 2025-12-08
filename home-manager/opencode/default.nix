@@ -47,11 +47,6 @@ with lib;
 
   options = {
     programs.opencode = {
-      enable = mkEnableOption "";
-      package = mkOption {
-        type = types.package;
-        default = pkgs.opencode;
-      };
       extraConfig = mkOption {
         type = types.attrs;
         default = { };
@@ -64,6 +59,5 @@ with lib;
   };
   config = mkIf opencode.enable {
     xdg.configFile."opencode/config.json".text = builtins.toJSON fullConfig;
-    home.packages = [ opencode.package ];
   };
 }

@@ -9,13 +9,13 @@
   ...
 }:
 let
-  srcHash = "sha256-cV1h138IkfnsBH8055sZch3cm1WUx6vAo0uUQeiNlIY=";
-  pnpmDepsHash = "sha256-m7JLJP2GDTWLbnW2x7m82LDPC0/kLzBd4uPChKoxcwU=";
+  srcHash = "sha256-+d1bvWsttEmoqNWu79DcrXMdh3LW/iSF2YaQz68Gi6g";
+  pnpmDepsHash = "sha256-MnzlGcLiXrpMUzzqN4wXB9d/rhhO/00zlORZ1HPM7fI=";
 
   src = fetchFromGitHub {
     owner = "zcaceres";
     repo = "fetch-mcp";
-    rev = "7189766a0d7e75c2b837f93e613f2a15deacac08";
+    rev = "c662c8ac300f715e414a64766cd95cc9ec60a1b3";
     hash = srcHash;
   };
 
@@ -56,6 +56,7 @@ let
         postPatch
         ;
       hash = pnpmDepsHash;
+      fetcherVersion = 2;
     };
   });
 in

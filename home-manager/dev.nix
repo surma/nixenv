@@ -1,7 +1,5 @@
 {
-  config,
   pkgs,
-  lib,
   ...
 }:
 {
@@ -11,7 +9,6 @@
 
   home.packages = with pkgs; [
     git
-    gitui
     lazygit
     git-lfs
     tig
@@ -28,21 +25,20 @@
       autoFetch: false
   '';
 
+  programs.diff-so-fancy.enable = true;
+  programs.diff-so-fancy.enableGitIntegration = true;
   programs.git = {
     enable = true;
-    userName = "Surma";
-    userEmail = "surma@surma.dev";
-    signing = {
-      key = "0xE46E2194CAC89068";
-      signByDefault = true;
-    };
-    diff-so-fancy = {
-      enable = true;
-    };
-    extraConfig = {
+    settings = {
+      user.name = "Surma";
+      user.email = "surma@surma.dev";
       init = {
         defaultBranch = "main";
       };
+    };
+    signing = {
+      key = "0xE46E2194CAC89068";
+      signByDefault = true;
     };
   };
 }

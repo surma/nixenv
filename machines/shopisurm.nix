@@ -23,7 +23,6 @@ in
     { config, ... }:
     {
       imports = [
-        ../common/spotify
         ../common/telegram
 
         ../home-manager/opencode
@@ -46,9 +45,7 @@ in
       nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
       home.sessionVariables.FLAKE_CONFIG_URI = "${config.home.homeDirectory}/src/github.com/surma/nixenv#shopisurm";
 
-      allowedUnfreeApps = [
-        "spotify"
-      ];
+      allowedUnfreeApps = [ ];
 
       home.packages = (
         with pkgs;
@@ -77,13 +74,12 @@ in
       customScripts.update-shopify-key.enable = true;
       customScripts.update-shopify-key.asDesktopItem = true;
 
-      programs.spotify.enable = true;
       programs.git = {
         maintenance.enable = false;
         maintenance.repositories = [
           "${config.home.homeDirectory}/world/git"
         ];
-        extraConfig.include = {
+        settings.extraConfig.include = {
           path = "${config.home.homeDirectory}/.config/dev/gitconfig";
         };
       };

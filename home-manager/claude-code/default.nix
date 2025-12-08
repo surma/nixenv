@@ -25,7 +25,7 @@ let
     ${lib.optionalString (claude-code.overrides.apiKey != null) ''
       export ANTHROPIC_API_KEY=${claude-code.overrides.apiKey}
     ''}
-    ${claude-code.package}/bin/claude "$@"
+    ${pkgs.claude-code}/bin/claude "$@"
   '';
 in
 with lib;
@@ -37,7 +37,6 @@ with lib;
 
   options = {
     programs.claude-code = {
-      enable = mkEnableOption "";
       overrides.baseURL = mkOption {
         type = with types; nullOr str;
         default = null;
@@ -45,10 +44,6 @@ with lib;
       overrides.apiKey = mkOption {
         type = with types; nullOr str;
         default = null;
-      };
-      package = mkOption {
-        type = types.package;
-        default = pkgs.claude-code;
       };
       mcps = mkOption {
         type = types.attrsOf mcpServerType;
@@ -64,6 +59,6 @@ with lib;
       fi
     '';
 
-    home.packages = [ wrapper ];
+    programs.claude-code.package = wrapper;
   };
 }

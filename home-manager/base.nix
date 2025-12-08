@@ -110,11 +110,12 @@ in
     );
 
   programs.ssh = {
+    enableDefaultConfig = false;
     enable = true;
-    forwardAgent = true;
-    addKeysToAgent = "yes";
     matchBlocks = {
       "*" = {
+        addKeysToAgent = "yes";
+        forwardAgent = true;
         identityFile = [
           "${config.home.homeDirectory}/.ssh/id_machine"
           "${config.home.homeDirectory}/.ssh/id_surma"
