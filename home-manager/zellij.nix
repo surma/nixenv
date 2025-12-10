@@ -43,7 +43,13 @@ with lib;
         };
 
         keybinds = {
-          unbind = [ "Ctrl q" ];
+          "shared_except \"locked\"" = {
+            unbind = [ "Ctrl q" "Ctrl g" ];
+            "bind \"Ctrl y\"" = { SwitchToMode = "Locked"; };
+          };
+          locked = {
+            "bind \"Ctrl y\"" = { SwitchToMode = "Normal"; };
+          };
         };
       };
     };
