@@ -1,6 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env -S nu --stdin
 
-cp $@ $@.tmp
-rm $@
-mv $@.tmp $@
-chmod u+w $@
+def main [...files: path] {
+    for file in $files {
+        let tmp = $"($file).tmp"
+        cp $file $tmp
+        rm $file
+        mv $tmp $file
+        chmod u+w $file
+    }
+}
