@@ -1,14 +1,4 @@
 {
-  pkgs,
-  config,
-  lib,
-  ...
-}:
-let
-  inherit (config.programs) nushell;
-in
-with lib;
-{
   config.programs.nushell = {
     extraConfig = ''
       def ngs [...args] {
