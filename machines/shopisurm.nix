@@ -79,7 +79,7 @@ in
         maintenance.repositories = [
           "${config.home.homeDirectory}/world/git"
         ];
-        settings.extraConfig.include = {
+        settings.include = {
           path = "${config.home.homeDirectory}/.config/dev/gitconfig";
         };
       };
