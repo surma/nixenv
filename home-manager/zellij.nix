@@ -44,11 +44,18 @@ with lib;
 
         keybinds = {
           "shared_except \"locked\"" = {
-            unbind = [ "Ctrl q" "Ctrl g" ];
-            "bind \"Ctrl y\"" = { SwitchToMode = "Locked"; };
+            unbind = [
+              "Ctrl q"
+              "Ctrl g"
+            ];
+            "bind \"Ctrl y\"" = {
+              SwitchToMode = "Locked";
+            };
           };
           locked = {
-            "bind \"Ctrl y\"" = { SwitchToMode = "Normal"; };
+            "bind \"Ctrl y\"" = {
+              SwitchToMode = "Normal";
+            };
           };
         };
       };
