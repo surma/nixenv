@@ -33,7 +33,6 @@
     { config, ... }:
     {
       imports = [
-        ../../common/spotify
         ../../common/telegram
 
         ../../home-manager/claude-code
@@ -61,7 +60,6 @@
       home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmbook";
 
       allowedUnfreeApps = [
-        "spotify"
         "claude-code"
       ];
 
@@ -73,11 +71,9 @@
           ollama
           qbittorrent
           jupyter
-          amber
         ]
       );
 
-      programs.spotify.enable = true;
       programs.telegram.enable = true;
       programs.claude-code.enable = true;
       defaultConfigs.claude-code.enable = true;

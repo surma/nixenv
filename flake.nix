@@ -10,10 +10,10 @@
       url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    amber-upstream = {
-      url = "github:amber-lang/Amber";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # amber-upstream = {
+    #   url = "github:amber-lang/Amber/0.4.0-alpha";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
     hyprland = {
       url = "github:hyprwm/hyprland/v0.49.0";
       inputs.nixpkgs.follows = "nixpkgs";
