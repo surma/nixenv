@@ -79,9 +79,8 @@ in
   programs.starship.settings = {
     add_newline = true;
 
-    format = ''${"$"}{custom.cwd} $git_branch $hostname ${"\n"}$character'';
+    format = ''${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname ${"\n"}$character'';
 
-    git_branch.format = "[$branch]($style)";
     hostname.style = "bold red";
     hostname.format = "[$ssh_symbol$hostname]($style)";
     custom.cwd = {
@@ -89,6 +88,18 @@ in
       when = "true";
       format = "[$output]($style)";
       style = "bold cyan";
+      disabled = false;
+      ignore_timeout = true;
+    };
+    custom.branch = {
+      command = "git branch --show-current";
+      when = "test \"$(git rev-parse --is-inside-work-tree 2>&1)\" = true";
+      shell = [
+        "bash"
+        "-"
+      ];
+      format = "[$output]($style)";
+      style = "bold purple";
       disabled = false;
       ignore_timeout = true;
     };
