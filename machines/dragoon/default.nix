@@ -38,6 +38,7 @@
         ../../home-manager/claude-code
         ../../home-manager/opencode
         ../../home-manager/syncthing
+        ../../home-manager/ghostty
 
         ../../home-manager/unfree-apps.nix
 
@@ -79,6 +80,8 @@
       defaultConfigs.claude-code.enable = true;
       programs.opencode.enable = true;
       defaultConfigs.opencode.enable = true;
+      programs.ghostty.enable = true;
+      defaultConfigs.ghostty.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.noti.enable = true;
