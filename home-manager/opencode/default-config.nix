@@ -32,8 +32,8 @@ with lib;
             name = "Shopify";
             npm = "@ai-sdk/openai-compatible";
             options = {
-              apiKey = "{env:SHOPIFY_API_KEY}";
-              baseURL = "https://proxy.shopify.ai/v1";
+              # apiKey = "{env:SHOPIFY_API_KEY}";
+              baseURL = "http://localhost:4000/v1";
             };
             models =
               models

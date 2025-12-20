@@ -1,0 +1,50 @@
+#!/usr/bin/env nu
+
+def better_save [
+  file: string
+] {
+  mkdir ($file | path parse | get parent)
+  $in | save -f $file
+}
+
+def "main" [
+  --key: string
+  --config: string 
+] {
+  let models =  http get -fe --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models | get body.data | where id =~ '^(openai|anthropic|google):'
+  
+  let rconfig = $config | default $"($env.HOME)/.config/sproxy/config.yml"
+
+  let configs = {
+    shopify: {
+      prefix: "openai/",
+      models: $models,
+      extra: {
+        api_base: "https://proxy.shopify.ai/v1/"
+      }
+    }
+  }
+
+  let config = {
+    model_list: ($configs
+      | transpose "name" "config" 
+      | each {|c| 
+        $c.config.models 
+          | each {|m| 
+            {
+              model_name: $"($c.name):($m.id)", 
+              litellm_params: {
+                model: $"($c.config.prefix)($m.id)", 
+                api_key: ($key), 
+                ...$c.config.extra
+              }
+            }
+          }
+      }
+      | flatten)
+  }
+
+  $config | to yaml | better_save $rconfig
+
+  nix run 'github:nixos/nixpkgs/nixpkgs-unstable#litellm' -- -c $rconfig
+}

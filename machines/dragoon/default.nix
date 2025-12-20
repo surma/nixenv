@@ -81,6 +81,8 @@
       defaultConfigs.opencode.enable = true;
 
       customScripts.denix.enable = true;
+      customScripts.noti.enable = true;
+      customScripts.llm-proxy.enable = true;
       customScripts.ghclone.enable = true;
       customScripts.wallpaper-shuffle.enable = true;
       customScripts.wallpaper-shuffle.asDesktopItem = true;
