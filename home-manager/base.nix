@@ -11,6 +11,14 @@ let
   not = x: !x;
 
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+
+  # Wrapper for pinentry-curses that fixes $TERM for Ghostty
+  pinentry-curses-wrapped = pkgs.writeShellScriptBin "pinentry" ''
+    if [ "$TERM" = "xterm-ghostty" ]; then
+      export TERM=xterm
+    fi
+    exec ${pkgs.pinentry-curses}/bin/pinentry "$@"
+  '';
 in
 {
 
@@ -47,7 +55,7 @@ in
 
   home.file = {
     ".gnupg/gpg-agent.conf".text = ''
-      pinentry-program ${pkgs.pinentry-curses}/bin/pinentry
+      pinentry-program ${pinentry-curses-wrapped}/bin/pinentry
     '';
   };
 

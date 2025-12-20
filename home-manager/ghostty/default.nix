@@ -18,6 +18,8 @@ let
     name = "ghostty";
     inherit version src;
 
+    meta.mainProgram = "ghostty";
+
     # FIXME: This is dirty!
     # The Ghostty DMG is APFS, not HFS+, which `undmg` does not suppport.
     # To be able to unpack it, I rely on the fact that builds on MacOS i
