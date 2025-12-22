@@ -130,7 +130,10 @@ in
 
     networking.nat.enable = true;
     networking.nat.externalInterface = cfg.externalInterface;
-    networking.nat.internalInterfaces = [ "ve-+" ];
+    networking.nat.internalIPs = [ "10.201.0.0/16" ];
+
+    networking.firewall.allowedTCPPorts = [ 80 ] ++ (lib.optionals cfg.tls.enable [ 443 ]);
+    networking.firewall.trustedInterfaces = [ "ve-+" ];
 
     services.traefik = mkMerge (
       [
