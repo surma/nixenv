@@ -68,5 +68,13 @@
         "nexus"
       ];
     };
+    nexus-redis = {
+      contents = ../machines/nexus/redis/pw.age;
+      keys = [
+        "surma"
+        "nexus"
+        "shopisurm"
+      ];
+    };
   };
 }
