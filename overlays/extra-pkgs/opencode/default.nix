@@ -7,8 +7,8 @@
   ...
 }:
 let
-  version = "1.0.169";
-  hash = "sha256-kU+CvUkuDLJfTQ+zufXpCiPTjepu80H8oMXz9gSs+lQ=";
+  version = "1.0.223";
+  hash = "sha256-UF1vpx3DnjoJkybEn+d8oi+hB7m9HlB8xcV26p3aGUE=";
 
   platforms = {
     "x86_64-linux" = "linux-x64";
