@@ -10,6 +10,7 @@ def better_save [
 def "main" [
   --key: string
   --config: string 
+  --branch: string = "nixpkgs-unstable"
 ] {
   let models =  http get -fe --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models | get body.data | where id =~ '^(openai|anthropic|google):'
   
@@ -46,5 +47,5 @@ def "main" [
 
   $config | to yaml | better_save $rconfig
 
-  nix run 'github:nixos/nixpkgs/nixpkgs-unstable#litellm' -- -c $rconfig
+  nix run $"github:nixos/nixpkgs/($branch)#litellm" -- -c $rconfig
 }
