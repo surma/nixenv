@@ -107,10 +107,11 @@
             machine = ./machines/archon;
           };
           surmframework = archon;
-          surmrock = loadNixos {
+          forge = loadNixos {
             inherit system;
-            machine = ./machines/surmrock.nix;
+            machine = ./machines/forge;
           };
+          surmrock = forge;
           nexus = loadNixos {
             inherit system;
             machine = ./machines/nexus;
