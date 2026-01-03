@@ -9,9 +9,9 @@
     pylon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRS1TLlaWODfefGUvk0mYZEx6pE6Gr2xhsVGbsn91Uh";
     surmframework = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMGHVSc2lTehmhEl87rp3m15b8Q1GojwNJsnbxJxWe99";
     archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMGHVSc2lTehmhEl87rp3m15b8Q1GojwNJsnbxJxWe99";
-    surmturntable = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBb7S7oe5a61I0TH+2xmI68rGVflyftTvjQlVinJgFOr surma@surmturntable";
-    nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW surma@nexus";
-    forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJc5PTI022JeWW4l3nWZggBLY80GLu793TEwpIwdZtzJ surma@forge";
+    surmturntable = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBb7S7oe5a61I0TH+2xmI68rGVflyftTvjQlVinJgFOr";
+    nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW";
+    forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJc5PTI022JeWW4l3nWZggBLY80GLu793TEwpIwdZtzJ";
   };
   secrets = {
     ssh-keys = {
@@ -25,6 +25,7 @@
         "shopisurm"
         "surmframework"
         "surmturntable"
+        "forge"
       ];
     };
     gpg-keys = {
@@ -38,6 +39,7 @@
         "shopisurm"
         "surmframework"
         "surmturntable"
+        "forge"
       ];
     };
     writing-prompt = {
