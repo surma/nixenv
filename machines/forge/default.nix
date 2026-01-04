@@ -10,24 +10,34 @@
     inputs.home-manager.nixosModules.home-manager
 
     ./hardware.nix
-    
+
     ../../home-manager/unfree-apps.nix
     ../../nixos/base.nix
     ../../nixos/hyprland.nix
 
+    ../../nixos/_1password-wrapper.nix
+
     # ../../secrets
   ];
+
+  allowedUnfreeApps = [ "1password" ];
   nix.settings.require-sigs = false;
-  # secrets.identity = "/home/surma/.ssh/id_machine";
+  secrets.identity = "/home/surma/.ssh/id_machine";
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  fonts.packages = with pkgs; [ fira-code ];
+
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+  services.blueman.enable = true;
   networking.hostName = "forge";
   networking.networkmanager.enable = true;
   programs.nm-applet.enable = true;
+  programs.firefox.enable = true;
   services.pulseaudio.enable = false;
   services.pipewire = {
     enable = true;
