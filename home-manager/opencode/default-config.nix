@@ -23,9 +23,13 @@ with lib;
 
   config = {
 
+    customScripts.noti.enable = mkIf isEnabled true;
     programs.mcp-nixos.enable = mkIf isEnabled true;
     programs.mcp-playwright.enable = mkIf isEnabled true;
     programs.opencode = {
+      plugins = {
+        "notification.js" = builtins.readFile ./plugin/notification.js;
+      };
       extraConfig = {
         provider = {
           shopify = {
