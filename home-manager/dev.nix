@@ -17,7 +17,10 @@
   ];
 
   home.file = {
-    ".npmrc".source = ../configs/npmrc;
+    ".npmrc" = {
+      source = ../configs/npmrc;
+      mutable = true;
+    };
   };
 
   xdg.configFile."lazygit/config.yml".text = ''

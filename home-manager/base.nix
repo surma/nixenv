@@ -25,6 +25,7 @@ in
   imports = [
     ../scripts
     ../secrets
+    ./mutable-files.nix
     ./zellij.nix
 
     ../home-manager/nushell
