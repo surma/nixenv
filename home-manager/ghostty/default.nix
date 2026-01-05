@@ -41,9 +41,12 @@ let
     installPhase = ''
       runHook preInstall
 
-      mkdir -p $out/Applications $out/bin
+      mkdir -p $out/Applications $out/bin $out/share/terminfo
       cp -r Ghostty.app $out/Applications/
       ln -sf $out/Applications/Ghostty.app/Contents/MacOS/ghostty $out/bin/ghostty
+
+      # Copy terminfo files so they're found via TERMINFO_DIRS
+      cp -r Ghostty.app/Contents/Resources/terminfo/* $out/share/terminfo/
 
       runHook postInstall
     '';
