@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ options, config, pkgs, ... }:
 let
   inherit (pkgs) callPackage;
 in
@@ -8,6 +8,8 @@ in
 
     ../common/obs
     ../common/obsidian
+
+    ../scripts
   ];
 
   system.stateVersion = 5;
