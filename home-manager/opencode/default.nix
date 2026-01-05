@@ -55,9 +55,22 @@ with lib;
         type = types.attrsOf (types.submodule mcpServerDefinition);
         default = { };
       };
+      plugins = mkOption {
+        type = types.attrsOf types.lines;
+        default = { };
+        description = "Plugin files to write to ~/.config/opencode/plugin/";
+      };
     };
   };
   config = mkIf opencode.enable {
-    xdg.configFile."opencode/config.json".text = builtins.toJSON fullConfig;
+    xdg.configFile = mkMerge [
+      { "opencode/config.json".text = builtins.toJSON fullConfig; }
+      (lib.mapAttrs' (name: content: {
+        name = "opencode/plugin/${name}";
+        value = {
+          text = content;
+        };
+      }) opencode.plugins)
+    ];
   };
 }
