@@ -76,6 +76,7 @@ in
       customScripts.ghclone.enable = true;
       customScripts.wallpaper-shuffle.enable = true;
       customScripts.wallpaper-shuffle.asDesktopItem = true;
+      customScripts.llm-proxy.enable = true;
       customScripts.get-shopify-key.enable = true;
       customScripts.update-shopify-key.enable = true;
       customScripts.update-shopify-key.asDesktopItem = true;
