@@ -23,6 +23,7 @@ let
 
   packages = [
     (callPackage (import ./flacsplit) { })
+    (callPackage (import ./noti) { })
   ]
   ++ (
     scripts

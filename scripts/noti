@@ -1,7 +1,0 @@
-#!/usr/bin/env nu
-
-def main [
-  msg: string
-] {
-  osascript -e $"display notification ($msg | to json)"
-}
