@@ -16,8 +16,10 @@ with lib;
       settings = {
         theme = "light:Gruvbox Light,dark:Gruvbox Dark";
 
-        font-family = "Fira Code";
-        font-size = 12;
+        font-family = "Fira Code Regular";
+        font-family-bold = "Fira Code Bold";
+        font-size = 16;
+        font-thicken = false;
 
         gtk-tabs-location = "hidden";
 
@@ -27,12 +29,11 @@ with lib;
           "super+equal=increase_font_size:1"
           "super+-=decrease_font_size:1"
           "super+0=reset_font_size"
-          "super+f=start_search"
           "super+n=new_window"
           "super+q=quit"
-          "super+c=copy_to_clipboard:mixed"
+          "performable:super+c=copy_to_clipboard"
           "super+v=paste_from_clipboard"
-          "copy=copy_to_clipboard:mixed"
+          "performable:copy=copy_to_clipboard"
           "paste=paste_from_clipboard"
         ];
       };
