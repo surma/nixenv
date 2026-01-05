@@ -1,4 +1,9 @@
-{ options, config, pkgs, ... }:
+{
+  options,
+  config,
+  pkgs,
+  ...
+}:
 let
   inherit (pkgs) callPackage;
 in
@@ -28,7 +33,7 @@ in
         ../common/telegram
 
         ../home-manager/opencode
-        ../home-manager/claude-code
+        ../home-manager/ghostty
 
         ../home-manager/base.nix
         ../home-manager/graphical.nix
@@ -63,9 +68,8 @@ in
 
       programs.opencode.enable = true;
       defaultConfigs.opencode.enable = true;
-      programs.claude-code.enable = true;
-      defaultConfigs.claude-code.enable = true;
-      programs.telegram.enable = true;
+      programs.ghostty.enable = true;
+      defaultConfigs.ghostty.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.noti.enable = true;
