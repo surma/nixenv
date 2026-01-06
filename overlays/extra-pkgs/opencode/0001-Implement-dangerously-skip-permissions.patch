@@ -1,17 +1,21 @@
-From 1e8c24301ccd12d0087eadf828813417b07d5e15 Mon Sep 17 00:00:00 2001
+From 9b842292e1e25d9716c94fb9c5c10659bec59109 Mon Sep 17 00:00:00 2001
 From: Surma <surma@surma.dev>
 Date: Tue, 6 Jan 2026 11:44:32 +0000
 Subject: [PATCH] Implement --dangerously-skip-permissions
 
 ---
- packages/opencode/src/cli/cmd/run.ts        | 10 ++++++++++
- packages/opencode/src/cli/cmd/tui/thread.ts | 10 ++++++++++
- packages/opencode/src/flag/flag.ts          |  1 +
- packages/opencode/src/permission/next.ts    |  8 ++++++++
- 4 files changed, 29 insertions(+)
+ packages/opencode/src/cli/cmd/run.ts                   |  9 +++++++++
+ packages/opencode/src/cli/cmd/tui/context/args.tsx     |  1 +
+ packages/opencode/src/cli/cmd/tui/routes/home.tsx      |  3 +++
+ .../opencode/src/cli/cmd/tui/routes/session/footer.tsx |  5 +++++
+ .../src/cli/cmd/tui/routes/session/sidebar.tsx         |  5 +++++
+ packages/opencode/src/cli/cmd/tui/thread.ts            | 10 ++++++++++
+ packages/opencode/src/flag/flag.ts                     |  1 +
+ packages/opencode/src/permission/next.ts               |  8 ++++++++
+ 8 files changed, 42 insertions(+)
 
 diff --git a/packages/opencode/src/cli/cmd/run.ts b/packages/opencode/src/cli/cmd/run.ts
-index bd9d29b4d..7dfa50ac9 100644
+index bd9d29b4d..f03b96041 100644
 --- a/packages/opencode/src/cli/cmd/run.ts
 +++ b/packages/opencode/src/cli/cmd/run.ts
 @@ -11,6 +11,7 @@ import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk/v2"
@@ -22,7 +26,7 @@ index bd9d29b4d..7dfa50ac9 100644
  
  const TOOL: Record<string, [string, string]> = {
    todowrite: ["Todo", UI.Style.TEXT_WARNING_BOLD],
-@@ -91,8 +92,17 @@ export const RunCommand = cmd({
+@@ -91,8 +92,16 @@ export const RunCommand = cmd({
          type: "string",
          describe: "model variant (provider-specific reasoning effort, e.g., high, max, minimal)",
        })
@@ -34,14 +38,94 @@ index bd9d29b4d..7dfa50ac9 100644
    handler: async (args) => {
 +    if (args.dangerouslySkipPermissions || Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS) {
 +      PermissionNext.setSkipPermissions(true)
-+      UI.println(UI.Style.TEXT_DANGER_BOLD + "⚠", UI.Style.TEXT_NORMAL, "All permission checks are bypassed.")
 +    }
 +
      let message = [...args.message, ...(args["--"] || [])]
        .map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg))
        .join(" ")
+diff --git a/packages/opencode/src/cli/cmd/tui/context/args.tsx b/packages/opencode/src/cli/cmd/tui/context/args.tsx
+index ffd43009a..1f0413679 100644
+--- a/packages/opencode/src/cli/cmd/tui/context/args.tsx
++++ b/packages/opencode/src/cli/cmd/tui/context/args.tsx
+@@ -6,6 +6,7 @@ export interface Args {
+   prompt?: string
+   continue?: boolean
+   sessionID?: string
++  dangerouslySkipPermissions?: boolean
+ }
+ 
+ export const { use: useArgs, provider: ArgsProvider } = createSimpleContext({
+diff --git a/packages/opencode/src/cli/cmd/tui/routes/home.tsx b/packages/opencode/src/cli/cmd/tui/routes/home.tsx
+index 2155ab947..2666aa464 100644
+--- a/packages/opencode/src/cli/cmd/tui/routes/home.tsx
++++ b/packages/opencode/src/cli/cmd/tui/routes/home.tsx
+@@ -103,6 +103,9 @@ export function Home() {
+             hint={Hint}
+           />
+         </box>
++        <Show when={args.dangerouslySkipPermissions}>
++          <text fg={theme.warning}>△ YOLO mode</text>
++        </Show>
+         <Toast />
+       </box>
+       <Show when={!isFirstTimeUser()}>
+diff --git a/packages/opencode/src/cli/cmd/tui/routes/session/footer.tsx b/packages/opencode/src/cli/cmd/tui/routes/session/footer.tsx
+index d10c49c83..121c485eb 100644
+--- a/packages/opencode/src/cli/cmd/tui/routes/session/footer.tsx
++++ b/packages/opencode/src/cli/cmd/tui/routes/session/footer.tsx
+@@ -5,11 +5,13 @@ import { useDirectory } from "../../context/directory"
+ import { useConnected } from "../../component/dialog-model"
+ import { createStore } from "solid-js/store"
+ import { useRoute } from "../../context/route"
++import { useArgs } from "../../context/args"
+ 
+ export function Footer() {
+   const { theme } = useTheme()
+   const sync = useSync()
+   const route = useRoute()
++  const args = useArgs()
+   const mcp = createMemo(() => Object.values(sync.data.mcp).filter((x) => x.status === "connected").length)
+   const mcpError = createMemo(() => Object.values(sync.data.mcp).some((x) => x.status === "failed"))
+   const lsp = createMemo(() => Object.keys(sync.data.lsp))
+@@ -50,6 +52,9 @@ export function Footer() {
+     <box flexDirection="row" justifyContent="space-between" gap={1} flexShrink={0}>
+       <text fg={theme.textMuted}>{directory()}</text>
+       <box gap={2} flexDirection="row" flexShrink={0}>
++        <Show when={args.dangerouslySkipPermissions}>
++          <text fg={theme.warning}>△ YOLO mode</text>
++        </Show>
+         <Switch>
+           <Match when={store.welcome}>
+             <text fg={theme.text}>
+diff --git a/packages/opencode/src/cli/cmd/tui/routes/session/sidebar.tsx b/packages/opencode/src/cli/cmd/tui/routes/session/sidebar.tsx
+index a9ed042d1..7b6b2bb74 100644
+--- a/packages/opencode/src/cli/cmd/tui/routes/session/sidebar.tsx
++++ b/packages/opencode/src/cli/cmd/tui/routes/session/sidebar.tsx
+@@ -11,10 +11,12 @@ import { useKeybind } from "../../context/keybind"
+ import { useDirectory } from "../../context/directory"
+ import { useKV } from "../../context/kv"
+ import { TodoItem } from "../../component/todo-item"
++import { useArgs } from "../../context/args"
+ 
+ export function Sidebar(props: { sessionID: string }) {
+   const sync = useSync()
+   const { theme } = useTheme()
++  const args = useArgs()
+   const session = createMemo(() => sync.session.get(props.sessionID)!)
+   const diff = createMemo(() => sync.data.session_diff[props.sessionID] ?? [])
+   const todo = createMemo(() => sync.data.todo[props.sessionID] ?? [])
+@@ -311,6 +313,9 @@ export function Sidebar(props: { sessionID: string }) {
+             </span>{" "}
+             <span>{Installation.VERSION}</span>
+           </text>
++          <Show when={args.dangerouslySkipPermissions}>
++            <text fg={theme.warning}>△ YOLO mode</text>
++          </Show>
+         </box>
+       </box>
+     </Show>
 diff --git a/packages/opencode/src/cli/cmd/tui/thread.ts b/packages/opencode/src/cli/cmd/tui/thread.ts
-index 7b6f028fc..2081fc321 100644
+index 7b6f028fc..ad6d40b7c 100644
 --- a/packages/opencode/src/cli/cmd/tui/thread.ts
 +++ b/packages/opencode/src/cli/cmd/tui/thread.ts
 @@ -7,6 +7,7 @@ import { UI } from "@/cli/ui"
@@ -52,7 +136,7 @@ index 7b6f028fc..2081fc321 100644
  
  declare global {
    const OPENCODE_WORKER_PATH: string
-@@ -43,8 +44,17 @@ export const TuiThreadCommand = cmd({
+@@ -43,8 +44,16 @@ export const TuiThreadCommand = cmd({
        .option("agent", {
          type: "string",
          describe: "agent to use",
@@ -64,12 +148,19 @@ index 7b6f028fc..2081fc321 100644
    handler: async (args) => {
 +    if (args.dangerouslySkipPermissions || Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS) {
 +      process.env.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS = "true"
-+      UI.println(UI.Style.TEXT_DANGER_BOLD + "⚠", UI.Style.TEXT_NORMAL, "All permission checks are bypassed.")
 +    }
 +
      // Resolve relative paths against PWD to preserve behavior when using --cwd flag
      const baseCwd = process.env.PWD ?? process.cwd()
      const cwd = args.project ? path.resolve(baseCwd, args.project) : process.cwd()
+@@ -96,6 +105,7 @@ export const TuiThreadCommand = cmd({
+         agent: args.agent,
+         model: args.model,
+         prompt,
++        dangerouslySkipPermissions: args.dangerouslySkipPermissions || Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS,
+       },
+       onExit: async () => {
+         await client.call("shutdown", undefined)
 diff --git a/packages/opencode/src/flag/flag.ts b/packages/opencode/src/flag/flag.ts
 index 805da33cc..ca82b3904 100644
 --- a/packages/opencode/src/flag/flag.ts
