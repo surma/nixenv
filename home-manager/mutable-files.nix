@@ -10,17 +10,21 @@ in
 {
   options.home.file = mkOption {
     type = types.attrsOf (
-      types.submodule {
-        options.mutable = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            If true, the file will be copied instead of symlinked,
-            making it writable. The file is overwritten on each
-            home-manager activation.
-          '';
-        };
-      }
+      types.submodule (
+        { config, ... }:
+        {
+          options.mutable = mkOption {
+            type = types.bool;
+            default = false;
+            description = ''
+              If true, the file will be copied instead of symlinked,
+              making it writable. The file is overwritten on each
+              home-manager activation.
+            '';
+          };
+          config.force = mkIf config.mutable true;
+        }
+      )
     );
   };
 

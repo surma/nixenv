@@ -32,7 +32,6 @@ let
               ];
             }
           ];
-          backupFileExtension = "bak";
           extraSpecialArgs = {
             inherit inputs;
             systemManager = "home-manager";
