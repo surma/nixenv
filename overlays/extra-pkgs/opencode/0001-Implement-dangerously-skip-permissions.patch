@@ -1,0 +1,117 @@
+From 1e8c24301ccd12d0087eadf828813417b07d5e15 Mon Sep 17 00:00:00 2001
+From: Surma <surma@surma.dev>
+Date: Tue, 6 Jan 2026 11:44:32 +0000
+Subject: [PATCH] Implement --dangerously-skip-permissions
+
+---
+ packages/opencode/src/cli/cmd/run.ts        | 10 ++++++++++
+ packages/opencode/src/cli/cmd/tui/thread.ts | 10 ++++++++++
+ packages/opencode/src/flag/flag.ts          |  1 +
+ packages/opencode/src/permission/next.ts    |  8 ++++++++
+ 4 files changed, 29 insertions(+)
+
+diff --git a/packages/opencode/src/cli/cmd/run.ts b/packages/opencode/src/cli/cmd/run.ts
+index bd9d29b4d..7dfa50ac9 100644
+--- a/packages/opencode/src/cli/cmd/run.ts
++++ b/packages/opencode/src/cli/cmd/run.ts
+@@ -11,6 +11,7 @@ import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk/v2"
+ import { Server } from "../../server/server"
+ import { Provider } from "../../provider/provider"
+ import { Agent } from "../../agent/agent"
++import { PermissionNext } from "../../permission/next"
+ 
+ const TOOL: Record<string, [string, string]> = {
+   todowrite: ["Todo", UI.Style.TEXT_WARNING_BOLD],
+@@ -91,8 +92,17 @@ export const RunCommand = cmd({
+         type: "string",
+         describe: "model variant (provider-specific reasoning effort, e.g., high, max, minimal)",
+       })
++      .option("dangerously-skip-permissions", {
++        type: "boolean",
++        describe: "Skip all permission prompts (use with extreme caution)",
++      })
+   },
+   handler: async (args) => {
++    if (args.dangerouslySkipPermissions || Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS) {
++      PermissionNext.setSkipPermissions(true)
++      UI.println(UI.Style.TEXT_DANGER_BOLD + "⚠", UI.Style.TEXT_NORMAL, "All permission checks are bypassed.")
++    }
++
+     let message = [...args.message, ...(args["--"] || [])]
+       .map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg))
+       .join(" ")
+diff --git a/packages/opencode/src/cli/cmd/tui/thread.ts b/packages/opencode/src/cli/cmd/tui/thread.ts
+index 7b6f028fc..2081fc321 100644
+--- a/packages/opencode/src/cli/cmd/tui/thread.ts
++++ b/packages/opencode/src/cli/cmd/tui/thread.ts
+@@ -7,6 +7,7 @@ import { UI } from "@/cli/ui"
+ import { iife } from "@/util/iife"
+ import { Log } from "@/util/log"
+ import { withNetworkOptions, resolveNetworkOptions } from "@/cli/network"
++import { Flag } from "@/flag/flag"
+ 
+ declare global {
+   const OPENCODE_WORKER_PATH: string
+@@ -43,8 +44,17 @@ export const TuiThreadCommand = cmd({
+       .option("agent", {
+         type: "string",
+         describe: "agent to use",
++      })
++      .option("dangerously-skip-permissions", {
++        type: "boolean",
++        describe: "Skip all permission prompts (use with extreme caution)",
+       }),
+   handler: async (args) => {
++    if (args.dangerouslySkipPermissions || Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS) {
++      process.env.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS = "true"
++      UI.println(UI.Style.TEXT_DANGER_BOLD + "⚠", UI.Style.TEXT_NORMAL, "All permission checks are bypassed.")
++    }
++
+     // Resolve relative paths against PWD to preserve behavior when using --cwd flag
+     const baseCwd = process.env.PWD ?? process.cwd()
+     const cwd = args.project ? path.resolve(baseCwd, args.project) : process.cwd()
+diff --git a/packages/opencode/src/flag/flag.ts b/packages/opencode/src/flag/flag.ts
+index 805da33cc..ca82b3904 100644
+--- a/packages/opencode/src/flag/flag.ts
++++ b/packages/opencode/src/flag/flag.ts
+@@ -8,6 +8,7 @@ export namespace Flag {
+   export const OPENCODE_DISABLE_PRUNE = truthy("OPENCODE_DISABLE_PRUNE")
+   export const OPENCODE_DISABLE_TERMINAL_TITLE = truthy("OPENCODE_DISABLE_TERMINAL_TITLE")
+   export const OPENCODE_PERMISSION = process.env["OPENCODE_PERMISSION"]
++  export const OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS = truthy("OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS")
+   export const OPENCODE_DISABLE_DEFAULT_PLUGINS = truthy("OPENCODE_DISABLE_DEFAULT_PLUGINS")
+   export const OPENCODE_DISABLE_LSP_DOWNLOAD = truthy("OPENCODE_DISABLE_LSP_DOWNLOAD")
+   export const OPENCODE_ENABLE_EXPERIMENTAL_MODELS = truthy("OPENCODE_ENABLE_EXPERIMENTAL_MODELS")
+diff --git a/packages/opencode/src/permission/next.ts b/packages/opencode/src/permission/next.ts
+index 9a0395fa1..62d67b621 100644
+--- a/packages/opencode/src/permission/next.ts
++++ b/packages/opencode/src/permission/next.ts
+@@ -8,10 +8,17 @@ import { fn } from "@/util/fn"
+ import { Log } from "@/util/log"
+ import { Wildcard } from "@/util/wildcard"
+ import z from "zod"
++import { Flag } from "@/flag/flag"
+ 
+ export namespace PermissionNext {
+   const log = Log.create({ service: "permission" })
+ 
++  let skipPermissions = Flag.OPENCODE_DANGEROUSLY_SKIP_PERMISSIONS
++
++  export function setSkipPermissions(value: boolean) {
++    skipPermissions = value
++  }
++
+   export const Action = z.enum(["allow", "deny", "ask"]).meta({
+     ref: "PermissionAction",
+   })
+@@ -126,6 +133,7 @@ export namespace PermissionNext {
+         if (rule.action === "deny")
+           throw new DeniedError(ruleset.filter((r) => Wildcard.match(request.permission, r.permission)))
+         if (rule.action === "ask") {
++          if (skipPermissions) continue
+           const id = input.id ?? Identifier.ascending("permission")
+           return new Promise<void>((resolve, reject) => {
+             const info: Request = {
+-- 
+2.52.0
+

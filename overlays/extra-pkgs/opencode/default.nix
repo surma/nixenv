@@ -89,8 +89,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   patches = [
     ./relax-bun-version-check.patch
-    # Add your custom patches here:
-    # ./my-custom-patch.patch
+    ./0001-Implement-dangerously-skip-permissions.patch
   ];
 
   dontConfigure = true;
