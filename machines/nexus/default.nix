@@ -157,6 +157,7 @@ in
           services.lidarr.user = "containeruser";
           services.lidarr.dataDir = "/dump/state/lidarr";
           services.lidarr.settings.server.port = 8080;
+          services.lidarr.settings.auth.method = "External";
         };
 
         bindMounts = {
@@ -189,6 +190,7 @@ in
           services.radarr.user = "containeruser";
           services.radarr.dataDir = "/dump/state/radarr";
           services.radarr.settings.server.port = 8080;
+          services.radarr.settings.auth.method = "External";
         };
 
         bindMounts = {
@@ -220,6 +222,7 @@ in
           services.sonarr.user = "containeruser";
           services.sonarr.dataDir = "/dump/state/sonarr";
           services.sonarr.settings.server.port = 8080;
+          services.sonarr.settings.auth.method = "External";
         };
         bindMounts = {
           state = {
@@ -248,6 +251,7 @@ in
           services.prowlarr.enable = true;
           services.prowlarr.package = pkgs-unstable.prowlarr;
           services.prowlarr.settings.server.port = 8080;
+          services.prowlarr.settings.auth.method = "External";
         };
 
         bindMounts.state = {
