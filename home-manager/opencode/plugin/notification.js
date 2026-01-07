@@ -1,8 +1,13 @@
-export const NotificationPlugin = async ({ $ }) => {
+export const NotificationPlugin = async ({ client, $ }) => {
   return {
     event: async ({ event }) => {
       if (event.type === "session.idle") {
-        await $`noti "OpenCode is done coding"`
+        const session = await client.session.get({
+          path: { id: event.properties.sessionID },
+        })
+        if (!session.data?.parentID) {
+          await $`noti "OpenCode is done coding"`
+        }
       }
     },
   }
