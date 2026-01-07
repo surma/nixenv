@@ -48,7 +48,7 @@ in
     tree
     pinentry-curses
     chafa
-    yazi
+
     fzf
     dprint
     fd
@@ -75,16 +75,19 @@ in
   programs.bat.enable = true;
   programs.zoxide.enable = true;
   programs.zoxide.enableZshIntegration = true;
+  programs.zoxide.enableNushellIntegration = true;
   programs.fzf.enable = true;
   programs.fzf.enableZshIntegration = true;
   programs.eza = {
     enable = true;
     icons = "auto";
     git = true;
+    enableNushellIntegration = true;
   };
   programs.helix = import ../configs/helix.nix;
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
+  programs.starship.enableNushellIntegration = true;
   programs.starship.settings = {
     add_newline = true;
 
@@ -114,6 +117,10 @@ in
     };
   };
   programs.gpg.enable = true;
+  programs.carapace.enable = true;
+  programs.carapace.enableNushellIntegration = true;
+  programs.yazi.enable = true;
+  programs.yazi.enableNushellIntegration = true;
   programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
   programs.nushell.enable = true;
   programs.nushell.package = pkgs-unstable.nushell;
