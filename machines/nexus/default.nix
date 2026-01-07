@@ -294,6 +294,12 @@ in
           services.qbittorrent.webuiPort = 8080;
           services.qbittorrent.torrentingPort = torrentingPort;
           services.qbittorrent.profileDir = "/dump/state/qbittorrent";
+          services.qbittorrent.serverConfig = {
+            Preferences.WebUI = {
+              AuthSubnetWhitelistEnabled = true;
+              AuthSubnetWhitelist = "0.0.0.0/0";
+            };
+          };
         };
 
         forwardPorts = [
