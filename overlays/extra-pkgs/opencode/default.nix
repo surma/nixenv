@@ -94,6 +94,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   dontConfigure = true;
 
+  env.MODELS_DEV_API_JSON = builtins.toFile "models-dev-api.json" "{}";
   env.OPENCODE_VERSION = finalAttrs.version;
   env.OPENCODE_CHANNEL = "stable";
 
