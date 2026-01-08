@@ -5,7 +5,7 @@
   ...
 }:
 let
-  mkMultiSystemModule = import ../../lib/mk-multi-system-module.nix;
+  mkMultiSystemModule = import ../../../lib/mk-multi-system-module.nix;
 
   name = "obsidian";
   caskName = "obsidian";

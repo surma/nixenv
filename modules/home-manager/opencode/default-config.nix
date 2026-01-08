@@ -8,7 +8,7 @@ let
   isEnabled = config.defaultConfigs.opencode.enable;
   cfg = config.defaultConfigs.opencode.llmProxy;
 
-  models = import ../../overlays/extra-pkgs/opencode/models.nix;
+  models = import ../../../overlays/extra-pkgs/opencode/models.nix;
 
   # Build options object conditionally
   providerOptions = {
@@ -31,8 +31,8 @@ with lib;
 {
 
   imports = [
-    ../mcp-nixos.nix
-    ../mcp-playwright.nix
+    ../mcp-nixos
+    ../mcp-playwright
   ];
 
   options = {

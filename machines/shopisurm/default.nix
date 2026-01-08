@@ -33,21 +33,21 @@ in
       imports = [
         ../common/telegram
 
-        ../home-manager/opencode
-        ../home-manager/ghostty
-        ../home-manager/llm-key-updater
+        ../../modules/home-manager/opencode
+        ../../modules/home-manager/ghostty
+        ../../modules/home-manager/llm-key-updater
 
-        ../home-manager/base.nix
-        ../home-manager/graphical.nix
-        ../home-manager/workstation.nix
-        ../home-manager/physical.nix
-        ../home-manager/macos.nix
-        ../home-manager/cloud.nix
-        ../home-manager/nixdev.nix
-        ../home-manager/javascript.nix
-        ../home-manager/dev.nix
-        ../home-manager/experiments.nix
-        ../home-manager/unfree-apps.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/graphical.nix
+        ../../profiles/home-manager/workstation.nix
+        ../../profiles/home-manager/physical.nix
+        ../../profiles/home-manager/macos.nix
+        ../../profiles/home-manager/cloud.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/javascript.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/experiments.nix
+        ../../modules/home-manager/unfree-apps
 
         ../secrets
       ];

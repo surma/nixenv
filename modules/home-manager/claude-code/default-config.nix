@@ -10,9 +10,9 @@ in
 with lib;
 {
   imports = [
-    ../fetch-mcp.nix
-    ../browser-mcp.nix
-    ../mcp-nixos.nix
+    ../fetch-mcp
+    ../browser-mcp
+    ../mcp-nixos
   ];
 
   options = {

@@ -129,10 +129,10 @@
         ../../modules/home-manager/opencode
         ../../modules/home-manager/claude-code
         ../../modules/home-manager/hyprland
-        ../../home-manager/hyprsunset
+        ../../../modules/home-manager/hyprsunset
         ../../modules/services/syncthing
-        ../../home-manager/waybar
-        ../../home-manager/hyprpaper
+        ../../../modules/home-manager/waybar
+        ../../../modules/home-manager/hyprpaper
 
         ../../scripts
 
@@ -147,7 +147,7 @@
 
         ../../modules/home-manager/unfree-apps
         ../../profiles/home-manager/webapps.nix
-        ../../home-manager/screenshot.nix
+        ../../../modules/home-manager/screenshot
       ];
 
       config = {

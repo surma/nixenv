@@ -10,7 +10,7 @@
     { config, ... }:
     {
       imports = [
-        ../home-manager/base.nix
+        ../../profiles/home-manager/base.nix
       ];
 
       home.stateVersion = "24.05";

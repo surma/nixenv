@@ -2,9 +2,9 @@
 {
   imports = [
 
-    ../home-manager/base.nix
-    ../home-manager/dev.nix
-    ../home-manager/linux.nix
+    ../../profiles/home-manager/base.nix
+    ../../profiles/home-manager/dev.nix
+    ../../profiles/home-manager/linux.nix
   ];
   home.packages = (with pkgs; [ ]);
 

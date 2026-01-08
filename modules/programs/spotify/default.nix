@@ -2,7 +2,7 @@
   ...
 }:
 let
-  mkElectronWrapperModule = import ../../lib/make-electron-wrapper-module.nix;
+  mkElectronWrapperModule = import ../../../lib/make-electron-wrapper-module.nix;
   wrapperMod = mkElectronWrapperModule {
     name = "spotify";
     desktopName = "Spotify";

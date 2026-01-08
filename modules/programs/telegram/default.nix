@@ -8,7 +8,7 @@ let
   name = "telegram";
   pkgName = "telegram-desktop";
 
-  mkMultiSystemModule = import ../../lib/mk-multi-system-module.nix;
+  mkMultiSystemModule = import ../../../lib/mk-multi-system-module.nix;
 
   appConfig = config.programs.${name};
 

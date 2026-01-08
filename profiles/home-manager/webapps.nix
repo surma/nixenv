@@ -22,7 +22,7 @@ in
 with lib;
 {
   imports = [
-    ../modules/home-manager/webapp-wrapper
+    ../../modules/home-manager/webapp-wrapper
   ];
   options = {
     programs = apps |> lib.mapAttrs (name: value: { enable = mkEnableOption value.title; });

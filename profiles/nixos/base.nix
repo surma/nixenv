@@ -8,7 +8,7 @@
 {
 
   imports = [
-    ../secrets
+    ../../modules/secrets
   ];
 
   nix.settings.experimental-features = [

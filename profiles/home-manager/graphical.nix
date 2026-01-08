@@ -10,9 +10,7 @@ in
 {
 
   imports = [
-    ./unfree-apps.nix
-
-    ./wezterm
+    ../../modules/home-manager/wezterm
   ];
 
   config = {
