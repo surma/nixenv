@@ -8,9 +8,9 @@
   imports = [
     ../../profiles/darwin/base.nix
 
-    ../../common/signal
-    ../../common/obs
-    ../../common/obsidian
+    ../../modules/programs/signal
+    ../../modules/programs/obs
+    ../../modules/programs/obsidian
   ];
 
   system.stateVersion = 5;

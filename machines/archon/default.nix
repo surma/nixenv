@@ -16,9 +16,9 @@
     ../../profiles/nixos/base.nix
     ../../nixos/hyprland.nix
 
-    ../../common/signal
-    ../../common/obs
-    ../../common/keyd-as-internal
+    ../../modules/programs/signal
+    ../../modules/programs/obs
+    ../../modules/programs/keyd-as-internal
 
     ../../nixos/obs-virtual-camera-fix.nix
 
@@ -121,10 +121,10 @@
     }:
     {
       imports = [
-        ../../common/spotify
-        ../../common/discord
-        ../../common/telegram
-        ../../common/obsidian
+        ../../modules/programs/spotify
+        ../../modules/programs/discord
+        ../../modules/programs/telegram
+        ../../modules/programs/obsidian
 
         ../../home-manager/opencode
         ../../home-manager/claude-code
