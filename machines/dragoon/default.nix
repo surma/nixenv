@@ -6,7 +6,7 @@
 }:
 {
   imports = [
-    ../../darwin/base.nix
+    ../../profiles/darwin/base.nix
 
     ../../common/signal
     ../../common/obs
@@ -33,27 +33,18 @@
     { config, ... }:
     {
       imports = [
-        ../../common/telegram
-
-        ../../home-manager/claude-code
-        ../../home-manager/opencode
-        ../../home-manager/syncthing
-        ../../home-manager/ghostty
-
-        ../../home-manager/unfree-apps.nix
-
-        ../../home-manager/base.nix
-        ../../home-manager/graphical.nix
-        ../../home-manager/keyboard-dev.nix
-        ../../home-manager/workstation.nix
-        ../../home-manager/physical.nix
-        ../../home-manager/macos.nix
-        ../../home-manager/experiments.nix
-        ../../home-manager/cloud.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/javascript.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/godot.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/workstation.nix
+        ../../profiles/home-manager/graphical.nix
+        ../../profiles/home-manager/physical.nix
+        ../../profiles/home-manager/macos.nix
+        ../../profiles/home-manager/experiments.nix
+        ../../profiles/home-manager/cloud.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/javascript.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/godot.nix
       ];
 
       home.stateVersion = "24.05";

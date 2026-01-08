@@ -18,7 +18,7 @@
 
   home.file = {
     ".npmrc" = {
-      source = ../configs/npmrc;
+      source = ../../configs/npmrc;
       mutable = true;
     };
   };

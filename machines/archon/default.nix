@@ -13,7 +13,7 @@
     ./hardware.nix
 
     ../../home-manager/unfree-apps.nix
-    ../../nixos/base.nix
+    ../../profiles/nixos/base.nix
     ../../nixos/hyprland.nix
 
     ../../common/signal
@@ -136,17 +136,17 @@
 
         ../../scripts
 
-        ../../home-manager/base.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/gamedev.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/linux.nix
-        ../../home-manager/graphical.nix
-        ../../home-manager/workstation.nix
-        ../../home-manager/experiments.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/gamedev.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/linux.nix
+        ../../profiles/home-manager/graphical.nix
+        ../../profiles/home-manager/workstation.nix
+        ../../profiles/home-manager/experiments.nix
 
         ../../home-manager/unfree-apps.nix
-        ../../home-manager/webapps.nix
+        ../../profiles/home-manager/webapps.nix
         ../../home-manager/screenshot.nix
       ];
 

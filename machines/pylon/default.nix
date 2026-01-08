@@ -10,7 +10,7 @@
     ../../home-manager/unfree-apps.nix
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
-    ../../nixos/base.nix
+    ../../profiles/nixos/base.nix
     ../../nixos/surmhosting.nix
 
     ../../secrets
@@ -61,12 +61,12 @@
       imports = [
         ../../home-manager/claude-code
 
-        ../../home-manager/base.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/linux.nix
-        ../../home-manager/workstation.nix
-        # ../../home-manager/cloud.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/linux.nix
+        ../../profiles/home-manager/workstation.nix
+        # ../../profiles/home-manager/cloud.nix
 
         ../../home-manager/unfree-apps.nix
 
