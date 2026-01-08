@@ -42,7 +42,7 @@ with lib;
       llmProxy = {
         baseURL = mkOption {
           type = types.str;
-          default = "http://llm.nexus.hosts.10.0.0.2.nip.io/v1";
+          default = "https://proxy.llm.surma.technology/v1";
           description = "Base URL for the LLM proxy";
         };
 
