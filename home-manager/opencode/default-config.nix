@@ -36,8 +36,7 @@ with lib;
             name = "Shopify";
             npm = "@ai-sdk/openai-compatible";
             options = {
-              # apiKey = "{env:SHOPIFY_API_KEY}";
-              baseURL = "http://localhost:4000/v1";
+              baseURL = "http://llm.nexus.hosts.10.0.0.2.nip.io/v1";
             };
             models =
               models
