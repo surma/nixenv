@@ -35,8 +35,7 @@ let
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
     "${cfg.stateDir}/client-key"
-  ])
-  ++ (lib.optional cfg.disableAdminUI "--disable-admin-ui");
+  ]);
 
   # Collect all key files that should be watched for changes
   watchedKeyFiles =
@@ -125,10 +124,10 @@ in
       };
     };
 
-    disableAdminUI = mkOption {
+    disableAllUI = mkOption {
       type = types.bool;
       default = false;
-      description = "Disable the LiteLLM Admin UI web interface";
+      description = "Disable all LiteLLM UI components (Admin UI, Swagger, Redoc)";
     };
   };
 
@@ -225,6 +224,12 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ] ++ lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
       requires = lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
+
+      environment = lib.mkIf cfg.disableAllUI {
+        DISABLE_ADMIN_UI = "True";
+        NO_DOCS = "True";
+        NO_REDOC = "True";
+      };
 
       serviceConfig = {
         Type = "simple";
