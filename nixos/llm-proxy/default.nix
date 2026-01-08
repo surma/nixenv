@@ -123,6 +123,12 @@ in
         description = "Path to file containing the static API key (should start with sk-)";
       };
     };
+
+    disableAdminUI = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Disable the LiteLLM Admin UI web interface";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -218,6 +224,10 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ] ++ lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
       requires = lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
+
+      environment = mkIf cfg.disableAdminUI {
+        DISABLE_ADMIN_UI = "True";
+      };
 
       serviceConfig = {
         Type = "simple";

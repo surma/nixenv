@@ -466,59 +466,6 @@ in
       services.vsftpd.localUsers = true;
       services.vsftpd.writeEnable = true;
     }
-    # LLM Proxy service
-    {
-      secrets.items.llm-proxy-secret.target = "/var/lib/llm-proxy-credentials/receiver-secret";
-      secrets.items.llm-proxy-client-key.target = "/var/lib/llm-proxy-credentials/client-key";
-
-      # Ensure host directories exist for bind mounts
-      systemd.tmpfiles.rules = [
-        "d /var/lib/llm-proxy 0755 root root -"
-        "d /var/lib/llm-proxy-credentials 0755 root root -"
-      ];
-
-      services.surmhosting.exposedApps.llm-proxy = {
-        target.ports = [
-          {
-            port = 4000;
-            hostname = "llm";
-          }
-          {
-            port = 8080;
-            hostname = "llm-key";
-          }
-        ];
-        target.container = {
-          config =
-            { pkgs, ... }:
-            {
-              imports = [ ../../nixos/llm-proxy ];
-
-              system.stateVersion = "25.05";
-
-              services.llm-proxy.enable = true;
-              services.llm-proxy.keyReceiver.enable = true;
-              services.llm-proxy.keyReceiver.secretFile = "/var/lib/credentials/receiver-secret";
-              services.llm-proxy.providers.shopify.enable = true;
-              services.llm-proxy.clientAuth.enable = true;
-              services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
-            };
-
-          bindMounts = {
-            state = {
-              mountPoint = "/var/lib/llm-proxy";
-              hostPath = "/var/lib/llm-proxy";
-              isReadOnly = false;
-            };
-            credentials = {
-              mountPoint = "/var/lib/credentials";
-              hostPath = "/var/lib/llm-proxy-credentials";
-              isReadOnly = true;
-            };
-          };
-        };
-      };
-    }
 
     {
       secrets.items.nexus-redis.target = "/var/lib/redis/password";

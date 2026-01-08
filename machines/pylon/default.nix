@@ -191,6 +191,7 @@
           services.llm-proxy.providers.shopify.enable = true;
           services.llm-proxy.clientAuth.enable = true;
           services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
+          services.llm-proxy.disableAdminUI = true;
         };
 
       bindMounts = {
