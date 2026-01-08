@@ -11,7 +11,7 @@
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../nixos/surmhosting.nix
+    ../../modules/services/surmhosting
 
     ../../secrets
 
@@ -181,7 +181,7 @@
       config =
         { pkgs, ... }:
         {
-          imports = [ ../../nixos/llm-proxy ];
+          imports = [ ../../modules/services/llm-proxy ];
 
           system.stateVersion = "25.05";
 

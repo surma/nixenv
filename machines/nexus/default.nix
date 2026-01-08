@@ -17,7 +17,7 @@ in
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../nixos/surmhosting.nix
+    ../../modules/services/surmhosting
 
     ../../secrets
 

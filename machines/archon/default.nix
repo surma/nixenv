@@ -14,19 +14,19 @@
 
     ../../modules/home-manager/unfree-apps
     ../../profiles/nixos/base.nix
-    ../../nixos/hyprland.nix
+    ../../modules/nixos/hyprland
 
     ../../modules/programs/signal
     ../../modules/programs/obs
     ../../modules/programs/keyd-as-internal
 
-    ../../nixos/obs-virtual-camera-fix.nix
+    ../../modules/nixos/obs-virtual-camera-fix
 
-    ../../nixos/framework/suspend-fix.nix
-    ../../nixos/framework/wifi-fix.nix
+    ../../modules/nixos/framework/suspend-fix.nix
+    ../../modules/nixos/framework/wifi-fix.nix
 
-    ../../nixos/shopify-cloudflare-warp.nix
-    ../../nixos/_1password-wrapper.nix
+    ../../modules/nixos/shopify-cloudflare-warp
+    ../../modules/nixos/1password-wrapper
   ];
 
   boot.loader.systemd-boot.enable = true;
