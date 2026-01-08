@@ -9,8 +9,8 @@ in
 {
 
   imports = [
-    ./ssh-keys.nix
-    ./gpg-keys.nix
+    ../modules/home-manager/ssh-keys
+    ../modules/home-manager/gpg-keys
 
   ];
 

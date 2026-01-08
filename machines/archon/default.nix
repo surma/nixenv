@@ -12,7 +12,7 @@
 
     ./hardware.nix
 
-    ../../home-manager/unfree-apps.nix
+    ../../modules/home-manager/unfree-apps
     ../../profiles/nixos/base.nix
     ../../nixos/hyprland.nix
 
@@ -126,11 +126,11 @@
         ../../modules/programs/telegram
         ../../modules/programs/obsidian
 
-        ../../home-manager/opencode
-        ../../home-manager/claude-code
-        ../../home-manager/hyprland
+        ../../modules/home-manager/opencode
+        ../../modules/home-manager/claude-code
+        ../../modules/home-manager/hyprland
         ../../home-manager/hyprsunset
-        ../../home-manager/syncthing
+        ../../modules/services/syncthing
         ../../home-manager/waybar
         ../../home-manager/hyprpaper
 
@@ -145,7 +145,7 @@
         ../../profiles/home-manager/workstation.nix
         ../../profiles/home-manager/experiments.nix
 
-        ../../home-manager/unfree-apps.nix
+        ../../modules/home-manager/unfree-apps
         ../../profiles/home-manager/webapps.nix
         ../../home-manager/screenshot.nix
       ];

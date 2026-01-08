@@ -7,7 +7,7 @@
 }:
 {
   imports = [
-    ../../home-manager/unfree-apps.nix
+    ../../modules/home-manager/unfree-apps
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
@@ -59,7 +59,7 @@
     }:
     {
       imports = [
-        ../../home-manager/claude-code
+        ../../modules/home-manager/claude-code
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix
@@ -68,7 +68,7 @@
         ../../profiles/home-manager/workstation.nix
         # ../../profiles/home-manager/cloud.nix
 
-        ../../home-manager/unfree-apps.nix
+        ../../modules/home-manager/unfree-apps
 
       ];
 

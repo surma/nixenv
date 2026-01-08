@@ -23,7 +23,7 @@ in
 
     ../../apps/hate
 
-    ../../home-manager/unfree-apps.nix
+    ../../modules/home-manager/unfree-apps
   ];
 
   config = mkMerge [
@@ -515,7 +515,7 @@ in
         {
           imports = [
             ../../scripts
-            ../../home-manager/opencode
+            ../../modules/home-manager/opencode
 
             ../../profiles/home-manager/base.nix
             ../../profiles/home-manager/dev.nix
@@ -523,7 +523,7 @@ in
             ../../profiles/home-manager/linux.nix
             ../../profiles/home-manager/workstation.nix
 
-            ../../home-manager/unfree-apps.nix
+            ../../modules/home-manager/unfree-apps
           ];
 
           config = {

@@ -8,7 +8,7 @@ let
   inherit (config.programs) claude-code;
   inherit (pkgs) writeShellScriptBin;
 
-  mcpServerType = import ../../lib/module-types/mcp-server.nix lib;
+  mcpServerType = import ../../../lib/module-types/mcp-server.nix lib;
 
   defaultClaudeJson =
     {
