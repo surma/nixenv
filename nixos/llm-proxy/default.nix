@@ -126,15 +126,36 @@ in
       "d ${cfg.stateDir} 0755 ${cfg.user} ${cfg.user} -"
     ];
 
+    # Service to copy secrets with correct ownership (runs as root)
+    systemd.services.llm-proxy-copy-secrets = mkIf cfg.keyReceiver.enable {
+      description = "Copy secrets for LLM proxy services";
+      wantedBy = [ "multi-user.target" ];
+      before = [ "llm-key-receiver.service" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
+          cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
+          chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
+          chmod 0600 ${cfg.stateDir}/receiver-secret
+        '';
+      };
+    };
+
     # Key receiver service
     systemd.services.llm-key-receiver = mkIf cfg.keyReceiver.enable {
       description = "LLM API Key Receiver";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+      after = [
+        "network.target"
+        "llm-proxy-copy-secrets.service"
+      ];
+      requires = [ "llm-proxy-copy-secrets.service" ];
 
       environment = {
         LLM_KEY_RECEIVER_PORT = toString cfg.keyReceiver.port;
-        LLM_KEY_RECEIVER_SECRET_FILE = cfg.keyReceiver.secretFile;
+        LLM_KEY_RECEIVER_SECRET_FILE = "${cfg.stateDir}/receiver-secret";
         LLM_KEY_RECEIVER_KEY_FILE = cfg.keyReceiver.keyFile;
       };
 

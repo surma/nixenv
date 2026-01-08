@@ -46,7 +46,7 @@ func readSecret(path string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read secret file: %w", err)
 	}
-	return []byte(strings.TrimSpace(string(data))), nil
+	return data, nil
 }
 
 func validateJWT(tokenString string, secret []byte) error {
