@@ -13,24 +13,14 @@ in
     ./unfree-apps.nix
   ];
 
+  imports = [
+    ../../modules/defaultConfigs/aerospace
+    ../../modules/defaultConfigs/karabiner
+  ];
+
   config = {
-    home.username = lib.mkDefault "surma";
-    home.homeDirectory = lib.mkDefault "/Users/surma";
-
-    allowedUnfreeApps = [ "raycast" ];
-    home.packages =
-      (with pkgs; [
-      ])
-      ++ (with pkgs-unstable; [
-        # raycast
-        aerospace
-      ]);
-
-    home.file.".config/aerospace/aerospace.toml".source = ../configs/aerospace.toml;
-
-    home.file.".config/karabiner/karabiner.json" = {
-      source = ../configs/karabiner.json;
-    };
+    defaultConfigs.aerospace.enable = true;
+    defaultConfigs.karabiner.enable = true;
 
     home.sessionVariables = {
       # LIBRARY_PATH = ''${lib.makeLibraryPath [pkgs.iconv]}''${LIBRARY_PATH:+:$LIBRARY_PATH}'';

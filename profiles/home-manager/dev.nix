@@ -5,6 +5,7 @@
 {
   imports = [
     ./nixdev.nix
+    ../../modules/defaultConfigs/npm
   ];
 
   home.packages = with pkgs; [
@@ -16,12 +17,7 @@
     dprint
   ];
 
-  home.file = {
-    ".npmrc" = {
-      source = ../../configs/npmrc;
-      mutable = true;
-    };
-  };
+  defaultConfigs.npm.enable = true;
 
   xdg.configFile."lazygit/config.yml".text = ''
     git:
