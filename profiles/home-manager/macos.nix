@@ -15,12 +15,19 @@ in
     ../../modules/defaultConfigs/karabiner
   ];
 
-  imports = [
-    ../../modules/defaultConfigs/aerospace
-    ../../modules/defaultConfigs/karabiner
-  ];
-
   config = {
+    home.username = lib.mkDefault "surma";
+    home.homeDirectory = lib.mkDefault "/Users/surma";
+
+    allowedUnfreeApps = [ "raycast" ];
+    home.packages =
+      (with pkgs; [
+      ])
+      ++ (with pkgs-unstable; [
+        # raycast
+        aerospace
+      ]);
+
     defaultConfigs.aerospace.enable = true;
     defaultConfigs.karabiner.enable = true;
 
