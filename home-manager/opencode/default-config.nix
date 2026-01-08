@@ -65,6 +65,7 @@ with lib;
           "notification.js" = builtins.readFile ./plugin/notification.js;
         };
         extraConfig = {
+          model = "shopify/shopify:anthropic:claude-sonnet-4-5";
           provider = {
             shopify = {
               name = "Shopify";
