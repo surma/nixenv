@@ -61,7 +61,7 @@
       home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmbook";
 
       secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.config/llm-proxy/client-key";
-      
+
       allowedUnfreeApps = [
         "claude-code"
       ];

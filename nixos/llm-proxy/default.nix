@@ -35,7 +35,8 @@ let
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
     "${cfg.stateDir}/client-key"
-  ]);
+  ])
+  ++ (lib.optional cfg.disableAdminUI "--disable-admin-ui");
 
   # Collect all key files that should be watched for changes
   watchedKeyFiles =
@@ -224,10 +225,6 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ] ++ lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
       requires = lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
-
-      environment = mkIf cfg.disableAdminUI {
-        DISABLE_ADMIN_UI = "True";
-      };
 
       serviceConfig = {
         Type = "simple";
