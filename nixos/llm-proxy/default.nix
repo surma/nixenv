@@ -31,6 +31,10 @@ let
   ++ (lib.optionals (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null) [
     "--openrouter-key-file"
     cfg.providers.openrouter.keyFile
+  ])
+  ++ (lib.optionals cfg.clientAuth.enable [
+    "--client-key-file"
+    "${cfg.stateDir}/client-key"
   ]);
 
   # Collect all key files that should be watched for changes
@@ -110,6 +114,15 @@ in
         };
       };
     };
+
+    clientAuth = {
+      enable = mkEnableOption "Require API key for LLM API clients";
+
+      keyFile = mkOption {
+        type = types.path;
+        description = "Path to file containing the static API key (should start with sk-)";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -127,18 +140,28 @@ in
     ];
 
     # Service to copy secrets with correct ownership (runs as root)
-    systemd.services.llm-proxy-copy-secrets = mkIf cfg.keyReceiver.enable {
+    systemd.services.llm-proxy-copy-secrets = mkIf (cfg.keyReceiver.enable || cfg.clientAuth.enable) {
       description = "Copy secrets for LLM proxy services";
       wantedBy = [ "multi-user.target" ];
-      before = [ "llm-key-receiver.service" ];
+      before = [
+        "llm-key-receiver.service"
+        "litellm.service"
+      ];
 
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
         ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
-          cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
-          chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
-          chmod 0600 ${cfg.stateDir}/receiver-secret
+          ${lib.optionalString cfg.keyReceiver.enable ''
+            cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
+            chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
+            chmod 0600 ${cfg.stateDir}/receiver-secret
+          ''}
+          ${lib.optionalString cfg.clientAuth.enable ''
+            cp ${cfg.clientAuth.keyFile} ${cfg.stateDir}/client-key
+            chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/client-key
+            chmod 0600 ${cfg.stateDir}/client-key
+          ''}
         '';
       };
     };
@@ -193,7 +216,8 @@ in
     systemd.services.litellm = {
       description = "LiteLLM Proxy Server";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+      after = [ "network.target" ] ++ lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
+      requires = lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
 
       serviceConfig = {
         Type = "simple";

@@ -12,6 +12,7 @@ def better_save [
 def main [
   --shopify-key-file: path       # Path to Shopify API key file
   --openrouter-key-file: path    # Path to OpenRouter API key file (optional)
+  --client-key-file: path        # Path to client API key file (optional, for authentication)
   --config: path = "/var/lib/llm-proxy/config.yml"  # Output config path
   --port: int = 4000             # LiteLLM port
   --litellm: path                # Path to litellm binary
@@ -82,8 +83,19 @@ def main [
     }
     | flatten
 
-  let litellm_config = {
+  mut litellm_config = {
     model_list: $model_list
+  }
+
+  # Add client authentication if configured
+  if $client_key_file != null and ($client_key_file | path exists) {
+    let client_key = open $client_key_file | str trim
+    if ($client_key | str length) > 0 {
+      print "Client authentication enabled"
+      $litellm_config = $litellm_config | insert general_settings { master_key: $client_key }
+    } else {
+      print "Warning: Client key file is empty, authentication disabled"
+    }
   }
 
   print $"Writing config with ($model_list | length) models to ($config)"

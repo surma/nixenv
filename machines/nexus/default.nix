@@ -469,6 +469,7 @@ in
     # LLM Proxy service
     {
       secrets.items.llm-proxy-secret.target = "/var/lib/llm-proxy-credentials/receiver-secret";
+      secrets.items.llm-proxy-client-key.target = "/var/lib/llm-proxy-credentials/client-key";
 
       # Ensure host directories exist for bind mounts
       systemd.tmpfiles.rules = [
@@ -499,6 +500,8 @@ in
               services.llm-proxy.keyReceiver.enable = true;
               services.llm-proxy.keyReceiver.secretFile = "/var/lib/credentials/receiver-secret";
               services.llm-proxy.providers.shopify.enable = true;
+              services.llm-proxy.clientAuth.enable = true;
+              services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
             };
 
           bindMounts = {
@@ -580,6 +583,8 @@ in
             allowedUnfreeApps = [
               "claude-code"
             ];
+
+            secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
 
             home.stateVersion = "25.05";
 

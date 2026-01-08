@@ -54,6 +54,7 @@ in
 
       secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
       secrets.items.llm-proxy-secret.target = "${config.home.homeDirectory}/.config/llm-proxy/secret";
+      secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.config/llm-proxy/client-key";
 
       home.stateVersion = "24.05";
       nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";

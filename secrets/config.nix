@@ -85,5 +85,15 @@
         "shopisurm"
       ];
     };
+    llm-proxy-client-key = {
+      contents = ../secrets/llm-proxy-client-key.age;
+      keys = [
+        "surma"
+        "nexus"
+        "pylon"
+        "shopisurm"
+        "dragoon"
+      ];
+    };
   };
 }
