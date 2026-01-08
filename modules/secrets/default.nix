@@ -8,7 +8,7 @@
 with lib;
 let
   inherit (pkgs) writeShellApplication;
-  secretsConfig = import ./config.nix;
+  secretsConfig = import ../../secrets/config.nix;
 
   secretType = types.submodule {
     options = {
