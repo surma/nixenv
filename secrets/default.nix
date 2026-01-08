@@ -83,11 +83,18 @@ in
               serviceConfig = {
                 Type = "oneshot";
                 ExecStart = ''${writeSecrets}/bin/write-secrets'';
-                RemainAfterExit = true; # Remain “active” after completion (optional but common for oneshot)
+                RemainAfterExit = true; # Remain "active" after completion (optional but common for oneshot)
               };
               wantedBy = [ "multi-user.target" ];
             };
 
+          }
+        else if systemManager == "nix-darwin" then
+          {
+            # Run secrets decryption during activation (darwin-rebuild switch)
+            system.activationScripts.postActivation.text = ''
+              ${writeSecrets}/bin/write-secrets
+            '';
           }
         else
           throw "Secrets not yet supported on ${systemManager}";

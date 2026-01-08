@@ -1,9 +1,0 @@
-#!/usr/bin/env nu
-
-def main [
-	--host: string = "10.0.0.2:1337"
-	--token: string
-] {
-	let key = if $token == null  {(get-shopify-key)} else {$token}
-	http get -u admin -p su4wi $"http://($host)/update-shopify-key?key=($key | url encode)"
-}

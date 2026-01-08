@@ -15,6 +15,7 @@ in
     ../common/obsidian
 
     ../scripts
+    ../secrets
   ];
 
   system.stateVersion = 5;
@@ -26,6 +27,9 @@ in
   programs.obs.enable = true;
   programs.obsidian.enable = true;
 
+  secrets.identity = "/Users/surma/.ssh/id_machine";
+  secrets.items.llm-proxy-secret.target = "/Users/surma/.config/llm-proxy/secret";
+
   home-manager.users.${config.system.primaryUser} =
     { config, ... }:
     {
@@ -34,6 +38,7 @@ in
 
         ../home-manager/opencode
         ../home-manager/ghostty
+        ../home-manager/llm-key-updater
 
         ../home-manager/base.nix
         ../home-manager/graphical.nix
@@ -78,8 +83,12 @@ in
       customScripts.wallpaper-shuffle.asDesktopItem = true;
       customScripts.llm-proxy.enable = true;
       customScripts.get-shopify-key.enable = true;
-      customScripts.update-shopify-key.enable = true;
-      customScripts.update-shopify-key.asDesktopItem = true;
+
+      # LLM key updater - pushes fresh Shopify keys to nexus
+      services.llm-key-updater.enable = true;
+      services.llm-key-updater.target = "http://llm-key.nexus.hosts.10.0.0.2.nip.io";
+      services.llm-key-updater.secretFile = "/Users/surma/.config/llm-proxy/secret";
+      services.llm-key-updater.intervalHours = 8;
 
       programs.git = {
         maintenance.enable = false;
