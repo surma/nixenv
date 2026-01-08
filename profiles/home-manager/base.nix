@@ -23,12 +23,13 @@ in
 {
 
   imports = [
-    ../scripts
-    ../secrets
-    ./mutable-files.nix
-    ./zellij.nix
-
-    ../home-manager/nushell
+    ../../scripts
+    ../../secrets
+    ../../modules/home-manager/mutable-files
+    ../../modules/home-manager/zellij
+    ../../modules/home-manager/nushell
+    ../../modules/defaultConfigs/zsh
+    ../../modules/defaultConfigs/helix
   ];
 
   nix = {
@@ -84,7 +85,8 @@ in
     git = true;
     enableNushellIntegration = true;
   };
-  programs.helix = import ../configs/helix.nix;
+  defaultConfigs.zsh.enable = true;
+  defaultConfigs.helix.enable = true;
   programs.ripgrep.enable = true;
   programs.starship.enable = true;
   programs.starship.enableNushellIntegration = true;
@@ -121,7 +123,7 @@ in
   programs.carapace.enableNushellIntegration = true;
   programs.yazi.enable = true;
   programs.yazi.enableNushellIntegration = true;
-  programs.zsh = (callPackage (import ../configs/zsh.nix) { }).config;
+
   programs.nushell.enable = true;
   programs.nushell.package = pkgs-unstable.nushell;
   programs.nushell.shellAliases =

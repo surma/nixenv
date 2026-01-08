@@ -10,7 +10,9 @@ let
 in
 {
   imports = [
-    ./unfree-apps.nix
+    ../../modules/home-manager/unfree-apps
+    ../../modules/defaultConfigs/aerospace
+    ../../modules/defaultConfigs/karabiner
   ];
 
   imports = [
