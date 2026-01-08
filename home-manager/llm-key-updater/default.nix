@@ -23,7 +23,7 @@ let
     }
 
     print "Got key, generating JWT..."
-    let jwt = ${pkgs.jwt-cli}/bin/jwt encode -S $"@($secret_file)" -e "+5 minutes" '{}'
+    let jwt = ${pkgs.jwt-cli}/bin/jwt encode -S $"@($secret_file)" -e="+5 minutes" '{}'
 
     print $"Sending key to ${cfg.target}/update..."
     let result = http post --headers ["Authorization" $"Bearer ($jwt)"] "${cfg.target}/update" $key
