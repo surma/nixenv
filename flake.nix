@@ -68,7 +68,7 @@
           surmbook = dragoon;
           shopisurm = loadDarwin {
             inherit system;
-            machine = ./machines/shopisurm.nix;
+            machine = ./machines/shopisurm;
           };
         };
 
@@ -82,25 +82,25 @@
         homeConfigurations = {
           generic-linux = loadHomeManager {
             inherit system;
-            machine = ./machines/generic-linux.nix;
+            machine = ./machines/generic-linux;
           };
           surmturntable = loadHomeManager {
             inherit system;
-            machine = ./machines/surmturntable.nix;
+            machine = ./machines/surmturntable;
           };
         };
 
         nixOnDroidConfigurations = {
           generic-android = loadAndroid {
             inherit system;
-            machine = ./machines/generic-android.nix;
+            machine = ./machines/generic-android;
           };
         };
 
         nixosConfigurations = rec {
           generic-nixos = loadNixos {
             inherit system;
-            machine = ./machines/generic-nixos.nix;
+            machine = ./machines/generic-nixos;
           };
           archon = loadNixos {
             inherit system;
@@ -109,7 +109,7 @@
           surmframework = archon;
           surmrock = loadNixos {
             inherit system;
-            machine = ./machines/surmrock.nix;
+            machine = ./machines/surmrock;
           };
           nexus = loadNixos {
             inherit system;
@@ -122,7 +122,7 @@
           surmedge = pylon;
           testcontainer = loadNixos {
             inherit system;
-            machine = ./machines/testcontainer.nix;
+            machine = ./machines/testcontainer;
           };
         };
       };
