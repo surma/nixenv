@@ -24,7 +24,7 @@ in
 
   imports = [
     ../../scripts
-    ../../secrets
+    ../../modules/secrets
     ../../modules/home-manager/mutable-files
     ../../modules/home-manager/zellij
     ../../modules/home-manager/nushell

@@ -19,7 +19,7 @@ in
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
 
-    ../../secrets
+    ../../modules/secrets
 
     ../../apps/hate
 
