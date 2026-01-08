@@ -27,9 +27,6 @@ in
   programs.obs.enable = true;
   programs.obsidian.enable = true;
 
-  secrets.identity = "/Users/surma/.ssh/id_machine";
-  secrets.items.llm-proxy-secret.target = "/Users/surma/.config/llm-proxy/secret";
-
   home-manager.users.${config.system.primaryUser} =
     { config, ... }:
     {
@@ -51,7 +48,12 @@ in
         ../home-manager/dev.nix
         ../home-manager/experiments.nix
         ../home-manager/unfree-apps.nix
+
+        ../secrets
       ];
+
+      secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
+      secrets.items.llm-proxy-secret.target = "${config.home.homeDirectory}/.config/llm-proxy/secret";
 
       home.stateVersion = "24.05";
       nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
@@ -87,7 +89,7 @@ in
       # LLM key updater - pushes fresh Shopify keys to nexus
       services.llm-key-updater.enable = true;
       services.llm-key-updater.target = "http://llm-key.nexus.hosts.10.0.0.2.nip.io";
-      services.llm-key-updater.secretFile = "/Users/surma/.config/llm-proxy/secret";
+      services.llm-key-updater.secretFile = "${config.home.homeDirectory}/.config/llm-proxy/secret";
       services.llm-key-updater.intervalHours = 8;
 
       programs.git = {
