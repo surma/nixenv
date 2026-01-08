@@ -116,7 +116,8 @@ in
             pkgs.jwt-cli
             pkgs.coreutils
             pkgs.curl
-            # get-shopify-key dependencies
+            # get-shopify-key and its dependencies
+            config.customScripts.get-shopify-key.package
             pkgs.google-cloud-sdk
           ];
         };
