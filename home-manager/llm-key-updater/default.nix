@@ -85,7 +85,7 @@ in
     launchd.agents.llm-key-updater = {
       enable = true;
       config = {
-        Label = "com.surma.llm-key-updater";
+        Label = "dev.surma.llm-key-updater";
         ProgramArguments = [ "${updateScript}/bin/llm-key-update" ];
 
         # Run at specified intervals
