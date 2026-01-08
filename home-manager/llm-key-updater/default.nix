@@ -63,6 +63,12 @@ in
       description = "Hours between key updates (must evenly divide 24)";
     };
 
+    retryIntervalSeconds = mkOption {
+      type = types.int;
+      default = 300;
+      description = "Minimum seconds between retry attempts on failure";
+    };
+
     logFile = mkOption {
       type = types.str;
       default = "/tmp/llm-key-updater.log";
@@ -90,6 +96,14 @@ in
 
         # Run once when the agent is loaded
         RunAtLoad = true;
+
+        # Retry on failure: restart if exit code is non-zero
+        KeepAlive = {
+          SuccessfulExit = false;
+        };
+
+        # Minimum time between restart attempts
+        ThrottleInterval = cfg.retryIntervalSeconds;
 
         # Logging
         StandardOutPath = cfg.logFile;
