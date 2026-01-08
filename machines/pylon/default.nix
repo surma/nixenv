@@ -15,7 +15,7 @@
 
     ../../secrets
 
-    ../../apps/writing-prompt
+    # ../../apps/writing-prompt
   ];
 
   nix.settings.require-sigs = false;
