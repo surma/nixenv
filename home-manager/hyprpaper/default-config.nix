@@ -5,7 +5,7 @@
   ...
 }:
 let
-  src = ../../wallpapers;
+  src = ../../assets/wallpapers;
   wallpapers = builtins.readDir src;
   defaultWallpaper = wallpapers |> lib.attrNames |> (l: lib.elemAt l 0);
   defaultWallpaperPath = "${src}/${defaultWallpaper}";

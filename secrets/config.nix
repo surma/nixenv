@@ -14,7 +14,7 @@
   };
   secrets = {
     ssh-keys = {
-      contents = ../ssh-keys/id_surma.age;
+      contents = ../assets/ssh-keys/id_surma.age;
       keys = [
         "surma"
         "surmbook"
@@ -27,7 +27,7 @@
       ];
     };
     gpg-keys = {
-      contents = ../gpg-keys/key.sec.asc.age;
+      contents = ../assets/gpg-keys/key.sec.asc.age;
       keys = [
         "surma"
         "surmbook"
