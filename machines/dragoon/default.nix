@@ -33,6 +33,13 @@
     { config, ... }:
     {
       imports = [
+        ../../modules/programs/telegram
+
+        ../../modules/home-manager/claude-code
+        ../../modules/home-manager/opencode
+        ../../modules/home-manager/ghostty
+        ../../modules/services/syncthing
+
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix
         ../../profiles/home-manager/workstation.nix
@@ -43,7 +50,6 @@
         ../../profiles/home-manager/cloud.nix
         ../../profiles/home-manager/nixdev.nix
         ../../profiles/home-manager/javascript.nix
-        ../../profiles/home-manager/dev.nix
         ../../profiles/home-manager/godot.nix
       ];
 
