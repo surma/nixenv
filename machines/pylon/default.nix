@@ -7,13 +7,13 @@
 }:
 {
   imports = [
-    ../../home-manager/unfree-apps.nix
+    ../../modules/home-manager/unfree-apps
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
-    ../../nixos/base.nix
-    ../../nixos/surmhosting.nix
+    ../../profiles/nixos/base.nix
+    ../../modules/services/surmhosting
 
-    ../../secrets
+    ../../modules/secrets
 
     # ../../apps/writing-prompt
   ];
@@ -59,16 +59,16 @@
     }:
     {
       imports = [
-        ../../home-manager/claude-code
+        ../../modules/home-manager/claude-code
 
-        ../../home-manager/base.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/linux.nix
-        ../../home-manager/workstation.nix
-        # ../../home-manager/cloud.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/linux.nix
+        ../../profiles/home-manager/workstation.nix
+        # ../../profiles/home-manager/cloud.nix
 
-        ../../home-manager/unfree-apps.nix
+        ../../modules/home-manager/unfree-apps
 
       ];
 
@@ -181,7 +181,7 @@
       config =
         { pkgs, ... }:
         {
-          imports = [ ../../nixos/llm-proxy ];
+          imports = [ ../../modules/services/llm-proxy ];
 
           system.stateVersion = "25.05";
 

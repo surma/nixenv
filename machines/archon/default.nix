@@ -12,21 +12,21 @@
 
     ./hardware.nix
 
-    ../../home-manager/unfree-apps.nix
-    ../../nixos/base.nix
-    ../../nixos/hyprland.nix
+    ../../modules/home-manager/unfree-apps
+    ../../profiles/nixos/base.nix
+    ../../modules/nixos/hyprland
 
-    ../../common/signal
-    ../../common/obs
-    ../../common/keyd-as-internal
+    ../../modules/programs/signal
+    ../../modules/programs/obs
+    ../../modules/programs/keyd-as-internal
 
-    ../../nixos/obs-virtual-camera-fix.nix
+    ../../modules/nixos/obs-virtual-camera-fix
 
-    ../../nixos/framework/suspend-fix.nix
-    ../../nixos/framework/wifi-fix.nix
+    ../../modules/nixos/framework/suspend-fix.nix
+    ../../modules/nixos/framework/wifi-fix.nix
 
-    ../../nixos/shopify-cloudflare-warp.nix
-    ../../nixos/_1password-wrapper.nix
+    ../../modules/nixos/shopify-cloudflare-warp
+    ../../modules/nixos/1password-wrapper
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -121,33 +121,28 @@
     }:
     {
       imports = [
-        ../../common/spotify
-        ../../common/discord
-        ../../common/telegram
-        ../../common/obsidian
-
-        ../../home-manager/opencode
-        ../../home-manager/claude-code
-        ../../home-manager/hyprland
-        ../../home-manager/hyprsunset
-        ../../home-manager/syncthing
-        ../../home-manager/waybar
-        ../../home-manager/hyprpaper
+        ../../modules/home-manager/opencode
+        ../../modules/home-manager/claude-code
+        ../../modules/home-manager/hyprland
+        ../../modules/home-manager/hyprsunset
+        ../../modules/services/syncthing
+        ../../modules/home-manager/waybar
+        ../../modules/home-manager/hyprpaper
 
         ../../scripts
 
-        ../../home-manager/base.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/gamedev.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/linux.nix
-        ../../home-manager/graphical.nix
-        ../../home-manager/workstation.nix
-        ../../home-manager/experiments.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/gamedev.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/linux.nix
+        ../../profiles/home-manager/graphical.nix
+        ../../profiles/home-manager/workstation.nix
+        ../../profiles/home-manager/experiments.nix
 
-        ../../home-manager/unfree-apps.nix
-        ../../home-manager/webapps.nix
-        ../../home-manager/screenshot.nix
+        ../../modules/home-manager/unfree-apps
+        ../../profiles/home-manager/webapps.nix
+        ../../modules/home-manager/screenshot
       ];
 
       config = {
@@ -191,9 +186,9 @@
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmframework";
 
         programs.spotify.enable = true;
-        programs.spotify.platform = "wayland";
+        # programs.spotify.platform = "wayland";
         programs.discord.enable = true;
-        programs.discord.platform = "wayland";
+        # programs.discord.platform = "wayland";
         programs.telegram.enable = true;
         programs.whatsapp.enable = true;
         programs.squoosh.enable = true;

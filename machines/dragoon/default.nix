@@ -6,11 +6,11 @@
 }:
 {
   imports = [
-    ../../darwin/base.nix
+    ../../profiles/darwin/base.nix
 
-    ../../common/signal
-    ../../common/obs
-    ../../common/obsidian
+    ../../modules/programs/signal
+    ../../modules/programs/obs
+    ../../modules/programs/obsidian
   ];
 
   system.stateVersion = 5;
@@ -33,27 +33,24 @@
     { config, ... }:
     {
       imports = [
-        ../../common/telegram
+        ../../modules/programs/telegram
 
-        ../../home-manager/claude-code
-        ../../home-manager/opencode
-        ../../home-manager/syncthing
-        ../../home-manager/ghostty
+        ../../modules/home-manager/claude-code
+        ../../modules/home-manager/opencode
+        ../../modules/home-manager/ghostty
+        ../../modules/services/syncthing
 
-        ../../home-manager/unfree-apps.nix
-
-        ../../home-manager/base.nix
-        ../../home-manager/graphical.nix
-        ../../home-manager/keyboard-dev.nix
-        ../../home-manager/workstation.nix
-        ../../home-manager/physical.nix
-        ../../home-manager/macos.nix
-        ../../home-manager/experiments.nix
-        ../../home-manager/cloud.nix
-        ../../home-manager/nixdev.nix
-        ../../home-manager/javascript.nix
-        ../../home-manager/dev.nix
-        ../../home-manager/godot.nix
+        ../../profiles/home-manager/base.nix
+        ../../profiles/home-manager/dev.nix
+        ../../profiles/home-manager/workstation.nix
+        ../../profiles/home-manager/graphical.nix
+        ../../profiles/home-manager/physical.nix
+        ../../profiles/home-manager/macos.nix
+        ../../profiles/home-manager/experiments.nix
+        ../../profiles/home-manager/cloud.nix
+        ../../profiles/home-manager/nixdev.nix
+        ../../profiles/home-manager/javascript.nix
+        ../../profiles/home-manager/godot.nix
       ];
 
       home.stateVersion = "24.05";
