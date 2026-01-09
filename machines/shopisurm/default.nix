@@ -9,13 +9,13 @@ let
 in
 {
   imports = [
-    ../darwin/base.nix
+    ../../profiles/darwin/base.nix
 
-    ../common/obs
-    ../common/obsidian
+    ../../modules/programs/obs
+    ../../modules/programs/obsidian
 
-    ../scripts
-    ../secrets
+    ../../scripts
+    ../../modules/secrets
   ];
 
   system.stateVersion = 5;
@@ -31,11 +31,11 @@ in
     { config, ... }:
     {
       imports = [
-        ../common/telegram
+        ../../modules/programs/telegram
 
         ../../modules/home-manager/opencode
         ../../modules/home-manager/ghostty
-        ../../modules/home-manager/llm-key-updater
+        ../../modules/services/llm-key-updater
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/graphical.nix
@@ -49,7 +49,7 @@ in
         ../../profiles/home-manager/experiments.nix
         ../../modules/home-manager/unfree-apps
 
-        ../secrets
+        ../../modules/secrets
       ];
 
       secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";

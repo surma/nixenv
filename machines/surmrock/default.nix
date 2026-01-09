@@ -8,20 +8,20 @@
 {
   imports = [
     ../../modules/home-manager/unfree-apps
-    ./surmrock-hardware.nix
+    ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
-    ../nixos/base.nix
+    ../../profiles/nixos/base.nix
 
-    ../secrets
+    ../../modules/secrets
 
-    ../apps/hate
-    ../apps/traefik.nix
-    ../apps/music
-    ../apps/torrent
-    ../apps/lidarr
-    ../apps/prowlarr
-    ../apps/sonarr
-    ../apps/radarr
+    ../../apps/hate
+    # ../../apps/traefik.nix
+    # ../../apps/music
+    # ../../apps/torrent
+    # ../../apps/lidarr
+    # ../../apps/prowlarr
+    # ../../apps/sonarr
+    # ../../apps/radarr
   ];
   nix.settings.require-sigs = false;
   secrets.identity = "/home/surma/.ssh/id_machine";

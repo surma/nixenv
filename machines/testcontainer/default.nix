@@ -7,7 +7,7 @@
 }:
 {
   imports = [
-    ../apps/traefik.nix
+    # ../../apps/traefik.nix
   ];
 
   boot.isContainer = true;

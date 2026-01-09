@@ -121,18 +121,13 @@
     }:
     {
       imports = [
-        ../../modules/programs/spotify
-        ../../modules/programs/discord
-        ../../modules/programs/telegram
-        ../../modules/programs/obsidian
-
         ../../modules/home-manager/opencode
         ../../modules/home-manager/claude-code
         ../../modules/home-manager/hyprland
-        ../../../modules/home-manager/hyprsunset
+        ../../modules/home-manager/hyprsunset
         ../../modules/services/syncthing
-        ../../../modules/home-manager/waybar
-        ../../../modules/home-manager/hyprpaper
+        ../../modules/home-manager/waybar
+        ../../modules/home-manager/hyprpaper
 
         ../../scripts
 
@@ -147,7 +142,7 @@
 
         ../../modules/home-manager/unfree-apps
         ../../profiles/home-manager/webapps.nix
-        ../../../modules/home-manager/screenshot
+        ../../modules/home-manager/screenshot
       ];
 
       config = {
@@ -191,9 +186,9 @@
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmframework";
 
         programs.spotify.enable = true;
-        programs.spotify.platform = "wayland";
+        # programs.spotify.platform = "wayland";
         programs.discord.enable = true;
-        programs.discord.platform = "wayland";
+        # programs.discord.platform = "wayland";
         programs.telegram.enable = true;
         programs.whatsapp.enable = true;
         programs.squoosh.enable = true;

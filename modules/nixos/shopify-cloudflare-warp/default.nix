@@ -5,7 +5,7 @@
 {
 
   imports = [
-    ../home-manager/unfree-apps.nix
+    ../../home-manager/unfree-apps
   ];
   allowedUnfreeApps = [
     "cloudflare-warp"
