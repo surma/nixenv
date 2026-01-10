@@ -68,13 +68,6 @@
         "nexus"
       ];
     };
-    postgres-admin-password = {
-      contents = ../secrets/postgres-admin-password.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
     llm-proxy-secret = {
       contents = ../secrets/llm-proxy-secret.age;
       keys = [
@@ -102,13 +95,6 @@
         "pylon"
       ];
     };
-    postgres-admin-password = {
-      contents = ../secrets/postgres-admin-password.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
     llm-proxy-master-key = {
       contents = ../secrets/llm-proxy-master-key.age;
       keys = [
@@ -117,6 +103,13 @@
         "pylon"
         "shopisurm"
         "dragoon"
+      ];
+    };
+    postgres-admin-password = {
+      contents = ../secrets/postgres-admin-password.age;
+      keys = [
+        "surma"
+        "nexus"
       ];
     };
   };
