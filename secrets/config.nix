@@ -95,5 +95,13 @@
         "dragoon"
       ];
     };
+    openrouter-api-key = {
+      contents = ../secrets/openrouter-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+        "pylon"
+      ];
+    };
   };
 }

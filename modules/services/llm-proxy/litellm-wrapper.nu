@@ -12,6 +12,7 @@ def better_save [
 def main [
   --shopify-key-file: path       # Path to Shopify API key file
   --openrouter-key-file: path    # Path to OpenRouter API key file (optional)
+  --openrouter-models: string    # JSON array of OpenRouter model IDs (optional)
   --client-key-file: path        # Path to client API key file (optional, for authentication)
   --config: path = "/var/lib/llm-proxy/config.yml"  # Output config path
   --port: int = 4000             # LiteLLM port
@@ -40,21 +41,23 @@ def main [
     }
   }
 
-  # OpenRouter provider
+  # OpenRouter provider (static model list)
   if $openrouter_key_file != null and ($openrouter_key_file | path exists) {
     let key = open $openrouter_key_file | str trim
     if ($key | str length) > 0 {
-      print "Fetching models from OpenRouter..."
-      let response = http get --full --headers ["Authorization" $"Bearer ($key)"] https://openrouter.ai/api/v1/models
-      let models = $response | get body.data
-      print $"Found ($models | length) OpenRouter models"
-      $providers = $providers | insert openrouter {
-        prefix: "openai/"
-        models: $models
-        key: $key
-        extra: {
-          api_base: "https://openrouter.ai/api/v1"
+      let models_list = if $openrouter_models != null { $openrouter_models | from json } else { [] }
+      if ($models_list | is-not-empty) {
+        print $"Configuring ($models_list | length) OpenRouter models"
+        $providers = $providers | insert openrouter {
+          prefix: "openrouter/"
+          models: ($models_list | each {|id| {id: $id}})
+          key: $key
+          extra: {
+            api_base: "https://openrouter.ai/api/v1"
+          }
         }
+      } else {
+        print "OpenRouter enabled but no models configured, skipping"
       }
     } else {
       print "Warning: OpenRouter key file is empty"

@@ -30,7 +30,9 @@ let
   ])
   ++ (lib.optionals (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null) [
     "--openrouter-key-file"
-    cfg.providers.openrouter.keyFile
+    "${cfg.stateDir}/openrouter-key"
+    "--openrouter-models"
+    (builtins.toJSON cfg.providers.openrouter.models)
   ])
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
@@ -112,6 +114,19 @@ in
           default = null;
           description = "Path to OpenRouter API key file";
         };
+
+        models = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = ''
+            List of OpenRouter model IDs to expose.
+            These will be prefixed with "openrouter:" in the LiteLLM config.
+          '';
+          example = [
+            "qwen/qwen3-235b-a22b-2507"
+            "anthropic/claude-opus-4.5"
+          ];
+        };
       };
     };
 
@@ -146,31 +161,45 @@ in
     ];
 
     # Service to copy secrets with correct ownership (runs as root)
-    systemd.services.llm-proxy-copy-secrets = mkIf (cfg.keyReceiver.enable || cfg.clientAuth.enable) {
-      description = "Copy secrets for LLM proxy services";
-      wantedBy = [ "multi-user.target" ];
-      before = [
-        "llm-key-receiver.service"
-        "litellm.service"
-      ];
+    systemd.services.llm-proxy-copy-secrets =
+      mkIf
+        (
+          cfg.keyReceiver.enable
+          || cfg.clientAuth.enable
+          || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+        )
+        {
+          description = "Copy secrets for LLM proxy services";
+          wantedBy = [ "multi-user.target" ];
+          before = [
+            "llm-key-receiver.service"
+            "litellm.service"
+          ];
 
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
-          ${lib.optionalString cfg.keyReceiver.enable ''
-            cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
-            chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
-            chmod 0600 ${cfg.stateDir}/receiver-secret
-          ''}
-          ${lib.optionalString cfg.clientAuth.enable ''
-            cp ${cfg.clientAuth.keyFile} ${cfg.stateDir}/client-key
-            chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/client-key
-            chmod 0600 ${cfg.stateDir}/client-key
-          ''}
-        '';
-      };
-    };
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
+                  ${lib.optionalString cfg.keyReceiver.enable ''
+                    cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
+                    chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
+                    chmod 0600 ${cfg.stateDir}/receiver-secret
+                  ''}
+              ${lib.optionalString cfg.clientAuth.enable ''
+                cp ${cfg.clientAuth.keyFile} ${cfg.stateDir}/client-key
+                chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/client-key
+                chmod 0600 ${cfg.stateDir}/client-key
+              ''}
+              ${lib.optionalString (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+                ''
+                  cp ${cfg.providers.openrouter.keyFile} ${cfg.stateDir}/openrouter-key
+                  chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/openrouter-key
+                  chmod 0600 ${cfg.stateDir}/openrouter-key
+                ''
+              }
+            '';
+          };
+        };
 
     # Key receiver service
     systemd.services.llm-key-receiver = mkIf cfg.keyReceiver.enable {
@@ -222,8 +251,17 @@ in
     systemd.services.litellm = {
       description = "LiteLLM Proxy Server";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ] ++ lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
-      requires = lib.optional cfg.clientAuth.enable "llm-proxy-copy-secrets.service";
+      after = [
+        "network.target"
+      ]
+      ++ lib.optional (
+        cfg.clientAuth.enable
+        || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+      ) "llm-proxy-copy-secrets.service";
+      requires = lib.optional (
+        cfg.clientAuth.enable
+        || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+      ) "llm-proxy-copy-secrets.service";
 
       environment = lib.mkIf cfg.disableAllUI {
         DISABLE_ADMIN_UI = "True";
