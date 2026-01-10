@@ -5,7 +5,7 @@
 let
   inherit (pkgs) callPackage writeShellApplication;
 
-  writingPrompt = callPackage (import ./repo) { };
+  writingPrompt = callPackage (import ./build.nix) { };
 
   service = writeShellApplication {
     name = "service";

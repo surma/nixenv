@@ -61,6 +61,10 @@
       inherit overlays;
       packages = {
         darwinConfigurations = rec {
+          generic-darwin = loadDarwin {
+            inherit system;
+            machine = ./machines/generic-darwin;
+          };
           dragoon = loadDarwin {
             inherit system;
             machine = ./machines/dragoon;

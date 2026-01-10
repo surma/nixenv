@@ -7,7 +7,7 @@
 with lib;
 let
   inherit (pkgs) callPackage writeShellApplication;
-  app = callPackage (import ./app.nix) { };
+  app = callPackage (import ./build.nix) { };
 
   service = writeShellApplication {
     name = "service";

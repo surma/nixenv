@@ -1,6 +1,0 @@
-[submodule "apps/writing-prompt"]
-	path = apps/writing-prompt/repo
-	url = ssh://git@github.com/surma/writing-prompt
-[submodule "apps/hate/src"]
-	path = apps/hate/repo
-	url = ssh://git@github.com/surma/hate
