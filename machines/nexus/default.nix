@@ -479,17 +479,14 @@ in
 
           services.postgresql = {
             enable = true;
-            package = pkgs.postgresql_17;
+            package = pkgs.postgresql_18;
             port = 5432;
             enableTCPIP = true;
 
-            # Allow connections from Tailscale network
-            authentication = pkgs.lib.mkOverride 10 ''
-              # TYPE  DATABASE        USER            ADDRESS                 METHOD
-              local   all             all                                     trust
-              host    all             all             127.0.0.1/32            scram-sha-256
-              host    all             all             ::1/128                 scram-sha-256
-              host    all             all             100.64.0.0/10           scram-sha-256
+            # Allow network connections (intranet only server)
+            authentication = pkgs.lib.mkAfter ''
+              host all all 0.0.0.0/0 scram-sha-256
+              host all all ::/0      scram-sha-256
             '';
 
             # Create admin user on first run

@@ -215,12 +215,6 @@ in
         description = "Disable Swagger and Redoc documentation";
       };
     };
-
-    disableAllUI = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Disable all LiteLLM UI components (Admin UI, Swagger, Redoc)";
-    };
   };
 
   config = mkIf cfg.enable {
