@@ -73,6 +73,59 @@ nixenv/
 └── flake.nix          # Flake configuration
 ```
 
+## Secrets Management
+
+This repository uses [age](https://github.com/FiloSottile/age) for encrypting secrets. The secrets management tool is available as a flake app.
+
+### Available Commands
+
+```sh
+# Show all available commands
+nix run .#secrets
+
+# Re-encrypt all secrets with current public keys
+nix run .#secrets -- recrypt
+
+# Re-encrypt specific secrets
+nix run .#secrets -- recrypt llm-proxy-secret ssh-keys
+
+# Edit an encrypted file
+nix run .#secrets -- edit secrets/llm-proxy-secret.age
+
+# Encrypt a new file
+nix run .#secrets -- encrypt myfile.txt
+
+# Encrypt and keep the original
+nix run .#secrets -- encrypt --keep-original myfile.txt
+
+# Generate a new machine key
+nix run .#secrets -- genkey
+```
+
+### Adding a New Machine
+
+1. Generate a key on the new machine:
+   ```sh
+   nix run .#secrets -- genkey
+   ```
+
+2. Add the public key to `secrets/config.nix` in the `keys` section
+
+3. Add the machine to the appropriate secrets in the `secrets` section
+
+4. Re-encrypt the secrets:
+   ```sh
+   nix run .#secrets -- recrypt
+   ```
+
+### Working from a Different Directory
+
+By default, the tool auto-detects the flake root using git. If you need to specify it manually:
+
+```sh
+nix run .#secrets -- recrypt --root /path/to/nixenv
+```
+
 ## Updating Dependencies
 
 ### Update all dependencies

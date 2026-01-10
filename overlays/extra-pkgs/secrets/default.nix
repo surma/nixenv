@@ -3,13 +3,17 @@
   lib,
   nushell,
   makeWrapper,
+  age,
+  openssh,
+  git,
+  coreutils,
   ...
 }:
 let
-  script = ./nixenv;
+  script = ./secrets.nu;
 in
 stdenv.mkDerivation {
-  name = "nixenv";
+  name = "secrets";
   buildInputs = [
     nushell
   ];
@@ -22,13 +26,21 @@ stdenv.mkDerivation {
     runHook preBuild
 
     mkdir -p $out/bin
-    cp $src $out/bin/nixenv
+    cp $src $out/bin/secrets
 
-    patchShebangs $out/bin/nixenv
+    patchShebangs $out/bin/secrets
 
     runHook postBuild
   '';
   postFixup = ''
-    wrapProgram $out/bin/nixenv
+    wrapProgram $out/bin/secrets \
+     --prefix PATH ":" ${
+       lib.makeBinPath [
+         age
+         openssh
+         git
+         coreutils
+       ]
+     }
   '';
 }
