@@ -157,6 +157,7 @@
   # LLM Proxy service
   secrets.items.llm-proxy-secret.target = "/var/lib/llm-proxy-credentials/receiver-secret";
   secrets.items.llm-proxy-client-key.target = "/var/lib/llm-proxy-credentials/client-key";
+  secrets.items.openrouter-api-key.target = "/var/lib/llm-proxy-credentials/openrouter-key";
 
   # Ensure host directories exist for bind mounts
   systemd.tmpfiles.rules = [
@@ -189,6 +190,14 @@
           services.llm-proxy.keyReceiver.enable = true;
           services.llm-proxy.keyReceiver.secretFile = "/var/lib/credentials/receiver-secret";
           services.llm-proxy.providers.shopify.enable = true;
+          services.llm-proxy.providers.openrouter.enable = true;
+          services.llm-proxy.providers.openrouter.keyFile = "/var/lib/credentials/openrouter-key";
+          services.llm-proxy.providers.openrouter.models = [
+            "qwen/qwen3-235b-a22b-2507"
+            "anthropic/claude-opus-4.5"
+            "anthropic/claude-sonnet-4.5"
+            "openai/gpt-5.1-codex-max"
+          ];
           services.llm-proxy.clientAuth.enable = true;
           services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
           services.llm-proxy.disableAllUI = true;

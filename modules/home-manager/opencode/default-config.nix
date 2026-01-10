@@ -8,8 +8,6 @@ let
   isEnabled = config.defaultConfigs.opencode.enable;
   cfg = config.defaultConfigs.opencode.llmProxy;
 
-  models = import ../../../overlays/extra-pkgs/opencode/models.nix;
-
   # Build options object conditionally
   providerOptions = {
     baseURL = cfg.baseURL;
@@ -18,11 +16,42 @@ let
     apiKey = "{env:LLM_PROXY_API_KEY}";
   };
 
-  # Wrapped opencode that reads the API key from file and sets the env var
+  # Wrapped opencode that reads the API key from file, fetches models, and sets the env vars
   wrappedOpencode = pkgs.writeScriptBin "opencode" ''
     #!${pkgs.nushell}/bin/nu
     def --wrapped main [...args] {
+      # Read API key
       $env.LLM_PROXY_API_KEY = (open ${cfg.apiKeyFile} | str trim)
+      
+      # Fetch models from proxy
+      let models_response = http get --full --headers [
+        "Authorization" $"Bearer ($env.LLM_PROXY_API_KEY)"
+      ] "${cfg.baseURL}/models"
+      
+      # Extract model IDs
+      let model_ids = $models_response 
+        | get body.data 
+        | get id
+      
+      # Generate models config
+      let models_config = $model_ids 
+        | each {|id| {name: $id, value: {name: $id}}} 
+        | transpose -r -d 
+        | into record
+      
+      # Build dynamic config
+      let dynamic_config = {
+        provider: {
+          "llm.surma.technology": {
+            models: $models_config
+          }
+        }
+      }
+      
+      # Set config content env var
+      $env.OPENCODE_CONFIG_CONTENT = ($dynamic_config | to json)
+      
+      # Execute opencode
       exec ${pkgs.opencode}/bin/opencode ...$args
     }
   '';
@@ -65,19 +94,13 @@ with lib;
           "notification.js" = builtins.readFile ./plugin/notification.js;
         };
         extraConfig = {
-          model = "shopify/shopify:anthropic:claude-sonnet-4-5";
+          model = "llm.surma.technology/shopify:anthropic:claude-sonnet-4-5";
           provider = {
-            shopify = {
-              name = "Shopify";
+            "llm.surma.technology" = {
+              name = "LLM Proxy";
               npm = "@ai-sdk/openai-compatible";
               options = providerOptions;
-              models =
-                models
-                |> map (name: {
-                  inherit name;
-                  value = { inherit name; };
-                })
-                |> lib.listToAttrs;
+              # models will be injected dynamically via OPENCODE_CONFIG_CONTENT
             };
           };
         };

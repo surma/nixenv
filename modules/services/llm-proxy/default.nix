@@ -31,6 +31,8 @@ let
   ++ (lib.optionals (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null) [
     "--openrouter-key-file"
     cfg.providers.openrouter.keyFile
+    "--openrouter-models"
+    (cfg.providers.openrouter.models |> builtins.toJSON)
   ])
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
@@ -111,6 +113,19 @@ in
           type = types.nullOr types.path;
           default = null;
           description = "Path to OpenRouter API key file";
+        };
+
+        models = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = ''
+            List of OpenRouter model IDs to expose.
+            These will be prefixed with "openrouter:" in the LiteLLM config.
+          '';
+          example = [
+            "qwen/qwen3-235b-a22b-2507"
+            "anthropic/claude-opus-4.5"
+          ];
         };
       };
     };
