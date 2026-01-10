@@ -37,6 +37,22 @@ let
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
     "${cfg.stateDir}/client-key"
+  ])
+  ++ (lib.optionals (cfg.database.enable && cfg.database.passwordFile != null) [
+    "--database-host"
+    cfg.database.host
+    "--database-port"
+    (toString cfg.database.port)
+    "--database-name"
+    cfg.database.database
+    "--database-user"
+    cfg.database.user
+    "--database-password-file"
+    "${cfg.stateDir}/database-password"
+  ])
+  ++ (lib.optionals (cfg.masterKeyFile != null) [
+    "--master-key-file"
+    "${cfg.stateDir}/master-key"
   ]);
 
   # Collect all key files that should be watched for changes
@@ -44,7 +60,11 @@ let
     (lib.optional cfg.providers.shopify.enable cfg.providers.shopify.keyFile)
     ++ (lib.optional (
       cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null
-    ) cfg.providers.openrouter.keyFile);
+    ) cfg.providers.openrouter.keyFile)
+    ++ (lib.optional (
+      cfg.database.enable && cfg.database.passwordFile != null
+    ) cfg.database.passwordFile)
+    ++ (lib.optional (cfg.masterKeyFile != null) cfg.masterKeyFile);
 in
 {
   options.services.llm-proxy = {
@@ -139,6 +159,63 @@ in
       };
     };
 
+    # PostgreSQL database configuration
+    database = {
+      enable = mkEnableOption "PostgreSQL database for virtual keys";
+
+      host = mkOption {
+        type = types.str;
+        default = "localhost";
+        description = "PostgreSQL host";
+      };
+
+      port = mkOption {
+        type = types.port;
+        default = 5432;
+        description = "PostgreSQL port";
+      };
+
+      database = mkOption {
+        type = types.str;
+        default = "litellm";
+        description = "PostgreSQL database name";
+      };
+
+      user = mkOption {
+        type = types.str;
+        default = "litellm";
+        description = "PostgreSQL user";
+      };
+
+      passwordFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing PostgreSQL password";
+      };
+    };
+
+    # Master key for virtual key management
+    masterKeyFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Path to file containing master key (must start with sk-)";
+    };
+
+    # UI configuration
+    ui = {
+      enableAdminUI = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable LiteLLM Admin UI";
+      };
+
+      disableDocs = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Disable Swagger and Redoc documentation";
+      };
+    };
+
     disableAllUI = mkOption {
       type = types.bool;
       default = false;
@@ -167,6 +244,8 @@ in
           cfg.keyReceiver.enable
           || cfg.clientAuth.enable
           || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+          || cfg.database.enable
+          || cfg.masterKeyFile != null
         )
         {
           description = "Copy secrets for LLM proxy services";
@@ -180,11 +259,11 @@ in
             Type = "oneshot";
             RemainAfterExit = true;
             ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
-                  ${lib.optionalString cfg.keyReceiver.enable ''
-                    cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
-                    chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
-                    chmod 0600 ${cfg.stateDir}/receiver-secret
-                  ''}
+              ${lib.optionalString cfg.keyReceiver.enable ''
+                cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
+                chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
+                chmod 0600 ${cfg.stateDir}/receiver-secret
+              ''}
               ${lib.optionalString cfg.clientAuth.enable ''
                 cp ${cfg.clientAuth.keyFile} ${cfg.stateDir}/client-key
                 chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/client-key
@@ -197,6 +276,16 @@ in
                   chmod 0600 ${cfg.stateDir}/openrouter-key
                 ''
               }
+              ${lib.optionalString (cfg.database.enable && cfg.database.passwordFile != null) ''
+                cp ${cfg.database.passwordFile} ${cfg.stateDir}/database-password
+                chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/database-password
+                chmod 0600 ${cfg.stateDir}/database-password
+              ''}
+              ${lib.optionalString (cfg.masterKeyFile != null) ''
+                cp ${cfg.masterKeyFile} ${cfg.stateDir}/master-key
+                chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/master-key
+                chmod 0600 ${cfg.stateDir}/master-key
+              ''}
             '';
           };
         };
@@ -257,16 +346,21 @@ in
       ++ lib.optional (
         cfg.clientAuth.enable
         || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+        || cfg.database.enable
+        || cfg.masterKeyFile != null
       ) "llm-proxy-copy-secrets.service";
       requires = lib.optional (
         cfg.clientAuth.enable
         || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
+        || cfg.database.enable
+        || cfg.masterKeyFile != null
       ) "llm-proxy-copy-secrets.service";
 
-      environment = lib.mkIf cfg.disableAllUI {
-        DISABLE_ADMIN_UI = "True";
-        NO_DOCS = "True";
-        NO_REDOC = "True";
+      environment = {
+        # UI configuration
+        DISABLE_ADMIN_UI = mkIf (!cfg.ui.enableAdminUI) "True";
+        NO_DOCS = mkIf cfg.ui.disableDocs "True";
+        NO_REDOC = mkIf cfg.ui.disableDocs "True";
       };
 
       serviceConfig = {

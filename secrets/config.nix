@@ -68,12 +68,11 @@
         "nexus"
       ];
     };
-    nexus-redis = {
-      contents = ../machines/nexus/redis/pw.age;
+    postgres-admin-password = {
+      contents = ../secrets/postgres-admin-password.age;
       keys = [
         "surma"
         "nexus"
-        "shopisurm"
       ];
     };
     llm-proxy-secret = {
@@ -101,6 +100,23 @@
         "surma"
         "nexus"
         "pylon"
+      ];
+    };
+    postgres-admin-password = {
+      contents = ../secrets/postgres-admin-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    llm-proxy-master-key = {
+      contents = ../secrets/llm-proxy-master-key.age;
+      keys = [
+        "surma"
+        "nexus"
+        "pylon"
+        "shopisurm"
+        "dragoon"
       ];
     };
   };

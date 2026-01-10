@@ -468,44 +468,100 @@ in
     }
 
     {
-      secrets.items.nexus-redis.target = "/var/lib/redis/password";
+      # PostgreSQL database server
+      secrets.items.postgres-admin-password.target = "/var/lib/postgres-credentials/password";
 
-      networking.firewall.allowedTCPPorts = [ 6379 ];
+      networking.firewall.allowedTCPPorts = [ 5432 ];
 
-      services.surmhosting.exposedApps.redis.target.container = {
+      services.surmhosting.exposedApps.postgres.target.container = {
         config = {
           system.stateVersion = "25.05";
 
-          services.redis.servers.default = {
+          services.postgresql = {
             enable = true;
-            port = 6379;
-            bind = "0.0.0.0";
-            requirePassFile = "/var/lib/credentials/redis/password";
+            package = pkgs.postgresql_17;
+            port = 5432;
+            enableTCPIP = true;
+
+            # Allow connections from Tailscale network
+            authentication = pkgs.lib.mkOverride 10 ''
+              # TYPE  DATABASE        USER            ADDRESS                 METHOD
+              local   all             all                                     trust
+              host    all             all             127.0.0.1/32            scram-sha-256
+              host    all             all             ::1/128                 scram-sha-256
+              host    all             all             100.64.0.0/10           scram-sha-256
+            '';
+
+            # Create admin user on first run
+            initialScript = pkgs.writeText "postgres-init.sql" ''
+              -- Create admin user (password will be set via ALTER USER)
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'surma') THEN
+                  CREATE ROLE surma WITH LOGIN SUPERUSER CREATEDB CREATEROLE;
+                END IF;
+              END
+              $$;
+            '';
           };
+
+          # Set admin password from file after PostgreSQL starts
+          systemd.services.postgresql.postStart = ''
+            PASSWORD=$(cat /var/lib/credentials/password)
+            $PSQL -tAc "ALTER USER surma WITH PASSWORD '$PASSWORD';"
+          '';
         };
 
         forwardPorts = [
           {
-            containerPort = 6379;
-            hostPort = 6379;
+            containerPort = 5432;
+            hostPort = 5432;
             protocol = "tcp";
           }
         ];
 
         bindMounts = {
           state = {
-            mountPoint = "/var/lib/redis-default";
-            hostPath = "/dump/state/redis";
+            mountPoint = "/var/lib/postgresql";
+            hostPath = "/dump/state/postgres";
             isReadOnly = false;
           };
-          creds = {
-            mountPoint = "/var/lib/credentials/redis";
-            hostPath = "/var/lib/redis";
+          credentials = {
+            mountPoint = "/var/lib/credentials";
+            hostPath = "/var/lib/postgres-credentials";
             isReadOnly = true;
           };
         };
       };
     }
+
+    {
+      # pgweb - PostgreSQL web interface
+      services.surmhosting.exposedApps.pgweb.target.container = {
+        config = {
+          system.stateVersion = "25.05";
+
+          # Simple systemd service to run pgweb
+          systemd.services.pgweb = {
+            description = "pgweb - PostgreSQL Web Interface";
+            wantedBy = [ "multi-user.target" ];
+            after = [ "network.target" ];
+
+            serviceConfig = {
+              Type = "simple";
+              ExecStart = "${pkgs.pgweb}/bin/pgweb --bind=0.0.0.0 --listen=8080 --host=100.83.198.90 --port=5432 --user=surma --db=postgres --sessions";
+              Restart = "always";
+              RestartSec = "10s";
+            };
+
+            environment = {
+              PGWEB_DATABASE_URL = "postgres://surma@100.83.198.90:5432/postgres?sslmode=disable";
+            };
+          };
+        };
+      };
+    }
+
     {
       home-manager.users.surma =
         {

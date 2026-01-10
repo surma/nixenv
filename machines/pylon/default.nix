@@ -158,6 +158,7 @@
   secrets.items.llm-proxy-secret.target = "/var/lib/llm-proxy-credentials/receiver-secret";
   secrets.items.llm-proxy-client-key.target = "/var/lib/llm-proxy-credentials/client-key";
   secrets.items.openrouter-api-key.target = "/var/lib/llm-proxy-credentials/openrouter-key";
+  secrets.items.llm-proxy-master-key.target = "/var/lib/llm-proxy-credentials/master-key";
 
   # Ensure host directories exist for bind mounts
   systemd.tmpfiles.rules = [
@@ -200,7 +201,21 @@
           ];
           services.llm-proxy.clientAuth.enable = true;
           services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
-          services.llm-proxy.disableAllUI = true;
+
+          # Database configuration
+          services.llm-proxy.database.enable = true;
+          services.llm-proxy.database.host = "100.83.198.90"; # nexus tailscale IP
+          services.llm-proxy.database.port = 5432;
+          services.llm-proxy.database.database = "litellm";
+          services.llm-proxy.database.user = "litellm";
+          services.llm-proxy.database.passwordFile = "/var/lib/credentials/database-password";
+
+          # Master key
+          services.llm-proxy.masterKeyFile = "/var/lib/credentials/master-key";
+
+          # UI configuration
+          services.llm-proxy.ui.enableAdminUI = true;
+          services.llm-proxy.ui.disableDocs = true;
         };
 
       bindMounts = {

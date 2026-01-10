@@ -14,6 +14,12 @@ def main [
   --openrouter-key-file: path    # Path to OpenRouter API key file (optional)
   --openrouter-models: string    # JSON array of OpenRouter model IDs (optional)
   --client-key-file: path        # Path to client API key file (optional, for authentication)
+  --database-host: string        # PostgreSQL host
+  --database-port: int           # PostgreSQL port
+  --database-name: string        # PostgreSQL database name
+  --database-user: string        # PostgreSQL user
+  --database-password-file: path # Path to PostgreSQL password file
+  --master-key-file: path        # Path to master key file
   --config: path = "/var/lib/llm-proxy/config.yml"  # Output config path
   --port: int = 4000             # LiteLLM port
   --litellm: path                # Path to litellm binary
@@ -90,15 +96,56 @@ def main [
     model_list: $model_list
   }
 
-  # Add client authentication if configured
-  if $client_key_file != null and ($client_key_file | path exists) {
-    let client_key = open $client_key_file | str trim
-    if ($client_key | str length) > 0 {
-      print "Client authentication enabled"
-      $litellm_config = $litellm_config | insert general_settings { master_key: $client_key }
+  # Read database password if configured
+  mut database_url = null
+  if $database_password_file != null and ($database_password_file | path exists) {
+    let db_password = open $database_password_file | str trim
+    if ($db_password | str length) > 0 {
+      print $"Database configuration enabled for ($database_host):($database_port)/($database_name)"
+      $database_url = $"postgresql://($database_user):($db_password)@($database_host):($database_port)/($database_name)?sslmode=disable"
     } else {
-      print "Warning: Client key file is empty, authentication disabled"
+      print "Warning: Database password file is empty"
     }
+  }
+
+  # Read master key if configured
+  mut master_key = null
+  if $master_key_file != null and ($master_key_file | path exists) {
+    $master_key = open $master_key_file | str trim
+    if ($master_key | str length) > 0 {
+      print "Master key configured for virtual key management"
+    } else {
+      print "Warning: Master key file is empty"
+    }
+  }
+
+  # Read client key if configured (for backward compatibility)
+  mut client_key = null
+  if $client_key_file != null and ($client_key_file | path exists) {
+    $client_key = open $client_key_file | str trim
+    if ($client_key | str length) > 0 {
+      print "Client authentication enabled (legacy mode)"
+    } else {
+      print "Warning: Client key file is empty"
+    }
+  }
+
+  # Add general_settings if database, master key, or client key is configured
+  if $database_url != null or $master_key != null or $client_key != null {
+    mut general_settings = {}
+    
+    if $database_url != null {
+      $general_settings = $general_settings | insert database_url $database_url
+    }
+    
+    if $master_key != null {
+      $general_settings = $general_settings | insert master_key $master_key
+    } else if $client_key != null {
+      # Use client key as master key if no dedicated master key is set (backward compatibility)
+      $general_settings = $general_settings | insert master_key $client_key
+    }
+    
+    $litellm_config = $litellm_config | insert general_settings $general_settings
   }
 
   print $"Writing config with ($model_list | length) models to ($config)"
