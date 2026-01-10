@@ -86,6 +86,8 @@ in
       customScripts.wallpaper-shuffle.asDesktopItem = true;
       customScripts.llm-proxy.enable = true;
       customScripts.get-shopify-key.enable = true;
+      customScripts.oc.enable = true;
+      customScripts.ocq.enable = true;
 
       # LLM key updater - pushes fresh Shopify keys to nexus
       services.llm-key-updater.enable = true;

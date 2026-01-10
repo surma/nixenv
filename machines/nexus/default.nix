@@ -537,6 +537,8 @@ in
 
             home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#nexus";
             customScripts.llm-proxy.enable = true;
+            customScripts.oc.enable = true;
+            customScripts.ocq.enable = true;
 
             programs.opencode.enable = true;
             defaultConfigs.opencode.enable = true;

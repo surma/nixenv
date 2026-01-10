@@ -13,13 +13,7 @@
         ngb | if ($in|str length) > 0 {git checkout $in} else {print "Aborted."};
       }
 
-      def --wrapped ocq [...rest] {
-        opencode run --dangerously-skip-permissions ...$rest
-      }
 
-      def --wrapped oc [...rest] {
-        opencode --dangerously-skip-permissions ...$rest
-      }
     '';
   };
 }
