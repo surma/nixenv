@@ -279,22 +279,74 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
+      # Add Prisma CLI to PATH
+      path = [ pkgs.python3Packages.prisma ];
+
+      # Generate Prisma client and run migrations before starting
+      preStart = mkIf cfg.database.enable ''
+        # Set up environment for Prisma
+        export HOME="${cfg.stateDir}"
+        export DATABASE_URL="postgresql://${cfg.database.user}:$(cat ${cfg.database.passwordFile})@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.database}?sslmode=disable"
+
+        # Copy schema.prisma to state directory if not exists or if source is newer
+        SCHEMA_SOURCE="${pkgs.litellm}/lib/python${pkgs.python3.pythonVersion}/site-packages/litellm/proxy/schema.prisma"
+        if [ ! -f "${cfg.stateDir}/schema.prisma" ] || [ "$SCHEMA_SOURCE" -nt "${cfg.stateDir}/schema.prisma" ]; then
+          echo "Copying schema.prisma to state directory..."
+          cp "$SCHEMA_SOURCE" "${cfg.stateDir}/schema.prisma"
+        fi
+
+        # Change to state directory
+        cd "${cfg.stateDir}"
+
+        # Generate Prisma client
+        echo "Generating Prisma client..."
+        prisma generate --schema=schema.prisma
+
+        # Run database migrations
+        echo "Running database migrations..."
+        ${
+          pkgs.python3.withPackages (ps: [
+            ps.litellm
+            ps.prisma
+          ])
+        }/bin/python3 \
+          "${pkgs.litellm}/lib/python${pkgs.python3.pythonVersion}/site-packages/litellm/proxy/prisma_migration.py"
+
+        echo "Prisma setup complete"
+      '';
+
       environment = {
         # UI configuration
         DISABLE_ADMIN_UI = mkIf (!cfg.ui.enableAdminUI) "True";
         NO_DOCS = mkIf cfg.ui.disableDocs "True";
         NO_REDOC = mkIf cfg.ui.disableDocs "True";
-      };
+      }
+      // (lib.optionalAttrs cfg.database.enable {
+        # Prisma configuration
+        HOME = cfg.stateDir;
+        PRISMA_PYTHON_CLIENT_PATH = "${cfg.stateDir}/generated";
+      });
 
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${litellm-wrapper}/bin/litellm-wrapper ${lib.escapeShellArgs wrapperArgs}";
         User = cfg.user;
         Restart = "always";
         RestartSec = "10s";
 
-        # Give it time to fetch models on startup
-        TimeoutStartSec = "120s";
+        # Increased timeout for Prisma engine download on first run
+        TimeoutStartSec = "180s";
+
+        # Use wrapper script when database is enabled to set DATABASE_URL dynamically
+        ExecStart =
+          if cfg.database.enable then
+            pkgs.writeShellScript "litellm-start" ''
+              export DATABASE_URL="postgresql://${cfg.database.user}:$(cat ${cfg.database.passwordFile})@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.database}?sslmode=disable"
+              export HOME="${cfg.stateDir}"
+              export PRISMA_PYTHON_CLIENT_PATH="${cfg.stateDir}/generated"
+              exec ${litellm-wrapper}/bin/litellm-wrapper ${lib.escapeShellArgs wrapperArgs}
+            ''
+          else
+            "${litellm-wrapper}/bin/litellm-wrapper ${lib.escapeShellArgs wrapperArgs}";
       };
     };
   };
