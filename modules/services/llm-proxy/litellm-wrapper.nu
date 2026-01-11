@@ -9,6 +9,63 @@ def better_save [
   $in | save -f $file
 }
 
+def extract_model_info [
+  model: record
+  provider: string
+] {
+  try {
+    if $provider == "shopify" {
+      # Shopify has nested structure: config.targets[0].targets[0].model_info
+      # Try to extract model_info from the first target's first target
+      let model_info = try {
+        $model | get config | get targets | first | get targets | first | get -o model_info
+      } catch {
+        null
+      }
+      
+      if $model_info != null {
+        let context = $model_info | get -o context_window
+        let max_out = $model_info | get -o max_output_tokens
+        
+        if $context != null and $max_out != null {
+          return {
+            max_input_tokens: $context        # Total context window
+            max_output_tokens: $max_out       # Max completion tokens
+            max_tokens: $context              # Legacy field
+          }
+        }
+      }
+    } else if $provider == "openrouter" {
+      # OpenRouter uses context_length and top_provider.max_completion_tokens
+      let context = $model | get -o context_length
+      
+      if $context != null {
+        let max_out = if ($model | get -o top_provider) != null {
+          ($model | get top_provider | get -o max_completion_tokens)
+        } else {
+          null
+        }
+        
+        # If max_completion_tokens is null, use context_length as fallback
+        let output_tokens = if $max_out != null { $max_out } else { $context }
+        
+        return {
+          max_input_tokens: $context        # Total context window
+          max_output_tokens: $output_tokens # Max completion tokens
+          max_tokens: $context              # Legacy field
+        }
+      }
+    }
+    
+    # If we get here, metadata is missing
+    print $"Warning: Missing metadata for ($provider) model: ($model.id)"
+    return null
+  } catch {
+    print $"Warning: Error extracting metadata for ($provider) model: ($model.id)"
+    return null
+  }
+}
+
 def main [
   --shopify-key-file: path       # Path to Shopify API key file
   --openrouter-key-file: path    # Path to OpenRouter API key file (optional)
@@ -41,20 +98,38 @@ def main [
     }
   }
 
-  # OpenRouter provider (static model list)
+  # OpenRouter provider
   if $openrouter_key_file != null and ($openrouter_key_file | path exists) {
     let key = open $openrouter_key_file | str trim
     if ($key | str length) > 0 {
       let models_list = if $openrouter_models != null { $openrouter_models | from json } else { [] }
       if ($models_list | is-not-empty) {
-        print $"Configuring ($models_list | length) OpenRouter models"
-        $providers = $providers | insert openrouter {
-          prefix: "openrouter/"
-          models: ($models_list | each {|id| {id: $id}})
-          key: $key
-          extra: {
-            api_base: "https://openrouter.ai/api/v1"
+        print "Fetching models from OpenRouter API..."
+        try {
+          let response = http get --full --headers ["Authorization" $"Bearer ($key)"] https://openrouter.ai/api/v1/models
+          let all_models = $response | get body.data
+          
+          # Filter to only models in the static list
+          let models = $all_models | where id in $models_list
+          
+          # Warn about models in static list not found in API
+          let found_ids = $models | get id
+          let missing = $models_list | where $it not-in $found_ids
+          if ($missing | is-not-empty) {
+            print $"Warning: OpenRouter models not found in API: ($missing | str join ', ')"
           }
+          
+          print $"Found ($models | length) OpenRouter models"
+          $providers = $providers | insert openrouter {
+            prefix: "openrouter/"
+            models: $models
+            key: $key
+            extra: {
+              api_base: "https://openrouter.ai/api/v1"
+            }
+          }
+        } catch {
+          print "Error: Failed to fetch OpenRouter models, skipping OpenRouter provider"
         }
       } else {
         print "OpenRouter enabled but no models configured, skipping"
@@ -74,7 +149,9 @@ def main [
     | each {|c|
       $c.config.models
         | each {|m|
-          {
+          let metadata = extract_model_info $m $c.name
+          
+          mut entry = {
             model_name: $"($c.name):($m.id)"
             litellm_params: {
               model: $"($c.config.prefix)($m.id)"
@@ -82,9 +159,22 @@ def main [
               ...$c.config.extra
             }
           }
+          
+          if $metadata != null {
+            $entry = $entry | insert model_info $metadata
+          }
+          
+          $entry
         }
     }
     | flatten
+
+  # Count models with/without metadata
+  let models_with_metadata = $model_list | where ($it | get -o model_info) != null | length
+  let models_without_metadata = $model_list | where ($it | get -o model_info) == null | length
+
+  print $"Models with metadata: ($models_with_metadata)"
+  print $"Models without metadata: ($models_without_metadata)"
 
   mut litellm_config = {
     model_list: $model_list
