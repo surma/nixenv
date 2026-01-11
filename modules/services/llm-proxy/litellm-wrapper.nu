@@ -92,12 +92,12 @@ def main [
     }
     | flatten
 
-  mut litellm_config = {
+  mut litellm_config: any = {
     model_list: $model_list
   }
 
   # Read database password if configured
-  mut database_url = null
+  mut database_url: any = null
   if $database_password_file != null and ($database_password_file | path exists) {
     let db_password = open $database_password_file | str trim
     if ($db_password | str length) > 0 {
@@ -109,7 +109,7 @@ def main [
   }
 
   # Read master key if configured
-  mut master_key = null
+  mut master_key: any = null
   if $master_key_file != null and ($master_key_file | path exists) {
     $master_key = open $master_key_file | str trim
     if ($master_key | str length) > 0 {
@@ -120,7 +120,7 @@ def main [
   }
 
   # Read client key if configured (for backward compatibility)
-  mut client_key = null
+  mut client_key: any = null
   if $client_key_file != null and ($client_key_file | path exists) {
     $client_key = open $client_key_file | str trim
     if ($client_key | str length) > 0 {
@@ -132,7 +132,7 @@ def main [
 
   # Add general_settings if database, master key, or client key is configured
   if $database_url != null or $master_key != null or $client_key != null {
-    mut general_settings = {}
+    mut general_settings: any = {}
     
     if $database_url != null {
       $general_settings = $general_settings | insert database_url $database_url
