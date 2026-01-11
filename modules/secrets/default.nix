@@ -20,6 +20,12 @@ let
         type = types.nullOr types.str;
         default = null;
       };
+      mode = mkOption {
+        type = types.str;
+        default = "0600";
+        description = "File permissions (octal mode)";
+        example = "0644";
+      };
     };
   };
 in
@@ -53,7 +59,7 @@ in
             prelude = lib.optionalString (value.target != null) ''
               mkdir -p ${value.target |> builtins.dirOf}
               touch ${value.target}
-              chmod 0600 ${value.target}
+              chmod ${value.mode} ${value.target}
             '';
           in
           ''
