@@ -38,6 +38,12 @@ let
 
         forwardHost = if isContainer then "10.201.${i |> toString}.2" else value.target.host;
 
+        # Check if this app needs auth
+        needsAuth = value.allowedGitHubUsers != [ ];
+
+        # Check if this app needs host header rewrite
+        needsHostRewrite = value.useTargetHost && !isContainer && value.target.host != null;
+
         # Generate Traefik config for each port
         traefikConfigs =
           value.target.ports
@@ -51,15 +57,27 @@ let
                   portCfg.rule
                 else
                   "HostRegexp(`^${portCfg.hostname}\\.${config.services.surmhosting.hostname}`)";
+
+              # Build middleware list
+              middlewareList =
+                (lib.optional needsAuth "auth-${name}") ++ (lib.optional needsHostRewrite "host-rewrite-${name}");
             in
             {
               routers.${serviceName} = {
                 rule = routerRule;
                 service = serviceName;
+                middlewares = middlewareList;
               };
               services.${serviceName}.loadBalancer.servers = [
                 { inherit url; }
               ];
+
+              # Add host rewrite middleware if needed
+              middlewares = lib.optionalAttrs needsHostRewrite {
+                "host-rewrite-${name}" = {
+                  headers.customRequestHeaders.Host = value.target.host;
+                };
+              };
             }
           );
 
@@ -92,6 +110,99 @@ let
       }
     );
 
+  # Filter apps that need auth
+  appsWithAuth = lib.filterAttrs (name: app: app.allowedGitHubUsers != [ ]) cfg.exposedApps;
+
+  authEnabled = appsWithAuth != { };
+
+  # Generate surm-auth container (single instance for all protected apps)
+  surmAuthConfig = {
+    # Container definition
+    containers."surm-auth" = mkIf authEnabled {
+      autoStart = true;
+      privateNetwork = true;
+      localAddress = "10.202.0.2";
+      hostAddress = "10.202.0.1";
+      ephemeral = true;
+
+      # Bind mount secrets
+      bindMounts = {
+        secrets = {
+          mountPoint = "/var/lib/secrets";
+          hostPath = "/var/lib/surm-auth";
+          isReadOnly = true;
+        };
+      };
+
+      config =
+        { ... }:
+        {
+          imports = [ ../surm-auth ];
+
+          system.stateVersion = "25.05";
+
+          services.surm-auth = {
+            enable = true;
+            package = pkgs.surm-auth;
+            baseUrl = "https://${cfg.auth.domain}";
+
+            github.clientIdFile = "/var/lib/secrets/github-client-id";
+            github.clientSecretFile = "/var/lib/secrets/github-client-secret";
+
+            session.cookieDomain = cfg.auth.cookieDomain;
+            session.cookieSecretFile = "/var/lib/secrets/cookie-secret";
+            session.duration = cfg.auth.sessionDuration;
+
+            # Generate apps config from exposedApps with allowedGitHubUsers
+            apps = lib.mapAttrs (name: app: {
+              allowed_users = app.allowedGitHubUsers;
+            }) appsWithAuth;
+          };
+
+          networking.firewall.enable = false;
+        };
+    };
+
+    # Traefik configuration for surm-auth
+    services.traefik.dynamicConfigOptions.http = mkIf authEnabled {
+      # Auth service router (for login page, callback, etc.)
+      routers."surm-auth" = {
+        rule = "Host(`${cfg.auth.domain}`)";
+        service = "surm-auth";
+        entryPoints = [ "websecure" ];
+      };
+
+      # Auth service
+      services."surm-auth".loadBalancer.servers = [
+        {
+          url = "http://10.202.0.2:8080";
+        }
+      ];
+
+      # ForwardAuth middlewares (one per app with app name in query param)
+      middlewares = lib.mapAttrs' (
+        name: app:
+        lib.nameValuePair "auth-${name}" {
+          forwardAuth = {
+            address = "http://10.202.0.2:8080/auth?app=${name}";
+            trustForwardHeader = true;
+            authResponseHeaders = [
+              "X-Auth-Request-User"
+              "X-Auth-Request-Email"
+            ];
+            authRequestHeaders = [
+              "Cookie"
+              "X-Forwarded-Method"
+              "X-Forwarded-Proto"
+              "X-Forwarded-Host"
+              "X-Forwarded-Uri"
+            ];
+          };
+        }
+      ) appsWithAuth;
+    };
+  };
+
   targetConfig =
     { name, config, ... }:
     {
@@ -120,6 +231,23 @@ let
           type = types.nullOr types.attrs;
           default = null;
           description = "Container configuration";
+        };
+        allowedGitHubUsers = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = ''
+            List of GitHub usernames allowed to access this app.
+            If set, OAuth2 authentication is automatically enabled.
+          '';
+          example = [
+            "surma"
+            "stimhub"
+          ];
+        };
+        useTargetHost = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Whether to rewrite the Host header to match target.host when forwarding requests";
         };
       };
 
@@ -166,9 +294,74 @@ in
         type = types.attrsOf (types.submodule targetConfig);
         default = { };
       };
+      auth = {
+        domain = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Domain for the auth service (e.g., auth.surma.technology)";
+        };
+        github = {
+          clientIdFile = mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to file containing GitHub OAuth Client ID";
+          };
+          clientSecretFile = mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to file containing GitHub OAuth Client Secret";
+          };
+        };
+        cookieSecretFile = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          description = "Path to file containing cookie encryption secret";
+        };
+        cookieDomain = mkOption {
+          type = types.str;
+          default = ".${cfg.hostname}";
+          description = "Cookie domain for SSO across all apps";
+        };
+        sessionDuration = mkOption {
+          type = types.str;
+          default = "168h";
+          description = "Session duration (default: 168h = 7 days)";
+        };
+      };
     };
   };
   config = mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = authEnabled -> cfg.auth.domain != null;
+        message = ''
+          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
+          but services.surmhosting.auth.domain is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.github.clientIdFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
+          but services.surmhosting.auth.github.clientIdFile is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.github.clientSecretFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
+          but services.surmhosting.auth.github.clientSecretFile is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.cookieSecretFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
+          but services.surmhosting.auth.cookieSecretFile is not set.
+        '';
+      }
+    ];
+
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
       dockerCompat = true;
@@ -177,7 +370,10 @@ in
 
     networking.nat.enable = true;
     networking.nat.externalInterface = cfg.externalInterface;
-    networking.nat.internalIPs = [ "10.201.0.0/16" ];
+    networking.nat.internalIPs = [
+      "10.201.0.0/16"
+      "10.202.0.0/16"
+    ];
 
     networking.firewall.allowedTCPPorts = [ 80 ] ++ (lib.optionals cfg.tls.enable [ 443 ]);
     networking.firewall.trustedInterfaces = [ "ve-+" ];
@@ -222,7 +418,11 @@ in
         }
       ]
       ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
+      ++ (lib.optional authEnabled surmAuthConfig.services.traefik)
     );
-    containers = mkMerge (exposedAppsConfigs |> map (cfg: cfg.containers));
+    containers = mkMerge (
+      (exposedAppsConfigs |> map (cfg: cfg.containers))
+      ++ (lib.optional authEnabled surmAuthConfig.containers)
+    );
   };
 }
