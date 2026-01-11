@@ -59,7 +59,7 @@
     }:
     {
       imports = [
-        ../../modules/home-manager/claude-code
+        ../../modules/secrets
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix
@@ -69,7 +69,7 @@
         # ../../profiles/home-manager/cloud.nix
 
         ../../modules/home-manager/unfree-apps
-
+        ../../modules/home-manager/opencode
       ];
 
       config = {
@@ -86,6 +86,9 @@
         home.stateVersion = "25.05";
 
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#pylon";
+
+        programs.opencode.enable = true;
+        defaultConfigs.opencode.enable = true;
       };
     };
 

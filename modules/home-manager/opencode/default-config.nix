@@ -112,6 +112,7 @@ with lib;
       customScripts.noti.enable = mkIf isEnabled true;
       programs.mcp-nixos.enable = mkIf isEnabled true;
       programs.mcp-playwright.enable = mkIf isEnabled true;
+      secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/opencode/api-key";
       programs.opencode = {
         plugins = {
           "notification.js" = builtins.readFile ./plugin/notification.js;
