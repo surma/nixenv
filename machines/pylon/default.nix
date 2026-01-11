@@ -123,7 +123,22 @@
         endpoint = "http://100.83.198.90:4318/v1/traces";
       };
     };
+  };
 
+  # Gitea SSH TCP forwarding
+  services.traefik.staticConfigOptions.entryPoints.gitea-ssh = {
+    address = ":2222";
+  };
+
+  services.traefik.staticConfigOptions.tcp = {
+    routers.gitea-ssh = {
+      rule = "HostSNI(`*`)";
+      service = "gitea-ssh";
+      entryPoints = [ "gitea-ssh" ];
+    };
+    services.gitea-ssh.loadBalancer.servers = [
+      { address = "100.83.198.90:2222"; }
+    ];
   };
 
   services.traefik.dynamicConfigOptions = {
@@ -162,18 +177,6 @@
     2222 # Gitea SSH
   ];
   networking.nftables.enable = true;
-
-  # Forward Gitea SSH port to nexus
-  networking.nat.enable = true;
-  networking.nat.externalInterface = "enp1s0";
-  networking.nat.forwardPorts = [
-    {
-      destination = "100.83.198.90:2222";
-      proto = "tcp";
-      sourcePort = 2222;
-    }
-  ];
-
   services.openssh.enable = true;
 
   # LLM Proxy service
