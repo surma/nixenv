@@ -135,13 +135,6 @@ in
         ProtectSystem = "strict";
         ProtectHome = true;
         NoNewPrivileges = true;
-
-        # Allow reading secret files
-        ReadOnlyPaths = [
-          cfg.github.clientIdFile
-          cfg.github.clientSecretFile
-          cfg.session.cookieSecretFile
-        ];
       };
     };
   };

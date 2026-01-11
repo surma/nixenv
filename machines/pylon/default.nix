@@ -178,9 +178,18 @@
   };
 
   # Surm-Auth secrets
-  secrets.items.surm-auth-github-client-id.target = "/var/lib/surm-auth/github-client-id";
-  secrets.items.surm-auth-github-client-secret.target = "/var/lib/surm-auth/github-client-secret";
-  secrets.items.surm-auth-cookie-secret.target = "/var/lib/surm-auth/cookie-secret";
+  secrets.items.surm-auth-github-client-id = {
+    target = "/var/lib/surm-auth/github-client-id";
+    mode = "0644";
+  };
+  secrets.items.surm-auth-github-client-secret = {
+    target = "/var/lib/surm-auth/github-client-secret";
+    mode = "0644";
+  };
+  secrets.items.surm-auth-cookie-secret = {
+    target = "/var/lib/surm-auth/cookie-secret";
+    mode = "0644";
+  };
 
   # Ensure host directories exist for bind mounts
   systemd.tmpfiles.rules = [
