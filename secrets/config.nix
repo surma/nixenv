@@ -112,5 +112,13 @@
         "nexus"
       ];
     };
+    llm-proxy-postgres-password = {
+      contents = ../secrets/llm-proxy-postgres-password.age;
+      keys = [
+        "surma"
+        "nexus"
+        "pylon"
+      ];
+    };
   };
 }
