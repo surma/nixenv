@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -60,21 +61,21 @@ func (c *Config) LoadSecrets() error {
 	if err != nil {
 		return fmt.Errorf("failed to read GitHub client ID: %w", err)
 	}
-	c.OAuth.GitHub.ClientID = string(clientID)
+	c.OAuth.GitHub.ClientID = strings.TrimSpace(string(clientID))
 
 	// Load GitHub client secret
 	clientSecret, err := os.ReadFile(c.OAuth.GitHub.ClientSecretFile)
 	if err != nil {
 		return fmt.Errorf("failed to read GitHub client secret: %w", err)
 	}
-	c.OAuth.GitHub.ClientSecret = string(clientSecret)
+	c.OAuth.GitHub.ClientSecret = strings.TrimSpace(string(clientSecret))
 
 	// Load cookie secret
 	cookieSecret, err := os.ReadFile(c.Session.CookieSecretFile)
 	if err != nil {
 		return fmt.Errorf("failed to read cookie secret: %w", err)
 	}
-	c.Session.CookieSecret = string(cookieSecret)
+	c.Session.CookieSecret = strings.TrimSpace(string(cookieSecret))
 
 	return nil
 }
