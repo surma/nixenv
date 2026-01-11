@@ -280,7 +280,10 @@ in
       after = [ "network.target" ];
 
       # Add Prisma CLI to PATH
-      path = [ pkgs.python3Packages.prisma ];
+      path = [
+        pkgs.python3Packages.prisma
+        pkgs.nodejs
+      ];
 
       # Generate Prisma client and run migrations before starting
       preStart = mkIf cfg.database.enable ''
@@ -289,7 +292,7 @@ in
         export DATABASE_URL="postgresql://${cfg.database.user}:$(cat ${cfg.database.passwordFile})@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.database}?sslmode=disable"
 
         # Copy schema.prisma to state directory if not exists or if source is newer
-        SCHEMA_SOURCE="${pkgs.litellm}/lib/python${pkgs.python3.pythonVersion}/site-packages/litellm/proxy/schema.prisma"
+        SCHEMA_SOURCE="${pkgs.litellm}/lib/python3.12/site-packages/litellm/proxy/schema.prisma"
         if [ ! -f "${cfg.stateDir}/schema.prisma" ] || [ "$SCHEMA_SOURCE" -nt "${cfg.stateDir}/schema.prisma" ]; then
           echo "Copying schema.prisma to state directory..."
           cp "$SCHEMA_SOURCE" "${cfg.stateDir}/schema.prisma"
@@ -305,12 +308,12 @@ in
         # Run database migrations
         echo "Running database migrations..."
         ${
-          pkgs.python3.withPackages (ps: [
+          pkgs.python312.withPackages (ps: [
             ps.litellm
             ps.prisma
           ])
         }/bin/python3 \
-          "${pkgs.litellm}/lib/python${pkgs.python3.pythonVersion}/site-packages/litellm/proxy/prisma_migration.py"
+          "${pkgs.litellm}/lib/python3.12/site-packages/litellm/proxy/prisma_migration.py"
 
         echo "Prisma setup complete"
       '';
@@ -343,6 +346,7 @@ in
               export DATABASE_URL="postgresql://${cfg.database.user}:$(cat ${cfg.database.passwordFile})@${cfg.database.host}:${toString cfg.database.port}/${cfg.database.database}?sslmode=disable"
               export HOME="${cfg.stateDir}"
               export PRISMA_PYTHON_CLIENT_PATH="${cfg.stateDir}/generated"
+              export PATH="${pkgs.nodejs}/bin:$PATH"
               exec ${litellm-wrapper}/bin/litellm-wrapper ${lib.escapeShellArgs wrapperArgs}
             ''
           else
