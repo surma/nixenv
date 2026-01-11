@@ -178,6 +178,7 @@ let
               "X-Auth-Request-Email"
             ];
             authRequestHeaders = [
+              "Cookie"
               "X-Forwarded-Method"
               "X-Forwarded-Proto"
               "X-Forwarded-Host"
