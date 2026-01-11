@@ -254,7 +254,7 @@
   # Gitea proxy (from nexus) with GitHub auth
   services.surmhosting.exposedApps.gitea = {
     target.host = "gitea.nexus.hosts.100.83.198.90.nip.io";
-    target.port = 8080;
+    target.port = 80;
     rule = "Host(`gitea.surma.technology`)";
 
     # Enable GitHub authentication
