@@ -155,9 +155,18 @@
   services.openssh.enable = true;
 
   # LLM Proxy service
-  secrets.items.llm-proxy-secret.target = "/var/lib/llm-proxy-credentials/receiver-secret";
-  secrets.items.llm-proxy-client-key.target = "/var/lib/llm-proxy-credentials/client-key";
-  secrets.items.openrouter-api-key.target = "/var/lib/llm-proxy-credentials/openrouter-key";
+  secrets.items.llm-proxy-secret = {
+    target = "/var/lib/llm-proxy-credentials/receiver-secret";
+    mode = "0644"; # World-readable so llm-proxy user can read it
+  };
+  secrets.items.llm-proxy-client-key = {
+    target = "/var/lib/llm-proxy-credentials/client-key";
+    mode = "0644";
+  };
+  secrets.items.openrouter-api-key = {
+    target = "/var/lib/llm-proxy-credentials/openrouter-key";
+    mode = "0644";
+  };
 
   # Ensure host directories exist for bind mounts
   systemd.tmpfiles.rules = [
