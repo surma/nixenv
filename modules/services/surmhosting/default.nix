@@ -122,14 +122,15 @@ let
       };
 
       config =
-        { pkgs, ... }:
+        { ... }:
         {
-          imports = [ ../../modules/services/surm-auth ];
+          imports = [ ../surm-auth ];
 
           system.stateVersion = "25.05";
 
           services.surm-auth = {
             enable = true;
+            package = pkgs.surm-auth;
             baseUrl = "https://${cfg.auth.domain}";
 
             github.clientIdFile = "/var/lib/secrets/github-client-id";
