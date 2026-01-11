@@ -480,6 +480,25 @@ in
         config =
           let
             postgresPackage = pkgs.postgresql_18;
+
+            setupUserScript = pkgs.writeShellScript "setup-postgres-user.sh" ''
+              #!/bin/sh
+              set -e
+
+              PASSWORD=$(cat /var/lib/credentials/password)
+
+              ${postgresPackage}/bin/psql -U postgres -d postgres <<EOF
+              DO \$\$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'surma') THEN
+                  CREATE ROLE surma WITH LOGIN SUPERUSER CREATEDB CREATEROLE;
+                END IF;
+              END
+              \$\$;
+
+              ALTER USER surma WITH PASSWORD '$PASSWORD';
+              EOF
+            '';
           in
           {
             system.stateVersion = "25.05";
@@ -495,25 +514,10 @@ in
                 host all all 0.0.0.0/0 scram-sha-256
                 host all all ::/0      scram-sha-256
               '';
-
-              # Create admin user on first run
-              initialScript = pkgs.writeText "postgres-init.sql" ''
-                -- Create admin user (password will be set via ALTER USER)
-                DO $$
-                BEGIN
-                  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'surma') THEN
-                    CREATE ROLE surma WITH LOGIN SUPERUSER CREATEDB CREATEROLE;
-                  END IF;
-                END
-                $$;
-              '';
             };
 
-            # Set admin password from file after PostgreSQL starts
-            systemd.services.postgresql.postStart = ''
-              PASSWORD=$(cat /var/lib/credentials/password)
-              ${postgresPackage}/bin/psql -U postgres -d postgres -tAc "ALTER USER surma WITH PASSWORD '$PASSWORD';"
-            '';
+            # Create/update admin user after PostgreSQL starts
+            systemd.services.postgresql.postStart = "${setupUserScript}";
           };
 
         forwardPorts = [
