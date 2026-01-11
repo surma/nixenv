@@ -256,6 +256,7 @@
     target.host = "gitea.nexus.hosts.100.83.198.90.nip.io";
     target.port = 80;
     rule = "Host(`gitea.surma.technology`)";
+    useTargetHost = true;
 
     # Enable GitHub authentication
     allowedGitHubUsers = [ "surma" ];

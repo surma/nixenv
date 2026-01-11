@@ -41,6 +41,9 @@ let
         # Check if this app needs auth
         needsAuth = value.allowedGitHubUsers != [ ];
 
+        # Check if this app needs host header rewrite
+        needsHostRewrite = value.useTargetHost && !isContainer && value.target.host != null;
+
         # Generate Traefik config for each port
         traefikConfigs =
           value.target.ports
@@ -54,17 +57,27 @@ let
                   portCfg.rule
                 else
                   "HostRegexp(`^${portCfg.hostname}\\.${config.services.surmhosting.hostname}`)";
+
+              # Build middleware list
+              middlewareList =
+                (lib.optional needsAuth "auth-${name}") ++ (lib.optional needsHostRewrite "host-rewrite-${name}");
             in
             {
               routers.${serviceName} = {
                 rule = routerRule;
                 service = serviceName;
-                # Add auth middleware if app needs auth
-                middlewares = lib.optional needsAuth "auth-${name}";
+                middlewares = middlewareList;
               };
               services.${serviceName}.loadBalancer.servers = [
                 { inherit url; }
               ];
+
+              # Add host rewrite middleware if needed
+              middlewares = lib.optionalAttrs needsHostRewrite {
+                "host-rewrite-${name}" = {
+                  headers.customRequestHeaders.Host = value.target.host;
+                };
+              };
             }
           );
 
@@ -230,6 +243,11 @@ let
             "surma"
             "stimhub"
           ];
+        };
+        useTargetHost = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Whether to rewrite the Host header to match target.host when forwarding requests";
         };
       };
 
