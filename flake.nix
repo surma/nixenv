@@ -66,10 +66,9 @@
         };
       in
       rec {
-        inherit overlays;
         packages = {
           # Expose custom packages from overlay
-          inherit (pkgs) nixenv secrets;
+          inherit (pkgs) nixenv secrets surm-auth;
           jupyterDeno = pkgs.jupyter;
 
           darwinConfigurations = rec {
@@ -159,5 +158,8 @@
           };
         };
       }
-    );
+    )
+    // {
+      overlays = overlays;
+    };
 }

@@ -98,6 +98,15 @@
   services.surmhosting.tls.email = "surma@surma.dev";
   services.surmhosting.docker.enable = true;
 
+  # Surm-Auth authentication
+  services.surmhosting.auth = {
+    domain = "auth.surma.technology";
+    github.clientIdFile = "/var/lib/surm-auth/github-client-id";
+    github.clientSecretFile = "/var/lib/surm-auth/github-client-secret";
+    cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+    cookieDomain = ".surma.technology";
+  };
+
   virtualisation.oci-containers.backend = "podman";
 
   virtualisation.podman = {
@@ -168,10 +177,16 @@
     mode = "0644";
   };
 
+  # Surm-Auth secrets
+  secrets.items.surm-auth-github-client-id.target = "/var/lib/surm-auth/github-client-id";
+  secrets.items.surm-auth-github-client-secret.target = "/var/lib/surm-auth/github-client-secret";
+  secrets.items.surm-auth-cookie-secret.target = "/var/lib/surm-auth/cookie-secret";
+
   # Ensure host directories exist for bind mounts
   systemd.tmpfiles.rules = [
     "d /var/lib/llm-proxy 0755 root root -"
     "d /var/lib/llm-proxy-credentials 0755 root root -"
+    "d /var/lib/surm-auth 0755 root root -"
   ];
 
   services.surmhosting.exposedApps.llm-proxy = {
@@ -225,6 +240,16 @@
         };
       };
     };
+  };
+
+  # Gitea proxy (from nexus) with GitHub auth
+  services.surmhosting.exposedApps.gitea = {
+    target.host = "gitea.nexus.hosts.100.83.198.90.nip.io";
+    target.port = 8080;
+    rule = "Host(`gitea.surma.technology`)";
+
+    # Enable GitHub authentication
+    allowedGitHubUsers = [ "surma" ];
   };
 
   system.stateVersion = "25.05";

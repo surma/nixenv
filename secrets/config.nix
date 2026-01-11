@@ -100,6 +100,26 @@
       keys = [
         "surma"
         "nexus"
+      ];
+    };
+    surm-auth-github-client-id = {
+      contents = ../secrets/surm-auth-github-client-id.age;
+      keys = [
+        "surma"
+        "pylon"
+      ];
+    };
+    surm-auth-github-client-secret = {
+      contents = ../secrets/surm-auth-github-client-secret.age;
+      keys = [
+        "surma"
+        "pylon"
+      ];
+    };
+    surm-auth-cookie-secret = {
+      contents = ../secrets/surm-auth-cookie-secret.age;
+      keys = [
+        "surma"
         "pylon"
       ];
     };
