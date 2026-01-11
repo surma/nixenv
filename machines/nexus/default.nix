@@ -469,7 +469,10 @@ in
 
     {
       # PostgreSQL database server
-      secrets.items.postgres-admin-password.target = "/var/lib/postgres-credentials/password";
+      secrets.items.postgres-admin-password = {
+        target = "/var/lib/postgres-credentials/password";
+        mode = "0644"; # World-readable so postgres user can read it
+      };
 
       networking.firewall.allowedTCPPorts = [ 5432 ];
 
