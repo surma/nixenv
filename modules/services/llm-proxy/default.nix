@@ -30,13 +30,13 @@ let
   ])
   ++ (lib.optionals (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null) [
     "--openrouter-key-file"
-    "${cfg.stateDir}/openrouter-key"
+    cfg.providers.openrouter.keyFile
     "--openrouter-models"
     (builtins.toJSON cfg.providers.openrouter.models)
   ])
   ++ (lib.optionals cfg.clientAuth.enable [
     "--client-key-file"
-    "${cfg.stateDir}/client-key"
+    cfg.clientAuth.keyFile
   ]);
 
   # Collect all key files that should be watched for changes
@@ -160,60 +160,15 @@ in
       "d ${cfg.stateDir} 0755 ${cfg.user} ${cfg.user} -"
     ];
 
-    # Service to copy secrets with correct ownership (runs as root)
-    systemd.services.llm-proxy-copy-secrets =
-      mkIf
-        (
-          cfg.keyReceiver.enable
-          || cfg.clientAuth.enable
-          || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
-        )
-        {
-          description = "Copy secrets for LLM proxy services";
-          wantedBy = [ "multi-user.target" ];
-          before = [
-            "llm-key-receiver.service"
-            "litellm.service"
-          ];
-
-          serviceConfig = {
-            Type = "oneshot";
-            RemainAfterExit = true;
-            ExecStart = pkgs.writeShellScript "copy-llm-proxy-secrets" ''
-                  ${lib.optionalString cfg.keyReceiver.enable ''
-                    cp ${cfg.keyReceiver.secretFile} ${cfg.stateDir}/receiver-secret
-                    chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/receiver-secret
-                    chmod 0600 ${cfg.stateDir}/receiver-secret
-                  ''}
-              ${lib.optionalString cfg.clientAuth.enable ''
-                cp ${cfg.clientAuth.keyFile} ${cfg.stateDir}/client-key
-                chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/client-key
-                chmod 0600 ${cfg.stateDir}/client-key
-              ''}
-              ${lib.optionalString (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
-                ''
-                  cp ${cfg.providers.openrouter.keyFile} ${cfg.stateDir}/openrouter-key
-                  chown ${cfg.user}:${cfg.user} ${cfg.stateDir}/openrouter-key
-                  chmod 0600 ${cfg.stateDir}/openrouter-key
-                ''
-              }
-            '';
-          };
-        };
-
     # Key receiver service
     systemd.services.llm-key-receiver = mkIf cfg.keyReceiver.enable {
       description = "LLM API Key Receiver";
       wantedBy = [ "multi-user.target" ];
-      after = [
-        "network.target"
-        "llm-proxy-copy-secrets.service"
-      ];
-      requires = [ "llm-proxy-copy-secrets.service" ];
+      after = [ "network.target" ];
 
       environment = {
         LLM_KEY_RECEIVER_PORT = toString cfg.keyReceiver.port;
-        LLM_KEY_RECEIVER_SECRET_FILE = "${cfg.stateDir}/receiver-secret";
+        LLM_KEY_RECEIVER_SECRET_FILE = cfg.keyReceiver.secretFile;
         LLM_KEY_RECEIVER_KEY_FILE = cfg.keyReceiver.keyFile;
       };
 
@@ -251,17 +206,7 @@ in
     systemd.services.litellm = {
       description = "LiteLLM Proxy Server";
       wantedBy = [ "multi-user.target" ];
-      after = [
-        "network.target"
-      ]
-      ++ lib.optional (
-        cfg.clientAuth.enable
-        || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
-      ) "llm-proxy-copy-secrets.service";
-      requires = lib.optional (
-        cfg.clientAuth.enable
-        || (cfg.providers.openrouter.enable && cfg.providers.openrouter.keyFile != null)
-      ) "llm-proxy-copy-secrets.service";
+      after = [ "network.target" ];
 
       environment = lib.mkIf cfg.disableAllUI {
         DISABLE_ADMIN_UI = "True";
