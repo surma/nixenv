@@ -23,20 +23,43 @@ let
       # Read API key
       $env.LLM_PROXY_API_KEY = (open ${cfg.apiKeyFile} | str trim)
       
-      # Fetch models from proxy
+      # Fetch models with metadata from proxy
       let models_response = http get --full --headers [
         "Authorization" $"Bearer ($env.LLM_PROXY_API_KEY)"
-      ] "${cfg.baseURL}/models"
+      ] "${cfg.baseURL}/model/info"
       
-      # Extract model IDs
-      let model_ids = $models_response 
-        | get body.data 
-        | get id
+      # Extract models with metadata
+      let models_data = $models_response | get body.data
       
-      # Generate models config
-      let models_config = $model_ids 
-        | each {|id| {name: $id, value: {name: $id}}} 
-        | transpose -r -d 
+      # Generate models config with limit information
+      let models_config = $models_data
+        | each {|m|
+          let model_id = $m.model_name
+          
+          # Build base model config
+          mut model_config = {
+            id: $model_id
+            name: $model_id
+          }
+          
+          # Add limit info if model_info exists and has the required fields
+          if ($m | get -o model_info) != null {
+            let info = $m.model_info
+            let max_input = $info | get -o max_input_tokens
+            let max_output = $info | get -o max_output_tokens
+            
+            # Only add limit if both fields are present and not null
+            if $max_input != null and $max_output != null {
+              $model_config = $model_config | insert limit {
+                context: $max_input
+                output: $max_output
+              }
+            }
+          }
+          
+          {name: $model_id, value: $model_config}
+        }
+        | transpose -r -d
         | into record
       
       # Build dynamic config
