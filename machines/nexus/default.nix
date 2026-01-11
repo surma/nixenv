@@ -508,7 +508,7 @@ in
           # Set admin password from file after PostgreSQL starts
           systemd.services.postgresql.postStart = ''
             PASSWORD=$(cat /var/lib/credentials/password)
-            $PSQL -tAc "ALTER USER surma WITH PASSWORD '$PASSWORD';"
+            ${config.services.postgresql.package}/bin/psql -U postgres -d postgres -tAc "ALTER USER surma WITH PASSWORD '$PASSWORD';"
           '';
         };
 
