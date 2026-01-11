@@ -159,8 +159,21 @@
     22
     80
     443
+    2222 # Gitea SSH
   ];
   networking.nftables.enable = true;
+
+  # Forward Gitea SSH port to nexus
+  networking.nat.enable = true;
+  networking.nat.externalInterface = "enp1s0";
+  networking.nat.forwardPorts = [
+    {
+      destination = "100.83.198.90:2222";
+      proto = "tcp";
+      sourcePort = 2222;
+    }
+  ];
+
   services.openssh.enable = true;
 
   # LLM Proxy service
