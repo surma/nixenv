@@ -59,7 +59,7 @@
     }:
     {
       imports = [
-        ../../modules/home-manager/claude-code
+        ../../modules/secrets
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix
@@ -69,7 +69,7 @@
         # ../../profiles/home-manager/cloud.nix
 
         ../../modules/home-manager/unfree-apps
-
+        ../../modules/home-manager/opencode
       ];
 
       config = {
@@ -86,6 +86,9 @@
         home.stateVersion = "25.05";
 
         home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#pylon";
+
+        programs.opencode.enable = true;
+        defaultConfigs.opencode.enable = true;
       };
     };
 
@@ -123,10 +126,24 @@
         endpoint = "http://100.83.198.90:4318/v1/traces";
       };
     };
+  };
 
+  # Gitea SSH TCP forwarding
+  services.traefik.staticConfigOptions.entryPoints.gitea-ssh = {
+    address = ":2222";
   };
 
   services.traefik.dynamicConfigOptions = {
+    tcp = {
+      routers.gitea-ssh = {
+        rule = "HostSNI(`*`)";
+        service = "gitea-ssh";
+        entryPoints = [ "gitea-ssh" ];
+      };
+      services.gitea-ssh.loadBalancer.servers = [
+        { address = "100.83.198.90:2222"; }
+      ];
+    };
     http = {
       routers.music = {
         rule = "Host(`music.surma.technology`)";
@@ -162,18 +179,6 @@
     2222 # Gitea SSH
   ];
   networking.nftables.enable = true;
-
-  # Forward Gitea SSH port to nexus
-  networking.nat.enable = true;
-  networking.nat.externalInterface = "enp1s0";
-  networking.nat.forwardPorts = [
-    {
-      destination = "100.83.198.90:2222";
-      proto = "tcp";
-      sourcePort = 2222;
-    }
-  ];
-
   services.openssh.enable = true;
 
   # LLM Proxy service
