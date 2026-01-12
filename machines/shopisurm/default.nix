@@ -103,52 +103,6 @@ in
         };
       };
 
-      programs.nushell.extraConfig = ''
-        def --env --wrapped dev [...args: string] {
-          let tmpfile = (mktemp)
-          ^bash -c 'exec 9>"$1"; shift; DEV_SHELL=nushell /opt/dev/bin/dev "$@"' -- $tmpfile ...$args
-
-          for fin in (open $tmpfile | lines | split column ':' -n 2 finalizer value) {
-            match $fin.finalizer {
-              "cd" => { cd $fin.value }
-              "setenv" => {
-                let kv = ($fin.value | split column '=' -n 2 key value | first)
-                load-env {($kv.key): $kv.value}
-              }
-            }
-          }
-
-          rm -f $tmpfile
-        }
-
-        def --env --wrapped devx [...args: string] {
-          $env.DEVX_INVOKED = "1"
-          dev tools run ...$args
-        }
-
-        # Shadowenv hook
-        $env.config = ($env.config | upsert hooks.env_change.PWD { |config|
-          let existing = $config | get -o hooks.env_change.PWD | default []
-          $existing | append {||
-             mut flags = ["--json"]
-
-             if ($env.__shadowenv_force_run? | default false) {
-              hide-env -i __shadowenv_force_run
-              $flags = ($flags | append "--force")
-            }
-
-            let result = /Users/surma/.local/state/tec/profiles/base/current/global/bin/shadowenv hook ...$flags | complete
-            if $result.exit_code != 0 {
-              return
-            }
-
-            $result.stdout | from json | get -o exported | default {} | load-env
-          }
-        })
-
-        $env.__shadowenv_force_run = true
-      '';
-
       programs.zsh = {
         initContent = ''
           [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
