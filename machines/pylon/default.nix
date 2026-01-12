@@ -133,18 +133,17 @@
     address = ":2222";
   };
 
-  services.traefik.staticConfigOptions.tcp = {
-    routers.gitea-ssh = {
-      rule = "HostSNI(`*`)";
-      service = "gitea-ssh";
-      entryPoints = [ "gitea-ssh" ];
-    };
-    services.gitea-ssh.loadBalancer.servers = [
-      { address = "100.83.198.90:2222"; }
-    ];
-  };
-
   services.traefik.dynamicConfigOptions = {
+    tcp = {
+      routers.gitea-ssh = {
+        rule = "HostSNI(`*`)";
+        service = "gitea-ssh";
+        entryPoints = [ "gitea-ssh" ];
+      };
+      services.gitea-ssh.loadBalancer.servers = [
+        { address = "100.83.198.90:2222"; }
+      ];
+    };
     http = {
       routers.music = {
         rule = "Host(`music.surma.technology`)";
