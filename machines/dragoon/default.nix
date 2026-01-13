@@ -70,6 +70,7 @@
           qbittorrent
           jupyter
           gopls
+          bun
         ]
       );
 

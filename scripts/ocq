@@ -1,4 +1,4 @@
 #!/usr/bin/env nu
 def --wrapped main [...rest] {
-  opencode run --dangerously-skip-permissions ...$rest
+  oc run ...$rest
 }

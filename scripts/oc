@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
 def --wrapped main [...rest] {
-  opencode --dangerously-skip-permissions ...$rest
+  $env.OPENCODE_PERMISSION = {"*": "allow", doom_loop: "allow"} | to json
+  opencode ...$rest
 }

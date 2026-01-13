@@ -12,13 +12,13 @@
 }:
 let
   pname = "opencode";
-  version = "1.1.3";
-  nodeModulesHash = "sha256-LJ7xgKQP0ows76P8QVflS6SGGowVBYVvarkmCVkfe60=";
+  version = "1.1.18";
+  nodeModulesHash = "sha256-zSco4ORQQOqV3vMPuP+M/q/hBa+MJGnTKIlxgngMA3g=";
   src = fetchFromGitHub {
     owner = "anomalyco";
     repo = "opencode";
     tag = "v${version}";
-    hash = "sha256-uNeje6WZ/FJVOtxdTdWXbWhPl7BwMws+7/Iz2Hz/stw=";
+    hash = "sha256-3A4s0FpjZuGB0HGMQVBXfWq+0yHmeIvnEQTSX3amV4I=";
   };
 
   node_modules = stdenvNoCC.mkDerivation {
@@ -89,7 +89,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   patches = [
     ./relax-bun-version-check.patch
-    ./0001-Implement-dangerously-skip-permissions.patch
   ];
 
   dontConfigure = true;
