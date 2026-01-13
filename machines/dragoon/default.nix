@@ -57,8 +57,6 @@
 
       home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmbook";
 
-      secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.config/llm-proxy/client-key";
-
       allowedUnfreeApps = [
         "claude-code"
       ];
@@ -71,6 +69,7 @@
           ollama
           qbittorrent
           jupyter
+          gopls
         ]
       );
 
@@ -81,6 +80,8 @@
       defaultConfigs.opencode.enable = true;
       programs.ghostty.enable = true;
       defaultConfigs.ghostty.enable = true;
+
+      programs.go.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.noti.enable = true;
