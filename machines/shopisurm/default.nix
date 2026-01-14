@@ -67,6 +67,7 @@ in
           keycastr
           jupyter
           gopls
+          bun
           (python3.withPackages (ps: [
             ps.distutils
           ]))
