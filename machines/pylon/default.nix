@@ -36,6 +36,7 @@
     surmbook
   ];
 
+  networking.interfaces.enp1s0.useDHCP = true;
   networking.interfaces.enp1s0.ipv6.addresses = [
     {
       address = "2a01:4f8:c17:731::1";
