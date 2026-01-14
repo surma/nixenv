@@ -20,6 +20,21 @@ let
   wrappedOpencode = pkgs.writeScriptBin "opencode" ''
     #!${pkgs.nushell}/bin/nu
     def --wrapped main [...args] {
+      # Ensure models.json exists to prevent startup crash
+      let cache_dir = $"($env.HOME)/.cache/opencode"
+      mkdir $cache_dir
+      let models_file = $"($cache_dir)/models.json"
+      
+      # Download models.json if it doesn't exist or is empty
+      if not ($models_file | path exists) or (($models_file | path exists) and (open $models_file | is-empty)) {
+        try {
+          http get "https://models.dev/api.json" | save --force $models_file
+        } catch {
+          # If download fails, create empty JSON object so OpenCode can handle it
+          "{}" | save --force $models_file
+        }
+      }
+      
       # Read API key
       $env.LLM_PROXY_API_KEY = (open ${cfg.apiKeyFile} | str trim)
       
