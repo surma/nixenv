@@ -66,6 +66,7 @@ in
           # graphite-cli
           keycastr
           jupyter
+          gopls
           (python3.withPackages (ps: [
             ps.distutils
           ]))
@@ -86,6 +87,8 @@ in
       customScripts.get-shopify-key.enable = true;
       customScripts.oc.enable = true;
       customScripts.ocq.enable = true;
+
+      programs.go.enable = true;
 
       # LLM key updater - pushes fresh Shopify keys to nexus
       services.llm-key-updater.enable = true;
