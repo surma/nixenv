@@ -12,13 +12,13 @@
 }:
 let
   pname = "opencode";
-  version = "1.1.18";
-  nodeModulesHash = "sha256-zSco4ORQQOqV3vMPuP+M/q/hBa+MJGnTKIlxgngMA3g=";
+  version = "1.1.19";
+  nodeModulesHash = "sha256-Ws/XERjxQSK8HIDrE/8608TB5gBe4qoFE9mmssry78Y=";
   src = fetchFromGitHub {
     owner = "anomalyco";
     repo = "opencode";
     tag = "v${version}";
-    hash = "sha256-3A4s0FpjZuGB0HGMQVBXfWq+0yHmeIvnEQTSX3amV4I=";
+    hash = "sha256-dG8d40Q2iG738yhgu7y9ijYY3hWG7N0Fqjj1EvXMeLs=";
   };
 
   node_modules = stdenvNoCC.mkDerivation {
