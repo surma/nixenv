@@ -83,7 +83,6 @@ in
     enable = true;
     icons = "auto";
     git = true;
-    enableNushellIntegration = true;
   };
   defaultConfigs.zsh.enable = true;
   defaultConfigs.helix.enable = true;
@@ -119,8 +118,6 @@ in
     };
   };
   programs.gpg.enable = true;
-  programs.carapace.enable = true;
-  programs.carapace.enableNushellIntegration = true;
   programs.yazi.enable = true;
   programs.yazi.enableNushellIntegration = true;
 

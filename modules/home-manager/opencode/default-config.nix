@@ -98,7 +98,6 @@ with lib;
 {
 
   imports = [
-    ../mcp-nixos
     ../mcp-playwright
   ];
 
@@ -125,7 +124,6 @@ with lib;
   config = mkMerge [
     {
       customScripts.noti.enable = mkIf isEnabled true;
-      programs.mcp-nixos.enable = mkIf isEnabled true;
       programs.mcp-playwright.enable = mkIf isEnabled true;
       secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/opencode/api-key";
       programs.opencode = {
@@ -144,10 +142,6 @@ with lib;
           };
         };
         mcps = {
-          mcp-nixos = {
-            type = "local";
-            command = [ "mcp-nixos" ];
-          };
           mcp-playwright = {
             type = "local";
             command = [ "mcp-playwright" ];
