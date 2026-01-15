@@ -3,6 +3,7 @@
 def main [
   msg: string
   --name: string  # Optional session/context name
+  --chime         # Play a sound with the notification
 ] {
   let os = (sys host | get name)
   
@@ -17,8 +18,10 @@ def main [
   
   # Send notification and swallow all output
   if $os == "Darwin" {
-    ^/usr/bin/osascript -e $"display notification ($msg | to json) with title ($session_name | to json)" | complete | ignore
+    let sound_param = if $chime { " sound name \"Glass\"" } else { "" }
+    ^/usr/bin/osascript -e $"display notification ($msg | to json) with title ($session_name | to json)($sound_param)" | complete | ignore
   } else {
-    ^notify-send $session_name $msg | complete | ignore
+    let urgency_flag = if $chime { ["-u" "critical"] } else { [] }
+    ^notify-send ...$urgency_flag $session_name $msg | complete | ignore
   }
 }
