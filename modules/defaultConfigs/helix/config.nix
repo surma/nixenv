@@ -12,7 +12,7 @@
         120
       ];
       color-modes = true;
-      auto-pairs = true;
+      auto-pairs = false;
       cursorline = true;
       soft-wrap = {
         enable = true;
