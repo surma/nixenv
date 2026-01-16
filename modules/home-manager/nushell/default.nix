@@ -13,6 +13,10 @@
         ngb | if ($in|str length) > 0 {git checkout $in} else {print "Aborted."};
       }
 
+      def ngstack [] {
+        gt log --stack | lines | chunk-by  {|l| ($l | str starts-with "◯") or ($l | str starts-with "◉") } | enumerate | where { $in.index mod 2 == 0 } | flatten | each { $in.item | parse --regex `[^\s]+\s*([^(\s]+)` | get capture0.0 }
+      }
+
 
     '';
   };
