@@ -71,6 +71,7 @@ in
   customScripts.nix-build-pkg.enable = true;
   customScripts.build-nixpkg-pkg.enable = true;
   customScripts.git-show-commit.enable = true;
+  customScripts.timeout.enable = true;
 
   programs.home-manager.enable = true;
   programs.bat.enable = true;
