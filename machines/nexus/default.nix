@@ -41,6 +41,8 @@ in
       networking.nftables.enable = true;
       networking.firewall.enable = true;
 
+      networking.firewall.allowedTCPPorts = [ 8082 ];
+
       environment.systemPackages = with pkgs; [
         smartmontools
         e2fsprogs
