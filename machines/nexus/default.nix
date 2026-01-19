@@ -544,6 +544,16 @@ in
             customScripts.oc.enable = true;
             customScripts.ocq.enable = true;
 
+            home.packages = (
+              with pkgs;
+              [
+                gopls
+                # clang
+                gcc
+              ]
+            );
+            programs.go.enable = true;
+
             programs.opencode.enable = true;
             defaultConfigs.opencode.enable = true;
           };
