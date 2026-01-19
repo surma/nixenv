@@ -71,14 +71,13 @@ let
               services.${serviceName}.loadBalancer.servers = [
                 { inherit url; }
               ];
-
-              # Add host rewrite middleware if needed
-              middlewares = lib.optionalAttrs needsHostRewrite {
-                "host-rewrite-${name}" = {
-                  headers.customRequestHeaders.Host = value.target.host;
-                };
-              };
             }
+            // (lib.optionalAttrs needsHostRewrite {
+              # Add host rewrite middleware if needed
+              middlewares."host-rewrite-${name}" = {
+                headers.customRequestHeaders.Host = value.target.host;
+              };
+            })
           );
 
         # Merge all Traefik configs for this app
