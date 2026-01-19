@@ -68,6 +68,8 @@ in
 
       services.openssh.enable = true;
 
+      programs.mosh.enable = true;
+
       system.stateVersion = "25.05";
     }
 

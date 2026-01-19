@@ -53,6 +53,7 @@ in
     fzf
     dprint
     fd
+    mosh
   ];
 
   home.file = {
