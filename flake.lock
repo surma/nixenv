@@ -56,6 +56,30 @@
         "type": "github"
       }
     },
+    "dump": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768905312,
+        "narHash": "sha256-2ALqZ6GspunLLY9WoteIM0sFDcFp8MzkydakRn4BlyY=",
+        "ref": "main",
+        "rev": "67e9a7a5284032fb9eb4636d98b20887fe97b2a4",
+        "revCount": 291,
+        "type": "git",
+        "url": "ssh://git@github.com/surma/dump"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/surma/dump"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -647,6 +671,7 @@
     "root": {
       "inputs": {
         "copyparty": "copyparty",
+        "dump": "dump",
         "flake-utils": "flake-utils",
         "home-manager": "home-manager",
         "hyprland": "hyprland",

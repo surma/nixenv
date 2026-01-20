@@ -511,6 +511,32 @@ in
       };
     }
     {
+      services.surmhosting.exposedApps.dump.target.container = {
+        config = {
+          system.stateVersion = "25.05";
+
+          systemd.services.dumpd = {
+            enable = true;
+            description = "Dump service";
+            wantedBy = [ "multi-user.target" ];
+            serviceConfig = {
+              ExecStart = "${
+                inputs.dump.packages.${pkgs.stdenv.system}.default
+              }/bin/dumpd --listen 0.0.0.0:8080 --dir /var/lib/dump --enable-cors";
+              User = "containeruser";
+              Restart = "always";
+            };
+          };
+        };
+
+        bindMounts.state = {
+          mountPoint = "/var/lib/dump";
+          hostPath = "/dumpdump";
+          isReadOnly = false;
+        };
+      };
+    }
+    {
       home-manager.users.surma =
         {
           config,
