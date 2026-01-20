@@ -281,5 +281,16 @@
     allowedGitHubUsers = [ "surma" ];
   };
 
+  # Dump proxy (from nexus) with GitHub auth
+  services.surmhosting.exposedApps.dump = {
+    target.host = "dump.nexus.hosts.100.83.198.90.nip.io";
+    target.port = 80;
+    rule = "Host(`dump.surma.technology`)";
+    useTargetHost = true;
+
+    # Enable GitHub authentication
+    allowedGitHubUsers = [ "surma" ];
+  };
+
   system.stateVersion = "25.05";
 }
