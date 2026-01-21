@@ -1,7 +1,16 @@
 {
   pkgs,
+  lib,
   ...
 }:
+with lib;
+let
+  lazygitConfig = ''
+    git:
+      autoFetch: false
+      fetchAll: false
+  '';
+in
 {
   imports = [
     ./nixdev.nix
@@ -19,10 +28,14 @@
 
   defaultConfigs.npm.enable = true;
 
-  xdg.configFile."lazygit/config.yml".text = ''
-    git:
-      autoFetch: false
-  '';
+  home.file = mkMerge [
+    (mkIf pkgs.stdenv.isDarwin {
+      "Library/Application Support/lazygit/config.yml".text = lazygitConfig;
+    })
+    (mkIf pkgs.stdenv.isLinux {
+      ".config/lazygit/config.yml".text = lazygitConfig;
+    })
+  ];
 
   programs.diff-so-fancy.enable = true;
   programs.diff-so-fancy.enableGitIntegration = true;
