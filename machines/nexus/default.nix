@@ -9,6 +9,7 @@ with lib;
 let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
   torrentingPort = 60123;
+  dumpPort = 8123;
   giteaPort = 2222;
 in
 {
@@ -511,6 +512,8 @@ in
       };
     }
     {
+      networking.firewall.allowedTCPPorts = [ dumpPort ];
+      services.surmhosting.exposedApps.dump.target.port = dumpPort;
       services.surmhosting.exposedApps.dump.target.container = {
         config = {
           system.stateVersion = "25.05";
@@ -522,12 +525,21 @@ in
             serviceConfig = {
               ExecStart = "${
                 inputs.dump.packages.${pkgs.stdenv.system}.default
-              }/bin/dumpd --listen 0.0.0.0:8080 --dir /var/lib/dump --enable-cors";
+              }/bin/dumpd --listen 0.0.0.0:${dumpPort |> toString} --dir /var/lib/dump --enable-cors";
               User = "containeruser";
               Restart = "always";
             };
           };
         };
+
+        forwardPorts = [
+          {
+            containerPort = dumpPort;
+            hostPort = dumpPort;
+            protocol = "tcp";
+          }
+
+        ];
 
         bindMounts.state = {
           mountPoint = "/var/lib/dump";
@@ -567,6 +579,7 @@ in
 
             home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#nexus";
             customScripts.llm-proxy.enable = true;
+            customScripts.flacsplit.enable = true;
             customScripts.oc.enable = true;
             customScripts.ocq.enable = true;
 
