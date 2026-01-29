@@ -23,7 +23,6 @@ in
 
     ../../apps/hate
 
-    ../../modules/home-manager/unfree-apps
   ];
 
   config = mkMerge [
@@ -564,7 +563,6 @@ in
             ../../profiles/home-manager/linux.nix
             ../../profiles/home-manager/workstation.nix
 
-            ../../modules/home-manager/unfree-apps
           ];
 
           config = {

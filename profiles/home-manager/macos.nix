@@ -10,7 +10,6 @@ let
 in
 {
   imports = [
-    ../../modules/home-manager/unfree-apps
     ../../modules/defaultConfigs/aerospace
     ../../modules/defaultConfigs/karabiner
   ];

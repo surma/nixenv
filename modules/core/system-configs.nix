@@ -1,6 +1,14 @@
 { lib, config, inputs, ... }:
 let
   inherit (lib) mkOption types;
+
+  # List of cross-platform feature modules to inject into all configurations
+  crossPlatformFeatures = [
+    ../features/secrets.nix
+    ../features/unfree-apps.nix
+    ../features/zellij.nix
+    ../features/nushell.nix
+  ];
 in
 {
   options = {
@@ -52,14 +60,13 @@ in
         modules = [
           cfg
           inputs.home-manager.nixosModules.home-manager
-          ../features/secrets.nix  # Cross-platform secrets module
+        ] ++ crossPlatformFeatures ++ [
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
             ];
             home-manager = {
-              sharedModules = [
-                ../features/secrets.nix  # Also inject into home-manager
+              sharedModules = crossPlatformFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -87,7 +94,7 @@ in
         modules = [
           cfg
           inputs.home-manager.darwinModules.home-manager
-          ../features/secrets.nix  # Cross-platform secrets module
+        ] ++ crossPlatformFeatures ++ [
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -97,8 +104,7 @@ in
               home = "/Users/${config.system.primaryUser}";
             };
             home-manager = {
-              sharedModules = [
-                ../features/secrets.nix  # Also inject into home-manager
+              sharedModules = crossPlatformFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -123,9 +129,8 @@ in
     homeConfigurations = lib.mapAttrs (name: cfg:
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
-        modules = [
+        modules = crossPlatformFeatures ++ [
           cfg
-          ../features/secrets.nix  # Cross-platform secrets module
           {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })

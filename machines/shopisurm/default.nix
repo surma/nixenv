@@ -48,7 +48,6 @@ in
         ../../profiles/home-manager/javascript.nix
         ../../profiles/home-manager/dev.nix
         ../../profiles/home-manager/experiments.nix
-        ../../modules/home-manager/unfree-apps
 
       ];
 

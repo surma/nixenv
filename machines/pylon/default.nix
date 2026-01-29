@@ -7,7 +7,6 @@
 }:
 {
   imports = [
-    ../../modules/home-manager/unfree-apps
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
@@ -67,7 +66,6 @@
         ../../profiles/home-manager/workstation.nix
         # ../../profiles/home-manager/cloud.nix
 
-        ../../modules/home-manager/unfree-apps
         ../../modules/home-manager/opencode
       ];
 

@@ -7,7 +7,6 @@
 }:
 {
   imports = [
-    ../../modules/home-manager/unfree-apps
     ./hardware.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
@@ -137,7 +136,6 @@
         ../../profiles/home-manager/linux.nix
         ../../profiles/home-manager/workstation.nix
 
-        ../../modules/home-manager/unfree-apps
       ];
 
       config = {

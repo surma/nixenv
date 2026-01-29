@@ -26,8 +26,8 @@ in
     ../../scripts
     # ../../modules/secrets  # Now injected globally via features/secrets.nix
     ../../modules/home-manager/mutable-files
-    ../../modules/home-manager/zellij
-    ../../modules/home-manager/nushell
+    # ../../modules/home-manager/zellij  # Now injected globally
+    # ../../modules/home-manager/nushell  # Now injected globally
     ../../modules/defaultConfigs/zsh
     ../../modules/defaultConfigs/helix
   ];

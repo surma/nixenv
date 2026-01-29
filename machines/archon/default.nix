@@ -12,7 +12,6 @@
 
     ./hardware.nix
 
-    ../../modules/home-manager/unfree-apps
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
 
@@ -140,7 +139,6 @@
         ../../profiles/home-manager/workstation.nix
         ../../profiles/home-manager/experiments.nix
 
-        ../../modules/home-manager/unfree-apps
         ../../profiles/home-manager/webapps.nix
         ../../modules/home-manager/screenshot
       ];
