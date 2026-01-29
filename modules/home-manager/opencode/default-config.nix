@@ -8,14 +8,6 @@ let
   isEnabled = config.defaultConfigs.opencode.enable;
   cfg = config.defaultConfigs.opencode.llmProxy;
 
-  # Build options object conditionally
-  providerOptions = {
-    baseURL = cfg.baseURL;
-  }
-  // lib.optionalAttrs (cfg.apiKeyFile != null) {
-    apiKey = "{env:LLM_PROXY_API_KEY}";
-  };
-
   # Wrapped opencode that reads the API key from file, fetches models, and sets the env vars
   wrappedOpencode = pkgs.writeScriptBin "opencode" ''
     #!${pkgs.nushell}/bin/nu
@@ -34,13 +26,13 @@ let
           "{}" | save --force $models_file
         }
       }
-      
+
       # Read API key
-      $env.LLM_PROXY_API_KEY = (open ${cfg.apiKeyFile} | str trim)
+      let api_key = (open ${cfg.apiKeyFile} | str trim)
       
       # Fetch models with metadata from proxy
       let models_response = http get --full --headers [
-        "Authorization" $"Bearer ($env.LLM_PROXY_API_KEY)"
+        "Authorization" $"Bearer ($api_key)"
       ] "${cfg.baseURL}/model/info"
       
       # Extract models with metadata
@@ -77,13 +69,88 @@ let
         | transpose -r -d
         | into record
       
-      # Build dynamic config
+      # Build dynamic config with ALL provider configurations
       let dynamic_config = {
+        model: "anthropic/claude-sonnet-4-5",
         provider: {
           "llm.surma.technology": {
-            models: $models_config
+            name: "LLM Proxy",
+            npm: "@ai-sdk/openai-compatible",
+            models: $models_config,
+            options: {
+              baseURL: "${cfg.baseURL}",
+              apiKey: $api_key
+            }
+          },
+          anthropic: {
+            name: "Anthropic",
+            npm: "@ai-sdk/anthropic",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/anthropic/v1",
+              apiKey: $api_key
+            }
+          },
+          openai: {
+            name: "OpenAI",
+            npm: "@ai-sdk/openai",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/openai/v1",
+              apiKey: $api_key
+            }
+          },
+          google: {
+            name: "Google",
+            npm: "@ai-sdk/google",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google",
+              headers: {
+                Authorization: $"Bearer ($api_key)"
+              }
+            }
+          },
+          groq: {
+            name: "Groq",
+            npm: "@ai-sdk/groq",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/groq/openai/v1",
+              apiKey: $api_key
+            }
+          },
+          xai: {
+            name: "xAI",
+            npm: "@ai-sdk/xai",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/xai/v1",
+              apiKey: $api_key
+            }
+          },
+          cohere: {
+            name: "Cohere",
+            npm: "@ai-sdk/cohere",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/cohere/v2",
+              apiKey: $api_key
+            }
+          },
+          perplexity: {
+            name: "Perplexity",
+            npm: "@ai-sdk/perplexity",
+            options: {
+              baseURL: "https://vendors.llm.surma.technology/perplexity",
+              apiKey: $api_key
+            }
           }
-        }
+        },
+        enabled_providers: [
+          "llm.surma.technology",
+          "anthropic",
+          "openai",
+          "google",
+          "groq",
+          "xai",
+          "cohere",
+          "perplexity"
+        ]
       }
       
       # Set config content env var
@@ -132,15 +199,7 @@ with lib;
           "notification.js" = builtins.readFile ./plugin/notification.js;
         };
         extraConfig = {
-          model = "llm.surma.technology/shopify:anthropic:claude-sonnet-4-5";
-          provider = {
-            "llm.surma.technology" = {
-              name = "LLM Proxy";
-              npm = "@ai-sdk/openai-compatible";
-              options = providerOptions;
-              # models will be injected dynamically via OPENCODE_CONFIG_CONTENT
-            };
-          };
+          # model and provider config will be injected via OPENCODE_CONFIG_CONTENT
         };
         mcps = {
           mcp-playwright = {
