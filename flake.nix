@@ -77,7 +77,7 @@
       rec {
         packages = {
           # Expose custom packages from overlay
-          inherit (pkgs) nixenv secrets surm-auth;
+          inherit (pkgs) nixenv secrets surm-auth handy;
           jupyterDeno = pkgs.jupyter;
 
           darwinConfigurations = rec {
