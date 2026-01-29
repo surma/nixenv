@@ -1,0 +1,12 @@
+{
+  "name": "browser-mcp",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "keywords": [],
+  "author": "Surma <surma@surma.dev>",
+  "license": "MIT",
+  "dependencies": {
+    "@browsermcp/mcp": "^0.1.3"
+  }
+}
