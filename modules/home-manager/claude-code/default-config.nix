@@ -11,9 +11,10 @@ in
 with lib;
 {
   imports = [
-    ../fetch-mcp
-    ../browser-mcp
-    ../mcp-nixos
+    # MCP servers now globally injected via features
+    # ../fetch-mcp
+    # ../browser-mcp
+    # ../mcp-nixos
   ];
 
   options = {

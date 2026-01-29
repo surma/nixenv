@@ -166,7 +166,8 @@ with lib;
 {
 
   imports = [
-    ../mcp-playwright
+    # MCP servers now globally injected via features
+    # ../mcp-playwright
   ];
 
   options = {

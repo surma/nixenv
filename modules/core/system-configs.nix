@@ -2,12 +2,22 @@
 let
   inherit (lib) mkOption types;
 
-  # List of cross-platform feature modules to inject into all configurations
-  crossPlatformFeatures = [
+  # Feature modules that work at system level (nixos/darwin)
+  systemFeatures = [
+    ../features/secrets.nix
+    ../features/unfree-apps.nix
+  ];
+
+  # Feature modules that only work in home-manager context
+  homeManagerFeatures = [
     ../features/secrets.nix
     ../features/unfree-apps.nix
     ../features/zellij.nix
     ../features/nushell.nix
+    ../features/browser-mcp.nix
+    ../features/mcp-nixos.nix
+    ../features/fetch-mcp.nix
+    ../features/mcp-playwright.nix
   ];
 in
 {
@@ -60,13 +70,13 @@ in
         modules = [
           cfg
           inputs.home-manager.nixosModules.home-manager
-        ] ++ crossPlatformFeatures ++ [
+        ] ++ systemFeatures ++ [
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
             ];
             home-manager = {
-              sharedModules = crossPlatformFeatures ++ [
+              sharedModules = homeManagerFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -94,7 +104,7 @@ in
         modules = [
           cfg
           inputs.home-manager.darwinModules.home-manager
-        ] ++ crossPlatformFeatures ++ [
+        ] ++ systemFeatures ++ [
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -104,7 +114,7 @@ in
               home = "/Users/${config.system.primaryUser}";
             };
             home-manager = {
-              sharedModules = crossPlatformFeatures ++ [
+              sharedModules = homeManagerFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -129,7 +139,7 @@ in
     homeConfigurations = lib.mapAttrs (name: cfg:
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
-        modules = crossPlatformFeatures ++ [
+        modules = homeManagerFeatures ++ [
           cfg
           {
             nixpkgs.overlays = [
