@@ -9,6 +9,7 @@ let
   cfg = config.services.llm-proxy;
 
   key-receiver = pkgs.callPackage ./key-receiver { };
+  vendor-proxy = pkgs.callPackage ./vendor-proxy { };
 
   litellm-wrapper = pkgs.writeScriptBin "litellm-wrapper" ''
     #!${pkgs.nushell}/bin/nu
@@ -144,6 +145,28 @@ in
       default = false;
       description = "Disable all LiteLLM UI components (Admin UI, Swagger, Redoc)";
     };
+
+    vendorProxy = {
+      enable = mkEnableOption "Shopify vendor proxy service";
+
+      port = mkOption {
+        type = types.port;
+        default = 4001;
+        description = "Port for vendor proxy API";
+      };
+
+      shopifyKeyFile = mkOption {
+        type = types.path;
+        default = cfg.providers.shopify.keyFile;
+        description = "Path to Shopify API key file";
+      };
+
+      clientKeyFile = mkOption {
+        type = types.path;
+        default = cfg.clientAuth.keyFile;
+        description = "Path to client authentication key file";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -199,6 +222,27 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.systemd}/bin/systemctl restart litellm.service";
+      };
+    };
+
+    # Vendor proxy service
+    systemd.services.llm-vendor-proxy = mkIf cfg.vendorProxy.enable {
+      description = "LLM Vendor Proxy Server";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" ];
+
+      environment = {
+        VENDOR_PROXY_PORT = toString cfg.vendorProxy.port;
+        SHOPIFY_KEY_FILE = cfg.vendorProxy.shopifyKeyFile;
+        CLIENT_KEY_FILE = cfg.vendorProxy.clientKeyFile;
+      };
+
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${vendor-proxy}/bin/vendor-proxy";
+        User = cfg.user;
+        Restart = "always";
+        RestartSec = "5s";
       };
     };
 

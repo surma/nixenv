@@ -67,6 +67,7 @@ let
                 rule = routerRule;
                 service = serviceName;
                 middlewares = middlewareList;
+                entryPoints = [ "websecure" ];
               };
               services.${serviceName}.loadBalancer.servers = [
                 { inherit url; }

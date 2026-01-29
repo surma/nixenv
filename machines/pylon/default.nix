@@ -229,6 +229,11 @@
         hostname = "key-llm";
         rule = "Host(`key.llm.surma.technology`)";
       }
+      {
+        port = 4001;
+        hostname = "vendors-llm";
+        rule = "Host(`vendors.llm.surma.technology`)";
+      }
     ];
     target.container = {
       config =
@@ -253,6 +258,8 @@
           services.llm-proxy.clientAuth.enable = true;
           services.llm-proxy.clientAuth.keyFile = "/var/lib/credentials/client-key";
           services.llm-proxy.disableAllUI = true;
+
+          services.llm-proxy.vendorProxy.enable = true;
         };
 
       bindMounts = {
