@@ -260,8 +260,6 @@
           services.llm-proxy.disableAllUI = true;
 
           services.llm-proxy.vendorProxy.enable = true;
-          services.llm-proxy.vendorProxy.shopifyKeyFile = "/var/lib/credentials/shopify-key";
-          services.llm-proxy.vendorProxy.clientKeyFile = "/var/lib/credentials/client-key";
         };
 
       bindMounts = {
