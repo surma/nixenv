@@ -102,12 +102,24 @@ func (km *KeyManager) getShopifyKey() string {
 	return km.shopifyKey
 }
 
-func (km *KeyManager) validateClientKey(authHeader string) bool {
+func (km *KeyManager) validateClientKey(r *http.Request) bool {
 	km.mu.RLock()
 	defer km.mu.RUnlock()
 
+	// Try Authorization: Bearer format first (standard)
+	authHeader := r.Header.Get("Authorization")
 	expectedAuth := "Bearer " + km.clientKey
-	return authHeader == expectedAuth
+	if authHeader == expectedAuth {
+		return true
+	}
+
+	// Try x-api-key format (used by Anthropic SDK)
+	apiKey := r.Header.Get("x-api-key")
+	if apiKey == km.clientKey {
+		return true
+	}
+
+	return false
 }
 
 func (km *KeyManager) Close() error {
@@ -151,9 +163,7 @@ func NewVendorProxy(keyManager *KeyManager, shopifyURL string) (*VendorProxy, er
 }
 
 func (vp *VendorProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-
-	if !vp.keyManager.validateClientKey(authHeader) {
+	if !vp.keyManager.validateClientKey(r) {
 		log.Printf("Unauthorized request from %s to %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusUnauthorized)
 		io.WriteString(w, "Unauthorized\n")
