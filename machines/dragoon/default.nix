@@ -38,6 +38,7 @@
         ../../modules/home-manager/claude-code
         ../../modules/home-manager/opencode
         ../../modules/home-manager/ghostty
+        ../../modules/home-manager/handy
         ../../modules/services/syncthing
 
         ../../profiles/home-manager/base.nix
@@ -81,6 +82,8 @@
       defaultConfigs.opencode.enable = true;
       programs.ghostty.enable = true;
       defaultConfigs.ghostty.enable = true;
+      programs.handy.enable = true;
+      defaultConfigs.handy.enable = true;
 
       programs.go.enable = true;
 

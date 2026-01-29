@@ -33,8 +33,10 @@ in
       imports = [
         ../../modules/programs/telegram
 
+        ../../modules/home-manager/claude-code
         ../../modules/home-manager/opencode
         ../../modules/home-manager/ghostty
+        ../../modules/home-manager/handy
         ../../modules/services/llm-key-updater
 
         ../../profiles/home-manager/base.nix
@@ -76,8 +78,11 @@ in
 
       programs.opencode.enable = true;
       defaultConfigs.opencode.enable = true;
+      defaultConfigs.claude-code.enable = true;
       programs.ghostty.enable = true;
       defaultConfigs.ghostty.enable = true;
+      programs.handy.enable = true;
+      defaultConfigs.handy.enable = true;
 
       customScripts.denix.enable = true;
       customScripts.noti.enable = true;
