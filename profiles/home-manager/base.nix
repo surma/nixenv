@@ -24,7 +24,7 @@ in
 
   imports = [
     ../../scripts
-    ../../modules/secrets
+    # ../../modules/secrets  # Now injected globally via features/secrets.nix
     ../../modules/home-manager/mutable-files
     ../../modules/home-manager/zellij
     ../../modules/home-manager/nushell

@@ -15,7 +15,6 @@ in
     ../../modules/programs/obsidian
 
     ../../scripts
-    ../../modules/secrets
   ];
 
   system.stateVersion = 5;
@@ -51,7 +50,6 @@ in
         ../../profiles/home-manager/experiments.nix
         ../../modules/home-manager/unfree-apps
 
-        ../../modules/secrets
       ];
 
       secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";

@@ -52,16 +52,20 @@ in
         modules = [
           cfg
           inputs.home-manager.nixosModules.home-manager
+          ../features/secrets.nix  # Cross-platform secrets module
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
             ];
             home-manager = {
-              sharedModules = [{
-                nixpkgs.overlays = [
-                  (import ../../overlays/extra-pkgs { inherit inputs; })
-                ];
-              }];
+              sharedModules = [
+                ../features/secrets.nix  # Also inject into home-manager
+                {
+                  nixpkgs.overlays = [
+                    (import ../../overlays/extra-pkgs { inherit inputs; })
+                  ];
+                }
+              ];
               extraSpecialArgs = {
                 inherit inputs;
                 systemManager = "home-manager";
@@ -83,6 +87,7 @@ in
         modules = [
           cfg
           inputs.home-manager.darwinModules.home-manager
+          ../features/secrets.nix  # Cross-platform secrets module
           ({ config, ... }: {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -92,11 +97,14 @@ in
               home = "/Users/${config.system.primaryUser}";
             };
             home-manager = {
-              sharedModules = [{
-                nixpkgs.overlays = [
-                  (import ../../overlays/extra-pkgs { inherit inputs; })
-                ];
-              }];
+              sharedModules = [
+                ../features/secrets.nix  # Also inject into home-manager
+                {
+                  nixpkgs.overlays = [
+                    (import ../../overlays/extra-pkgs { inherit inputs; })
+                  ];
+                }
+              ];
               extraSpecialArgs = {
                 inherit inputs;
                 systemManager = "home-manager";
@@ -117,6 +125,7 @@ in
         pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
         modules = [
           cfg
+          ../features/secrets.nix  # Cross-platform secrets module
           {
             nixpkgs.overlays = [
               (import ../../overlays/extra-pkgs { inherit inputs; })

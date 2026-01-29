@@ -13,7 +13,6 @@
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
 
-    ../../modules/secrets
 
     # ../../apps/writing-prompt
   ];
@@ -60,7 +59,6 @@
     }:
     {
       imports = [
-        ../../modules/secrets
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix

@@ -8,7 +8,7 @@
 {
 
   imports = [
-    ../../modules/secrets
+    # ../../modules/secrets  # Now injected globally via features/secrets.nix
   ];
 
   nix.settings.experimental-features = [

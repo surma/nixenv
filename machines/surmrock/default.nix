@@ -12,7 +12,6 @@
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
 
-    ../../modules/secrets
 
     ../../apps/hate
     # ../../apps/traefik.nix
