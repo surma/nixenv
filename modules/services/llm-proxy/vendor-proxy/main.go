@@ -119,6 +119,12 @@ func (km *KeyManager) validateClientKey(r *http.Request) bool {
 		return true
 	}
 
+	// Try x-goog-api-key format (used by Google SDK)
+	googKey := r.Header.Get("x-goog-api-key")
+	if googKey == km.clientKey {
+		return true
+	}
+
 	return false
 }
 

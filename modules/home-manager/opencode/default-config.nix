@@ -100,9 +100,9 @@ let
           },
           google: {
             name: "Google",
-            npm: "@ai-sdk/openai-compatible",
+            npm: "@ai-sdk/google",
             options: {
-              baseURL: "https://vendors.llm.surma.technology/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google",
+              baseURL: "https://vendors.llm.surma.technology/googlevertexai-global",
               apiKey: $api_key
             }
           },
