@@ -10,22 +10,17 @@ let
 
   mcpServerType = import ../../../lib/module-types/mcp-server.nix lib;
 
-  defaultClaudeJson =
-    {
-      hasCompletedOnboarding = true;
-      mcps = claude-code.mcps;
-    }
-    |> builtins.toJSON
-    |> builtins.toFile "dot-claude-json";
-
   wrapper = writeShellScriptBin "claude" ''
     ${lib.optionalString (claude-code.overrides.baseURL != null) ''
       export ANTHROPIC_BASE_URL="${claude-code.overrides.baseURL}"
     ''}
     ${lib.optionalString (claude-code.overrides.apiKey != null) ''
-      export ANTHROPIC_API_KEY=${claude-code.overrides.apiKey}
+      # Read API key from file and export as env var (only in this subprocess)
+      if [ -f "${claude-code.overrides.apiKey}" ]; then
+        export ANTHROPIC_API_KEY=$(cat "${claude-code.overrides.apiKey}" | tr -d '\n')
+      fi
     ''}
-    ${pkgs.claude-code}/bin/claude "$@"
+    exec ${pkgs.claude-code}/bin/claude "$@"
   '';
 in
 with lib;
@@ -40,10 +35,12 @@ with lib;
       overrides.baseURL = mkOption {
         type = with types; nullOr str;
         default = null;
+        description = "Base URL for the Anthropic API";
       };
       overrides.apiKey = mkOption {
-        type = with types; nullOr str;
+        type = with types; nullOr path;
         default = null;
+        description = "Path to file containing the API key";
       };
       mcps = mkOption {
         type = types.attrsOf mcpServerType;
@@ -52,13 +49,6 @@ with lib;
     };
   };
   config = mkIf claude-code.enable {
-    home.activation.copyClaudeJson = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      if [ ! -f ~/.claude.json ]; then
-        cp ${defaultClaudeJson} ~/.claude.json
-        chmod 644 ~/.claude.json
-      fi
-    '';
-
     programs.claude-code.package = wrapper;
   };
 }

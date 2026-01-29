@@ -595,6 +595,7 @@ in
 
             programs.opencode.enable = true;
             defaultConfigs.opencode.enable = true;
+            defaultConfigs.claude-code.enable = true;
           };
         };
     }

@@ -76,6 +76,7 @@ in
 
       programs.opencode.enable = true;
       defaultConfigs.opencode.enable = true;
+      defaultConfigs.claude-code.enable = true;
       programs.ghostty.enable = true;
       defaultConfigs.ghostty.enable = true;
 
