@@ -6,7 +6,7 @@ buildGoModule {
 
   src = ./.;
 
-  vendorHash = "sha256-iyhVyrAf3cVejT+balQdQiJy+CIdT00a/x1VOnhRj3I=";
+  vendorHash = "sha256-SAZpfeTKHC/OEgMUWScXYwx7RY6LrSHkHXLg4vArX+g=";
 
   meta = with lib; {
     description = "Proxy service for Shopify vendor routes";
