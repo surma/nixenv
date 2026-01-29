@@ -23,7 +23,7 @@ with lib;
       llmProxy = {
         baseURL = mkOption {
           type = types.str;
-          default = "https://vendors.llm.surma.technology/anthropic/v1";
+          default = "https://vendors.llm.surma.technology/anthropic-claude-code";
           description = "Base URL for the Anthropic vendor route on your LLM proxy";
         };
 
