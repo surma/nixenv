@@ -9,10 +9,6 @@ in
 
 {
 
-  imports = [
-    ../../modules/home-manager/wezterm
-  ];
-
   config = {
     allowedUnfreeApps = [
       "vscode"
