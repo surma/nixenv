@@ -158,49 +158,24 @@ in
     };
   };
 
-  config = mkMerge [
-    # NixOS system-level config (Linux-only)
-    (mkIf (systemManager == "nixos" && pkgs.stdenv.isLinux) {
-      environment.systemPackages = with pkgs; [
-        brightnessctl
-        playerctl
-        wireplumber
-      ];
-
-      programs.hyprland.enable = true;
-      programs.hyprland.package = hyprlandPackage;
-      programs.hyprland.portalPackage = hyprlandPortalPackage;
-
-      xdg.portal = {
-        enable = true;
-        extraPortals = [ hyprlandPortalPackage ];
-      };
-
-      programs.waybar.enable = true;
-      services.xserver.displayManager.gdm = {
-        enable = true;
-        wayland = true;
-      };
-    })
-
-    # Home-manager user-level config
-    (mkIf (systemManager == "home-manager") {
-      wayland.windowManager.hyprland = {
-        extraConfig =
-          let
-            bindings =
-              config.wayland.windowManager.hyprland.bindings
-              |> map (binding:
-                "${binding.flags |> asBindingKeyword} = ${binding.key}, ${actionToCommand binding.action}"
-              )
-              |> lib.concatLines;
-          in
-          ''
-            ${config.wayland.windowManager.hyprland.header}
-            ${bindings}
-            ${lib.readFile ../home-manager/hyprland/hyprland.conf}
-          '';
-      };
-    })
-  ];
+  # NixOS system-level config is handled by modules/nixos/hyprland
+  # This feature module only handles the home-manager parts
+  config = mkIf (systemManager == "home-manager") {
+    wayland.windowManager.hyprland = {
+      extraConfig =
+        let
+          bindings =
+            config.wayland.windowManager.hyprland.bindings
+            |> map (binding:
+              "${binding.flags |> asBindingKeyword} = ${binding.key}, ${actionToCommand binding.action}"
+            )
+            |> lib.concatLines;
+        in
+        ''
+          ${config.wayland.windowManager.hyprland.header}
+          ${bindings}
+          ${lib.readFile ../home-manager/hyprland/hyprland.conf}
+        '';
+    };
+  };
 }
