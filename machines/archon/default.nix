@@ -15,8 +15,6 @@
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
 
-    ../../modules/programs/keyd-as-internal
-
     ../../modules/nixos/obs-virtual-camera-fix
 
     ../../modules/nixos/framework/suspend-fix.nix
@@ -118,13 +116,8 @@
     }:
     {
       imports = [
-        ../../modules/home-manager/opencode
-        ../../modules/home-manager/claude-code
         ../../modules/home-manager/hyprland
-        ../../modules/home-manager/hyprsunset
         ../../modules/services/syncthing
-        ../../modules/home-manager/waybar
-        ../../modules/home-manager/hyprpaper
 
         ../../scripts
 

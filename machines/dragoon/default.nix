@@ -28,7 +28,6 @@
 
   programs.signal.enable = true;
   programs.obs.enable = true;
-  programs.obsidian.enable = true;
 
   home-manager.users.${config.system.primaryUser} =
     { config, ... }:
@@ -64,6 +63,7 @@
 
       allowedUnfreeApps = [
         "claude-code"
+        "obsidian"
       ];
 
       home.packages = (
@@ -88,6 +88,7 @@
       defaultConfigs.ghostty.enable = true;
       programs.handy.enable = true;
       defaultConfigs.handy.enable = true;
+      programs.obsidian.enable = true;
 
       programs.go.enable = true;
 

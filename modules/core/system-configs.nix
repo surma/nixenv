@@ -10,7 +10,8 @@ let
     ../features/signal.nix
     ../features/telegram.nix
     ../features/obs.nix
-    ../features/obsidian.nix
+    ../features/keyd-as-internal.nix
+    # obsidian is provided by home-manager built-in
   ];
 
   # Feature modules for nested home-manager (within nixos/darwin)
@@ -21,7 +22,7 @@ let
     ../features/signal.nix
     ../features/telegram.nix
     ../features/obs.nix
-    ../features/obsidian.nix
+    # obsidian is provided by home-manager built-in
     ../features/zellij.nix
     ../features/nushell.nix
     ../features/browser-mcp.nix
@@ -38,6 +39,8 @@ let
     ../features/claude-code.nix
     ../features/opencode.nix
     ../features/syncthing.nix
+    ../features/spotify.nix
+    # discord and obsidian are provided by home-manager built-in
   ];
 
   # Feature modules for standalone home-manager configs
