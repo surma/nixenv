@@ -117,7 +117,6 @@
     {
       imports = [
         ../../modules/home-manager/hyprland
-        ../../modules/services/syncthing
 
         ../../scripts
 
