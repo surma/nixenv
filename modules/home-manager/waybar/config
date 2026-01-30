@@ -1,0 +1,159 @@
+{
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-alt": "{time} {icon}",
+    "format-charging": "{capacity}% ",
+    "format-full": "{capacity}% {icon}",
+    "format-icons": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "format-plugged": "{capacity}% ",
+    "states": {
+      "critical": 15,
+      "warning": 30
+    }
+  },
+  "clock": {
+    "format": "{:%a, %F %H:%M}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+  },
+  "cpu": {
+    "format": "{usage}% ",
+    "tooltip": false
+  },
+  "custom/sunset": {
+    "format": "🟧",
+    "on-click": "toggle-sunset"
+  },
+  "custom/power": {
+    "format": "⏻ ",
+    "on-click": "wlogout",
+    "tooltip": false
+  },
+  "hyprland/workspaces": {
+    "format": "{icon} {windows}",
+    "format-icons": {
+      "1": "1",
+      "10": "A",
+      "11": "B",
+      "12": "C",
+      "13": "D",
+      "14": "E",
+      "15": "F",
+      "16": "G",
+      "17": "H",
+      "18": "I",
+      "19": "J",
+      "2": "2",
+      "20": "K",
+      "21": "L",
+      "22": "M",
+      "23": "N",
+      "24": "O",
+      "25": "P",
+      "26": "Q",
+      "27": "R",
+      "28": "S",
+      "29": "T",
+      "3": "3",
+      "30": "U",
+      "31": "V",
+      "32": "W",
+      "33": "X",
+      "34": "Y",
+      "35": "Z",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9"
+    },
+    "on-click": "activate",
+    "on-scroll-down": "hyprctl dispatch workspace e-1",
+    "on-scroll-up": "hyprctl dispatch workspace e+1"
+  },
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "",
+      "deactivated": ""
+    }
+  },
+  "memory": {
+    "format": "{}% "
+  },
+  "modules-center": [
+    "clock"
+  ],
+  "modules-left": [
+    "hyprland/workspaces"
+  ],
+  "modules-right": [
+    "idle_inhibitor",
+    "custom/sunset",
+    "pulseaudio",
+    "power-profiles-daemon",
+    "battery",
+    "tray",
+    "custom/power"
+  ],
+  "network": {
+    "format-alt": "{ifname}: {ipaddr}/{cidr}",
+    "format-disconnected": "Disconnected ⚠",
+    "format-ethernet": "{ipaddr}/{cidr} ",
+    "format-linked": "{ifname} (No IP) ",
+    "format-wifi": "{essid} ({signalStrength}%) ",
+    "tooltip-format": "{ifname} via {gwaddr} "
+  },
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "format-icons": {
+      "balanced": "",
+      "default": "",
+      "performance": "",
+      "power-saver": ""
+    },
+    "tooltip": true,
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}"
+  },
+  "pulseaudio": {
+    "format": "{volume}% {icon} {format_source}",
+    "format-bluetooth": "{volume}% {icon} {format_source}",
+    "format-bluetooth-muted": " {icon} {format_source}",
+    "format-icons": {
+      "car": "",
+      "default": [
+        "",
+        "",
+        ""
+      ],
+      "hands-free": "",
+      "headphone": "",
+      "headset": "",
+      "phone": "",
+      "portable": ""
+    },
+    "format-muted": " {format_source}",
+    "format-source": "{volume}% ",
+    "format-source-muted": "",
+    "on-click": "pavucontrol"
+  },
+  "spacing": 4,
+  "temperature": {
+    "critical-threshold": 80,
+    "format": "{temperatureC}°C {icon}",
+    "format-icons": [
+      "",
+      "",
+      ""
+    ]
+  },
+  "tray": {
+    "spacing": 10
+  }
+}
