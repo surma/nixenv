@@ -130,7 +130,6 @@
         ../../profiles/home-manager/experiments.nix
 
         ../../profiles/home-manager/webapps.nix
-        ../../modules/home-manager/screenshot
       ];
 
       config = {
