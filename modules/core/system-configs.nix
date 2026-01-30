@@ -11,6 +11,7 @@ let
     ../features/telegram.nix
     ../features/obs.nix
     ../features/keyd-as-internal.nix
+    ../features/hyprland.nix
     # obsidian is provided by home-manager built-in
   ];
 
@@ -23,6 +24,7 @@ let
     ../features/telegram.nix
     ../features/obs.nix
     # obsidian is provided by home-manager built-in
+    ../features/hyprland.nix
     ../features/zellij.nix
     ../features/nushell.nix
     ../features/browser-mcp.nix

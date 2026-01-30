@@ -13,7 +13,6 @@
     ./hardware.nix
 
     ../../profiles/nixos/base.nix
-    ../../modules/nixos/hyprland
 
     ../../modules/nixos/obs-virtual-camera-fix
 
@@ -116,8 +115,6 @@
     }:
     {
       imports = [
-        ../../modules/home-manager/hyprland
-
         ../../scripts
 
         ../../profiles/home-manager/base.nix
