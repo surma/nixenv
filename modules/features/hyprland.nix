@@ -142,11 +142,11 @@ let
   hyprlandPortalPackage = pkgs.xdg-desktop-portal-hyprland;
 in
 {
-  imports = mkIf (systemManager == "home-manager") [
+  imports = [
     ../home-manager/hyprland/default-config.nix
   ];
 
-  options.wayland.windowManager.hyprland = mkIf (systemManager == "home-manager") {
+  options.wayland.windowManager.hyprland = {
     bindings = mkOption {
       type = with types; listOf (submodule binding);
       default = [];
