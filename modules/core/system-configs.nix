@@ -27,6 +27,7 @@ let
     ../features/hyprpaper.nix
     ../features/claude-code.nix
     ../features/opencode.nix
+    ../features/syncthing.nix
   ];
 in
 {

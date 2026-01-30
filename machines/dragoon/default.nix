@@ -36,11 +36,12 @@
         ../../modules/programs/telegram
 
         # Application modules now globally injected
+        # Application modules now globally injected
         # ../../modules/home-manager/claude-code
         # ../../modules/home-manager/opencode
         # ../../modules/home-manager/ghostty
         # ../../modules/home-manager/handy
-        ../../modules/services/syncthing
+        # ../../modules/services/syncthing
 
         ../../profiles/home-manager/base.nix
         ../../profiles/home-manager/dev.nix
