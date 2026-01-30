@@ -4,9 +4,7 @@
 }:
 {
 
-  imports = [
-    ../../home-manager/unfree-apps
-  ];
+  # unfree-apps now globally injected as a feature module
   allowedUnfreeApps = [
     "cloudflare-warp"
   ];
