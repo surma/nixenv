@@ -78,4 +78,4 @@
   defaultConfigs.syncthing.knownFolders.scratch.enable = true;
   defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
 
-};
+}
