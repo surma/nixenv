@@ -35,10 +35,11 @@
       imports = [
         ../../modules/programs/telegram
 
-        ../../modules/home-manager/claude-code
-        ../../modules/home-manager/opencode
-        ../../modules/home-manager/ghostty
-        ../../modules/home-manager/handy
+        # Application modules now globally injected
+        # ../../modules/home-manager/claude-code
+        # ../../modules/home-manager/opencode
+        # ../../modules/home-manager/ghostty
+        # ../../modules/home-manager/handy
         ../../modules/services/syncthing
 
         ../../profiles/home-manager/base.nix

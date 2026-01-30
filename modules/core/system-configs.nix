@@ -18,6 +18,15 @@ let
     ../features/mcp-nixos.nix
     ../features/fetch-mcp.nix
     ../features/mcp-playwright.nix
+    ../features/handy.nix
+    ../features/ghostty.nix
+    ../features/wezterm.nix
+    ../features/waybar.nix
+    ../features/screenshot.nix
+    ../features/hyprsunset.nix
+    ../features/hyprpaper.nix
+    ../features/claude-code.nix
+    ../features/opencode.nix
   ];
 in
 {
