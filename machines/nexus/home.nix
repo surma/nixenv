@@ -1,11 +1,11 @@
 {
   config,
+  pkgs,
   ...
 }:
 {
   imports = [
     ../../scripts
-    ../../modules/home-manager/opencode
 
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/dev.nix
@@ -44,5 +44,4 @@
     defaultConfigs.opencode.enable = true;
     defaultConfigs.claude-code.enable = true;
   };
-};
-    }
+}

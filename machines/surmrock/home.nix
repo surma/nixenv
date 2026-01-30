@@ -5,8 +5,6 @@
 }:
 {
   imports = [
-    ../../modules/home-manager/opencode
-
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/nixdev.nix
@@ -34,10 +32,4 @@
     defaultConfigs.opencode.enable = true;
     defaultConfigs.claude-code.enable = true;
   };
-};
-
-  networking.firewall.enable = false;
-
-  services.openssh.enable = true;
-
-  system.stateVersion = "25.05";
+}

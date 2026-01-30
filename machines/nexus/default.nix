@@ -547,8 +547,7 @@ in
       };
     }
     {
-      home-manager.users.surma =
       home-manager.users.surma = import ./home.nix;
-    };
-  };
+    }
+  ];
 }

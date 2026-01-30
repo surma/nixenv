@@ -25,7 +25,6 @@ in
   '';
 
   programs.obs.enable = true;
-  programs.obsidian.enable = true;
 
   home-manager.users.${config.system.primaryUser} = import ./home.nix;
 }
