@@ -8,9 +8,10 @@
   imports = [
     ../../profiles/darwin/base.nix
 
-    ../../modules/programs/signal
-    ../../modules/programs/obs
-    ../../modules/programs/obsidian
+    # Programs now globally injected
+    # ../../modules/programs/signal
+    # ../../modules/programs/obs
+    # ../../modules/programs/obsidian
   ];
 
   system.stateVersion = 5;
@@ -33,7 +34,8 @@
     { config, ... }:
     {
       imports = [
-        ../../modules/programs/telegram
+        # Programs now globally injected
+        # ../../modules/programs/telegram
 
         # Application modules now globally injected
         # Application modules now globally injected

@@ -11,8 +11,9 @@ in
   imports = [
     ../../profiles/darwin/base.nix
 
-    ../../modules/programs/obs
-    ../../modules/programs/obsidian
+    # Programs now globally injected
+    # ../../modules/programs/obs
+    # ../../modules/programs/obsidian
 
     ../../scripts
   ];
@@ -30,12 +31,14 @@ in
     { config, ... }:
     {
       imports = [
-        ../../modules/programs/telegram
+        # Programs now globally injected
+        # ../../modules/programs/telegram
 
-        ../../modules/home-manager/claude-code
-        ../../modules/home-manager/opencode
-        ../../modules/home-manager/ghostty
-        ../../modules/home-manager/handy
+        # Application modules now globally injected
+        # ../../modules/home-manager/claude-code
+        # ../../modules/home-manager/opencode
+        # ../../modules/home-manager/ghostty
+        # ../../modules/home-manager/handy
         ../../modules/services/llm-key-updater
 
         ../../profiles/home-manager/base.nix

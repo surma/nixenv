@@ -15,8 +15,6 @@
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
 
-    ../../modules/programs/signal
-    ../../modules/programs/obs
     ../../modules/programs/keyd-as-internal
 
     ../../modules/nixos/obs-virtual-camera-fix

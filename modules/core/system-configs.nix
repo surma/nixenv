@@ -3,15 +3,25 @@ let
   inherit (lib) mkOption types;
 
   # Feature modules that work at system level (nixos/darwin)
+  # These handle both system-level AND nested home-manager configs
   systemFeatures = [
     ../features/secrets.nix
     ../features/unfree-apps.nix
+    ../features/signal.nix
+    ../features/telegram.nix
+    ../features/obs.nix
+    ../features/obsidian.nix
   ];
 
-  # Feature modules that only work in home-manager context
-  homeManagerFeatures = [
-    ../features/secrets.nix
+  # Feature modules for nested home-manager (within nixos/darwin)
+  # Includes cross-platform features that support home-manager context
+  nestedHomeManagerFeatures = [
     ../features/unfree-apps.nix
+    ../features/secrets.nix
+    ../features/signal.nix
+    ../features/telegram.nix
+    ../features/obs.nix
+    ../features/obsidian.nix
     ../features/zellij.nix
     ../features/nushell.nix
     ../features/browser-mcp.nix
@@ -29,6 +39,10 @@ let
     ../features/opencode.nix
     ../features/syncthing.nix
   ];
+
+  # Feature modules for standalone home-manager configs
+  # Includes both system features (for their home-manager support) and home-only features
+  standaloneHomeManagerFeatures = systemFeatures ++ nestedHomeManagerFeatures;
 in
 {
   options = {
@@ -86,7 +100,7 @@ in
               (import ../../overlays/extra-pkgs { inherit inputs; })
             ];
             home-manager = {
-              sharedModules = homeManagerFeatures ++ [
+              sharedModules = nestedHomeManagerFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -124,7 +138,7 @@ in
               home = "/Users/${config.system.primaryUser}";
             };
             home-manager = {
-              sharedModules = homeManagerFeatures ++ [
+              sharedModules = nestedHomeManagerFeatures ++ [
                 {
                   nixpkgs.overlays = [
                     (import ../../overlays/extra-pkgs { inherit inputs; })
@@ -149,7 +163,7 @@ in
     homeConfigurations = lib.mapAttrs (name: cfg:
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
-        modules = homeManagerFeatures ++ [
+        modules = standaloneHomeManagerFeatures ++ [
           cfg
           {
             nixpkgs.overlays = [
