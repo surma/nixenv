@@ -13,6 +13,7 @@
     ./hardware.nix
 
     ../../profiles/nixos/base.nix
+    ../../modules/nixos/hyprland
 
     ../../modules/nixos/obs-virtual-camera-fix
 

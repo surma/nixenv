@@ -11,7 +11,7 @@ let
     ../features/telegram.nix
     ../features/obs.nix
     ../features/keyd-as-internal.nix
-    ../features/hyprland.nix
+    # hyprland is Linux-only, loaded via nestedHomeManagerFeatures only
     # obsidian is provided by home-manager built-in
   ];
 

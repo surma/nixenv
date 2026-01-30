@@ -159,8 +159,8 @@ in
   };
 
   config = mkMerge [
-    # NixOS system-level config
-    (mkIf (systemManager == "nixos") {
+    # NixOS system-level config (Linux-only)
+    (mkIf (systemManager == "nixos" && pkgs.stdenv.isLinux) {
       environment.systemPackages = with pkgs; [
         brightnessctl
         playerctl
