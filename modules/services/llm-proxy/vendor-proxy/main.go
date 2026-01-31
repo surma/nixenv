@@ -39,19 +39,30 @@ func (km *KeyManager) getShopifyKey() (string, error) {
 	return strings.TrimSpace(string(keyBytes)), nil
 }
 
-func (km *KeyManager) validateClientKey(authHeader string) (bool, error) {
+func (km *KeyManager) validateClientKey(r *http.Request) (bool, error) {
 	keyBytes, err := os.ReadFile(km.clientKeyFile)
 	if err != nil {
 		return false, fmt.Errorf("failed to read client key: %w", err)
 	}
 	clientKey := strings.TrimSpace(string(keyBytes))
+
+	authHeader := r.Header.Get("Authorization")
 	expectedAuth := "Bearer " + clientKey
-	return authHeader == expectedAuth, nil
+	if authHeader == expectedAuth {
+		return true, nil
+	}
+
+	apiKeyHeader := r.Header.Get("x-api-key")
+	if apiKeyHeader == clientKey {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 type VendorProxy struct {
-	keyManager  *KeyManager
-	shopifyURL  *url.URL
+	keyManager   *KeyManager
+	shopifyURL   *url.URL
 	reverseProxy *httputil.ReverseProxy
 }
 
@@ -86,9 +97,7 @@ func NewVendorProxy(keyManager *KeyManager, shopifyURL string) (*VendorProxy, er
 }
 
 func (vp *VendorProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-
-	valid, err := vp.keyManager.validateClientKey(authHeader)
+	valid, err := vp.keyManager.validateClientKey(r)
 	if err != nil {
 		log.Printf("Error reading client key: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
