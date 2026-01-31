@@ -24,6 +24,7 @@ in
     tig
     nodejs_24.pkgs.typescript-language-server
     dprint
+    just
   ];
 
   defaultConfigs.npm.enable = true;
