@@ -9,109 +9,44 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
-
-	"github.com/fsnotify/fsnotify"
 )
 
 type KeyManager struct {
-	mu              sync.RWMutex
-	shopifyKey      string
-	clientKey       string
-	shopifyKeyFile  string
-	clientKeyFile   string
-	watcher         *fsnotify.Watcher
+	shopifyKeyFile string
+	clientKeyFile  string
 }
 
 func NewKeyManager(shopifyKeyFile, clientKeyFile string) (*KeyManager, error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create watcher: %w", err)
+	// Validate files exist and are readable at startup
+	if _, err := os.ReadFile(shopifyKeyFile); err != nil {
+		return nil, fmt.Errorf("failed to read shopify key file: %w", err)
+	}
+	if _, err := os.ReadFile(clientKeyFile); err != nil {
+		return nil, fmt.Errorf("failed to read client key file: %w", err)
 	}
 
-	km := &KeyManager{
+	return &KeyManager{
 		shopifyKeyFile: shopifyKeyFile,
 		clientKeyFile:  clientKeyFile,
-		watcher:        watcher,
-	}
-
-	if err := km.loadKeys(); err != nil {
-		return nil, err
-	}
-
-	if err := watcher.Add(shopifyKeyFile); err != nil {
-		return nil, fmt.Errorf("failed to watch shopify key file: %w", err)
-	}
-
-	if err := watcher.Add(clientKeyFile); err != nil {
-		return nil, fmt.Errorf("failed to watch client key file: %w", err)
-	}
-
-	go km.watchKeys()
-
-	return km, nil
+	}, nil
 }
 
-func (km *KeyManager) loadKeys() error {
-	shopifyKeyBytes, err := os.ReadFile(km.shopifyKeyFile)
+func (km *KeyManager) getShopifyKey() (string, error) {
+	keyBytes, err := os.ReadFile(km.shopifyKeyFile)
 	if err != nil {
-		return fmt.Errorf("failed to read shopify key: %w", err)
+		return "", fmt.Errorf("failed to read shopify key: %w", err)
 	}
+	return strings.TrimSpace(string(keyBytes)), nil
+}
 
-	clientKeyBytes, err := os.ReadFile(km.clientKeyFile)
+func (km *KeyManager) validateClientKey(authHeader string) (bool, error) {
+	keyBytes, err := os.ReadFile(km.clientKeyFile)
 	if err != nil {
-		return fmt.Errorf("failed to read client key: %w", err)
+		return false, fmt.Errorf("failed to read client key: %w", err)
 	}
-
-	km.mu.Lock()
-	km.shopifyKey = strings.TrimSpace(string(shopifyKeyBytes))
-	km.clientKey = strings.TrimSpace(string(clientKeyBytes))
-	km.mu.Unlock()
-
-	log.Printf("Loaded keys: shopify key length=%d, client key length=%d", len(km.shopifyKey), len(km.clientKey))
-	return nil
-}
-
-func (km *KeyManager) watchKeys() {
-	for {
-		select {
-		case event, ok := <-km.watcher.Events:
-			if !ok {
-				return
-			}
-			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
-				log.Printf("Key file modified: %s", event.Name)
-				if err := km.loadKeys(); err != nil {
-					log.Printf("Error reloading keys: %v", err)
-				} else {
-					log.Printf("Successfully reloaded keys")
-				}
-			}
-		case err, ok := <-km.watcher.Errors:
-			if !ok {
-				return
-			}
-			log.Printf("Watcher error: %v", err)
-		}
-	}
-}
-
-func (km *KeyManager) getShopifyKey() string {
-	km.mu.RLock()
-	defer km.mu.RUnlock()
-	return km.shopifyKey
-}
-
-func (km *KeyManager) validateClientKey(authHeader string) bool {
-	km.mu.RLock()
-	defer km.mu.RUnlock()
-
-	expectedAuth := "Bearer " + km.clientKey
-	return authHeader == expectedAuth
-}
-
-func (km *KeyManager) Close() error {
-	return km.watcher.Close()
+	clientKey := strings.TrimSpace(string(keyBytes))
+	expectedAuth := "Bearer " + clientKey
+	return authHeader == expectedAuth, nil
 }
 
 type VendorProxy struct {
@@ -153,14 +88,28 @@ func NewVendorProxy(keyManager *KeyManager, shopifyURL string) (*VendorProxy, er
 func (vp *VendorProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 
-	if !vp.keyManager.validateClientKey(authHeader) {
+	valid, err := vp.keyManager.validateClientKey(authHeader)
+	if err != nil {
+		log.Printf("Error reading client key: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, "Internal Server Error\n")
+		return
+	}
+	if !valid {
 		log.Printf("Unauthorized request from %s to %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusUnauthorized)
 		io.WriteString(w, "Unauthorized\n")
 		return
 	}
 
-	r.Header.Set("Authorization", "Bearer "+vp.keyManager.getShopifyKey())
+	shopifyKey, err := vp.keyManager.getShopifyKey()
+	if err != nil {
+		log.Printf("Error reading shopify key: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, "Internal Server Error\n")
+		return
+	}
+	r.Header.Set("Authorization", "Bearer "+shopifyKey)
 
 	log.Printf("Proxying %s %s to Shopify", r.Method, r.URL.Path)
 	vp.reverseProxy.ServeHTTP(w, r)
@@ -191,7 +140,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize key manager: %v", err)
 	}
-	defer keyManager.Close()
 
 	vendorProxy, err := NewVendorProxy(keyManager, shopifyURL)
 	if err != nil {
