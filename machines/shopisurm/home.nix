@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 {
   imports = [
     # Programs now globally injected
@@ -100,5 +100,4 @@
       "~/.config/spin/ssh/include"
     ];
   };
-};
 }

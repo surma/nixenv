@@ -3,6 +3,8 @@
   fetchurl,
   undmg,
   stdenv,
+  inputs,
+  ...
 }:
 let
   version = "0.50";
