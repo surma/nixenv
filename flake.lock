@@ -66,11 +66,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769121174,
-        "narHash": "sha256-BANsFf6Q7bIALwvgkMTqePOnEk505PsXeGfRyG2/ZvI=",
+        "lastModified": 1769433383,
+        "narHash": "sha256-4hwwdwRBiGYA8LiqRwKVvi/bMbuWH4U3q9UrZlk+ZA8=",
         "ref": "main",
-        "rev": "ec4cf2a2f6b7b9eb8c7e2c8e18906c838dc96c45",
-        "revCount": 294,
+        "rev": "7be111f65584aa9895ef9c392646492dbfe830c2",
+        "revCount": 306,
         "type": "git",
         "url": "ssh://git@github.com/surma/dump"
       },
@@ -751,7 +751,8 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opencode": "opencode",
-        "system-manager": "system-manager"
+        "system-manager": "system-manager",
+        "voice-memos": "voice-memos"
       }
     },
     "scss-reset": {
@@ -818,6 +819,30 @@
         "owner": "nix-systems",
         "repo": "default-linux",
         "type": "github"
+      }
+    },
+    "voice-memos": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1769900046,
+        "narHash": "sha256-mmH/7gcxi8mKOZyT9lbmTlSO/g5qSfjjJQSz/3VN+gE=",
+        "ref": "main",
+        "rev": "ba200ea8e866262a3c6bca9da6b8e1a593ae29ef",
+        "revCount": 16,
+        "type": "git",
+        "url": "ssh://git@github.com/surma/voice-memos"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/surma/voice-memos"
       }
     },
     "xdph": {
