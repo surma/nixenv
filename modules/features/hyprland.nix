@@ -1,4 +1,11 @@
-{ lib, config, pkgs, systemManager, inputs, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  systemManager,
+  inputs,
+  ...
+}:
 with lib;
 let
   # Home-manager binding types
@@ -50,17 +57,34 @@ let
   actionType = types.submodule {
     options = {
       activateWorkspace = mkOption {
-        type = types.nullOr (types.oneOf [ types.int types.str ]);
+        type = types.nullOr (
+          types.oneOf [
+            types.int
+            types.str
+          ]
+        );
         default = null;
         description = "Workspace number or name to activate";
       };
       moveToWorkspace = mkOption {
-        type = types.nullOr (types.oneOf [ types.int types.str ]);
+        type = types.nullOr (
+          types.oneOf [
+            types.int
+            types.str
+          ]
+        );
         default = null;
         description = "Workspace number or name to move window to";
       };
       moveFocus = mkOption {
-        type = types.nullOr (types.enum [ "l" "r" "u" "d" ]);
+        type = types.nullOr (
+          types.enum [
+            "l"
+            "r"
+            "u"
+            "d"
+          ]
+        );
         default = null;
         description = "Direction to move focus";
       };
@@ -105,9 +129,13 @@ let
     };
   };
 
-  asBindingKeyword = bind:
-    "bind" + (
-      if bind == null then "" else
+  asBindingKeyword =
+    bind:
+    "bind"
+    + (
+      if bind == null then
+        ""
+      else
         bind
         |> lib.attrsToList
         |> lib.filter ({ value, ... }: value)
@@ -115,7 +143,8 @@ let
         |> lib.concatStrings
     );
 
-  actionToCommand = action:
+  actionToCommand =
+    action:
     let
       actionToCommandMap = {
         text = a: a.text;
@@ -149,7 +178,7 @@ in
   options.wayland.windowManager.hyprland = {
     bindings = mkOption {
       type = with types; listOf (submodule binding);
-      default = [];
+      default = [ ];
       description = "Structured keybindings with type checking";
     };
     header = mkOption {
@@ -166,8 +195,8 @@ in
         let
           bindings =
             config.wayland.windowManager.hyprland.bindings
-            |> map (binding:
-              "${binding.flags |> asBindingKeyword} = ${binding.key}, ${actionToCommand binding.action}"
+            |> map (
+              binding: "${binding.flags |> asBindingKeyword} = ${binding.key}, ${actionToCommand binding.action}"
             )
             |> lib.concatLines;
         in

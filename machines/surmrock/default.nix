@@ -11,7 +11,6 @@
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
 
-
     ../../apps/hate
     # ../../apps/traefik.nix
     # ../../apps/music

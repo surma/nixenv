@@ -20,7 +20,6 @@ in
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
 
-
     ../../apps/hate
 
   ];
@@ -545,7 +544,8 @@ in
           isReadOnly = false;
         };
       };
-    }{
+    }
+    {
       services.surmhosting.exposedApps.voice-memos.target.container = {
         config = {
           system.stateVersion = "25.05";

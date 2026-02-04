@@ -1,4 +1,11 @@
-{ pkgs, config, lib, systemManager, inputs, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  systemManager,
+  inputs,
+  ...
+}:
 let
   inherit (config.programs) claude-code;
   inherit (pkgs) writeShellScriptBin;

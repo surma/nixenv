@@ -1,4 +1,9 @@
-{ lib, config, systemManager, ... }:
+{
+  lib,
+  config,
+  systemManager,
+  ...
+}:
 with lib;
 {
   options = {

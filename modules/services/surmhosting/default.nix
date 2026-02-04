@@ -68,7 +68,7 @@ let
                 rule = routerRule;
                 service = serviceName;
                 middlewares = middlewareList;
-                entryPoints = if cfg.tls.enable then [ "websecure" ] else ["web"];
+                entryPoints = if cfg.tls.enable then [ "websecure" ] else [ "web" ];
               };
               services.${serviceName}.loadBalancer.servers = [
                 { inherit url; }

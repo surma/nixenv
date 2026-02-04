@@ -1,11 +1,17 @@
-{ lib, config, pkgs, systemManager, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  systemManager,
+  ...
+}:
 let
   inherit (lib) mkOption mkIf types;
 in
 {
   options.allowedUnfreeApps = mkOption {
     type = types.listOf types.str;
-    default = [];
+    default = [ ];
     description = "List of unfree package names to allow";
   };
 

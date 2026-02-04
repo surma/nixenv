@@ -1,4 +1,11 @@
-{ config, pkgs, lib, inputs, systemManager, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  systemManager,
+  ...
+}:
 let
   inherit (pkgs) wl-clipboard;
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};

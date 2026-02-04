@@ -1,6 +1,18 @@
-{ lib, config, pkgs, systemManager, inputs, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  systemManager,
+  inputs,
+  ...
+}:
 let
-  inherit (lib) mkOption mkEnableOption mkIf types;
+  inherit (lib)
+    mkOption
+    mkEnableOption
+    mkIf
+    types
+    ;
 
   secretsConfig = import ../../secrets/config.nix;
 
@@ -24,7 +36,8 @@ let
   };
 
   # Helper to create the secrets activation script
-  mkSecretsHelper = { secretsItems, identity }:
+  mkSecretsHelper =
+    { secretsItems, identity }:
     let
       commands =
         secretsItems
@@ -65,13 +78,15 @@ let
   activationConfig =
     if systemManager == "home-manager" then
       {
-        home.activation.secrets = mkIf (config.secrets.items != {}) (lib.hm.dag.entryAfter [
-          "write-boundary"
-        ] ''${writeSecretsScript}/bin/write-secrets'');
+        home.activation.secrets = mkIf (config.secrets.items != { }) (
+          lib.hm.dag.entryAfter [
+            "write-boundary"
+          ] "${writeSecretsScript}/bin/write-secrets"
+        );
       }
     else if systemManager == "nixos" then
       {
-        systemd.services.secrets = mkIf (config.secrets.items != {}) {
+        systemd.services.secrets = mkIf (config.secrets.items != { }) {
           serviceConfig = {
             Type = "oneshot";
             ExecStart = "${writeSecretsScript}/bin/write-secrets";
@@ -82,7 +97,7 @@ let
       }
     else if systemManager == "nix-darwin" then
       {
-        system.activationScripts.postActivation.text = mkIf (config.secrets.items != {}) ''
+        system.activationScripts.postActivation.text = mkIf (config.secrets.items != { }) ''
           ${writeSecretsScript}/bin/write-secrets
         '';
       }
@@ -105,7 +120,7 @@ in
 
     items = mkOption {
       type = types.attrsOf secretType;
-      default = {};
+      default = { };
       description = "Secrets to decrypt";
     };
   };

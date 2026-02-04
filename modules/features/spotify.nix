@@ -1,4 +1,11 @@
-{ lib, config, pkgs, systemManager, inputs, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  systemManager,
+  inputs,
+  ...
+}:
 let
   mkElectronWrapper = pkgs.callPackage (import ../../lib/make-electron-wrapper.nix) { };
 in
@@ -9,7 +16,13 @@ with lib;
       enable = mkEnableOption "Spotify";
       package = mkPackageOption pkgs "spotify" { };
       platform = mkOption {
-        type = with types; enum [ "wayland" "x11" "auto" ];
+        type =
+          with types;
+          enum [
+            "wayland"
+            "x11"
+            "auto"
+          ];
         default = "auto";
         description = "Which platform to use for Spotify (wayland/x11/auto)";
       };

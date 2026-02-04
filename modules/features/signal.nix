@@ -1,4 +1,10 @@
-{ pkgs, config, lib, systemManager, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  systemManager,
+  ...
+}:
 let
   name = "signal";
   caskName = "signal";

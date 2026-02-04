@@ -1,4 +1,10 @@
-{ pkgs, config, lib, systemManager, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  systemManager,
+  ...
+}:
 with lib;
 let
   inherit (config.programs) opencode;
@@ -9,7 +15,12 @@ let
         type = types.enum [ "local" ];
       };
       command = mkOption {
-        type = with types; oneOf [ str (listOf str) ];
+        type =
+          with types;
+          oneOf [
+            str
+            (listOf str)
+          ];
         apply = (s: if builtins.isString s then [ s ] else s);
       };
       environment = mkOption {
@@ -23,9 +34,12 @@ let
     "$schema" = "https://opencode.ai/config.json";
   };
 
-  fullConfig = baseConfig // {
-    mcp = opencode.mcps;
-  } // opencode.extraConfig;
+  fullConfig =
+    baseConfig
+    // {
+      mcp = opencode.mcps;
+    }
+    // opencode.extraConfig;
 in
 {
   imports = [

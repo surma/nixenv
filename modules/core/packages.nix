@@ -1,6 +1,12 @@
 { lib, inputs, ... }:
 {
-  perSystem = { pkgs, system, config, ... }:
+  perSystem =
+    {
+      pkgs,
+      system,
+      config,
+      ...
+    }:
     let
       packagesDir = ../../packages;
       packageDirs = builtins.readDir packagesDir;

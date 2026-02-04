@@ -1,4 +1,9 @@
-{ lib, config, inputs, ... }:
+{
+  lib,
+  config,
+  inputs,
+  ...
+}:
 let
   inherit (lib) mkOption types;
 
@@ -53,63 +58,79 @@ in
 {
   options = {
     nixosConfigurations = mkOption {
-      type = types.lazyAttrsOf (types.deferredModuleWith {
-        staticModules = [ ];
-      });
-      default = {};
+      type = types.lazyAttrsOf (
+        types.deferredModuleWith {
+          staticModules = [ ];
+        }
+      );
+      default = { };
       description = "NixOS system configurations";
     };
 
     darwinConfigurations = mkOption {
-      type = types.lazyAttrsOf (types.deferredModuleWith {
-        staticModules = [ ];
-      });
-      default = {};
+      type = types.lazyAttrsOf (
+        types.deferredModuleWith {
+          staticModules = [ ];
+        }
+      );
+      default = { };
       description = "nix-darwin system configurations";
     };
 
     homeConfigurations = mkOption {
-      type = types.lazyAttrsOf (types.deferredModuleWith {
-        staticModules = [ ];
-      });
-      default = {};
+      type = types.lazyAttrsOf (
+        types.deferredModuleWith {
+          staticModules = [ ];
+        }
+      );
+      default = { };
       description = "home-manager configurations";
     };
 
     nixOnDroidConfigurations = mkOption {
-      type = types.lazyAttrsOf (types.deferredModuleWith {
-        staticModules = [ ];
-      });
-      default = {};
+      type = types.lazyAttrsOf (
+        types.deferredModuleWith {
+          staticModules = [ ];
+        }
+      );
+      default = { };
       description = "nix-on-droid configurations";
     };
 
     systemConfigurations = mkOption {
-      type = types.lazyAttrsOf (types.deferredModuleWith {
-        staticModules = [ ];
-      });
-      default = {};
+      type = types.lazyAttrsOf (
+        types.deferredModuleWith {
+          staticModules = [ ];
+        }
+      );
+      default = { };
       description = "system-manager configurations";
     };
   };
 
   config.flake = {
-    nixosConfigurations = lib.mapAttrs (name: cfg:
+    nixosConfigurations = lib.mapAttrs (
+      name: cfg:
       inputs.nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";  # Default, can be overridden in machine config
+        system = "x86_64-linux"; # Default, can be overridden in machine config
         modules = [
           cfg
           inputs.home-manager.nixosModules.home-manager
-        ] ++ systemFeatures ++ [
-          ({ config, ... }: {
-            home-manager = {
-              sharedModules = nestedHomeManagerFeatures;
-              extraSpecialArgs = {
-                inherit inputs;
-                systemManager = "home-manager";
+        ]
+        ++ systemFeatures
+        ++ [
+          (
+            { config, ... }:
+            {
+              home-manager = {
+                sharedModules = nestedHomeManagerFeatures;
+                extraSpecialArgs = {
+                  inherit inputs;
+                  systemManager = "home-manager";
+                };
               };
-            };
-          })
+            }
+          )
         ];
         specialArgs = {
           inherit inputs;
@@ -119,26 +140,32 @@ in
       }
     ) config.nixosConfigurations;
 
-    darwinConfigurations = lib.mapAttrs (name: cfg:
+    darwinConfigurations = lib.mapAttrs (
+      name: cfg:
       inputs.nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin";  # Default, can be overridden
+        system = "aarch64-darwin"; # Default, can be overridden
         modules = [
           cfg
           inputs.home-manager.darwinModules.home-manager
-        ] ++ systemFeatures ++ [
-          ({ config, ... }: {
-            users.users.${config.system.primaryUser} = {
-              name = config.system.primaryUser;
-              home = "/Users/${config.system.primaryUser}";
-            };
-            home-manager = {
-              sharedModules = nestedHomeManagerFeatures;
-              extraSpecialArgs = {
-                inherit inputs;
-                systemManager = "home-manager";
+        ]
+        ++ systemFeatures
+        ++ [
+          (
+            { config, ... }:
+            {
+              users.users.${config.system.primaryUser} = {
+                name = config.system.primaryUser;
+                home = "/Users/${config.system.primaryUser}";
               };
-            };
-          })
+              home-manager = {
+                sharedModules = nestedHomeManagerFeatures;
+                extraSpecialArgs = {
+                  inherit inputs;
+                  systemManager = "home-manager";
+                };
+              };
+            }
+          )
         ];
         specialArgs = {
           inherit inputs;
@@ -148,9 +175,10 @@ in
       }
     ) config.darwinConfigurations;
 
-    homeConfigurations = lib.mapAttrs (name: cfg:
+    homeConfigurations = lib.mapAttrs (
+      name: cfg:
       inputs.home-manager.lib.homeManagerConfiguration {
-        pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
+        pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux; # Default
         modules = standaloneHomeManagerFeatures ++ [
           cfg
         ];
@@ -162,7 +190,8 @@ in
       }
     ) config.homeConfigurations;
 
-    nixOnDroidConfigurations = lib.mapAttrs (name: cfg:
+    nixOnDroidConfigurations = lib.mapAttrs (
+      name: cfg:
       inputs.nix-on-droid.lib.nixOnDroidConfiguration {
         modules = [ cfg ];
         extraSpecialArgs = {
@@ -172,7 +201,8 @@ in
       }
     ) config.nixOnDroidConfigurations;
 
-    systemConfigs = lib.mapAttrs (name: cfg:
+    systemConfigs = lib.mapAttrs (
+      name: cfg:
       inputs.system-manager.lib.makeSystemConfig {
         modules = [ cfg ];
         extraSpecialArgs = {

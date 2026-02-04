@@ -55,7 +55,8 @@
     };
   };
 
-  outputs = inputs @ { flake-parts, ... }:
+  outputs =
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./modules/core
@@ -68,7 +69,13 @@
         "aarch64-darwin"
       ];
 
-      perSystem = { config, system, pkgs, ... }:
+      perSystem =
+        {
+          config,
+          system,
+          pkgs,
+          ...
+        }:
         {
           # Apps for commonly used packages
           apps = {

@@ -7,7 +7,12 @@ with lib;
 
   options.programs.wezterm = {
     frontend = mkOption {
-      type = with types; enum [ "WebGpu" "OpenGL" ];
+      type =
+        with types;
+        enum [
+          "WebGpu"
+          "OpenGL"
+        ];
       default = "WebGpu";
     };
     fontSize = mkOption {
@@ -15,8 +20,18 @@ with lib;
       default = 12;
     };
     window-decorations = mkOption {
-      type = with types; nullOr (listOf (enum [ "RESIZE" "TITLE" ]));
-      default = [ "TITLE" "RESIZE" ];
+      type =
+        with types;
+        nullOr (
+          listOf (enum [
+            "RESIZE"
+            "TITLE"
+          ])
+        );
+      default = [
+        "TITLE"
+        "RESIZE"
+      ];
     };
     dark-theme = mkOption {
       type = types.str;
@@ -27,7 +42,13 @@ with lib;
       default = "Gruvbox (Gogh)";
     };
     theme = mkOption {
-      type = with types; enum [ "dark" "light" "auto" ];
+      type =
+        with types;
+        enum [
+          "dark"
+          "light"
+          "auto"
+        ];
       default = "auto";
     };
   };

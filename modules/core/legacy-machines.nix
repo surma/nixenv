@@ -1,4 +1,9 @@
-{ lib, config, inputs, ... }:
+{
+  lib,
+  config,
+  inputs,
+  ...
+}:
 {
   # Temporarily define machines using the old structure
   # This provides a compatibility layer during migration

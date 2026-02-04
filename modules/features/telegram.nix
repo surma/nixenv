@@ -1,4 +1,10 @@
-{ config, lib, pkgs, systemManager, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  systemManager,
+  ...
+}:
 let
   name = "telegram";
   appConfig = config.programs.${name};

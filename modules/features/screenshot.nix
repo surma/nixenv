@@ -1,4 +1,10 @@
-{ config, pkgs, lib, systemManager, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  systemManager,
+  ...
+}:
 let
   screenshotHelper = pkgs.makeDesktopItem {
     name = "screenshot";

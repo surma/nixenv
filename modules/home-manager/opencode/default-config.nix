@@ -158,7 +158,9 @@ let
       $env.OPENCODE_CONFIG_CONTENT = ($dynamic_config | to json)
       
       # Execute opencode
-      let opencode_bin = ($env.OPENCODE_PATH? | default "${inputs.self.packages.${pkgs.system}.opencode}/bin/opencode")
+      let opencode_bin = ($env.OPENCODE_PATH? | default "${
+        inputs.self.packages.${pkgs.system}.opencode
+      }/bin/opencode")
       exec $opencode_bin ...$args
     }
   '';

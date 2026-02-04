@@ -1,4 +1,9 @@
-{ pkgs, lib, systemManager, ... }:
+{
+  pkgs,
+  lib,
+  systemManager,
+  ...
+}:
 with lib;
 let
   inherit (pkgs) stdenv;

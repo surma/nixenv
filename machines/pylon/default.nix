@@ -12,7 +12,6 @@
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
 
-
     # ../../apps/writing-prompt
   ];
 

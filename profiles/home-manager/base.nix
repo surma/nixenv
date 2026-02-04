@@ -94,7 +94,7 @@ in
   programs.starship.settings = {
     add_newline = true;
 
-    format = ''${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname ${"\n"}$character'';
+    format = "${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname ${"\n"}$character";
 
     hostname.style = "bold red";
     hostname.format = "[$ssh_symbol$hostname]($style)";
