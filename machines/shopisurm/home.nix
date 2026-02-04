@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 {
   imports = [
     # Programs now globally injected
@@ -37,7 +37,7 @@
     [
       # graphite-cli
       keycastr
-      jupyter
+      inputs.self.packages.${pkgs.system}.jupyter
       gopls
       bun
       (python3.withPackages (ps: [

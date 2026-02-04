@@ -75,8 +75,6 @@ with lib;
 
   config = mkMerge [
     {
-      secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/pi/api-key";
-
       programs.pi = mkIf isEnabled {
         enable = true;
       };

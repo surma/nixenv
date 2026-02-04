@@ -39,9 +39,6 @@ with lib;
 
   config = mkMerge [
     {
-      # Ensure API key secret is configured (reuse OpenCode's)
-      secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/opencode/api-key";
-
       programs.fetch-mcp.enable = mkIf isEnabled true;
       programs.browser-mcp.enable = mkIf isEnabled true;
       programs.mcp-nixos.enable = mkIf isEnabled true;
