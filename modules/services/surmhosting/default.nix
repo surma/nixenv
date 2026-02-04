@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 with lib;
@@ -143,7 +144,7 @@ let
 
           services.surm-auth = {
             enable = true;
-            package = pkgs.surm-auth;
+            package = inputs.self.packages.${pkgs.system}.surm-auth;
             baseUrl = "https://${cfg.auth.domain}";
 
             github.clientIdFile = "/var/lib/secrets/github-client-id";

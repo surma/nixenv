@@ -87,10 +87,5 @@
             };
           };
         };
-
-      # Expose overlays at flake level
-      flake.overlays = {
-        extra-pkgs = import ./overlays/extra-pkgs { inherit inputs; };
-      };
     };
 }

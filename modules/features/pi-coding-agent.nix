@@ -1,4 +1,4 @@
-{ pkgs, config, lib, systemManager, ... }:
+{ pkgs, config, lib, systemManager, inputs, ... }:
 with lib;
 {
   imports = [
@@ -10,7 +10,7 @@ with lib;
       enable = mkEnableOption "Pi coding agent";
       package = mkOption {
         type = types.package;
-        default = pkgs.pi-coding-agent;
+        default = inputs.self.packages.${pkgs.system}.pi-coding-agent;
         description = "The pi-coding-agent package to use";
       };
     };

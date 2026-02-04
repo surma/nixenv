@@ -102,17 +102,8 @@ in
           inputs.home-manager.nixosModules.home-manager
         ] ++ systemFeatures ++ [
           ({ config, ... }: {
-            nixpkgs.overlays = [
-              (import ../../overlays/extra-pkgs { inherit inputs; })
-            ];
             home-manager = {
-              sharedModules = nestedHomeManagerFeatures ++ [
-                {
-                  nixpkgs.overlays = [
-                    (import ../../overlays/extra-pkgs { inherit inputs; })
-                  ];
-                }
-              ];
+              sharedModules = nestedHomeManagerFeatures;
               extraSpecialArgs = {
                 inherit inputs;
                 systemManager = "home-manager";
@@ -136,21 +127,12 @@ in
           inputs.home-manager.darwinModules.home-manager
         ] ++ systemFeatures ++ [
           ({ config, ... }: {
-            nixpkgs.overlays = [
-              (import ../../overlays/extra-pkgs { inherit inputs; })
-            ];
             users.users.${config.system.primaryUser} = {
               name = config.system.primaryUser;
               home = "/Users/${config.system.primaryUser}";
             };
             home-manager = {
-              sharedModules = nestedHomeManagerFeatures ++ [
-                {
-                  nixpkgs.overlays = [
-                    (import ../../overlays/extra-pkgs { inherit inputs; })
-                  ];
-                }
-              ];
+              sharedModules = nestedHomeManagerFeatures;
               extraSpecialArgs = {
                 inherit inputs;
                 systemManager = "home-manager";
@@ -171,11 +153,6 @@ in
         pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;  # Default
         modules = standaloneHomeManagerFeatures ++ [
           cfg
-          {
-            nixpkgs.overlays = [
-              (import ../../overlays/extra-pkgs { inherit inputs; })
-            ];
-          }
         ];
         extraSpecialArgs = {
           inherit inputs;

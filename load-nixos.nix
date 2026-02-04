@@ -1,33 +1,16 @@
-{
-  inputs,
-  overlays,
-  ...
-}:
+{ inputs, ... }:
 { machine, system }:
 let
   inherit (inputs) nixpkgs home-manager;
-  extraModule =
 
-    {
-      nixpkgs.overlays = [
-        overlays.extra-pkgs
-      ];
-
-      home-manager = {
-
-        sharedModules = [
-          {
-            nixpkgs.overlays = [
-              overlays.extra-pkgs
-            ];
-          }
-        ];
-        extraSpecialArgs = {
-          inherit inputs;
-          systemManager = "home-manager";
-        };
+  extraModule = {
+    home-manager = {
+      extraSpecialArgs = {
+        inherit inputs;
+        systemManager = "home-manager";
       };
     };
+  };
 in
 nixpkgs.lib.nixosSystem rec {
   inherit system;

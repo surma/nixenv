@@ -1,8 +1,4 @@
-{
-  inputs,
-  overlays,
-  ...
-}:
+{ inputs, ... }:
 { machine, system }:
 let
   inherit (inputs)
@@ -14,24 +10,12 @@ let
     { config, ... }:
     {
       config = {
-        nixpkgs.overlays = [
-          overlays.extra-pkgs
-        ];
-
         users.users.${config.system.primaryUser} = {
           name = config.system.primaryUser;
           home = "/Users/${config.system.primaryUser}";
         };
 
         home-manager = {
-          sharedModules = [
-            {
-
-              nixpkgs.overlays = [
-                overlays.extra-pkgs
-              ];
-            }
-          ];
           extraSpecialArgs = {
             inherit inputs;
             systemManager = "home-manager";

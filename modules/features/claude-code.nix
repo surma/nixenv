@@ -1,4 +1,4 @@
-{ pkgs, config, lib, systemManager, ... }:
+{ pkgs, config, lib, systemManager, inputs, ... }:
 let
   inherit (config.programs) claude-code;
   inherit (pkgs) writeShellScriptBin;
@@ -15,7 +15,7 @@ let
         export ANTHROPIC_API_KEY=$(cat "${claude-code.overrides.apiKey}" | tr -d '\n')
       fi
     ''}
-    exec ${pkgs.claude-code}/bin/claude "$@"
+    exec ${inputs.self.packages.${pkgs.system}.claude-code}/bin/claude "$@"
   '';
 in
 with lib;

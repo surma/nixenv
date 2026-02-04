@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 with lib;
@@ -38,7 +39,7 @@ in
 
     package = mkOption {
       type = types.package;
-      default = pkgs.surm-auth;
+      default = inputs.self.packages.${pkgs.system}.surm-auth;
       description = "The surm-auth package to use";
     };
 

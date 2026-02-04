@@ -2,6 +2,7 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }:
 let
@@ -47,7 +48,7 @@ let
 
     export PI_SKIP_VERSION_CHECK=1
 
-    exec ${pkgs.pi-coding-agent}/bin/pi "$@"
+    exec ${inputs.self.packages.${pkgs.system}.pi-coding-agent}/bin/pi "$@"
   '';
 in
 with lib;

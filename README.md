@@ -58,8 +58,7 @@ nixenv/
 │   ├── nixos/         # NixOS system profiles
 │   └── nix-on-droid/  # Android/Termux profiles
 │
-├── overlays/          # Package overlays
-│   └── extra-pkgs/    # Custom packages
+├── packages/          # Custom packages
 │
 ├── apps/              # Custom applications
 │   ├── hate/          # Home automation (source fetched via git)

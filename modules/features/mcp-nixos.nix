@@ -1,4 +1,4 @@
-{ pkgs, config, lib, systemManager, ... }:
+{ pkgs, config, lib, systemManager, inputs, ... }:
 with lib;
 {
   options = {
@@ -6,7 +6,7 @@ with lib;
       enable = mkEnableOption "mcp-nixos server";
       package = mkOption {
         type = types.package;
-        default = pkgs.mcp-nixos;
+        default = inputs.self.packages.${pkgs.system}.mcp-nixos;
       };
     };
   };

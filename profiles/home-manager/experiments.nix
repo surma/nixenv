@@ -6,8 +6,6 @@
 }:
 let
   inherit (pkgs) callPackage;
-
-  # zig = callPackage (import ../extra-pkgs/zig) { };
 in
 {
   home.packages =

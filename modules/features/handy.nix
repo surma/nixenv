@@ -1,4 +1,4 @@
-{ pkgs, config, lib, systemManager, ... }:
+{ pkgs, config, lib, systemManager, inputs, ... }:
 with lib;
 let
   cfg = config.programs.handy;
@@ -13,7 +13,7 @@ in
       enable = mkEnableOption "Handy speech-to-text tool";
       package = mkOption {
         type = types.package;
-        default = pkgs.handy;
+        default = inputs.self.packages.${pkgs.system}.handy;
         description = "The handy package to use";
       };
     };
