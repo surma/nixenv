@@ -47,8 +47,8 @@ let
   ];
 
   # Feature modules for standalone home-manager configs
-  # Includes both system features (for their home-manager support) and home-only features
-  standaloneHomeManagerFeatures = systemFeatures ++ nestedHomeManagerFeatures;
+  # Only include home-manager compatible features
+  standaloneHomeManagerFeatures = nestedHomeManagerFeatures;
 in
 {
   options = {
