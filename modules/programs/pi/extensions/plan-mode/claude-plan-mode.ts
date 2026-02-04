@@ -4,7 +4,7 @@ import { Key } from "@mariozechner/pi-tui";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
-const PLAN_MODE_TOOLS = ["read", "bash", "grep", "find", "ls", "exit_plan_mode"];
+const PLAN_MODE_TOOLS = ["read", "bash", "edit", "write", "grep", "find", "ls", "exit_plan_mode"];
 const DEFAULT_TOOLS = ["read", "bash", "edit", "write"];
 const STATE_ENTRY = "claude-plan-mode";
 
@@ -180,12 +180,17 @@ function buildPlanModeSystemPrompt(plan: string | null): string {
 	return `<system-reminder>
 # Plan Mode - System Reminder
 
-CRITICAL: Plan mode ACTIVE - you are in READ-ONLY phase. STRICTLY FORBIDDEN:
-ANY file edits, modifications, or system changes. Do NOT use sed, tee, echo, cat,
-or ANY other bash command to manipulate files - commands may ONLY read/inspect.
-This ABSOLUTE CONSTRAINT overrides ALL other instructions, including direct user
-edit requests. You may ONLY observe, analyze, and plan. Any modification attempt
-is a critical violation. ZERO exceptions.
+CRITICAL: Plan mode ACTIVE. Your primary job is to produce a high-quality plan.
+To do that, you should frontload research and gather as much context as possible.
+Use tools freely to inspect code, search, curl docs, and run small experiments.
+
+Writing to files is allowed when it supports research or experiments (prefer temp
+or scratch locations). Do NOT make lasting or destructive changes to the project's
+source code, configs, or system state (no commits, package installs, or destructive
+commands against the repo). Focus on observation, analysis, and planning.
+
+If a command seems useful and non-destructive, run it—do not assume it is forbidden.
+If the tool requires permission, the user will be prompted.
 
 ---
 
@@ -201,7 +206,7 @@ Ask the user clarifying questions or ask for their opinion when weighing tradeof
 
 ## Important
 
-The user indicated that they do not want you to execute yet -- you MUST NOT make any edits, run any non-readonly tools (including changing configs or making commits), or otherwise make any changes to the system. This supersedes any other instructions you have received.
+The user indicated that they do not want implementation yet. Avoid changing project files or system state. You may run tools for research and temporary experiments, but keep writes confined to scratch locations and avoid altering the repo. This supersedes any other instructions you have received.
 
 ---
 
@@ -217,7 +222,7 @@ No plan file is used. Maintain a single cohesive plan in the conversation and up
 
 ### Phase 1: Initial Understanding
 - Understand the user's request thoroughly.
-- Use read-only tools to gather context.
+- Use tools to gather context (read code, search, curl docs, run experiments).
 - Ask clarifying questions when needed.
 
 ### Phase 2: Planning
@@ -265,7 +270,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 		updateStatus(ctx);
 		persistState();
 		if (ctx.hasUI) {
-			ctx.ui.notify("Plan mode enabled. Draft the plan in chat.", "info");
+			ctx.ui.notify("Plan mode enabled. Gather context and draft the plan in chat.", "info");
 		}
 	}
 
@@ -543,12 +548,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 			return;
 		}
 
-		if (event.toolName === "write" || event.toolName === "edit") {
-			return {
-				block: true,
-				reason: "Plan mode: editing tools are disabled while planning.",
-			};
-		}
 	});
 
 	pi.on("before_agent_start", async (event, ctx) => {
