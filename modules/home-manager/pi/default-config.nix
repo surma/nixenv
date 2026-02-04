@@ -6,8 +6,8 @@
   ...
 }:
 let
-  isEnabled = config.defaultConfigs.pi-coding-agent.enable;
-  cfg = config.defaultConfigs.pi-coding-agent.llmProxy;
+  isEnabled = config.defaultConfigs.pi.enable;
+  cfg = config.defaultConfigs.pi.llmProxy;
 
   models = {
     providers = {
@@ -54,7 +54,7 @@ in
 with lib;
 {
   options = {
-    defaultConfigs.pi-coding-agent = {
+    defaultConfigs.pi = {
       enable = mkEnableOption "";
 
       llmProxy = {
@@ -75,9 +75,9 @@ with lib;
 
   config = mkMerge [
     {
-      secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/opencode/api-key";
+      secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/pi/api-key";
 
-      programs.pi-coding-agent = mkIf isEnabled {
+      programs.pi = mkIf isEnabled {
         enable = true;
       };
 
@@ -87,7 +87,7 @@ with lib;
     }
 
     (mkIf (isEnabled && cfg.apiKeyFile != null) {
-      programs.pi-coding-agent.package = wrapper;
+      programs.pi.package = wrapper;
     })
   ];
 }

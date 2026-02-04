@@ -42,8 +42,9 @@
 
     programs.opencode.enable = true;
     defaultConfigs.opencode.enable = true;
-    programs.pi-coding-agent.enable = true;
-    defaultConfigs.pi-coding-agent.enable = true;
+    programs.pi.enable = true;
+    programs.pi.extensions.plan-mode.enable = true;
+    defaultConfigs.pi.enable = true;
     defaultConfigs.claude-code.enable = true;
   };
 }

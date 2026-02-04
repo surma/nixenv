@@ -43,7 +43,7 @@ let
     ../features/screenshot.nix
     ../features/hyprsunset.nix
     ../features/hyprpaper.nix
-    ../features/pi-coding-agent.nix
+    ../features/pi.nix
     ../features/claude-code.nix
     ../features/opencode.nix
     ../features/syncthing.nix
