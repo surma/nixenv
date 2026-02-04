@@ -55,6 +55,9 @@ with lib;
             };
           };
           locked = {
+            unbind = [
+              "Ctrl g"
+            ];
             "bind \"Ctrl y\"" = {
               SwitchToMode = "Normal";
             };
