@@ -444,6 +444,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 			}
 
 			currentPlan = reviewedPlan;
+			const approvedPlan = reviewedPlan;
 			const choice = await ctx.ui.select("Plan ready. Start implementation session?", [
 				"Yes, start implementation session",
 				"No, keep planning",
@@ -467,7 +468,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 				content: [
 					{
 						type: "text",
-						text: `Plan approved. Starting a new session with the plan:\n\n${plan}`,
+						text: `Plan approved. Starting a new session with the plan:\n\n${approvedPlan}`,
 					},
 				],
 				details: { approved: true },
