@@ -52,6 +52,8 @@
   defaultConfigs.claude-code.enable = true;
   programs.opencode.enable = true;
   defaultConfigs.opencode.enable = true;
+  programs.pi-coding-agent.enable = true;
+  defaultConfigs.pi-coding-agent.enable = true;
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;
   programs.handy.enable = true;

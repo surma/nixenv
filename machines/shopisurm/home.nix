@@ -48,6 +48,8 @@
 
   programs.opencode.enable = true;
   defaultConfigs.opencode.enable = true;
+  programs.pi-coding-agent.enable = true;
+  defaultConfigs.pi-coding-agent.enable = true;
   defaultConfigs.claude-code.enable = true;
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;
