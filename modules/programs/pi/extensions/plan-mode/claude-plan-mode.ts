@@ -75,6 +75,12 @@ ${planBody}
 </system-reminder>`;
 }
 
+function buildPlanModeReminder(): string {
+	return `[PLAN MODE ACTIVE]
+You are in plan mode. Focus on research and drafting the plan only (no implementation or file edits).
+Include Summary and Key Context sections in the plan. Call exit_plan_mode with the full plan when ready.`;
+}
+
 export default function claudePlanMode(pi: ExtensionAPI): void {
 	let planModeEnabled = false;
 	let currentPlan: string | null = null;
@@ -308,12 +314,29 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 		},
 	});
 
+	pi.on("context", async (event) => {
+		if (planModeEnabled) return;
+
+		return {
+			messages: event.messages.filter((message) => {
+				const msg = message as { role?: string; customType?: string };
+				return !(msg.role === "custom" && msg.customType === "plan-mode-reminder");
+			}),
+		};
+	});
+
 	pi.on("before_agent_start", async (event, ctx) => {
 		if (!planModeEnabled) return;
 		const planModePrompt = buildPlanModeSystemPrompt(currentPlan);
+		const planModeReminder = buildPlanModeReminder();
 
 		return {
 			systemPrompt: `${event.systemPrompt}\n\n${planModePrompt}`,
+			message: {
+				customType: "plan-mode-reminder",
+				content: planModeReminder,
+				display: false,
+			},
 		};
 	});
 
