@@ -44,7 +44,7 @@ The user indicated that they do not want implementation yet. Avoid changing proj
 
 No plan file is used. Maintain a single cohesive plan in the conversation and update it as you refine. When the plan is ready, call exit_plan_mode with the full plan to request approval.
 
-**Plan Guidelines:** The plan should contain only your final recommended approach, not all alternatives considered. Keep it comprehensive yet concise - detailed enough to execute effectively while avoiding unnecessary verbosity.
+**Plan Guidelines:** The plan should contain only your final recommended approach, not all alternatives considered. Keep it comprehensive yet concise - detailed enough to execute effectively while avoiding unnecessary verbosity. Start the plan with a short **Summary** section that restates the user's request/problem in your own words. Include a **Key Context** section (or bullets) that captures important findings from research (relevant files, constraints, commands, assumptions) so the implementation phase retains the necessary grounding after history reset.
 
 ---
 
@@ -63,7 +63,7 @@ No plan file is used. Maintain a single cohesive plan in the conversation and up
 - Weigh tradeoffs, ask the user for input, and refine the plan.
 
 ### Phase 4: Final Plan
-- Ensure the plan is coherent, ordered, and includes files to change, risks, and tests.
+- Ensure the plan is coherent, ordered, and includes a summary of the goal, key context from research, files to change, risks, and tests.
 
 ### Phase 5: Call exit_plan_mode
 - End your turn either by asking the user a question or by calling exit_plan_mode with the full plan.
