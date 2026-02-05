@@ -1,177 +1,8 @@
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 import { Key } from "@mariozechner/pi-tui";
-import { promises as fs } from "node:fs";
-import * as path from "node:path";
 
-const PLAN_MODE_TOOLS = ["read", "bash", "edit", "write", "grep", "find", "ls", "exit_plan_mode"];
-const DEFAULT_TOOLS = ["read", "bash", "edit", "write"];
 const STATE_ENTRY = "claude-plan-mode";
-
-type AllowListEntry = { type: "exact"; value: string } | { type: "regex"; value: string };
-
-const STATE_DIR = process.env.XDG_STATE_HOME ?? (process.env.HOME ? `${process.env.HOME}/.local/state` : null);
-const STATE_PATH = STATE_DIR ? path.join(STATE_DIR, "pi/claude-plan-mode/state.json") : null;
-
-let allowList: AllowListEntry[] = [];
-
-function normalizeAllowList(value: unknown): AllowListEntry[] {
-	if (!Array.isArray(value)) return [];
-	return value.flatMap((entry) => {
-		if (!entry || typeof entry !== "object") return [];
-		const candidate = entry as { type?: unknown; value?: unknown };
-		if ((candidate.type === "exact" || candidate.type === "regex") && typeof candidate.value === "string") {
-			return [{ type: candidate.type, value: candidate.value }];
-		}
-		return [];
-	});
-}
-
-async function loadAllowList(ctx?: ExtensionContext): Promise<void> {
-	if (!STATE_PATH) return;
-	try {
-		const raw = await fs.readFile(STATE_PATH, "utf8");
-		const parsed = JSON.parse(raw) as { allowlist?: unknown };
-		allowList = normalizeAllowList(parsed.allowlist);
-	} catch (err) {
-		if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-			allowList = [];
-			return;
-		}
-		if (ctx?.hasUI) {
-			ctx.ui.notify("Failed to load plan-mode allowlist.", "error");
-		}
-	}
-}
-
-async function saveAllowList(ctx?: ExtensionContext): Promise<void> {
-	if (!STATE_PATH) return;
-	try {
-		await fs.mkdir(path.dirname(STATE_PATH), { recursive: true });
-		await fs.writeFile(STATE_PATH, JSON.stringify({ allowlist: allowList }, null, 2));
-	} catch {
-		if (ctx?.hasUI) {
-			ctx.ui.notify("Failed to save plan-mode allowlist.", "error");
-		}
-	}
-}
-
-function addAllowListEntry(entry: AllowListEntry): void {
-	if (!allowList.some((existing) => existing.type === entry.type && existing.value === entry.value)) {
-		allowList = [...allowList, entry];
-	}
-}
-
-function isAllowListed(command: string): boolean {
-	return allowList.some((entry) => {
-		if (entry.type === "exact") {
-			return entry.value === command;
-		}
-		if (entry.type === "regex") {
-			try {
-				return new RegExp(entry.value).test(command);
-			} catch {
-				return false;
-			}
-		}
-		return false;
-	});
-}
-
-const DESTRUCTIVE_PATTERNS = [
-	/\brm\b/i,
-	/\brmdir\b/i,
-	/\bmv\b/i,
-	/\bcp\b/i,
-	/\bmkdir\b/i,
-	/\btouch\b/i,
-	/\bchmod\b/i,
-	/\bchown\b/i,
-	/\bchgrp\b/i,
-	/\bln\b/i,
-	/\btee\b/i,
-	/\btruncate\b/i,
-	/\bdd\b/i,
-	/\bshred\b/i,
-	/(^|[^<])>(?!>)/,
-	/>>/,
-	/\bnpm\s+(install|uninstall|update|ci|link|publish)/i,
-	/\byarn\s+(add|remove|install|publish)/i,
-	/\bpnpm\s+(add|remove|install|publish)/i,
-	/\bpip\s+(install|uninstall)/i,
-	/\bapt(-get)?\s+(install|remove|purge|update|upgrade)/i,
-	/\bbrew\s+(install|uninstall|upgrade)/i,
-	/\bgit\s+(add|commit|push|pull|merge|rebase|reset|checkout|branch\s+-[dD]|stash|cherry-pick|revert|tag|init|clone)/i,
-	/\bsudo\b/i,
-	/\bsu\b/i,
-	/\bkill\b/i,
-	/\bpkill\b/i,
-	/\bkillall\b/i,
-	/\breboot\b/i,
-	/\bshutdown\b/i,
-	/\bsystemctl\s+(start|stop|restart|enable|disable)/i,
-	/\bservice\s+\S+\s+(start|stop|restart)/i,
-	/\b(vim?|nano|emacs|code|subl)\b/i,
-];
-
-const SAFE_PATTERNS = [
-	/^\s*cat\b/,
-	/^\s*head\b/,
-	/^\s*tail\b/,
-	/^\s*less\b/,
-	/^\s*more\b/,
-	/^\s*grep\b/,
-	/^\s*find\b/,
-	/^\s*ls\b/,
-	/^\s*pwd\b/,
-	/^\s*echo\b/,
-	/^\s*printf\b/,
-	/^\s*wc\b/,
-	/^\s*sort\b/,
-	/^\s*uniq\b/,
-	/^\s*diff\b/,
-	/^\s*file\b/,
-	/^\s*stat\b/,
-	/^\s*du\b/,
-	/^\s*df\b/,
-	/^\s*tree\b/,
-	/^\s*which\b/,
-	/^\s*whereis\b/,
-	/^\s*type\b/,
-	/^\s*env\b/,
-	/^\s*printenv\b/,
-	/^\s*uname\b/,
-	/^\s*whoami\b/,
-	/^\s*id\b/,
-	/^\s*date\b/,
-	/^\s*cal\b/,
-	/^\s*uptime\b/,
-	/^\s*ps\b/,
-	/^\s*top\b/,
-	/^\s*htop\b/,
-	/^\s*free\b/,
-	/^\s*git\s+(status|log|diff|show|branch|remote|config\s+--get)/i,
-	/^\s*git\s+ls-/i,
-	/^\s*npm\s+(list|ls|view|info|search|outdated|audit)/i,
-	/^\s*yarn\s+(list|info|why|audit)/i,
-	/^\s*node\s+--version/i,
-	/^\s*python\s+--version/i,
-	/^\s*curl\s/i,
-	/^\s*wget\s+-O\s*-/i,
-	/^\s*jq\b/,
-	/^\s*sed\s+-n/i,
-	/^\s*awk\b/,
-	/^\s*rg\b/,
-	/^\s*fd\b/,
-	/^\s*bat\b/,
-	/^\s*exa\b/,
-];
-
-function isSafeCommand(command: string): boolean {
-	const isDestructive = DESTRUCTIVE_PATTERNS.some((pattern) => pattern.test(command));
-	const isSafe = SAFE_PATTERNS.some((pattern) => pattern.test(command));
-	return !isDestructive && isSafe;
-}
 
 function buildPlanModeSystemPrompt(plan: string | null): string {
 	const trimmedPlan = plan?.trim();
@@ -190,7 +21,6 @@ source code, configs, or system state (no commits, package installs, or destruct
 commands against the repo). Focus on observation, analysis, and planning.
 
 If a command seems useful and non-destructive, run it—do not assume it is forbidden.
-If the tool requires permission, the user will be prompted.
 
 ---
 
@@ -217,6 +47,7 @@ No plan file is used. Maintain a single cohesive plan in the conversation and up
 **Plan Guidelines:** The plan should contain only your final recommended approach, not all alternatives considered. Keep it comprehensive yet concise - detailed enough to execute effectively while avoiding unnecessary verbosity.
 
 ---
+
 
 ## Enhanced Planning Workflow
 
@@ -246,7 +77,6 @@ ${planBody}
 
 export default function claudePlanMode(pi: ExtensionAPI): void {
 	let planModeEnabled = false;
-	let normalTools = DEFAULT_TOOLS;
 	let currentPlan: string | null = null;
 
 	function updateStatus(ctx: ExtensionContext): void {
@@ -265,8 +95,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 	async function enablePlanMode(ctx: ExtensionContext): Promise<void> {
 		if (planModeEnabled) return;
 		planModeEnabled = true;
-		normalTools = pi.getActiveTools();
-		pi.setActiveTools(PLAN_MODE_TOOLS);
 		updateStatus(ctx);
 		persistState();
 		if (ctx.hasUI) {
@@ -277,16 +105,19 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 	function disablePlanMode(ctx: ExtensionContext): void {
 		if (!planModeEnabled) return;
 		planModeEnabled = false;
-		pi.setActiveTools(normalTools.length > 0 ? normalTools : DEFAULT_TOOLS);
 		updateStatus(ctx);
 		persistState();
 		if (ctx.hasUI) {
-			ctx.ui.notify("Plan mode disabled. Full tool access restored.", "info");
+			ctx.ui.notify("Plan mode disabled.", "info");
 		}
 	}
 
 	function queuePlanAcceptance(): void {
 		pi.sendUserMessage("/plan accept", { deliverAs: "steer" });
+	}
+
+	function queuePlanRejection(): void {
+		pi.sendUserMessage("I rejected the plan. Please ask any clarifying questions or revise it.");
 	}
 
 	async function acceptPlan(ctx: ExtensionCommandContext): Promise<void> {
@@ -364,7 +195,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 
 			const planText = currentPlan?.trim();
 			ctx.ui.notify(planText ? `Current plan:\n${planText}` : "No plan drafted yet.", "info");
-
 		},
 	});
 
@@ -418,6 +248,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 
 			const reviewedPlan = await ctx.ui.editor("Review plan (edit if needed):", plan);
 			if (reviewedPlan === undefined) {
+				queuePlanRejection();
 				return {
 					content: [
 						{
@@ -451,6 +282,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 			]);
 
 			if (!choice || choice.startsWith("No")) {
+				queuePlanRejection();
 				return {
 					content: [
 						{
@@ -476,81 +308,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 		},
 	});
 
-	pi.on("tool_call", async (event, ctx) => {
-		if (!planModeEnabled) return;
-
-		if (event.toolName === "bash") {
-			const command = (event.input.command as string) ?? "";
-			const normalizedCommand = command.trim();
-
-			if (isSafeCommand(normalizedCommand) || isAllowListed(normalizedCommand)) {
-				return;
-			}
-
-			if (!ctx.hasUI) {
-				return {
-					block: true,
-					reason: `Plan mode: command blocked (no UI permission prompt available).\nCommand: ${normalizedCommand}`
-				};
-			}
-
-			const choice = await ctx.ui.select("Plan mode - allow command?", [
-				"no",
-				"yes (this once)",
-				"yes (forever)",
-			]);
-
-			if (!choice || choice === "no") {
-				return {
-					block: true,
-					reason: `Plan mode: command blocked by user.\nCommand: ${normalizedCommand}`
-				};
-			}
-
-			if (choice === "yes (this once)") {
-				return;
-			}
-
-			const scope = await ctx.ui.select("Allow exact command or pattern?", ["exact", "pattern"]);
-			if (!scope) {
-				return {
-					block: true,
-					reason: `Plan mode: command blocked by user.\nCommand: ${normalizedCommand}`
-				};
-			}
-
-			if (scope === "exact") {
-				addAllowListEntry({ type: "exact", value: normalizedCommand });
-				await saveAllowList(ctx);
-				return;
-			}
-
-			const pattern = await ctx.ui.input("Regex pattern (JavaScript):", normalizedCommand);
-			if (!pattern || !pattern.trim()) {
-				ctx.ui.notify("No pattern provided. Command blocked.", "info");
-				return {
-					block: true,
-					reason: `Plan mode: command blocked by user.\nCommand: ${normalizedCommand}`
-				};
-			}
-
-			try {
-				new RegExp(pattern);
-			} catch {
-				ctx.ui.notify("Invalid regex pattern. Command blocked.", "error");
-				return {
-					block: true,
-					reason: `Plan mode: invalid regex pattern.\nCommand: ${normalizedCommand}`
-				};
-			}
-
-			addAllowListEntry({ type: "regex", value: pattern });
-			await saveAllowList(ctx);
-			return;
-		}
-
-	});
-
 	pi.on("before_agent_start", async (event, ctx) => {
 		if (!planModeEnabled) return;
 		const planModePrompt = buildPlanModeSystemPrompt(currentPlan);
@@ -561,7 +318,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
-		await loadAllowList(ctx);
 		const entries = ctx.sessionManager.getEntries();
 		const lastState = entries
 			.filter((entry) => entry.type === "custom" && entry.customType === STATE_ENTRY)
@@ -571,8 +327,6 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 
 		if (lastState?.data?.enabled) {
 			planModeEnabled = true;
-			normalTools = pi.getActiveTools();
-			pi.setActiveTools(PLAN_MODE_TOOLS);
 		}
 
 		updateStatus(ctx);
