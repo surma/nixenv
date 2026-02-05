@@ -117,7 +117,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 	}
 
 	function queuePlanRejection(): void {
-		pi.sendUserMessage("I rejected the plan. Please ask any clarifying questions or revise it.");
+		// Intentionally left blank: avoid auto-follow-up so the user can respond manually.
 	}
 
 	async function acceptPlan(ctx: ExtensionCommandContext): Promise<void> {
