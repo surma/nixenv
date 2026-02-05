@@ -93,6 +93,7 @@
         "pylon"
         "shopisurm"
         "dragoon"
+        "archon"
       ];
     };
     openrouter-api-key = {

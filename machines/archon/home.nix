@@ -69,7 +69,7 @@
     programs.squoosh.enable = true;
     programs.geforce-now.enable = true;
     programs.xbox-remote-play.enable = true;
-    programs.obsidian.enable = true;
+    programs.obsidian.enable = false;
 
     programs.wezterm.enable = true;
     programs.wezterm.frontend = "OpenGL";

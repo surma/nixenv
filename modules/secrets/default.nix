@@ -81,14 +81,14 @@ in
           {
             home.activation.secrets = lib.hm.dag.entryAfter [
               "write-boundary"
-            ] ''${writeSecrets}/bin/write-secrets'';
+            ] "${writeSecrets}/bin/write-secrets";
           }
         else if systemManager == "nixos" then
           {
             systemd.services.secrets = {
               serviceConfig = {
                 Type = "oneshot";
-                ExecStart = ''${writeSecrets}/bin/write-secrets'';
+                ExecStart = "${writeSecrets}/bin/write-secrets";
                 RemainAfterExit = true; # Remain "active" after completion (optional but common for oneshot)
               };
               wantedBy = [ "multi-user.target" ];
