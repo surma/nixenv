@@ -57,6 +57,7 @@
   programs.pi.extensions.plan-mode.enable = true;
   defaultConfigs.pi.enable = true;
   defaultConfigs.claude-code.enable = true;
+
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;
   programs.handy.enable = true;
