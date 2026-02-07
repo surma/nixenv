@@ -252,13 +252,15 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 				};
 			}
 
-			const planStoredResponse = () => {
+			const planStoredResponse = (storedPlan: string) => {
 				queuePlanRejection();
+				const trimmedPlan = storedPlan.trim();
+				const planPreview = trimmedPlan ? `\n\nPlan:\n${trimmedPlan}` : "";
 				return {
 					content: [
 						{
 							type: "text",
-							text: "Plan stored. Provide feedback or keep refining the plan, then call exit_plan_mode again.",
+							text: `Plan stored. Provide feedback or keep refining the plan, then call exit_plan_mode again.${planPreview}`,
 						},
 					],
 					details: { approved: false },
@@ -268,7 +270,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 			const reviewedPlan = await ctx.ui.editor("Review plan (edit if needed):", plan);
 			if (reviewedPlan === undefined) {
 				currentPlan = plan;
-				return planStoredResponse();
+				return planStoredResponse(plan);
 			}
 
 			const normalizedPlan = reviewedPlan.trim();
@@ -293,7 +295,7 @@ export default function claudePlanMode(pi: ExtensionAPI): void {
 			]);
 
 			if (!choice || choice.startsWith("No")) {
-				return planStoredResponse();
+				return planStoredResponse(approvedPlan);
 			}
 
 			disablePlanMode(ctx);
