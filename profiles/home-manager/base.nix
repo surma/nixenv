@@ -94,10 +94,13 @@ in
   programs.starship.settings = {
     add_newline = true;
 
-    format = "${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname ${"\n"}$character";
+    format = "${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname $command_duration ${"\n"}$character";
 
     hostname.style = "bold red";
     hostname.format = "[$ssh_symbol$hostname]($style)";
+    command_duration = {
+      min_time = 0;
+    };
     custom.cwd = {
       command = "ssw_path";
       when = "true";

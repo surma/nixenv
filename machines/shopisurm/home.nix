@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
@@ -34,6 +35,8 @@
   home.stateVersion = "24.05";
   nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
   home.sessionVariables.FLAKE_CONFIG_URI = "${config.home.homeDirectory}/src/github.com/surma/nixenv#shopisurm";
+
+  programs.starship.settings.custom.cwd.command = lib.mkForce "worldpath";
 
   allowedUnfreeApps = [ ];
 
