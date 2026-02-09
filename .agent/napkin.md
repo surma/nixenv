@@ -15,4 +15,4 @@
 - (approaches that failed and why)
 
 ## Domain Notes
-- (project/domain context that matters)
+- Plan mode extension (`modules/programs/pi/extensions/plan-mode/claude-plan-mode.ts`) queues `/plan accept` via `pi.sendUserMessage`, but sendUserMessage bypasses command handling, so the command never runs and `ctx.newSession()` is not triggered. This explains context not clearing after plan acceptance.

@@ -87,7 +87,6 @@
     programs.opencode.enable = true;
     defaultConfigs.opencode.enable = true;
     programs.pi.enable = true;
-    programs.pi.extensions.plan-mode.enable = true;
     defaultConfigs.pi.enable = true;
     programs.claude-code.enable = true;
     defaultConfigs.claude-code.enable = true;

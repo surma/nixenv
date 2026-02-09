@@ -53,6 +53,10 @@
       url = "github:anomalyco/opencode?ref=v1.1.40";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
+    pi-superpowers = {
+      url = "github:jevon/pi-superpowers";
+      flake = false;
+    };
   };
 
   outputs =

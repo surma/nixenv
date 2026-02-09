@@ -10,7 +10,7 @@ with lib;
 {
   imports = [
     ../home-manager/pi/default-config.nix
-    ../programs/pi/extensions/plan-mode
+    ../programs/pi/superpowers
   ];
 
   options = {
