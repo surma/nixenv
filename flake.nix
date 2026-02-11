@@ -57,6 +57,10 @@
       url = "github:jevon/pi-superpowers";
       flake = false;
     };
+    napkin = {
+      url = "github:blader/napkin";
+      flake = false;
+    };
   };
 
   outputs =

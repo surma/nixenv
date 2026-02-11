@@ -437,6 +437,22 @@
         "type": "github"
       }
     },
+    "napkin": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1770434893,
+        "narHash": "sha256-cT3woRlyUMvja5VXVxVnL+o0erP5eb/YUF6HXkWxFzU=",
+        "owner": "blader",
+        "repo": "napkin",
+        "rev": "b3a1d2cfdaca8c11150d3ac4aab5f4f700e92a79",
+        "type": "github"
+      },
+      "original": {
+        "owner": "blader",
+        "repo": "napkin",
+        "type": "github"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -760,6 +776,7 @@
         "flake-utils": "flake-utils",
         "home-manager": "home-manager",
         "hyprland": "hyprland",
+        "napkin": "napkin",
         "nix-darwin": "nix-darwin",
         "nix-on-droid": "nix-on-droid",
         "nix-system-graphics": "nix-system-graphics",
