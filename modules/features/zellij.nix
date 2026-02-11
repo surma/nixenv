@@ -25,6 +25,7 @@ with lib;
         pane_frames = false;
         session_serialization = false;
         show_startup_tips = false;
+        default_shell = "${pkgs-unstable.nushell}/bin/nu";
 
         copy_command = mkIf config.programs.zellij.wl-clipboard.enable "${wl-clipboard}/bin/wl-copy -p";
         theme = "gruvbox";
