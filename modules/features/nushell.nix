@@ -20,6 +20,14 @@
           gt log --stack | lines | chunk-by  {|l| ($l | str starts-with "◯") or ($l | str starts-with "◉") } | enumerate | where { $in.index mod 2 == 0 } | flatten | each { $in.item | parse --regex `[^\s]+\s*([^(\s]+)` | get capture0.0 }
         }
 
+        def pswn [name: string] {
+          ps -l | where command =~ $name
+        }
+
+        def killeach [--kill = false] {
+          let flag = if ($kill) { "-KILL" } else { "-TERM" }
+          $in | each { kill $flag $in.pid }
+        }
 
       '';
     };

@@ -66,6 +66,7 @@
   customScripts.noti.enable = true;
   customScripts.llm-proxy.enable = true;
   customScripts.ghclone.enable = true;
+  customScripts.ccp.enable = true;
   customScripts.wallpaper-shuffle.enable = true;
   customScripts.wallpaper-shuffle.asDesktopItem = true;
   customScripts.oc.enable = true;
