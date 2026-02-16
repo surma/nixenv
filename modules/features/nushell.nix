@@ -30,6 +30,14 @@
         }
 
       '';
+
+      extraEnv = ''
+        # Keep GPG_TTY aligned with the current pane for pinentry.
+        let current_tty = (do -i { ^tty | str trim } | default "")
+        if $current_tty != "" {
+          $env.GPG_TTY = $current_tty
+        }
+      '';
     };
   };
 }

@@ -25,7 +25,7 @@ let
     };
     x86_64-linux = {
       url = "${baseUrl}/${version}/linux-x64/claude";
-      sha256 = "";
+      sha256 = "sha256-UXhb0m0oljloGYMrwjoYpsDKObe3YRk/p7bpkKF/J9g=";
     };
     aarch64-linux = {
       url = "${baseUrl}/${version}/linux-arm64/claude";
