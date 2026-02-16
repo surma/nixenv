@@ -584,15 +584,6 @@ in
           };
         };
 
-        forwardPorts = [
-          {
-            containerPort = dumpPort;
-            hostPort = dumpPort;
-            protocol = "tcp";
-          }
-
-        ];
-
         bindMounts.state = {
           mountPoint = "/dump/state/voice-memos";
           hostPath = "/dump/state/voice-memos";
