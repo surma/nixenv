@@ -10,13 +10,6 @@ let
 in
 with lib;
 {
-  imports = [
-    # MCP servers now globally injected via features
-    # ../fetch-mcp
-    # ../browser-mcp
-    # ../mcp-nixos
-  ];
-
   options = {
     defaultConfigs.claude-code = {
       enable = mkEnableOption "";
@@ -39,28 +32,10 @@ with lib;
 
   config = mkMerge [
     {
-      programs.fetch-mcp.enable = mkIf isEnabled true;
-      programs.browser-mcp.enable = mkIf isEnabled true;
-      programs.mcp-nixos.enable = mkIf isEnabled true;
-
       programs.claude-code = mkIf isEnabled {
         enable = true;
         overrides.baseURL = cfg.baseURL;
         overrides.apiKey = mkIf (cfg.apiKeyFile != null) cfg.apiKeyFile;
-        mcps = {
-          fetch-mcp = {
-            type = "stdio";
-            command = [ "fetch-mcp" ];
-          };
-          browser-mcp = {
-            type = "stdio";
-            command = [ "browser-mcp" ];
-          };
-          mcp-nixos = {
-            type = "stdio";
-            command = [ "mcp-nixos" ];
-          };
-        };
       };
     }
 

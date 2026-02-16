@@ -140,6 +140,23 @@ nix flake lock --update-input nixpkgs
 nix flake lock --update-input home-manager
 ```
 
+## Updating Custom Packages
+
+For packages in `packages/` that have fixed-output hashes, use `nix-update`:
+
+```sh
+# If nix-update complains about fsmonitor sockets:
+find .git -name fsmonitor--daemon.ipc -type s -delete
+
+nix run nixpkgs#nix-update -- --flake <package> [--version X]
+```
+
+To update everything (flake inputs + all package hashes):
+
+```sh
+nix run .#update-all
+```
+
 ## License
 
 Personal configuration - use at your own risk!

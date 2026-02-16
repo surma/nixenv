@@ -32,9 +32,6 @@ let
     ../features/hyprland.nix
     ../features/zellij.nix
     ../features/nushell.nix
-    ../features/browser-mcp.nix
-    ../features/mcp-nixos.nix
-    ../features/fetch-mcp.nix
     ../features/mcp-playwright.nix
     ../features/handy.nix
     ../features/ghostty.nix
