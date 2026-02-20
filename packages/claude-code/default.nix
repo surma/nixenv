@@ -8,7 +8,7 @@
 }:
 
 let
-  version = "2.1.42";
+  version = "2.1.49";
 
   # Base URL for all downloads
   baseUrl = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases";
@@ -25,7 +25,7 @@ let
     };
     x86_64-linux = {
       url = "${baseUrl}/${version}/linux-x64/claude";
-      sha256 = "sha256-UXhb0m0oljloGYMrwjoYpsDKObe3YRk/p7bpkKF/J9g=";
+      sha256 = "sha256-56dWVmXsvMyixpErLvKdorE30mAgG5Mcc3t904Icbi8=";
     };
     aarch64-linux = {
       url = "${baseUrl}/${version}/linux-arm64/claude";
