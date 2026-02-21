@@ -12,6 +12,7 @@
 ## User Preferences
 - Prefer simple solutions; assume no worktrees for this repo when cleaning fsmonitor sockets (use direct rm rather than find).
 - When running update-all, disable git fsmonitor for the duration instead of relying solely on repeated socket deletions.
+- For NixOS config changes on this machine, edit the flake repo config (not /etc/nixos).
 
 ## Patterns That Work
 - For Nu, use `".git" | path exists` (no positional arg) and `get -o` instead of deprecated `get -i`.

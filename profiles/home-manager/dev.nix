@@ -25,6 +25,7 @@ in
     nodejs_24.pkgs.typescript-language-server
     dprint
     just
+    nodejs_24
   ];
 
   defaultConfigs.npm.enable = true;
