@@ -2,7 +2,8 @@
   lib,
   stdenv,
   fetchurl,
-  autoPatchelfHook,
+  patchelf,
+  glibc,
   inputs,
   ...
 }:
@@ -47,10 +48,19 @@ stdenv.mkDerivation {
     inherit (source) url sha256;
   };
 
-  # Linux needs autoPatchelfHook to fix dynamic library paths
-  nativeBuildInputs = lib.optionals stdenv.isLinux [ autoPatchelfHook ];
+  # On Linux, patch ONLY the ELF interpreter — not RPATH.
+  # autoPatchelfHook must NOT be used here: it causes patchelf to reorganise the
+  # ELF and silently truncate the 122 MB Bun standalone payload appended after
+  # the ELF data, leaving a bare bun runtime that just prints bun's own help.
+  # A targeted --set-interpreter patch preserves the payload intact.
+  #
+  # dontPatchELF / dontStrip: the stdenv fixupPhase would otherwise run
+  # patchelf --shrink-rpath (and strip) on every ELF in $out, which also
+  # truncates the payload for the same reason.
+  nativeBuildInputs = lib.optionals stdenv.isLinux [ patchelf ];
+  dontPatchELF = true;
+  dontStrip = true;
 
-  # Don't try to unpack - it's a single executable binary
   dontUnpack = true;
 
   installPhase = ''
@@ -58,7 +68,13 @@ stdenv.mkDerivation {
 
     mkdir -p $out/bin
     cp $src $out/bin/claude
-    chmod +x $out/bin/claude
+    chmod +wx $out/bin/claude
+
+    ${lib.optionalString stdenv.isLinux ''
+      patchelf \
+        --set-interpreter ${glibc}/lib/ld-linux-x86-64.so.2 \
+        $out/bin/claude
+    ''}
 
     runHook postInstall
   '';

@@ -18,9 +18,10 @@
 - For Nu, use `".git" | path exists` (no positional arg) and `get -o` instead of deprecated `get -i`.
 
 ## Patterns That Don't Work
-- (approaches that failed and why)
+- Using `autoPatchelfHook` (or stdenv's automatic patchELF / strip fixups) on the claude-code GCS binary: patchelf reorganises the ELF and silently truncates the 122 MB Bun standalone payload, leaving only a bare bun runtime (102 MB) that prints bun's own help. Fix: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true`.
 
 ## Domain Notes
 - Plan mode extension (`modules/programs/pi/extensions/plan-mode/claude-plan-mode.ts`) queues `/plan accept` via `pi.sendUserMessage`, but sendUserMessage bypasses command handling, so the command never runs and `ctx.newSession()` is not triggered. This explains context not clearing after plan acceptance.
 - `nix-update --flake` uses `nix-instantiate` + `builtins.getFlake` and fails if `.git` contains `fsmonitor--daemon.ipc` sockets (including in `.git/worktrees`). Remove those sockets before running.
 - Zellij defaults to Nushell in this repo; set `GPG_TTY` in Nushell's `env.nu` (use `do -i { ^tty | str trim }`) to keep pinentry on the correct pane TTY.
+- `packages/claude-code/default.nix` uses the GCS binary (same source as Homebrew). On Linux: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true` to protect the Bun standalone payload.
