@@ -10,7 +10,7 @@
 
 buildNpmPackage rec {
   pname = "pi-coding-agent";
-  version = "0.54.0";
+  version = "0.55.0";
 
   # nodejs = nodejs_20;
 
@@ -18,10 +18,10 @@ buildNpmPackage rec {
     owner = "badlogic";
     repo = "pi-mono";
     tag = "v${version}";
-    hash = "sha256-j8h8KKt/1m47Y6/KA8g213gooq0n2fAqBVkKhHsBCGw=";
+    hash = "sha256-+T10MIxdRPHWAeXWur2JkonBgLZtBgCUM931QRWhBM4=";
   };
 
-  npmDepsHash = "sha256-L2kP2VpRNg+YeZjvXyn+Soly2wlff4jpZ5qa3T43quE=";
+  npmDepsHash = "sha256-XbWzA84uAmANa2gNUa5FqSykS+94KF50h3uJ2LFSmGU=";
 
   npmWorkspace = "packages/coding-agent";
 
