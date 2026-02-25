@@ -301,6 +301,11 @@ in
               AuthSubnetWhitelistEnabled = true;
               AuthSubnetWhitelist = "0.0.0.0/0";
             };
+            BitTorrent.Session = {
+              GlobalMaxRatio = 1;
+              GlobalMaxSeedingMinutes = 1440;
+              MaxRatioAction = 1;
+            };
           };
         };
 
@@ -339,6 +344,13 @@ in
             Address = "0.0.0.0";
             Port = 8080;
           };
+
+          # navidrome 0.60.0 uses Taglib's WASM JIT for cover art extraction,
+          # which requires memory that is both writable and executable.
+          # The stable nixpkgs module sets MemoryDenyWriteExecute = true, but
+          # the unstable nixpkgs (where the package comes from) correctly sets
+          # it to false. Override it here to fix broken cover art.
+          systemd.services.navidrome.serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
         };
 
         bindMounts = {

@@ -20,7 +20,12 @@
 ## Patterns That Don't Work
 - Using `autoPatchelfHook` (or stdenv's automatic patchELF / strip fixups) on the claude-code GCS binary: patchelf reorganises the ELF and silently truncates the 122 MB Bun standalone payload, leaving only a bare bun runtime (102 MB) that prints bun's own help. Fix: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true`.
 
+## Known Issues / Gotchas
+- navidrome containers use `nixpkgs = pkgs.path` (stable, nixos-25.11) for the NixOS module system, but the **package** comes from `pkgs-unstable`. The stable module has `MemoryDenyWriteExecute = true`, but navidrome 0.60.0 requires `false` (Taglib WASM JIT). Without the override, cover art extraction hangs, and the API returns 429 "Timed out while waiting for a pending request to complete". Fix: `systemd.services.navidrome.serviceConfig.MemoryDenyWriteExecute = lib.mkForce false` in the container config.
+- nixpkgs-unstable rev `2fc6539b` (lastModified 1771848320) has a broken navidrome build: `invalid flag in pkg-config --cflags: --define-prefix`. Previous working rev: `0182a361` (lastModified 1771369470, narHash `sha256-0NBlEBKkN3lufyvFegY4TYv5mCNHbi5OmBDrzihbBMQ=`).
+
 ## Domain Notes
+- The NixOS `services.qbittorrent` module uses a `systemd-tmpfiles` `L+` rule to forcibly symlink `qBittorrent.conf` → a read-only Nix store file on every container start and `nixos-rebuild switch`. Any settings not in `serverConfig` are wiped on restart. Always declare persistent qBittorrent settings (seeding limits, etc.) in `serverConfig`; never rely on in-UI changes surviving a restart.
 - Plan mode extension (`modules/programs/pi/extensions/plan-mode/claude-plan-mode.ts`) queues `/plan accept` via `pi.sendUserMessage`, but sendUserMessage bypasses command handling, so the command never runs and `ctx.newSession()` is not triggered. This explains context not clearing after plan acceptance.
 - `nix-update --flake` uses `nix-instantiate` + `builtins.getFlake` and fails if `.git` contains `fsmonitor--daemon.ipc` sockets (including in `.git/worktrees`). Remove those sockets before running.
 - Zellij defaults to Nushell in this repo; set `GPG_TTY` in Nushell's `env.nu` (use `do -i { ^tty | str trim }`) to keep pinentry on the correct pane TTY.
