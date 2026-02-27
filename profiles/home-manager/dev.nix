@@ -9,6 +9,8 @@ let
     git:
       autoFetch: false
       fetchAll: false
+    os:
+      copyToClipboardCmd: 'printf "\033]52;c;%s\007" "$(printf %s "{{text}}" | base64 | tr -d "\n")" > /dev/tty'
   '';
 in
 {

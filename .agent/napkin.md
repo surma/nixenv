@@ -30,3 +30,4 @@
 - `nix-update --flake` uses `nix-instantiate` + `builtins.getFlake` and fails if `.git` contains `fsmonitor--daemon.ipc` sockets (including in `.git/worktrees`). Remove those sockets before running.
 - Zellij defaults to Nushell in this repo; set `GPG_TTY` in Nushell's `env.nu` (use `do -i { ^tty | str trim }`) to keep pinentry on the correct pane TTY.
 - `packages/claude-code/default.nix` uses the GCS binary (same source as Homebrew). On Linux: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true` to protect the Bun standalone payload.
+- `~/.config/lazygit/config.yml` is Home Manager managed and symlinked into `/nix/store`; edit `profiles/home-manager/dev.nix` (`lazygitConfig`) instead of editing the live config path.
