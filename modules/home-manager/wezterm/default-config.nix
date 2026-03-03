@@ -88,6 +88,21 @@ with lib;
               action = wezterm.action.DisableDefaultAssignment,
             },
             {
+              key = '-',
+              mods = 'CMD',
+              action = wezterm.action.DecreaseFontSize,
+            },
+            {
+              key = '=',
+              mods = 'CMD',
+              action = wezterm.action.IncreaseFontSize,
+            },
+            {
+              key = '0',
+              mods = 'CMD',
+              action = wezterm.action.ResetFontSize,
+            },
+            {
               key = 'r',
               mods = 'CTRL|SHIFT',
               action = wezterm.action.ReloadConfiguration,
@@ -96,6 +111,11 @@ with lib;
               key = 'n',
               mods = 'CMD',
               action = wezterm.action.SpawnWindow,
+            },
+            {
+              key = 'v',
+              mods = 'CMD',
+              action = wezterm.action.PasteFrom 'Clipboard',
             },
           }
 
