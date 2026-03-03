@@ -70,7 +70,7 @@ with lib;
             font_size = 11,
           }
 
-
+          config.disable_default_key_bindings = true
           config.keys = {
             {
               key = '-',
@@ -91,6 +91,11 @@ with lib;
               key = 'r',
               mods = 'CTRL|SHIFT',
               action = wezterm.action.ReloadConfiguration,
+            },
+            {
+              key = 'n',
+              mods = 'CMD',
+              action = wezterm.action.SpawnWindow,
             },
           }
 

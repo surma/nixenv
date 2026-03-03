@@ -54,6 +54,12 @@ with lib;
             "bind \"Ctrl y\"" = {
               SwitchToMode = "Locked";
             };
+            "bind \"Super Shift [\"" = {
+              MoveTab = "Left";
+            };
+            "bind \"Super Shift ]\"" = {
+              MoveTab = "Right";
+            };
           };
           locked = {
             unbind = [
