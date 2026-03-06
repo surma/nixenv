@@ -4,6 +4,7 @@
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/linux.nix
+    ../../profiles/home-manager/workstation.nix
   ];
 
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
@@ -21,4 +22,7 @@
       fi
     fi
   '';
+
+  programs.pi.enable = true;
+  defaultConfigs.pi.enable = true;
 }
