@@ -81,11 +81,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769433383,
-        "narHash": "sha256-4hwwdwRBiGYA8LiqRwKVvi/bMbuWH4U3q9UrZlk+ZA8=",
+        "lastModified": 1772799830,
+        "narHash": "sha256-e4ykGshQIylJk1FgUWkr7HvYpXopn9iqOnY137Nwi6s=",
         "ref": "main",
-        "rev": "7be111f65584aa9895ef9c392646492dbfe830c2",
-        "revCount": 306,
+        "rev": "94798c169ab85e7d1416bfa2512bb53d394bd75b",
+        "revCount": 307,
         "type": "git",
         "url": "ssh://git@github.com/surma/dump"
       },
@@ -939,11 +939,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1772733413,
-        "narHash": "sha256-nORodDT+1AlDe7wdXg1/+ncLfuLtAEfZMNYIvDShx8E=",
+        "lastModified": 1772756534,
+        "narHash": "sha256-Oq4qmmVAzgnhErjAS788BxwjzdXdEfZRHBQY6fNC9lo=",
         "ref": "speedrun",
-        "rev": "ad9d04dc6d444ed453c9b8ed1c9c45f16e99d11d",
-        "revCount": 273,
+        "rev": "f4dc8695d954a86ab75af0705a0c4d9275763f2b",
+        "revCount": 274,
         "type": "git",
         "url": "ssh://git@github.com/surma/sl"
       },
