@@ -2,7 +2,6 @@
 {
   imports = [
     ../../profiles/home-manager/base.nix
-    ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
     inputs.nix-openclaw.homeManagerModules.openclaw
