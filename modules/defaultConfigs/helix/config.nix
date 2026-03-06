@@ -1,7 +1,9 @@
-{ pkgs, inputs, ... }:
-let
-  slTreeSitter = inputs.sl2.packages.${pkgs.system}.tree-sitter-sl;
-in
+{
+  lib,
+  enableSlSyntax ? false,
+  slTreeSitter ? null,
+  ...
+}:
 {
   enable = true;
   defaultEditor = true;
@@ -89,6 +91,12 @@ in
         };
       }
       {
+        name = "markdown";
+        text-width = 80;
+      }
+    ]
+    ++ lib.optionals enableSlSyntax [
+      {
         name = "sl";
         scope = "source.sl";
         injection-regex = "^sl$";
@@ -96,10 +104,6 @@ in
         comment-token = "//";
         roots = [ ];
         grammar = "sl";
-      }
-      {
-        name = "markdown";
-        text-width = 80;
       }
     ];
 
@@ -112,6 +116,8 @@ in
           subpath = "wat";
         };
       }
+    ]
+    ++ lib.optionals enableSlSyntax [
       {
         name = "sl";
         source = {

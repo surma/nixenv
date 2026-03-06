@@ -30,6 +30,7 @@
     homeConfigurations = {
       generic-linux.imports = [ ../../machines/generic-linux ];
       surmturntable.imports = [ ../../machines/surmturntable ];
+      scout.imports = [ ../../machines/scout ];
     };
 
     # Android configs

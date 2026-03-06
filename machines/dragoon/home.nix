@@ -54,6 +54,7 @@
   defaultConfigs.opencode.enable = true;
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
+  defaultConfigs.helix.enableSlSyntax = true;
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;
   programs.handy.enable = true;

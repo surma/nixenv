@@ -45,5 +45,6 @@
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.claude-code.enable = true;
+    defaultConfigs.helix.enableSlSyntax = true;
   };
 }
