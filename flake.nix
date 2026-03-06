@@ -57,6 +57,11 @@
       url = "github:jevon/pi-superpowers";
       flake = false;
     };
+    nix-openclaw = {
+      url = "github:openclaw/nix-openclaw";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
     sl2 = {
       url = "git+ssh://git@github.com/surma/sl?ref=speedrun";
       inputs.nixpkgs.follows = "nixpkgs";

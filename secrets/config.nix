@@ -98,6 +98,27 @@
         "scout"
       ];
     };
+    llm-proxy-openclaw-env = {
+      contents = ../secrets/llm-proxy-client-key.age;
+      keys = [
+        "surma"
+        "scout"
+      ];
+    };
+    openclaw-telegram-token = {
+      contents = ../secrets/openclaw-telegram-token.age;
+      keys = [
+        "surma"
+        "scout"
+      ];
+    };
+    openclaw-gateway-token = {
+      contents = ../secrets/openclaw-gateway-token.age;
+      keys = [
+        "surma"
+        "scout"
+      ];
+    };
     openrouter-api-key = {
       contents = ../secrets/openrouter-api-key.age;
       keys = [
