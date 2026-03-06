@@ -1,9 +1,10 @@
-{ config, lib, inputs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 {
   imports = [
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
+    ../../profiles/home-manager/dev.nix
     inputs.nix-openclaw.homeManagerModules.openclaw
   ];
 
@@ -49,10 +50,24 @@ EOF
 
   programs.openclaw = {
     enable = true;
+    toolNames =
+      (builtins.filter (name: name != "nodejs_22") pkgs.openclawPackages.toolNames)
+      ++ [ "nodejs_24" ];
+    instances.default.configPath = "${config.home.homeDirectory}/.openclaw/openclaw.hm.json";
     config = {
       gateway = {
         mode = "local";
-        auth.mode = "token";
+        bind = "custom";
+        customBindHost = "0.0.0.0";
+        auth = {
+          mode = "token";
+          token = {
+            source = "env";
+            provider = "default";
+            id = "OPENCLAW_GATEWAY_TOKEN";
+          };
+        };
+        controlUi.allowedOrigins = [ "*" ];
       };
 
       env.vars = {
@@ -64,7 +79,10 @@ EOF
 
       secrets.providers.default = {
         source = "env";
-        allowlist = [ "LLM_PROXY_API_KEY" ];
+        allowlist = [
+          "LLM_PROXY_API_KEY"
+          "OPENCLAW_GATEWAY_TOKEN"
+        ];
       };
 
       models = {
@@ -214,7 +232,7 @@ EOF
         };
       };
 
-      agents.defaults.model.primary = "shopify/shopify:openai:gpt-5-nano";
+      agents.defaults.model.primary = "shopify/shopify:openai:gpt-5-mini";
 
       channels.telegram = {
         tokenFile = config.secrets.items.openclaw-telegram-token.target;
@@ -226,6 +244,28 @@ EOF
     bundledPlugins.goplaces.enable = false;
   };
 
+  home.activation.openclawMergeManagedConfig = lib.hm.dag.entryAfter [ "openclawConfigFiles" ] ''
+    managed="${config.home.homeDirectory}/.openclaw/openclaw.hm.json"
+    merged="${config.home.homeDirectory}/.openclaw/openclaw.json"
+    tmp="$merged.tmp"
+
+    if [ ! -f "$managed" ]; then
+      exit 0
+    fi
+
+    if [ -f "$merged" ] && ${pkgs.jq}/bin/jq -e . "$merged" >/dev/null 2>&1; then
+      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$merged" "$managed" > "$tmp"
+    else
+      ${pkgs.coreutils}/bin/cp "$managed" "$tmp"
+    fi
+
+    ${pkgs.coreutils}/bin/mv "$tmp" "$merged"
+  '';
+
+  systemd.user.services.openclaw-gateway.Install.WantedBy = [ "default.target" ];
+  systemd.user.services.openclaw-gateway.Service.Environment = lib.mkAfter [
+    "OPENCLAW_CONFIG_PATH=${config.home.homeDirectory}/.openclaw/openclaw.json"
+  ];
   systemd.user.services.openclaw-gateway.Service.EnvironmentFile = [
     "${config.home.homeDirectory}/.local/state/openclaw/gateway-token.env"
     "${config.home.homeDirectory}/.local/state/openclaw/llm-proxy.env"
