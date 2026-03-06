@@ -39,7 +39,11 @@ in
       networking.nftables.enable = true;
       networking.firewall.enable = true;
 
-      networking.firewall.allowedTCPPorts = [ 8082 5173 4096 ];
+      networking.firewall.allowedTCPPorts = [
+        8082
+        5173
+        4096
+      ];
 
       environment.systemPackages = with pkgs; [
         smartmontools

@@ -32,7 +32,7 @@ with lib;
                   end
                 ''
               else
-                ''return ${builtins.toJSON wezterm.${"${wezterm.theme}-theme"}}''
+                "return ${builtins.toJSON wezterm.${"${wezterm.theme}-theme"}}"
             }
           end
 

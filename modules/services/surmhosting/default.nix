@@ -91,10 +91,14 @@ let
         services.traefik.dynamicConfigOptions.http = mergedTraefikConfig;
 
         systemd.services.${containerUnitName} = mkIf isContainer {
-          wants = [ "network-online.target" ]
-            ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
-          after = [ "network-online.target" ]
-            ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
+          wants = [
+            "network-online.target"
+          ]
+          ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
+          after = [
+            "network-online.target"
+          ]
+          ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
 
           serviceConfig = mkMerge [
             (mkIf (cfg.containerLimits.memoryMax != null) {

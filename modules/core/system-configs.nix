@@ -181,9 +181,9 @@ in
     homeConfigurations = lib.mapAttrs (
       name: cfg:
       let
-        system = config.homeConfigurationSystems.${name} or (
-          throw "homeConfigurations.${name}: missing required homeConfigurationSystems.${name}"
-        );
+        system =
+          config.homeConfigurationSystems.${name}
+            or (throw "homeConfigurations.${name}: missing required homeConfigurationSystems.${name}");
       in
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.${system};
