@@ -56,6 +56,21 @@
         "type": "github"
       }
     },
+    "crane": {
+      "locked": {
+        "lastModified": 1771438068,
+        "narHash": "sha256-nGBbXvEZVe/egCPVPFcu89RFtd8Rf6J+4RFoVCFec0A=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "b5090e53e9d68c523a4bb9ad42b4737ee6747597",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "dump": {
       "inputs": {
         "flake-utils": [
@@ -701,6 +716,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1744536153,
+        "narHash": "sha256-awS2zRgF4uTwrOKwwiJcByDzDOdo3Q1rPZbiHQg/N38=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "18dd725c29603f582cf1900e0d25f9f1063dbf11",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nmd": {
       "flake": false,
       "locked": {
@@ -857,8 +888,27 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opencode": "opencode",
         "pi-superpowers": "pi-superpowers",
+        "sl2": "sl2",
         "system-manager": "system-manager",
         "voice-memos": "voice-memos"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1771642886,
+        "narHash": "sha256-4zOvSi0WkS2WAaoJtM28wECtS9S+L38CPYbhF+wINDA=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "85078369717bdbe1f266c9eaad5e66956fb6feea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "scss-reset": {
@@ -875,6 +925,32 @@
         "owner": "andreymatin",
         "repo": "scss-reset",
         "type": "github"
+      }
+    },
+    "sl2": {
+      "inputs": {
+        "crane": "crane",
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1772733413,
+        "narHash": "sha256-nORodDT+1AlDe7wdXg1/+ncLfuLtAEfZMNYIvDShx8E=",
+        "ref": "speedrun",
+        "rev": "ad9d04dc6d444ed453c9b8ed1c9c45f16e99d11d",
+        "revCount": 273,
+        "type": "git",
+        "url": "ssh://git@github.com/surma/sl"
+      },
+      "original": {
+        "ref": "speedrun",
+        "type": "git",
+        "url": "ssh://git@github.com/surma/sl"
       }
     },
     "system-manager": {

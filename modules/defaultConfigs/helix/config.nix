@@ -1,3 +1,7 @@
+{ pkgs, inputs, ... }:
+let
+  slTreeSitter = inputs.sl2.packages.${pkgs.system}.tree-sitter-sl;
+in
 {
   enable = true;
   defaultEditor = true;
@@ -85,6 +89,15 @@
         };
       }
       {
+        name = "sl";
+        scope = "source.sl";
+        injection-regex = "^sl$";
+        file-types = [ "sl" ];
+        comment-token = "//";
+        roots = [ ];
+        grammar = "sl";
+      }
+      {
         name = "markdown";
         text-width = 80;
       }
@@ -97,6 +110,12 @@
           git = "https://github.com/wasm-lsp/tree-sitter-wasm";
           rev = "d9cb9aa9437172403203c242f08b8d4d95e0e61d";
           subpath = "wat";
+        };
+      }
+      {
+        name = "sl";
+        source = {
+          path = "${slTreeSitter}";
         };
       }
     ];

@@ -57,6 +57,11 @@
       url = "github:jevon/pi-superpowers";
       flake = false;
     };
+    sl2 = {
+      url = "git+ssh://git@github.com/surma/sl?ref=speedrun";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs =
