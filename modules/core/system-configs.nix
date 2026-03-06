@@ -84,6 +84,12 @@ in
       description = "home-manager configurations";
     };
 
+    homeConfigurationSystems = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      description = "Target system per home-manager configuration (e.g. aarch64-linux).";
+    };
+
     nixOnDroidConfigurations = mkOption {
       type = types.lazyAttrsOf (
         types.deferredModuleWith {
@@ -175,7 +181,9 @@ in
     homeConfigurations = lib.mapAttrs (
       name: cfg:
       let
-        system = if builtins ? currentSystem then builtins.currentSystem else "x86_64-linux";
+        system = config.homeConfigurationSystems.${name} or (
+          throw "homeConfigurations.${name}: missing required homeConfigurationSystems.${name}"
+        );
       in
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.${system};

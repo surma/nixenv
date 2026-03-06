@@ -29,8 +29,12 @@
     # Home-manager standalone configs
     homeConfigurations = {
       generic-linux.imports = [ ../../machines/generic-linux ];
-      surmturntable.imports = [ ../../machines/surmturntable ];
       scout.imports = [ ../../machines/scout ];
+    };
+
+    homeConfigurationSystems = {
+      generic-linux = "x86_64-linux";
+      scout = "aarch64-linux";
     };
 
     # Android configs
