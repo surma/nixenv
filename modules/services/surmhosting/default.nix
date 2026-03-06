@@ -36,6 +36,8 @@ let
       { name, value }:
       let
         isContainer = value.target.container != null;
+        containerName = "lc-${name |> lib.substring 0 10}";
+        containerUnitName = "container@${containerName}";
 
         forwardHost = if isContainer then "10.201.${i |> toString}.2" else value.target.host;
 
@@ -88,7 +90,23 @@ let
       {
         services.traefik.dynamicConfigOptions.http = mergedTraefikConfig;
 
-        containers."lc-${name |> lib.substring 0 10}" = mkIf isContainer (mkMerge [
+        systemd.services.${containerUnitName} = mkIf isContainer {
+          wants = [ "network-online.target" ]
+            ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
+          after = [ "network-online.target" ]
+            ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
+
+          serviceConfig = mkMerge [
+            (mkIf (cfg.containerLimits.memoryMax != null) {
+              MemoryMax = mkDefault cfg.containerLimits.memoryMax;
+            })
+            (mkIf (cfg.containerLimits.memorySwapMax != null) {
+              MemorySwapMax = mkDefault cfg.containerLimits.memorySwapMax;
+            })
+          ];
+        };
+
+        containers.${containerName} = mkIf isContainer (mkMerge [
           {
             config = {
               users.users.${cfg.containeruser.name} = mkDefault {
@@ -162,6 +180,17 @@ let
 
           networking.firewall.enable = false;
         };
+    };
+
+    systemd.services."container@surm-auth" = mkIf authEnabled {
+      serviceConfig = mkMerge [
+        (mkIf (cfg.containerLimits.memoryMax != null) {
+          MemoryMax = mkDefault cfg.containerLimits.memoryMax;
+        })
+        (mkIf (cfg.containerLimits.memorySwapMax != null) {
+          MemorySwapMax = mkDefault cfg.containerLimits.memorySwapMax;
+        })
+      ];
     };
 
     # Traefik configuration for surm-auth
@@ -276,6 +305,18 @@ in
       containeruser.uid = mkOption {
         type = types.nullOr types.int;
         default = null;
+      };
+      containerLimits = {
+        memoryMax = mkOption {
+          type = types.nullOr types.str;
+          default = "4G";
+          description = "Default MemoryMax limit applied to all surmhosting app containers (container@lc-* units).";
+        };
+        memorySwapMax = mkOption {
+          type = types.nullOr types.str;
+          default = "0";
+          description = "Default MemorySwapMax limit applied to all surmhosting app containers (container@lc-* units).";
+        };
       };
       tls.enable = mkEnableOption "";
       tls.email = mkOption {
@@ -421,6 +462,11 @@ in
       ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
       ++ (lib.optional authEnabled surmAuthConfig.services.traefik)
     );
+    systemd.services = mkMerge (
+      (exposedAppsConfigs |> map (cfg: cfg.systemd.services))
+      ++ (lib.optional authEnabled surmAuthConfig.systemd.services)
+    );
+
     containers = mkMerge (
       (exposedAppsConfigs |> map (cfg: cfg.containers))
       ++ (lib.optional authEnabled surmAuthConfig.containers)
