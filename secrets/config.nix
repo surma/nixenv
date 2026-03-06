@@ -24,7 +24,7 @@
         "nexus"
         "shopisurm"
         "surmframework"
-        "surmturntable"
+        "scout"
       ];
     };
     gpg-keys = {
@@ -37,7 +37,7 @@
         "surmrock"
         "shopisurm"
         "surmframework"
-        "surmturntable"
+        "scout"
       ];
     };
     writing-prompt = {
