@@ -174,14 +174,16 @@ in
 
     homeConfigurations = lib.mapAttrs (
       name: cfg:
+      let
+        system = if builtins ? currentSystem then builtins.currentSystem else "x86_64-linux";
+      in
       inputs.home-manager.lib.homeManagerConfiguration {
-        pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux; # Default
+        pkgs = inputs.nixpkgs.legacyPackages.${system};
         modules = standaloneHomeManagerFeatures ++ [
           cfg
         ];
         extraSpecialArgs = {
-          inherit inputs;
-          system = "x86_64-linux";
+          inherit inputs system;
           systemManager = "home-manager";
         };
       }
