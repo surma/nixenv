@@ -29,6 +29,9 @@ EOF
   secrets.items.openclaw-gateway-token.command = ''
     mkdir -p ${config.home.homeDirectory}/.local/state/openclaw
     token="$(cat)"
+    if [ "''${token#OPENCLAW_GATEWAY_TOKEN=}" != "$token" ]; then
+      token="''${token#OPENCLAW_GATEWAY_TOKEN=}"
+    fi
     printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$token" > ${config.home.homeDirectory}/.local/state/openclaw/gateway-token.env
     chmod 600 ${config.home.homeDirectory}/.local/state/openclaw/gateway-token.env
   '';
@@ -54,11 +57,10 @@ EOF
       (builtins.filter (name: name != "nodejs_22") pkgs.openclawPackages.toolNames)
       ++ [ "nodejs_24" ];
     instances.default.configPath = "${config.home.homeDirectory}/.openclaw/openclaw.hm.json";
+    instances.default.config = config.programs.openclaw.config;
     config = {
       gateway = {
         mode = "local";
-        bind = "custom";
-        customBindHost = "0.0.0.0";
         auth = {
           mode = "token";
           token = {
@@ -67,7 +69,6 @@ EOF
             id = "OPENCLAW_GATEWAY_TOKEN";
           };
         };
-        controlUi.allowedOrigins = [ "*" ];
       };
 
       env.vars = {
@@ -243,6 +244,8 @@ EOF
 
     bundledPlugins.goplaces.enable = false;
   };
+
+  home.file.".openclaw/openclaw.hm.json".force = true;
 
   home.activation.openclawMergeManagedConfig = lib.hm.dag.entryAfter [ "openclawConfigFiles" ] ''
     managed="${config.home.homeDirectory}/.openclaw/openclaw.hm.json"
