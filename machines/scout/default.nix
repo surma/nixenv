@@ -128,6 +128,10 @@ EOF
     "${config.home.homeDirectory}/.local/state/openclaw/gateway-token.env"
     "${config.home.homeDirectory}/.local/state/openclaw/llm-proxy.env"
   ];
+  systemd.user.services.openclaw-gateway.Service.StandardOutput =
+    lib.mkForce "append:${config.home.homeDirectory}/.local/state/openclaw/openclaw-gateway.log";
+  systemd.user.services.openclaw-gateway.Service.StandardError =
+    lib.mkForce "append:${config.home.homeDirectory}/.local/state/openclaw/openclaw-gateway.log";
 
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
