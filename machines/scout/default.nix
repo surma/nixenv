@@ -88,6 +88,64 @@ EOF
         ];
       };
 
+      models = {
+        mode = "merge";
+        providers = {
+          openai = {
+            api = "openai-completions";
+            baseUrl = "https://vendors.llm.surma.technology/openai/v1";
+            apiKey = {
+              source = "env";
+              provider = "default";
+              id = "LLM_PROXY_API_KEY";
+            };
+            models = [ ];
+          };
+
+          anthropic = {
+            baseUrl = "https://vendors.llm.surma.technology/anthropic";
+            apiKey = {
+              source = "env";
+              provider = "default";
+              id = "LLM_PROXY_API_KEY";
+            };
+            models = [ ];
+          };
+
+          google = {
+            baseUrl = "https://vendors.llm.surma.technology/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
+            apiKey = {
+              source = "env";
+              provider = "default";
+              id = "LLM_PROXY_API_KEY";
+            };
+            models = [ ];
+          };
+
+          groq = {
+            api = "openai-completions";
+            baseUrl = "https://vendors.llm.surma.technology/groq/openai/v1";
+            apiKey = {
+              source = "env";
+              provider = "default";
+              id = "LLM_PROXY_API_KEY";
+            };
+            models = [ ];
+          };
+
+          xai = {
+            api = "openai-completions";
+            baseUrl = "https://vendors.llm.surma.technology/xai/v1";
+            apiKey = {
+              source = "env";
+              provider = "default";
+              id = "LLM_PROXY_API_KEY";
+            };
+            models = [ ];
+          };
+        };
+      };
+
       agents.defaults.model.primary = "openai/gpt-5-mini";
 
       channels.telegram = {
@@ -117,7 +175,17 @@ EOF
       ${pkgs.coreutils}/bin/cp "$managed" "$tmp"
     fi
 
-    ${pkgs.coreutils}/bin/mv "$tmp" "$merged"
+    changed=1
+    if [ -f "$merged" ] && ${pkgs.diffutils}/bin/cmp -s "$tmp" "$merged"; then
+      changed=0
+      ${pkgs.coreutils}/bin/rm -f "$tmp"
+    else
+      ${pkgs.coreutils}/bin/mv "$tmp" "$merged"
+    fi
+
+    if [ "$changed" -eq 1 ] && command -v systemctl >/dev/null 2>&1; then
+      systemctl --user try-restart openclaw-gateway.service >/dev/null 2>&1 || true
+    fi
   '';
 
   systemd.user.services.openclaw-gateway.Install.WantedBy = [ "default.target" ];
