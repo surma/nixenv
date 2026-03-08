@@ -13,7 +13,7 @@ let
     if cfg.authTokenFile == null then
       null
     else
-      "if [ -f \"${cfg.authTokenFile}\" ]; then export WEB_SEARCH_AUTH_TOKEN=\"$(tr -d \\\"\\n\\\" < \"${cfg.authTokenFile}\")\"; fi";
+      "if [ -f \"${cfg.authTokenFile}\" ]; then export WEB_SEARCH_AUTH_TOKEN=\"$(<\"${cfg.authTokenFile}\")\"; fi";
 
   wrapperArgs =
     [ "--set WEB_SEARCH_PERPLEXITY_API_BASE ${lib.escapeShellArg cfg.perplexityApiBase}" ]
