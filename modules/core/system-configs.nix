@@ -43,6 +43,7 @@ let
     ../features/pi.nix
     ../features/claude-code.nix
     ../features/opencode.nix
+    ../features/web-search-cli.nix
     ../features/syncthing.nix
     ../features/spotify.nix
     # discord and obsidian are provided by home-manager built-in

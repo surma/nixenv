@@ -968,7 +968,8 @@
         "pi-superpowers": "pi-superpowers",
         "sl2": "sl2",
         "system-manager": "system-manager",
-        "voice-memos": "voice-memos"
+        "voice-memos": "voice-memos",
+        "web-search-cli": "web-search-cli"
       }
     },
     "rust-overlay": {
@@ -1160,6 +1161,30 @@
         "ref": "main",
         "type": "git",
         "url": "ssh://git@github.com/surma/voice-memos"
+      }
+    },
+    "web-search-cli": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772975400,
+        "narHash": "sha256-iUdJfMDQQsRL+CQ7cXzFAZKSm6PEvW0BzXoFc0M5rXE=",
+        "ref": "main",
+        "rev": "70b8bb899ee3995fcc1bc701b077296cdfdff3ba",
+        "revCount": 3,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/web-search-cli"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/web-search-cli"
       }
     },
     "xdph": {
