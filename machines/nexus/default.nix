@@ -121,7 +121,13 @@ in
       services.mosquitto.persistence = false;
     }
     {
-      secrets.items.openclaw-telegram-token.target = "/var/lib/openclaw/telegram-token";
+      secrets.items.openclaw-telegram-token.command = ''
+        mkdir -p /var/lib/openclaw
+        token="$(cat)"
+        printf '%s\n' "$token" > /var/lib/openclaw/telegram-token
+        chgrp users /var/lib/openclaw/telegram-token
+        chmod 0640 /var/lib/openclaw/telegram-token
+      '';
       secrets.items.openclaw-gateway-token.command = ''
         mkdir -p /var/lib/openclaw
         token="$(cat)"
@@ -166,6 +172,36 @@ in
             group = "users";
             createUser = false;
             stateDir = "/var/lib/openclaw/state";
+            configPath = "/etc/openclaw/openclaw.hm.json";
+            environment = {
+              # Keep the declarative Nix config in /etc/openclaw/openclaw.hm.json,
+              # but run OpenClaw against a writable+persistent merged config.
+              OPENCLAW_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
+              CLAWDBOT_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
+            };
+            execStartPre = [
+              "${pkgs.writeShellScript "openclaw-prepare-config" ''
+                set -euo pipefail
+
+                ${pkgs.coreutils}/bin/mkdir -p /var/lib/openclaw/state
+
+                managed=/etc/openclaw/openclaw.hm.json
+                mutable=/var/lib/openclaw/state/openclaw.json
+                tmp="$mutable.tmp"
+
+                if [ ! -f "$mutable" ]; then
+                  ${pkgs.coreutils}/bin/cp "$managed" "$mutable"
+                else
+                  # Deep-merge mutable + managed, with managed keys taking precedence.
+                  ${pkgs.nushell}/bin/nu -c '
+                    let mutable = (open /var/lib/openclaw/state/openclaw.json)
+                    let managed = (open /etc/openclaw/openclaw.hm.json)
+                    $mutable | merge deep $managed | to json --indent 2
+                  ' > "$tmp"
+                  ${pkgs.coreutils}/bin/mv "$tmp" "$mutable"
+                fi
+              ''}"
+            ];
             environmentFiles = [
               "/var/lib/credentials/openclaw/gateway-token.env"
               "/var/lib/credentials/openclaw/llm-proxy.env"
@@ -260,6 +296,7 @@ in
               agents.defaults.model.primary = "openai/gpt-5-mini";
 
               channels.telegram = {
+                enabled = true;
                 tokenFile = "/var/lib/credentials/openclaw/telegram-token";
                 allowFrom = [ 5248021986 ];
                 groups."*".requireMention = true;
