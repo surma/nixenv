@@ -121,6 +121,168 @@ in
       services.mosquitto.persistence = false;
     }
     {
+      secrets.items.openclaw-telegram-token.target = "/var/lib/openclaw/telegram-token";
+      secrets.items.openclaw-gateway-token.command = ''
+        mkdir -p /var/lib/openclaw
+        token="$(cat)"
+        if [ "''${token#OPENCLAW_GATEWAY_TOKEN=}" != "$token" ]; then
+          token="''${token#OPENCLAW_GATEWAY_TOKEN=}"
+        fi
+        printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$token" > /var/lib/openclaw/gateway-token.env
+        chmod 0600 /var/lib/openclaw/gateway-token.env
+      '';
+      secrets.items.llm-proxy-client-key.command = ''
+        mkdir -p /var/lib/openclaw
+        key="$(cat)"
+        {
+          printf 'LLM_PROXY_API_KEY=%s\n' "$key"
+          printf 'PI_PROXY_API_KEY=%s\n' "$key"
+          printf 'PI_PROXY_AUTH_HEADER=Bearer %s\n' "$key"
+          printf 'OPENAI_API_KEY=%s\n' "$key"
+          printf 'ANTHROPIC_API_KEY=%s\n' "$key"
+          printf 'GEMINI_API_KEY=%s\n' "$key"
+          printf 'GOOGLE_API_KEY=%s\n' "$key"
+          printf 'GROQ_API_KEY=%s\n' "$key"
+          printf 'XAI_API_KEY=%s\n' "$key"
+        } > /var/lib/openclaw/llm-proxy.env
+        chmod 0600 /var/lib/openclaw/llm-proxy.env
+      '';
+
+      services.surmhosting.exposedApps.openclaw.target.port = 18789;
+      systemd.services."container@lc-openclaw" = {
+        wants = [ "secrets.service" ];
+        after = [ "secrets.service" ];
+      };
+      services.surmhosting.exposedApps.openclaw.target.container = {
+        config = {
+          imports = [ inputs.nix-openclaw.nixosModules.openclaw-gateway ];
+          system.stateVersion = "25.05";
+
+          services.openclaw-gateway = {
+            enable = true;
+            package = inputs.nix-openclaw.packages.${pkgs.stdenv.system}.openclaw;
+            port = 18789;
+            user = "containeruser";
+            group = "users";
+            createUser = false;
+            stateDir = "/var/lib/openclaw/state";
+            environmentFiles = [
+              "/var/lib/credentials/openclaw/gateway-token.env"
+              "/var/lib/credentials/openclaw/llm-proxy.env"
+            ];
+            config = {
+              gateway = {
+                mode = "local";
+                auth = {
+                  mode = "token";
+                  token = {
+                    source = "env";
+                    provider = "default";
+                    id = "OPENCLAW_GATEWAY_TOKEN";
+                  };
+                };
+              };
+
+              env.vars = {
+                OPENAI_BASE_URL = "https://vendors.llm.surma.technology/openai/v1";
+                ANTHROPIC_BASE_URL = "https://vendors.llm.surma.technology/anthropic";
+                GEMINI_BASE_URL = "https://vendors.llm.surma.technology/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
+                GROQ_BASE_URL = "https://vendors.llm.surma.technology/groq/openai/v1";
+                XAI_BASE_URL = "https://vendors.llm.surma.technology/xai/v1";
+              };
+
+              secrets.providers.default = {
+                source = "env";
+                allowlist = [
+                  "LLM_PROXY_API_KEY"
+                  "OPENCLAW_GATEWAY_TOKEN"
+                ];
+              };
+
+              models = {
+                mode = "merge";
+                providers = {
+                  openai = {
+                    api = "openai-completions";
+                    baseUrl = "https://vendors.llm.surma.technology/openai/v1";
+                    apiKey = {
+                      source = "env";
+                      provider = "default";
+                      id = "LLM_PROXY_API_KEY";
+                    };
+                    models = [ ];
+                  };
+
+                  anthropic = {
+                    baseUrl = "https://vendors.llm.surma.technology/anthropic";
+                    apiKey = {
+                      source = "env";
+                      provider = "default";
+                      id = "LLM_PROXY_API_KEY";
+                    };
+                    models = [ ];
+                  };
+
+                  google = {
+                    baseUrl = "https://vendors.llm.surma.technology/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
+                    apiKey = {
+                      source = "env";
+                      provider = "default";
+                      id = "LLM_PROXY_API_KEY";
+                    };
+                    models = [ ];
+                  };
+
+                  groq = {
+                    api = "openai-completions";
+                    baseUrl = "https://vendors.llm.surma.technology/groq/openai/v1";
+                    apiKey = {
+                      source = "env";
+                      provider = "default";
+                      id = "LLM_PROXY_API_KEY";
+                    };
+                    models = [ ];
+                  };
+
+                  xai = {
+                    api = "openai-completions";
+                    baseUrl = "https://vendors.llm.surma.technology/xai/v1";
+                    apiKey = {
+                      source = "env";
+                      provider = "default";
+                      id = "LLM_PROXY_API_KEY";
+                    };
+                    models = [ ];
+                  };
+                };
+              };
+
+              agents.defaults.model.primary = "openai/gpt-5-mini";
+
+              channels.telegram = {
+                tokenFile = "/var/lib/credentials/openclaw/telegram-token";
+                allowFrom = [ 5248021986 ];
+                groups."*".requireMention = true;
+              };
+            };
+          };
+        };
+
+        bindMounts = {
+          state = {
+            mountPoint = "/var/lib/openclaw";
+            hostPath = "/dump/state/openclaw";
+            isReadOnly = false;
+          };
+          creds = {
+            mountPoint = "/var/lib/credentials/openclaw";
+            hostPath = "/var/lib/openclaw";
+            isReadOnly = true;
+          };
+        };
+      };
+    }
+    {
 
       networking.firewall.allowedTCPPorts = [ giteaPort ];
       services.surmhosting.exposedApps.gitea.target.container = {
