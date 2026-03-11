@@ -126,7 +126,7 @@ in
         token="$(cat)"
         printf '%s\n' "$token" > /var/lib/openclaw/telegram-token
         chgrp users /var/lib/openclaw/telegram-token
-        chmod 0640 /var/lib/openclaw/telegram-token
+        chmod 0644 /var/lib/openclaw/telegram-token
       '';
       secrets.items.openclaw-gateway-token.command = ''
         mkdir -p /var/lib/openclaw
@@ -135,7 +135,7 @@ in
           token="''${token#OPENCLAW_GATEWAY_TOKEN=}"
         fi
         printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$token" > /var/lib/openclaw/gateway-token.env
-        chmod 0600 /var/lib/openclaw/gateway-token.env
+        chmod 0644 /var/lib/openclaw/gateway-token.env
       '';
       secrets.items.llm-proxy-client-key.command = ''
         mkdir -p /var/lib/openclaw
@@ -151,7 +151,7 @@ in
           printf 'GROQ_API_KEY=%s\n' "$key"
           printf 'XAI_API_KEY=%s\n' "$key"
         } > /var/lib/openclaw/llm-proxy.env
-        chmod 0600 /var/lib/openclaw/llm-proxy.env
+        chmod 0644 /var/lib/openclaw/llm-proxy.env
       '';
 
       services.surmhosting.exposedApps.openclaw.target.port = 18789;
@@ -803,6 +803,53 @@ in
           mountPoint = "/dump/state/voice-memos";
           hostPath = "/dump/state/voice-memos";
           isReadOnly = false;
+        };
+      };
+    }
+    {
+      secrets.items.dashboard-server-env.command = ''
+        mkdir -p /var/lib/overview
+        cat > /var/lib/overview/server.env
+        chmod 0644 /var/lib/overview/server.env
+      '';
+
+      systemd.services."container@lc-overview" = {
+        wants = [ "secrets.service" ];
+        after = [ "secrets.service" ];
+      };
+
+      services.surmhosting.exposedApps.overview.target.container = {
+        config = {
+          system.stateVersion = "25.05";
+
+          systemd.services.overview-server = {
+            enable = true;
+            description = "Overview dashboard server";
+            wantedBy = [ "multi-user.target" ];
+            environment = {
+              OVERVIEW_HOST = "0.0.0.0";
+              OVERVIEW_PORT = "8080";
+              GOOGLE_CALENDAR_ID = "surma@surmair.de";
+              HA_BASE_URL = "https://ha.surma.technology";
+              HA_CLIMATE_ENTITY_ID = "climate.office_btrv_office_btrv";
+              HA_TODO_ENTITY_ID = "todo.todo_list";
+              SHOPIFY_STOCK_RANGE = "5D";
+            };
+            serviceConfig = {
+              ExecStart = "${inputs.dashboard.packages.${pkgs.stdenv.system}.server}/bin/overview";
+              EnvironmentFile = [ "/var/lib/credentials/overview/server.env" ];
+              User = "containeruser";
+              Restart = "always";
+            };
+          };
+        };
+
+        bindMounts = {
+          creds = {
+            mountPoint = "/var/lib/credentials/overview";
+            hostPath = "/var/lib/overview";
+            isReadOnly = true;
+          };
         };
       };
     }

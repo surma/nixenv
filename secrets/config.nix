@@ -140,5 +140,12 @@
         "pylon"
       ];
     };
+    dashboard-server-env = {
+      contents = ../secrets/dashboard-server-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
