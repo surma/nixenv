@@ -15,7 +15,6 @@
     # ../../modules/home-manager/opencode
     # ../../modules/home-manager/ghostty
     # ../../modules/home-manager/handy
-    ../../modules/services/llm-key-updater
 
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/graphical.nix
@@ -73,17 +72,22 @@
   customScripts.wallpaper-shuffle.enable = true;
   customScripts.wallpaper-shuffle.asDesktopItem = true;
   customScripts.llm-proxy.enable = true;
-  customScripts.get-shopify-key.enable = true;
   customScripts.oc.enable = true;
   customScripts.ocq.enable = true;
 
   programs.go.enable = true;
 
-  # LLM key updater - pushes fresh Shopify keys to nexus
-  services.llm-key-updater.enable = true;
-  services.llm-key-updater.target = "https://key.llm.surma.technology";
-  services.llm-key-updater.secretFile = "${config.home.homeDirectory}/.config/llm-proxy/secret";
-  services.llm-key-updater.intervalHours = 8;
+  home.activation.ensureNexusAuthorizedKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    auth_file="$HOME/.ssh/authorized_keys"
+    mkdir -p "$HOME/.ssh"
+    touch "$auth_file"
+    chmod 700 "$HOME/.ssh"
+    chmod 600 "$auth_file"
+
+    if ! grep -qxF '${config.secrets.keys.nexus}' "$auth_file"; then
+      printf '%s\n' '${config.secrets.keys.nexus}' >> "$auth_file"
+    fi
+  '';
 
   programs.git = {
     maintenance.enable = false;

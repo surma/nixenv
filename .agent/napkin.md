@@ -3,6 +3,11 @@
 ## Corrections
 | Date | Source | What Went Wrong | What To Do Instead |
 |------|--------|----------------|-------------------|
+| 2026-03-13 | self | Assumed shopisurm would expose Home Manager binaries under Linux-style `/etc/profiles/per-user/surma/bin/...`; remote `nu` path failed on Darwin. | For nix-darwin user-profile binaries on shopisurm, use `/Users/surma/.nix-profile/bin/...` (or override per host), not Linux per-user profile paths. |
+| 2026-03-13 | self | Rewrote the working `get-shopify-key` Nu pipeline to store the token in a variable, but `http post` in Nu requires input data and the pipeline form was semantically important. | When porting the Shopify key fetch to Nu, preserve the original pipeline shape: `... | get id_token | http post --headers [Authorization $"Bearer ($in)"] ... | get key`. |
+| 2026-03-13 | self | Passed JWT expiry as separate Nu args (`-e "+5 minutes"`), which `jwt-cli` interpreted differently than the working shell form and caused an `unexpected argument '{}'` error. | For `jwt-cli encode` with expiry strings, keep the option in single-arg form: `'-e=+5 minutes'` (plus `'{}'` payload if needed). |
+| 2026-03-13 | self | Left an explicit trailing `main` call at the bottom of a Nushell script after defining `def main []`; invoking the script ran the logic twice. | In Nushell scripts, define `main` and let the script entrypoint call it implicitly; don’t add an extra trailing `main` invocation. |
+| 2026-03-13 | self | Loaded skills before reading `.agent/napkin.md` at session start again. | First tool call in every conversation must be `read .agent/napkin.md`; only then load any skills. |
 | 2026-03-09 | self | In Nushell merge command, piped `open <json>` into `from json`; `open` already parses JSON, so `from json` failed with `only string input data is supported` and broke `ExecStartPre` startup. | For Nu JSON files, use `open <file>` directly (or `open --raw | from json`), not both together. |
 | 2026-03-09 | self | Set `ExecStartPre` to a multiline shell snippet string in NixOS unit options; systemd treated only the first command and ignored shell `if` block lines. | For `ExecStartPre`, use a real script path (`pkgs.writeShellScript`) or explicit `bash -c`; don’t embed shell blocks directly as raw unit command strings. |
 | 2026-03-09 | self | Used `sed` again to trim quick grep output while checking telegram config edits. | Avoid `sed`/`cat` output-massaging shortcuts; prefer direct tool output or `read`. |
@@ -46,6 +51,10 @@
 - When running update-all, disable git fsmonitor for the duration instead of relying solely on repeated socket deletions.
 - For NixOS config changes on this machine, edit the flake repo config (not /etc/nixos).
 - Do not keep “stability override” model pinning in OpenClaw provider config; prefer provider defaults/discovery unless explicitly requested.
+- For the reversed Shopify key flow, prefer a simple systemd service+timer design over an internal forever-loop service when systemd can express the asymmetric success/failure cadence.
+- Prefer the new Nexus-side fetch/forward script to be Nushell so it can be run and tested directly in isolation before relying on the systemd unit.
+- Prefer the new component name `key-poller` rather than `shopify-key-puller`.
+- For one-off infra scripts like `key-poller`, if manual end-to-end verification is done and the user does not expect to run the tests, remove the ad-hoc test files instead of keeping dead test scaffolding around.
 
 ## Patterns That Work
 - For Nu, use `".git" | path exists` (no positional arg) and `get -o` instead of deprecated `get -i`.
@@ -54,6 +63,7 @@
 - Using `autoPatchelfHook` (or stdenv's automatic patchELF / strip fixups) on the claude-code GCS binary: patchelf reorganises the ELF and silently truncates the 122 MB Bun standalone payload, leaving only a bare bun runtime (102 MB) that prints bun's own help. Fix: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true`.
 
 ## Known Issues / Gotchas
+- From `x86_64-linux` nexus, full `nix build` verification for `aarch64-linux` (`pylon`) and Darwin (`shopisurm`) configs can fail for platform reasons (`required system or feature not available`) even when evaluation is fine. Use `nix eval path:.#...drvPath` / targeted option evals on this host unless a matching builder is available.
 - On scout (Raspberry Pi), `nix-daemon.socket` can be skipped at boot when `/etc/systemd/system/nix-daemon.socket` is a symlink into `/nix/var/nix/profiles/default/...` and `/nix` is on a separate volume that mounts later. Evidence: early-boot `Failed to open /etc/systemd/system/nix-daemon.socket: No such file or directory`, then `/nix` mounts afterward. This is host-level systemd/Nix installer behavior, not Home Manager config.
 - `openclaw-gateway` user service can fail with `status=209/STDOUT` when `/tmp/openclaw` is missing. The generated unit logs to `append:/tmp/openclaw/openclaw-gateway.log` but does not create the parent directory. Creating `/tmp/openclaw` immediately restores startup.
 - `container@lc-openclaw` can show active while gateway is effectively down: if `OPENCLAW_GATEWAY_TOKEN` resolves to an empty string, `openclaw-gateway` loops `Startup failed: required secrets are unavailable` every ~5s, never binds `:18789`, and Telegram never replies. Confirm via `/dump/state/openclaw/state/logs/gateway.log` + process env length checks.
@@ -67,6 +77,7 @@
 
 ## Domain Notes
 - The NixOS `services.qbittorrent` module uses a `systemd-tmpfiles` `L+` rule to forcibly symlink `qBittorrent.conf` → a read-only Nix store file on every container start and `nixos-rebuild switch`. Any settings not in `serverConfig` are wiped on restart. Always declare persistent qBittorrent settings (seeding limits, etc.) in `serverConfig`; never rely on in-UI changes surviving a restart.
+- For the Shopify LLM key flow, the current `llm-proxy` / key receiver deployment is on `machines/pylon/default.nix` behind `key.llm.surma.technology`, not on `machines/nexus/default.nix`.
 - Plan mode extension (`modules/programs/pi/extensions/plan-mode/claude-plan-mode.ts`) queues `/plan accept` via `pi.sendUserMessage`, but sendUserMessage bypasses command handling, so the command never runs and `ctx.newSession()` is not triggered. This explains context not clearing after plan acceptance.
 - `machines/scout/default.nix`: `programs.openclaw.config.env.vars.*_BASE_URL` does **not** control OpenClaw model provider routing in current openclaw builds. For routing, set `programs.openclaw.config.models.providers.<provider>.baseUrl` (+ api/apiKey as needed). If provider config is missing, OpenClaw falls back to upstream defaults (e.g., `https://api.openai.com/v1`).
 - OpenAI via vendor proxy can fail with `HTTP 404 ... Item with id 'rs_...' not found ... store=false` when OpenClaw uses `openai-responses` flow that references response item IDs. For proxy compatibility, set provider adapter to `models.providers.openai.api = "openai-completions"`.
