@@ -1,7 +1,0 @@
-#!/usr/bin/env nu
-
-gcloud auth print-identity-token --format json
-	| from json
-	| get id_token
-	| http post --headers ["Authorization" $"Bearer ($in)"] https://openai-proxy.shopify.io/hmac/personal
-	| get key

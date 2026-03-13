@@ -19,6 +19,7 @@ in
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
+    ../../modules/services/key-poller
 
     ../../apps/hate
 
@@ -28,6 +29,10 @@ in
     {
       nix.settings.require-sigs = false;
       secrets.identity = "/home/surma/.ssh/id_machine";
+      secrets.items.llm-proxy-secret = {
+        target = "/var/lib/key-poller/receiver-secret";
+        mode = "0400";
+      };
 
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
@@ -71,6 +76,9 @@ in
       services.surmhosting.docker.enable = true;
 
       services.openssh.enable = true;
+
+      services.key-poller.enable = true;
+      services.key-poller.secretFile = "/var/lib/key-poller/receiver-secret";
 
       programs.mosh.enable = true;
 
