@@ -7,39 +7,50 @@
 }:
 let
   isEnabled = config.defaultConfigs.pi.enable;
-  cfg = config.defaultConfigs.pi.llmProxy;
+  piCfg = config.defaultConfigs.pi;
+  llmProxyCfg = piCfg.llmProxy;
+
+  defaultSettings = {
+    defaultProvider = "openai";
+    defaultModel = "gpt-5.4";
+    defaultThinkingLevel = "high";
+    packages = [ "ssh://git@github.com/surma/pi-config" ];
+    theme = "gruvbox-dark-medium";
+  };
+
+  settings = lib.recursiveUpdate defaultSettings piCfg.settings;
 
   models = {
     providers = {
       anthropic = {
-        baseUrl = "${cfg.vendorBaseURL}/anthropic";
+        baseUrl = "${llmProxyCfg.vendorBaseURL}/anthropic";
         apiKey = "PI_PROXY_API_KEY";
       };
       openai = {
-        baseUrl = "${cfg.vendorBaseURL}/openai/v1";
+        baseUrl = "${llmProxyCfg.vendorBaseURL}/openai/v1";
         apiKey = "PI_PROXY_API_KEY";
       };
       google = {
-        baseUrl = "${cfg.vendorBaseURL}/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
+        baseUrl = "${llmProxyCfg.vendorBaseURL}/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
         apiKey = "PI_PROXY_API_KEY";
         headers = {
           Authorization = "PI_PROXY_AUTH_HEADER";
         };
       };
       groq = {
-        baseUrl = "${cfg.vendorBaseURL}/groq/openai/v1";
+        baseUrl = "${llmProxyCfg.vendorBaseURL}/groq/openai/v1";
         apiKey = "PI_PROXY_API_KEY";
       };
       xai = {
-        baseUrl = "${cfg.vendorBaseURL}/xai/v1";
+        baseUrl = "${llmProxyCfg.vendorBaseURL}/xai/v1";
         apiKey = "PI_PROXY_API_KEY";
       };
     };
   };
 
   wrapper = pkgs.writeShellScriptBin "pi" ''
-    if [ -f "${cfg.apiKeyFile}" ]; then
-      export PI_PROXY_API_KEY="$(tr -d '\n' < "${cfg.apiKeyFile}")"
+    if [ -f "${llmProxyCfg.apiKeyFile}" ]; then
+      export PI_PROXY_API_KEY="$(tr -d '\n' < "${llmProxyCfg.apiKeyFile}")"
     fi
 
     if [ -n "''${PI_PROXY_API_KEY:-}" ]; then
@@ -56,6 +67,12 @@ with lib;
   options = {
     defaultConfigs.pi = {
       enable = mkEnableOption "";
+
+      settings = mkOption {
+        type = types.attrsOf types.anything;
+        default = { };
+        description = "Additional Pi settings merged into ~/.pi/agent/settings.json";
+      };
 
       llmProxy = {
         vendorBaseURL = mkOption {
@@ -81,10 +98,14 @@ with lib;
 
       home.file = mkIf isEnabled {
         ".pi/agent/models.json".text = builtins.toJSON models;
+        ".pi/agent/settings.json" = {
+          text = builtins.toJSON settings;
+          mutable = true;
+        };
       };
     }
 
-    (mkIf (isEnabled && cfg.apiKeyFile != null) {
+    (mkIf (isEnabled && llmProxyCfg.apiKeyFile != null) {
       programs.pi.package = wrapper;
     })
   ];
