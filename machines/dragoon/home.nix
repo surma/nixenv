@@ -80,6 +80,10 @@
   };
 
   services.syncthing.enable = true;
+  services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault" = {
+    id = "surmvault";
+    devices = [ "nexus" ];
+  };
   defaultConfigs.syncthing.enable = true;
   defaultConfigs.syncthing.knownFolders.scratch.enable = true;
   defaultConfigs.syncthing.knownFolders.ebooks.enable = true;

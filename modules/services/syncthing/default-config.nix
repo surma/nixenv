@@ -23,7 +23,7 @@ with lib;
     services.syncthing = {
       settings = {
         devices = {
-          surmcluster = {
+          nexus = {
             id = "CJT6SJ3-YD5KOXR-WRLN3GM-D5ALFHQ-7M6ZWSG-4MNKWG3-T525QU4-M77GYA3";
             addresses = [
               "tcp://10.0.0.2:22000"
@@ -34,26 +34,26 @@ with lib;
         folders =
           (mkOptionalAttr syncthing.knownFolders.scratch.enable {
             "${config.home.homeDirectory}/sync/scratch" = {
-              id = "hbza9-iimbx";
-              devices = [ "surmcluster" ];
+              id = "scratch";
+              devices = [ "nexus" ];
             };
           })
           // (mkOptionalAttr syncthing.knownFolders.audiobooks.enable {
             "${config.home.homeDirectory}/sync/audiobooks" = {
-              id = "ddjmk-uz6hb";
-              devices = [ "surmcluster" ];
+              id = "audiobooks";
+              devices = [ "nexus" ];
             };
           })
           // (mkOptionalAttr syncthing.knownFolders.ebooks.enable {
             "${config.home.homeDirectory}/sync/ebooks" = {
-              id = "ss5hw-abp4h";
-              devices = [ "surmcluster" ];
+              id = "ebooks";
+              devices = [ "nexus" ];
             };
           })
           // (mkOptionalAttr syncthing.knownFolders.surmvault.enable {
             "${config.home.homeDirectory}/sync/surmvault" = {
-              id = "cwsim-u7vth";
-              devices = [ "surmcluster" ];
+              id = "surmvault";
+              devices = [ "nexus" ];
             };
           });
       };

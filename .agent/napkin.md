@@ -3,6 +3,8 @@
 ## Corrections
 | Date | Source | What Went Wrong | What To Do Instead |
 |------|--------|----------------|-------------------|
+| 2026-03-22 | user | Started preparing deployment/apply steps after the user asked to fix config, but they had not asked me to apply the configuration. | Do not initiate `switch`/deployment work unless the user explicitly asks to apply changes. Config fixes and config application are separate steps. |
+| 2026-03-22 | self | Started by loading skill files before reading `.agent/napkin.md`, repeating the session-start ordering mistake again. | On every new conversation, the very first tool call must be `read .agent/napkin.md`; only then load any skill files. |
 | 2026-03-13 | self | Assumed shopisurm would expose Home Manager binaries under Linux-style `/etc/profiles/per-user/surma/bin/...`; remote `nu` path failed on Darwin. | For nix-darwin user-profile binaries on shopisurm, use `/Users/surma/.nix-profile/bin/...` (or override per host), not Linux per-user profile paths. |
 | 2026-03-13 | self | Rewrote the working `get-shopify-key` Nu pipeline to store the token in a variable, but `http post` in Nu requires input data and the pipeline form was semantically important. | When porting the Shopify key fetch to Nu, preserve the original pipeline shape: `... | get id_token | http post --headers [Authorization $"Bearer ($in)"] ... | get key`. |
 | 2026-03-13 | self | Passed JWT expiry as separate Nu args (`-e "+5 minutes"`), which `jwt-cli` interpreted differently than the working shell form and caused an `unexpected argument '{}'` error. | For `jwt-cli encode` with expiry strings, keep the option in single-arg form: `'-e=+5 minutes'` (plus `'{}'` payload if needed). |
@@ -55,6 +57,7 @@
 - Prefer the new Nexus-side fetch/forward script to be Nushell so it can be run and tested directly in isolation before relying on the systemd unit.
 - Prefer the new component name `key-poller` rather than `shopify-key-puller`.
 - For one-off infra scripts like `key-poller`, if manual end-to-end verification is done and the user does not expect to run the tests, remove the ad-hoc test files instead of keeping dead test scaffolding around.
+- Do not apply/rebuild configs unless explicitly asked; repo changes and deployment are separate approvals.
 
 ## Patterns That Work
 - For Nu, use `".git" | path exists` (no positional arg) and `get -o` instead of deprecated `get -i`.
@@ -87,3 +90,4 @@
 - `packages/claude-code/default.nix` uses the GCS binary (same source as Homebrew). On Linux: explicit `patchelf --set-interpreter` only, with `dontPatchELF = true` and `dontStrip = true` to protect the Bun standalone payload.
 - `~/.config/lazygit/config.yml` is Home Manager managed and symlinked into `/nix/store`; edit `profiles/home-manager/dev.nix` (`lazygitConfig`) instead of editing the live config path.
 - On nexus, `dumpd` (rev `7be111f6`) can drive host-wide OOM during uploads: `store_big_blob` can return early on `content_hash` dedupe without draining the request body, while `dumpc upload_dir` sends up to 8 files in parallel. With `container@lc-dump` `MemoryMax=infinity`, memory+swap can be exhausted, leading to `systemd-machined`/`systemd-journald` watchdog failures and a “ping responds but services/SSH dead” freeze until forced reboot.
+- Syncthing config is currently split-brain: `modules/services/syncthing/default-config.nix` still points dragoon/archon at a remote device named `surmcluster` with legacy folder IDs (`hbza9-iimbx`, `ss5hw-abp4h`, etc.), while `machines/nexus/default.nix` exports folders with IDs `scratch` / `ebooks` / `audiobooks` and does not open Syncthing default firewall ports. Dragoon↔nexus sync will not come up cleanly until the device/folder schema and ports are aligned.

@@ -91,6 +91,7 @@ in
 
       secrets.items.nexus-syncthing.target = "/var/lib/syncthing/key.pem";
       services.syncthing.enable = true;
+      services.syncthing.openDefaultPorts = true;
       services.syncthing.user = "surma";
       services.syncthing.dataDir = "/dump/state/syncthing/data";
       services.syncthing.configDir = "/dump/state/syncthing/config";
@@ -109,6 +110,8 @@ in
         "dragoon"
         "arbiter"
       ];
+      services.syncthing.settings.folders."surmvault".path = "/dump/surmvault";
+      services.syncthing.settings.folders."surmvault".devices = [ "dragoon" ];
       services.syncthing.settings.devices.dragoon.id =
         "TAYU7SA-CCAFI4R-ZLB6FNM-OCPMW5W-6KEYYPI-ANW52FK-DUHVT7Z-L2GYBAB";
       services.syncthing.settings.devices.arbiter.id =
