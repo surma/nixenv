@@ -16,10 +16,6 @@
   ];
 
   config = {
-    allowedUnfreeApps = [
-      "claude-code"
-    ];
-
     home.packages = (
       with pkgs;
       [
@@ -30,8 +26,7 @@
 
     home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#pylon";
 
-    programs.opencode.enable = true;
-    defaultConfigs.opencode.enable = true;
-    defaultConfigs.claude-code.enable = true;
+    programs.pi.enable = true;
+    defaultConfigs.pi.enable = true;
   };
 }

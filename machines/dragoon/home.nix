@@ -48,8 +48,6 @@
   );
 
   programs.telegram.enable = true;
-  programs.claude-code.enable = true;
-  defaultConfigs.claude-code.enable = true;
   programs.opencode.enable = true;
   defaultConfigs.opencode.enable = true;
   programs.web-search-cli.enable = true;
