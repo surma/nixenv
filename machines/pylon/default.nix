@@ -135,6 +135,7 @@
     80
     443
     2222 # Gitea SSH
+    22067 # Syncthing relay
   ];
   networking.nftables.enable = true;
   services.openssh.enable = true;
@@ -151,6 +152,10 @@
   secrets.items.openrouter-api-key = {
     target = "/var/lib/llm-proxy-credentials/openrouter-key";
     mode = "0644";
+  };
+  secrets.items.syncthing-relay-token = {
+    target = "/var/lib/syncthing-relay/token";
+    mode = "0400";
   };
 
   # Surm-Auth secrets
@@ -173,6 +178,43 @@
     "d /var/lib/llm-proxy-credentials 0755 root root -"
     "d /var/lib/surm-auth 0755 root root -"
   ];
+
+  systemd.services.syncthing-relay = {
+    description = "Private Syncthing relay";
+    after = [
+      "network-online.target"
+      "secrets.service"
+    ];
+    wants = [
+      "network-online.target"
+      "secrets.service"
+    ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      DynamicUser = true;
+      StateDirectory = "syncthing-relay";
+      LoadCredential = [ "relay-token:${config.secrets.items.syncthing-relay-token.target}" ];
+      ExecStart = let
+        relayStart = pkgs.writeShellScript "syncthing-relay-start" ''
+          set -euo pipefail
+
+          token_file="$CREDENTIALS_DIRECTORY/relay-token"
+          token="$(${pkgs.coreutils}/bin/tr -d '\n' < "$token_file")"
+
+          exec ${pkgs.syncthing-relay}/bin/strelaysrv \
+            --keys=/var/lib/syncthing-relay \
+            --listen=:22067 \
+            --status-srv= \
+            --provided-by=surma \
+            --pools= \
+            --ext-address=relay.sync.surma.technology:22067 \
+            --token="$token"
+        '';
+      in
+      "${relayStart}";
+      Restart = "on-failure";
+    };
+  };
 
   services.surmhosting.exposedApps.llm-proxy = {
     target.ports = [

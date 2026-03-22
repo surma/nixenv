@@ -90,6 +90,10 @@ in
     {
 
       secrets.items.nexus-syncthing.target = "/var/lib/syncthing/key.pem";
+      secrets.items.syncthing-relay-token = {
+        target = "/var/lib/syncthing/relay-token";
+        mode = "0400";
+      };
       services.syncthing.enable = true;
       services.syncthing.openDefaultPorts = true;
       services.syncthing.user = "surma";
@@ -118,6 +122,59 @@ in
         "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
       services.syncthing.guiAddress = "0.0.0.0:4538";
       services.surmhosting.exposedApps.syncthing.target.port = 4538;
+
+      systemd.services.syncthing-private-relay = {
+        description = "Inject private Syncthing relay URL";
+        after = [
+          "syncthing.service"
+          "secrets.service"
+        ];
+        wants = [
+          "syncthing.service"
+          "secrets.service"
+        ];
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = let
+            injectRelay = pkgs.writeShellScript "syncthing-private-relay" ''
+              set -euo pipefail
+
+              token_file="${config.secrets.items.syncthing-relay-token.target}"
+              config_xml="${config.services.syncthing.configDir}/config.xml"
+              relay_prefix="relay://relay.sync.surma.technology:22067/"
+              api_url="http://127.0.0.1:4538"
+
+              [ -s "$token_file" ]
+              [ -f "$config_xml" ]
+
+              api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(configuration/gui/apikey)' "$config_xml")"
+              relay_token="$(${pkgs.coreutils}/bin/tr -d '\n' < "$token_file")"
+              relay_url="$relay_prefix?token=$relay_token"
+
+              current_options="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" "$api_url/rest/config/options")"
+              updated_options="$(
+                printf '%s' "$current_options" | ${pkgs.jq}/bin/jq --arg relay "$relay_url" --arg prefix "$relay_prefix" '
+                  .listenAddresses = (
+                    [ $relay ]
+                    + ((.listenAddresses // []) | map(select(startswith($prefix) | not)))
+                    | unique
+                  )
+                '
+              )"
+
+              printf '%s' "$updated_options" \
+                | ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X PUT -d @- "$api_url/rest/config/options" >/dev/null
+
+              restart_required="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
+              if [ "$restart_required" = "true" ]; then
+                ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X POST "$api_url/rest/system/restart" >/dev/null
+              fi
+            '';
+          in
+          "${injectRelay}";
+        };
+      };
 
     }
     {

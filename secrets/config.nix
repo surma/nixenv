@@ -147,5 +147,14 @@
         "nexus"
       ];
     };
+    syncthing-relay-token = {
+      contents = ../secrets/syncthing-relay-token.age;
+      keys = [
+        "surma"
+        "dragoon"
+        "nexus"
+        "pylon"
+      ];
+    };
   };
 }
