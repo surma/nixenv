@@ -53,10 +53,6 @@
       url = "github:anomalyco/opencode?ref=v1.2.14";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
-    pi-superpowers = {
-      url = "github:jevon/pi-superpowers";
-      flake = false;
-    };
     nix-openclaw = {
       url = "github:openclaw/nix-openclaw";
       inputs.nixpkgs.follows = "nixpkgs";

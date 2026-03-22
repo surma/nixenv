@@ -906,22 +906,6 @@
         "type": "github"
       }
     },
-    "pi-superpowers": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1770600703,
-        "narHash": "sha256-96exY5BeIiXJGvRhQ3dCM9aTwiVpmf+QC6w48UukzZw=",
-        "owner": "jevon",
-        "repo": "pi-superpowers",
-        "rev": "bc93ab2f2b5a4c377d40e2aeed1e0afdfe4d3829",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jevon",
-        "repo": "pi-superpowers",
-        "type": "github"
-      }
-    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -990,7 +974,6 @@
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opencode": "opencode",
-        "pi-superpowers": "pi-superpowers",
         "sl2": "sl2",
         "system-manager": "system-manager",
         "voice-memos": "voice-memos",

@@ -8,11 +8,7 @@
 }:
 with lib;
 {
-  imports = [
-    ../home-manager/pi/default-config.nix
-    ../programs/pi/superpowers
-    ../programs/pi/napkin
-  ];
+  imports = [ ../home-manager/pi/default-config.nix ];
 
   options = {
     programs.pi = {
