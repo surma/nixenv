@@ -363,6 +363,7 @@ in
                 };
               };
 
+              agents.defaults.workspace = "/var/lib/openclaw/workspace";
               agents.defaults.model.primary = "openai/gpt-5.4";
 
               channels.telegram = {
