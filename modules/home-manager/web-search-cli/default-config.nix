@@ -8,24 +8,12 @@
 let
   isEnabled = config.defaultConfigs.web-search-cli.enable;
   cfg = config.defaultConfigs.web-search-cli.llmProxy;
+  defaultTokenPath = "${config.home.homeDirectory}/.local/state/opencode/api-key";
 
-  tokenExportCommand =
-    if cfg.authTokenFile == null then
-      null
-    else
-      "if [ -f \"${cfg.authTokenFile}\" ]; then export WEB_SEARCH_AUTH_TOKEN=\"$(<\"${cfg.authTokenFile}\")\"; fi";
-
-  wrapperArgs =
-    [ "--set WEB_SEARCH_PERPLEXITY_API_BASE ${lib.escapeShellArg cfg.perplexityApiBase}" ]
-    ++ lib.optional (tokenExportCommand != null) "--run ${lib.escapeShellArg tokenExportCommand}";
-
-  wrappedPackage = pkgs.symlinkJoin {
-    name = "web-search-cli-wrapped";
-    paths = [ inputs.web-search-cli.packages.${pkgs.system}.default ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      wrapProgram $out/bin/web-search ${lib.concatStringsSep " " wrapperArgs}
-    '';
+  wrappedPackage = import ./package.nix {
+    inherit pkgs lib inputs;
+    authTokenFile = cfg.authTokenFile;
+    perplexityApiBase = cfg.perplexityApiBase;
   };
 in
 with lib;
@@ -35,9 +23,15 @@ with lib;
       enable = mkEnableOption "";
 
       llmProxy = {
+        manageSecret = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether this module should also manage the web-search auth token secret file.";
+        };
+
         authTokenFile = mkOption {
           type = types.nullOr types.path;
-          default = config.secrets.items.llm-proxy-client-key.target;
+          default = null;
           description = "Path to file containing the auth token for web-search-cli";
         };
 
@@ -50,10 +44,15 @@ with lib;
     };
   };
 
-  config = mkIf isEnabled {
-    programs.web-search-cli.enable = true;
-    programs.web-search-cli.package = mkDefault wrappedPackage;
+  config = mkMerge [
+    (mkIf isEnabled {
+      programs.web-search-cli.enable = true;
+      programs.web-search-cli.package = mkDefault wrappedPackage;
+    })
 
-    secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/opencode/api-key";
-  };
+    (mkIf (isEnabled && cfg.manageSecret) {
+      defaultConfigs.web-search-cli.llmProxy.authTokenFile = mkDefault defaultTokenPath;
+      secrets.items.llm-proxy-client-key.target = mkDefault defaultTokenPath;
+    })
+  ];
 }

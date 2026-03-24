@@ -30,11 +30,13 @@
     homeConfigurations = {
       generic-linux.imports = [ ../../machines/generic-linux ];
       scout.imports = [ ../../machines/scout ];
+      openclaw.imports = [ ../../machines/openclaw ];
     };
 
     homeConfigurationSystems = {
       generic-linux = "x86_64-linux";
       scout = "aarch64-linux";
+      openclaw = "x86_64-linux";
     };
 
     # Android configs

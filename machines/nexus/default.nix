@@ -210,6 +210,8 @@ in
       secrets.items.llm-proxy-client-key.command = ''
         mkdir -p /var/lib/openclaw
         key="$(cat)"
+        printf '%s\n' "$key" > /var/lib/openclaw/llm-proxy-client-key
+        chmod 0644 /var/lib/openclaw/llm-proxy-client-key
         {
           printf 'LLM_PROXY_API_KEY=%s\n' "$key"
           printf 'PI_PROXY_API_KEY=%s\n' "$key"
@@ -231,8 +233,32 @@ in
       };
       services.surmhosting.exposedApps.openclaw.target.container = {
         config = {
-          imports = [ inputs.nix-openclaw.nixosModules.openclaw-gateway ];
+          imports = [
+            inputs.nix-openclaw.nixosModules.openclaw-gateway
+            inputs.home-manager.nixosModules.home-manager
+          ];
           system.stateVersion = "25.05";
+
+          users.users.containeruser = {
+            isNormalUser = lib.mkForce true;
+            group = lib.mkForce "users";
+            home = lib.mkForce "/home/containeruser";
+          };
+
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            sharedModules = [
+              ../../modules/features/secrets.nix
+              ../../modules/features/web-search-cli.nix
+            ];
+            extraSpecialArgs = {
+              inherit inputs;
+              system = pkgs.stdenv.system;
+              systemManager = "home-manager";
+            };
+            users.containeruser = import ../openclaw;
+          };
 
           services.openclaw-gateway = {
             enable = true;
@@ -275,6 +301,16 @@ in
             environmentFiles = [
               "/var/lib/credentials/openclaw/gateway-token.env"
               "/var/lib/credentials/openclaw/llm-proxy.env"
+            ];
+            servicePath = [
+              pkgs.git
+              pkgs.nix
+              pkgs.openssh
+              inputs.home-manager.packages.${pkgs.stdenv.system}.default
+              (import ../../modules/home-manager/web-search-cli/package.nix {
+                inherit pkgs lib inputs;
+                authTokenFile = "/var/lib/credentials/openclaw/llm-proxy-client-key";
+              })
             ];
             config = {
               gateway = {
