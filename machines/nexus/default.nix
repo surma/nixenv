@@ -363,7 +363,7 @@ in
                 };
               };
 
-              agents.defaults.model.primary = "openai/gpt-5-mini";
+              agents.defaults.model.primary = "openai/gpt-5.4";
 
               channels.telegram = {
                 enabled = true;

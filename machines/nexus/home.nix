@@ -46,5 +46,7 @@
     defaultConfigs.pi.enable = true;
     defaultConfigs.claude-code.enable = true;
     defaultConfigs.helix.enableSlSyntax = true;
+    programs.web-search-cli.enable = true;
+    defaultConfigs.web-search-cli.enable = true;
   };
 }
