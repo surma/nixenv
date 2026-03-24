@@ -127,10 +127,12 @@ in
         description = "Inject private Syncthing relay URL";
         after = [
           "syncthing.service"
+          "syncthing-init.service"
           "secrets.service"
         ];
         wants = [
           "syncthing.service"
+          "syncthing-init.service"
           "secrets.service"
         ];
         wantedBy = [ "multi-user.target" ];
@@ -152,7 +154,16 @@ in
               relay_token="$(${pkgs.coreutils}/bin/tr -d '\n' < "$token_file")"
               relay_url="$relay_prefix?token=$relay_token"
 
-              current_options="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" "$api_url/rest/config/options")"
+              api_curl() {
+                ${pkgs.curl}/bin/curl -fsSk \
+                  --retry 60 \
+                  --retry-delay 1 \
+                  --retry-all-errors \
+                  -H "X-API-Key: $api_key" \
+                  "$@"
+              }
+
+              current_options="$(api_curl "$api_url/rest/config/options")"
               updated_options="$(
                 printf '%s' "$current_options" | ${pkgs.jq}/bin/jq --arg relay "$relay_url" --arg prefix "$relay_prefix" '
                   .listenAddresses = (
@@ -164,11 +175,11 @@ in
               )"
 
               printf '%s' "$updated_options" \
-                | ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X PUT -d @- "$api_url/rest/config/options" >/dev/null
+                | api_curl -X PUT -d @- "$api_url/rest/config/options" >/dev/null
 
-              restart_required="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
+              restart_required="$(api_curl "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
               if [ "$restart_required" = "true" ]; then
-                ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X POST "$api_url/rest/system/restart" >/dev/null
+                api_curl -X POST "$api_url/rest/system/restart" >/dev/null
               fi
             '';
           in
