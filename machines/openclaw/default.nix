@@ -22,6 +22,11 @@
     home.packages = with pkgs; [
       git
       openssh
+      ripgrep
+      (python3.withPackages (ps: [
+        ps.pip
+        ps.virtualenv
+      ]))
     ];
 
     programs.home-manager.enable = true;
