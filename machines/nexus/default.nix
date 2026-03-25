@@ -238,6 +238,9 @@ in
       '';
 
       services.surmhosting.exposedApps.openclaw.target.port = 18789;
+      systemd.tmpfiles.rules = [
+        "d /dump/state/openclaw/home 0755 surma users - -"
+      ];
       systemd.services."container@lc-openclaw" = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];
@@ -256,9 +259,15 @@ in
             home = lib.mkForce "/home/containeruser";
           };
 
+          systemd.tmpfiles.rules = [
+            "d /home/containeruser 0755 containeruser users - -"
+          ];
+
+          programs.nix-ld.enable = true;
+
           home-manager = {
             useGlobalPkgs = true;
-            useUserPackages = true;
+            useUserPackages = false;
             sharedModules = [
               ../../modules/features/secrets.nix
               ../../modules/features/web-search-cli.nix
@@ -427,6 +436,11 @@ in
           state = {
             mountPoint = "/var/lib/openclaw";
             hostPath = "/dump/state/openclaw";
+            isReadOnly = false;
+          };
+          home = {
+            mountPoint = "/home/containeruser";
+            hostPath = "/dump/state/openclaw/home";
             isReadOnly = false;
           };
           creds = {
