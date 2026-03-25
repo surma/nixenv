@@ -14,6 +14,7 @@ let
     inherit pkgs lib inputs;
     authTokenFile = cfg.authTokenFile;
     perplexityApiBase = cfg.perplexityApiBase;
+    browserExecutable = lib.getExe pkgs.chromium;
   };
 in
 with lib;
