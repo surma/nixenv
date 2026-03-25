@@ -26,9 +26,6 @@
 
     programs.home-manager.enable = true;
 
-    # This sandbox machine should not decrypt or materialize any age-managed secrets.
-    secrets.items = lib.mkForce { };
-
     defaultConfigs.web-search-cli = {
       enable = true;
       llmProxy = {
