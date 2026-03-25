@@ -8,8 +8,8 @@
   imports = [ ../../scripts ];
 
   config = {
-    home.username = "containeruser";
-    home.homeDirectory = lib.mkForce "/home/containeruser";
+    home.username = lib.mkDefault "containeruser";
+    home.homeDirectory = lib.mkDefault "/home/containeruser";
     home.stateVersion = "25.05";
 
     nix = {

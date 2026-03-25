@@ -255,9 +255,9 @@ in
           system.stateVersion = "25.05";
 
           users.users.containeruser = {
-            isNormalUser = lib.mkForce true;
-            group = lib.mkForce "users";
-            home = lib.mkForce "/home/containeruser";
+            isNormalUser = true;
+            group = "users";
+            home = "/home/containeruser";
           };
 
           systemd.tmpfiles.rules = [
