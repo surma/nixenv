@@ -11,6 +11,26 @@ import (
 	"strings"
 )
 
+func upstreamPath(path string) string {
+	if path == "" || path == "/" {
+		return "/vendors"
+	}
+
+	if path == "/v1" || strings.HasPrefix(path, "/v1/") {
+		return path
+	}
+
+	if path == "/apis" || strings.HasPrefix(path, "/apis/") {
+		return path
+	}
+
+	if path == "/vendors" || strings.HasPrefix(path, "/vendors/") {
+		return path
+	}
+
+	return "/vendors" + path
+}
+
 type KeyManager struct {
 	shopifyKeyFile string
 	clientKeyFile  string
@@ -80,7 +100,7 @@ func NewVendorProxy(keyManager *KeyManager, shopifyURL string) (*VendorProxy, er
 		req.Host = targetURL.Host
 		req.URL.Scheme = targetURL.Scheme
 		req.URL.Host = targetURL.Host
-		req.URL.Path = "/vendors" + req.URL.Path
+		req.URL.Path = upstreamPath(req.URL.Path)
 	}
 
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {

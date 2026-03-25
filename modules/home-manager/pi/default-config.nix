@@ -20,34 +20,6 @@ let
 
   settings = lib.recursiveUpdate defaultSettings piCfg.settings;
 
-  models = {
-    providers = {
-      anthropic = {
-        baseUrl = "${llmProxyCfg.vendorBaseURL}/anthropic";
-        apiKey = "PI_PROXY_API_KEY";
-      };
-      openai = {
-        baseUrl = "${llmProxyCfg.vendorBaseURL}/openai/v1";
-        apiKey = "PI_PROXY_API_KEY";
-      };
-      google = {
-        baseUrl = "${llmProxyCfg.vendorBaseURL}/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
-        apiKey = "PI_PROXY_API_KEY";
-        headers = {
-          Authorization = "PI_PROXY_AUTH_HEADER";
-        };
-      };
-      groq = {
-        baseUrl = "${llmProxyCfg.vendorBaseURL}/groq/openai/v1";
-        apiKey = "PI_PROXY_API_KEY";
-      };
-      xai = {
-        baseUrl = "${llmProxyCfg.vendorBaseURL}/xai/v1";
-        apiKey = "PI_PROXY_API_KEY";
-      };
-    };
-  };
-
   wrapper = pkgs.writeShellScriptBin "pi" ''
     if [ -f "${llmProxyCfg.apiKeyFile}" ]; then
       export PI_PROXY_API_KEY="$(tr -d '\n' < "${llmProxyCfg.apiKeyFile}")"
@@ -78,7 +50,7 @@ with lib;
         vendorBaseURL = mkOption {
           type = types.str;
           default = "https://vendors.llm.surma.technology";
-          description = "Base URL for vendor routes on the LLM proxy";
+          description = "Base URL for Shopify proxy passthrough routes";
         };
 
         apiKeyFile = mkOption {
@@ -97,7 +69,6 @@ with lib;
       };
 
       home.file = mkIf isEnabled {
-        ".pi/agent/models.json".text = builtins.toJSON models;
         ".pi/agent/settings.json" = {
           text = builtins.toJSON settings;
           mutable = true;
