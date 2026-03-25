@@ -14,7 +14,8 @@ let
     inherit pkgs lib inputs;
     authTokenFile = cfg.authTokenFile;
     perplexityApiBase = cfg.perplexityApiBase;
-    browserExecutable = lib.getExe pkgs.chromium;
+    browserExecutable =
+      if pkgs.stdenv.isDarwin then lib.getExe pkgs.google-chrome else lib.getExe pkgs.chromium;
   };
 in
 with lib;

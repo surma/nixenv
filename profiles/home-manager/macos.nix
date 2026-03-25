@@ -18,7 +18,10 @@ in
     home.username = lib.mkDefault "surma";
     home.homeDirectory = lib.mkDefault "/Users/surma";
 
-    allowedUnfreeApps = [ "raycast" ];
+    allowedUnfreeApps = [
+      "raycast"
+      "google-chrome"
+    ];
     home.packages =
       (with pkgs; [
       ])
