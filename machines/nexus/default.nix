@@ -244,6 +244,7 @@ in
       systemd.services."container@lc-openclaw" = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];
+        serviceConfig.MemoryMax = "8G";
       };
       services.surmhosting.exposedApps.openclaw.target.container = {
         config = {
