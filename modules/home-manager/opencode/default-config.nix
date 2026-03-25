@@ -8,6 +8,7 @@
 let
   isEnabled = config.defaultConfigs.opencode.enable;
   cfg = config.defaultConfigs.opencode.llmProxy;
+  defaultApiKeyPath = "${config.home.homeDirectory}/.local/state/opencode/api-key";
 
   # Wrapped opencode that reads the API key from file, fetches models, and sets the env vars
   wrappedOpencode = pkgs.writeScriptBin "opencode" ''
@@ -184,9 +185,15 @@ with lib;
           description = "Base URL for the LLM proxy";
         };
 
+        manageSecret = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether this module should also manage the OpenCode LLM proxy API key secret file.";
+        };
+
         apiKeyFile = mkOption {
           type = types.nullOr types.path;
-          default = config.secrets.items.llm-proxy-client-key.target;
+          default = null;
           description = "Path to file containing the API key for the LLM proxy";
         };
       };
@@ -197,7 +204,6 @@ with lib;
     {
       customScripts.noti.enable = mkIf isEnabled true;
       programs.mcp-playwright.enable = mkIf isEnabled true;
-      secrets.items.llm-proxy-client-key.target = mkDefault "${config.home.homeDirectory}/.local/state/opencode/api-key";
       programs.opencode = {
         plugins = {
           "notification.js" = builtins.readFile ./plugin/notification.js;
@@ -214,8 +220,13 @@ with lib;
       };
     }
 
+    (mkIf (isEnabled && cfg.manageSecret) {
+      defaultConfigs.opencode.llmProxy.apiKeyFile = mkDefault defaultApiKeyPath;
+      secrets.items.llm-proxy-client-key.target = mkDefault defaultApiKeyPath;
+    })
+
     # Use wrapped opencode that reads API key from file when apiKeyFile is set
-    (mkIf (cfg.apiKeyFile != null) {
+    (mkIf (isEnabled && cfg.apiKeyFile != null) {
       programs.opencode.package = wrappedOpencode;
     })
   ];

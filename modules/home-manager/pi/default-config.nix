@@ -83,7 +83,7 @@ with lib;
 
         apiKeyFile = mkOption {
           type = types.nullOr types.path;
-          default = config.secrets.items.llm-proxy-client-key.target;
+          default = lib.attrByPath [ "secrets" "items" "llm-proxy-client-key" "target" ] null config;
           description = "Path to file containing the API key for the LLM proxy";
         };
       };
