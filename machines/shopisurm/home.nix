@@ -58,6 +58,8 @@
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
   defaultConfigs.claude-code.enable = true;
+  programs.web-search-cli.enable = true;
+  defaultConfigs.web-search-cli.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
 
   programs.ghostty.enable = true;
