@@ -7,19 +7,57 @@ def better_save [
   $in | save -f $file
 }
 
+def get_shopify_extra_models [] {
+  [
+    {
+      id: "bedrock-us-east-1:moonshotai.kimi-k2.5"
+      alias: "kimi-k2.5"
+      name: "Kimi K2.5"
+      synthetic: true
+    }
+  ]
+}
+
+def append_shopify_extra_models [
+  models: list<any>
+] {
+  let extra_models = get_shopify_extra_models
+
+  $extra_models | reduce -f $models {|extra_model, acc|
+    if (($acc | where id == $extra_model.id | length) > 0) {
+      $acc
+    } else {
+      $acc | append $extra_model
+    }
+  }
+}
+
+def get_exposed_model_id [
+  model: record
+] {
+  let alias = ($model | get -o alias | default null)
+
+  if $alias != null {
+    $alias
+  } else {
+    $model.id
+  }
+}
+
 def "main" [
   --key: string
   --config: string 
   --branch: string = "nixpkgs-unstable"
 ] {
-  let models =  http get -fe --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models | get body.data | where id =~ '^(openai|anthropic|google):'
+  let fetched_models = http get -fe --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models | get body.data | where id =~ '^(openai|anthropic|google):'
+  let models = append_shopify_extra_models $fetched_models
   
   let rconfig = $config | default $"($env.HOME)/.config/sproxy/config.yml"
 
   let configs = {
     shopify: {
-      prefix: "openai/",
-      models: $models,
+      prefix: "openai/"
+      models: $models
       extra: {
         api_base: "https://proxy.shopify.ai/v1/"
       }
@@ -32,11 +70,13 @@ def "main" [
       | each {|c| 
         $c.config.models 
           | each {|m| 
+            let exposed_id = get_exposed_model_id $m
+
             {
-              model_name: $"($c.name):($m.id)", 
+              model_name: $"($c.name):($exposed_id)"
               litellm_params: {
-                model: $"($c.config.prefix)($m.id)", 
-                api_key: ($key), 
+                model: $"($c.config.prefix)($m.id)"
+                api_key: ($key)
                 ...$c.config.extra
               }
             }

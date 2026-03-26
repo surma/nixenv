@@ -9,6 +9,43 @@ def better_save [
   $in | save -f $file
 }
 
+def get_shopify_extra_models [] {
+  [
+    {
+      id: "bedrock-us-east-1:moonshotai.kimi-k2.5"
+      alias: "kimi-k2.5"
+      name: "Kimi K2.5"
+      synthetic: true
+    }
+  ]
+}
+
+def append_shopify_extra_models [
+  models: list<any>
+] {
+  let extra_models = get_shopify_extra_models
+
+  $extra_models | reduce -f $models {|extra_model, acc|
+    if (($acc | where id == $extra_model.id | length) > 0) {
+      $acc
+    } else {
+      $acc | append $extra_model
+    }
+  }
+}
+
+def get_exposed_model_id [
+  model: record
+] {
+  let alias = ($model | get -o alias | default null)
+
+  if $alias != null {
+    $alias
+  } else {
+    $model.id
+  }
+}
+
 def extract_model_info [
   model: record
   provider: string
@@ -56,11 +93,19 @@ def extract_model_info [
         }
       }
     }
+
+    if (($model | get -o synthetic | default false) == true) {
+      return null
+    }
     
     # If we get here, metadata is missing
     print $"Warning: Missing metadata for ($provider) model: ($model.id)"
     return null
   } catch {
+    if (($model | get -o synthetic | default false) == true) {
+      return null
+    }
+
     print $"Warning: Error extracting metadata for ($provider) model: ($model.id)"
     return null
   }
@@ -83,7 +128,8 @@ def main [
     if ($key | str length) > 0 {
       print "Fetching models from Shopify proxy..."
       let response = http get --full --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models
-      let models = $response | get body.data | where id =~ '^(openai|anthropic|google):'
+      let fetched_models = $response | get body.data | where id =~ '^(openai|anthropic|google):'
+      let models = append_shopify_extra_models $fetched_models
       print $"Found ($models | length) Shopify models"
       $providers = $providers | insert shopify {
         prefix: "openai/"
@@ -150,9 +196,10 @@ def main [
       $c.config.models
         | each {|m|
           let metadata = extract_model_info $m $c.name
+          let exposed_id = get_exposed_model_id $m
           
           mut entry = {
-            model_name: $"($c.name):($m.id)"
+            model_name: $"($c.name):($exposed_id)"
             litellm_params: {
               model: $"($c.config.prefix)($m.id)"
               api_key: $c.config.key
