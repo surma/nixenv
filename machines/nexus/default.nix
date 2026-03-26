@@ -189,6 +189,9 @@ in
 
     }
     {
+      networking.firewall.allowedTCPPorts = [
+        1883
+      ];
       services.mosquitto.enable = true;
       services.mosquitto.listeners = [
         {
