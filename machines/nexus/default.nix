@@ -298,6 +298,12 @@ in
               # but run OpenClaw against a writable+persistent merged config.
               OPENCLAW_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
               CLAWDBOT_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
+              # Work around bundled plugin discovery resolving to lib/openclaw/dist/extensions
+              # in the gateway package, while manifests live under lib/openclaw/extensions.
+              # Note: services.openclaw-gateway.package uses the `openclaw` wrapper buildEnv,
+              # but that output does not itself contain lib/openclaw/extensions. Point this at
+              # the real gateway package output instead, or bundled channels like Telegram never load.
+              OPENCLAW_BUNDLED_PLUGINS_DIR = "${inputs.nix-openclaw.packages.${pkgs.stdenv.system}.openclaw-gateway}/lib/openclaw/extensions";
             };
             execStartPre = [
               "${pkgs.writeShellScript "openclaw-prepare-config" ''
@@ -369,7 +375,7 @@ in
                 mode = "merge";
                 providers = {
                   openai = {
-                    api = "openai-completions";
+                    api = "openai-responses";
                     baseUrl = "https://vendors.llm.surma.technology/openai/v1";
                     apiKey = {
                       source = "env";
@@ -985,6 +991,101 @@ in
             mountPoint = "/var/lib/credentials/overview";
             hostPath = "/var/lib/overview";
             isReadOnly = true;
+          };
+        };
+      };
+    }
+    {
+      secrets.items.github-runner-pat = {
+        target = "/var/lib/github-runner/token";
+        mode = "0400";
+      };
+
+      systemd.tmpfiles.rules = [
+        "d /dump/state/github-runner 0755 root root - -"
+      ];
+
+      systemd.services."container@github-runner" = {
+        wants = [ "secrets.service" ];
+        after = [ "secrets.service" ];
+        serviceConfig = {
+          MemoryMax = "8G";
+          MemorySwapMax = "8G";
+        };
+      };
+
+      containers.github-runner = {
+        autoStart = true;
+        privateNetwork = true;
+        localAddress = "10.203.0.2";
+        hostAddress = "10.203.0.1";
+        ephemeral = true;
+
+        bindMounts = {
+          state = {
+            mountPoint = "/var/lib/github-runner";
+            hostPath = "/dump/state/github-runner";
+            isReadOnly = false;
+          };
+          token = {
+            mountPoint = "/var/lib/credentials/github-runner";
+            hostPath = "/var/lib/github-runner";
+            isReadOnly = true;
+          };
+        };
+
+        config = { pkgs, ... }: {
+          system.stateVersion = "25.05";
+
+          users.users.containeruser = {
+            isNormalUser = true;
+            group = "users";
+            home = "/home/containeruser";
+            extraGroups = [ "nixbld" ];
+          };
+
+          systemd.tmpfiles.rules = [
+            "d /home/containeruser 0755 containeruser users - -"
+            "d /var/lib/github-runner/work 0755 containeruser users - -"
+          ];
+
+          services.github-runners.sl = {
+            enable = true;
+            url = "https://github.com/surma/sl";
+            tokenFile = "/var/lib/credentials/github-runner/token";
+            name = "nexus-sl-nix-x64";
+            replace = true;
+            runnerGroup = "Default";
+            user = "containeruser";
+            group = "users";
+            workDir = "/var/lib/github-runner/work";
+            extraLabels = [
+              "nix"
+              "nixos"
+              "nexus"
+              "container"
+              "x64"
+              "sl"
+            ];
+            extraPackages = with pkgs; [
+              bash
+              coreutils
+              curl
+              git
+              gnutar
+              gzip
+              jq
+              nushell
+              zstd
+            ];
+            serviceOverrides = {
+              StateDirectory = [ "github-runner/sl" ];
+              RuntimeDirectory = [ "github-runner/sl" ];
+              LogsDirectory = [ "github-runner/sl" ];
+              ProtectHome = false;
+              PrivateUsers = false;
+              PrivateMounts = false;
+            };
           };
         };
       };
