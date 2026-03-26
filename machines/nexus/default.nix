@@ -196,8 +196,8 @@ in
       services.mosquitto.listeners = [
         {
           users.ha.hashedPassword = "$7$101$7KOip01uJDP71vA0$y9vhvHE/pxka3/eQiP+Fs4EVjaXCJ4gwChMtFxiCH/jTDricu5MW3BjMx3XTyo2vXAVgUd/QHKuwoejw8h1OuQ==";
-          acl = [
-            "topic readwrite #"
+          users.ha.acl = [
+            "readwrite #"
           ];
         }
       ];
