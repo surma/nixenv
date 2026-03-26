@@ -1,5 +1,15 @@
-{ lib, systemManager, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  systemManager,
+  ...
+}:
 with lib;
+let
+  cfg = config.programs.wezterm;
+in
 {
   imports = [
     ../home-manager/wezterm/default-config.nix
@@ -51,5 +61,9 @@ with lib;
         ];
       default = "auto";
     };
+  };
+
+  config = mkIf (systemManager == "home-manager" && cfg.enable) {
+    programs.wezterm.package = mkDefault inputs.wezterm.packages.${pkgs.system}.default;
   };
 }

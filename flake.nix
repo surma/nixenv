@@ -68,6 +68,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    wezterm = {
+      url = "github:wezterm/wezterm?dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.flake-utils.follows = "flake-utils";
+    };
     dashboard = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/dashboard.git?ref=main";
       inputs.nixpkgs.follows = "nixpkgs";

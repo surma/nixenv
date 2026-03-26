@@ -1,12 +1,7 @@
 {
   pkgs,
-  inputs,
   ...
 }:
-let
-  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
-in
-
 {
 
   config = {
@@ -24,7 +19,6 @@ in
     );
 
     programs.wezterm.enable = true;
-    programs.wezterm.package = pkgs-unstable.wezterm;
     defaultConfigs.wezterm.enable = true;
   };
 }
