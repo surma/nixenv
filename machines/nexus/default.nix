@@ -298,6 +298,12 @@ in
               # but run OpenClaw against a writable+persistent merged config.
               OPENCLAW_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
               CLAWDBOT_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
+              # Work around bundled plugin discovery resolving to lib/openclaw/dist/extensions
+              # in the gateway package, while manifests live under lib/openclaw/extensions.
+              # Note: services.openclaw-gateway.package uses the `openclaw` wrapper buildEnv,
+              # but that output does not itself contain lib/openclaw/extensions. Point this at
+              # the real gateway package output instead, or bundled channels like Telegram never load.
+              OPENCLAW_BUNDLED_PLUGINS_DIR = "${inputs.nix-openclaw.packages.${pkgs.stdenv.system}.openclaw-gateway}/lib/openclaw/extensions";
             };
             execStartPre = [
               "${pkgs.writeShellScript "openclaw-prepare-config" ''
@@ -369,7 +375,7 @@ in
                 mode = "merge";
                 providers = {
                   openai = {
-                    api = "openai-completions";
+                    api = "openai-responses";
                     baseUrl = "https://vendors.llm.surma.technology/openai/v1";
                     apiKey = {
                       source = "env";
