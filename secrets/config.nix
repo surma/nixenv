@@ -147,6 +147,13 @@
         "nexus"
       ];
     };
+    github-runner-pat = {
+      contents = ../secrets/github-runner-pat.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     syncthing-relay-token = {
       contents = ../secrets/syncthing-relay-token.age;
       keys = [
