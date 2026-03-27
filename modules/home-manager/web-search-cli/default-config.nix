@@ -33,7 +33,7 @@ with lib;
 
         authTokenFile = mkOption {
           type = types.nullOr types.path;
-          default = null;
+          default = lib.attrByPath [ "secrets" "items" "llm-proxy-client-key" "target" ] null config;
           description = "Path to file containing the auth token for web-search-cli";
         };
 
@@ -53,7 +53,6 @@ with lib;
     })
 
     (mkIf (isEnabled && cfg.manageSecret) {
-      defaultConfigs.web-search-cli.llmProxy.authTokenFile = mkDefault defaultTokenPath;
       secrets.items.llm-proxy-client-key.target = mkDefault defaultTokenPath;
     })
   ];

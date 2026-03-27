@@ -193,7 +193,7 @@ with lib;
 
         apiKeyFile = mkOption {
           type = types.nullOr types.path;
-          default = null;
+          default = lib.attrByPath [ "secrets" "items" "llm-proxy-client-key" "target" ] null config;
           description = "Path to file containing the API key for the LLM proxy";
         };
       };
@@ -221,7 +221,6 @@ with lib;
     }
 
     (mkIf (isEnabled && cfg.manageSecret) {
-      defaultConfigs.opencode.llmProxy.apiKeyFile = mkDefault defaultApiKeyPath;
       secrets.items.llm-proxy-client-key.target = mkDefault defaultApiKeyPath;
     })
 
