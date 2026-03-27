@@ -1,0 +1,4 @@
+{ ... }:
+{
+  services.hate.enable = true;
+}
