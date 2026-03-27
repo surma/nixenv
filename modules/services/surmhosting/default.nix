@@ -118,7 +118,8 @@ let
                 isNormalUser = true;
               };
               networking.firewall.enable = mkDefault false;
-              networking.useHostResolvConf = mkDefault true;
+              networking.useHostResolvConf = mkDefault false;
+              networking.nameservers = mkDefault [ "8.8.8.8" ];
             };
 
             nixpkgs = mkDefault pkgs.path;
@@ -163,6 +164,9 @@ let
           imports = [ ../surm-auth ];
 
           system.stateVersion = "25.05";
+
+          networking.useHostResolvConf = false;
+          networking.nameservers = [ "8.8.8.8" ];
 
           services.surm-auth = {
             enable = true;
