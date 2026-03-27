@@ -1001,6 +1001,10 @@ in
         mode = "0400";
       };
 
+      # The GitHub runner lives in its own private container subnet.
+      # Add that subnet to host NAT so the container can reach api.github.com.
+      networking.nat.internalIPs = [ "10.203.0.0/24" ];
+
       systemd.tmpfiles.rules = [
         "d /dump/state/github-runner 0755 root root - -"
       ];
@@ -1036,6 +1040,15 @@ in
 
         config = { pkgs, ... }: {
           system.stateVersion = "25.05";
+
+          networking.useHostResolvConf = false;
+          networking.nameservers = [ "8.8.8.8" ];
+
+          nix.settings.experimental-features = [
+            "nix-command"
+            "flakes"
+            "pipe-operators"
+          ];
 
           users.users.containeruser = {
             isNormalUser = true;
