@@ -121,7 +121,7 @@ in
       services.syncthing.settings.devices.arbiter.id =
         "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
       services.syncthing.guiAddress = "0.0.0.0:4538";
-      services.surmhosting.exposedApps.syncthing.target.port = 4538;
+      services.surmhosting.services.syncthing.expose.port = 4538;
 
       systemd.services.syncthing-private-relay = {
         description = "Inject private Syncthing relay URL";
@@ -240,16 +240,16 @@ in
         chmod 0644 /var/lib/openclaw/llm-proxy.env
       '';
 
-      services.surmhosting.exposedApps.openclaw.target.port = 18789;
+      services.surmhosting.services.openclaw.expose.port = 18789;
       systemd.tmpfiles.rules = [
         "d /dump/state/openclaw/home 0755 surma users - -"
       ];
-      systemd.services."container@lc-openclaw" = {
+      services.surmhosting.services.openclaw.containerService = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];
         serviceConfig.MemoryMax = "8G";
       };
-      services.surmhosting.exposedApps.openclaw.target.container = {
+      services.surmhosting.services.openclaw.container = {
         config = {
           imports = [
             inputs.nix-openclaw.nixosModules.openclaw-gateway
@@ -464,7 +464,8 @@ in
     {
 
       networking.firewall.allowedTCPPorts = [ giteaPort ];
-      services.surmhosting.exposedApps.gitea.target.container = {
+      services.surmhosting.services.gitea.expose.port = 8080;
+      services.surmhosting.services.gitea.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -495,7 +496,8 @@ in
       };
     }
     {
-      services.surmhosting.exposedApps.lidarr.target.container = {
+      services.surmhosting.services.lidarr.expose.port = 8080;
+      services.surmhosting.services.lidarr.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -528,7 +530,8 @@ in
     }
     {
 
-      services.surmhosting.exposedApps.radarr.target.container = {
+      services.surmhosting.services.radarr.expose.port = 8080;
+      services.surmhosting.services.radarr.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -560,7 +563,8 @@ in
       };
     }
     {
-      services.surmhosting.exposedApps.sonarr.target.container = {
+      services.surmhosting.services.sonarr.expose.port = 8080;
+      services.surmhosting.services.sonarr.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -591,7 +595,8 @@ in
       };
     }
     {
-      services.surmhosting.exposedApps.prowlarr.target.container = {
+      services.surmhosting.services.prowlarr.expose.port = 8080;
+      services.surmhosting.services.prowlarr.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -609,8 +614,8 @@ in
       };
     }
     {
-      services.surmhosting.exposedApps.rss.target.port = 80;
-      services.surmhosting.exposedApps.rss.target.container = {
+      services.surmhosting.services.rss.expose.port = 80;
+      services.surmhosting.services.rss.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -631,7 +636,8 @@ in
     {
       networking.firewall.allowedTCPPorts = [ torrentingPort ];
       networking.firewall.allowedUDPPorts = [ torrentingPort ];
-      services.surmhosting.exposedApps.torrent.target.container = {
+      services.surmhosting.services.torrent.expose.port = 8080;
+      services.surmhosting.services.torrent.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -675,7 +681,8 @@ in
     }
     {
 
-      services.surmhosting.exposedApps.music.target.container = {
+      services.surmhosting.services.music.expose.port = 8080;
+      services.surmhosting.services.music.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -717,7 +724,8 @@ in
         cat > /var/lib/copyparty/surma.passwd
         chmod 0644 /var/lib/copyparty/surma.passwd
       '';
-      services.surmhosting.exposedApps.copyparty.target.container = {
+      services.surmhosting.services.copyparty.expose.port = 8080;
+      services.surmhosting.services.copyparty.container = {
         config = (
           { ... }:
           {
@@ -831,7 +839,7 @@ in
 
       networking.firewall.allowedTCPPorts = [ 6379 ];
 
-      services.surmhosting.exposedApps.redis.target.container = {
+      services.surmhosting.services.redis.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -867,8 +875,8 @@ in
     }
     {
       networking.firewall.allowedTCPPorts = [ dumpPort ];
-      services.surmhosting.exposedApps.dump.target.port = dumpPort;
-      services.surmhosting.exposedApps.dump.target.container = {
+      services.surmhosting.services.dump.expose.port = dumpPort;
+      services.surmhosting.services.dump.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -903,7 +911,8 @@ in
       };
     }
     {
-      services.surmhosting.exposedApps.voice-memos.target.container = {
+      services.surmhosting.services.voice-memos.expose.port = 8080;
+      services.surmhosting.services.voice-memos.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -955,12 +964,13 @@ in
         chmod 0644 /var/lib/overview/server.env
       '';
 
-      systemd.services."container@lc-overview" = {
+      services.surmhosting.services.overview.containerService = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];
       };
 
-      services.surmhosting.exposedApps.overview.target.container = {
+      services.surmhosting.services.overview.expose.port = 8080;
+      services.surmhosting.services.overview.container = {
         config = {
           system.stateVersion = "25.05";
 
@@ -1001,15 +1011,12 @@ in
         mode = "0400";
       };
 
-      # The GitHub runner lives in its own private container subnet.
-      # Add that subnet to host NAT so the container can reach api.github.com.
-      networking.nat.internalIPs = [ "10.203.0.0/24" ];
-
       systemd.tmpfiles.rules = [
         "d /dump/state/github-runner 0755 root root - -"
       ];
 
-      systemd.services."container@github-runner" = {
+      services.surmhosting.services.github-runner.containerName = "github-runner";
+      services.surmhosting.services.github-runner.containerService = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];
         serviceConfig = {
@@ -1018,13 +1025,7 @@ in
         };
       };
 
-      containers.github-runner = {
-        autoStart = true;
-        privateNetwork = true;
-        localAddress = "10.203.0.2";
-        hostAddress = "10.203.0.1";
-        ephemeral = true;
-
+      services.surmhosting.services.github-runner.container = {
         bindMounts = {
           state = {
             mountPoint = "/var/lib/github-runner";
@@ -1040,9 +1041,6 @@ in
 
         config = { pkgs, ... }: {
           system.stateVersion = "25.05";
-
-          networking.useHostResolvConf = false;
-          networking.nameservers = [ "8.8.8.8" ];
 
           nix.settings.experimental-features = [
             "nix-command"

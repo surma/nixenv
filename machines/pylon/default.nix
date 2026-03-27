@@ -216,8 +216,8 @@
     };
   };
 
-  services.surmhosting.exposedApps.llm-proxy = {
-    target.ports = [
+  services.surmhosting.services.llm-proxy = {
+    expose.ports = [
       {
         port = 4000;
         hostname = "proxy-llm";
@@ -234,7 +234,7 @@
         rule = "Host(`vendors.llm.surma.technology`)";
       }
     ];
-    target.container = {
+    container = {
       config =
         { pkgs, ... }:
         {
@@ -277,25 +277,25 @@
   };
 
   # Gitea proxy (from nexus) with GitHub auth
-  services.surmhosting.exposedApps.gitea = {
-    target.host = "gitea.nexus.hosts.100.83.198.90.nip.io";
-    target.port = 80;
-    rule = "Host(`gitea.surma.technology`)";
-    useTargetHost = true;
+  services.surmhosting.services.gitea = {
+    host = "gitea.nexus.hosts.100.83.198.90.nip.io";
+    expose.port = 80;
+    expose.rule = "Host(`gitea.surma.technology`)";
+    expose.useTargetHost = true;
 
     # Enable GitHub authentication
-    allowedGitHubUsers = [ "surma" ];
+    expose.allowedGitHubUsers = [ "surma" ];
   };
 
   # Dump proxy (from nexus) with GitHub auth
-  services.surmhosting.exposedApps.dump = {
-    target.host = "dump.nexus.hosts.100.83.198.90.nip.io";
-    target.port = 80;
-    rule = "Host(`dump.surma.technology`)";
-    useTargetHost = true;
+  services.surmhosting.services.dump = {
+    host = "dump.nexus.hosts.100.83.198.90.nip.io";
+    expose.port = 80;
+    expose.rule = "Host(`dump.surma.technology`)";
+    expose.useTargetHost = true;
 
     # Enable GitHub authentication
-    allowedGitHubUsers = [ "surma" ];
+    expose.allowedGitHubUsers = [ "surma" ];
   };
 
   system.stateVersion = "25.05";

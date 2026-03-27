@@ -9,12 +9,11 @@ with lib;
 let
   cfg = config.services.surmhosting;
 
-  # Port configuration type for multi-port support
   portConfig = types.submodule {
     options = {
       port = mkOption {
         type = types.port;
-        description = "Port number inside the container";
+        description = "Port number inside the backend";
       };
       hostname = mkOption {
         type = types.str;
@@ -28,28 +27,123 @@ let
     };
   };
 
-  exposedAppsConfigs =
-    cfg.exposedApps
-    |> lib.attrsToList
+  containerServiceConfig = types.submodule {
+    options = {
+      wants = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "Additional systemd Wants= dependencies for the container unit.";
+      };
+      after = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "Additional systemd After= dependencies for the container unit.";
+      };
+      serviceConfig = mkOption {
+        type = types.attrsOf types.anything;
+        default = { };
+        description = "Additional systemd serviceConfig for the generated container@ unit.";
+      };
+    };
+  };
+
+  serviceConfig =
+    { name, config, ... }:
+    {
+      options = {
+        host = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Host for non-container backends. Defaults to localhost when exposing a local host service.";
+        };
+        container = mkOption {
+          type = types.nullOr types.attrs;
+          default = null;
+          description = "NixOS container configuration.";
+        };
+        containerName = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Override the generated NixOS container name.";
+        };
+        containerService = mkOption {
+          type = containerServiceConfig;
+          default = { };
+          description = "Overrides for the generated container@ systemd unit.";
+        };
+        expose = {
+          enable = mkOption {
+            type = types.bool;
+            default = config.expose.port != null || config.expose.ports != [ ];
+            description = "Whether to expose this service via Traefik.";
+          };
+          rule = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Custom Traefik rule for single-port mode.";
+          };
+          port = mkOption {
+            type = types.nullOr types.port;
+            default = null;
+            description = "Port for single-port mode (automatically added to expose.ports).";
+          };
+          ports = mkOption {
+            type = types.listOf portConfig;
+            default = [ ];
+            description = "List of ports to expose with their hostnames.";
+          };
+          allowedGitHubUsers = mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            description = ''
+              List of GitHub usernames allowed to access this service.
+              If set, OAuth2 authentication is automatically enabled.
+            '';
+            example = [
+              "surma"
+              "stimhub"
+            ];
+          };
+          useTargetHost = mkOption {
+            type = types.bool;
+            default = false;
+            description = "Whether to rewrite the Host header to match host when forwarding requests.";
+          };
+        };
+      };
+
+      config = mkIf (config.expose.port != null) {
+        expose.ports = mkDefault [
+          {
+            port = config.expose.port;
+            hostname = name;
+            rule = config.expose.rule;
+          }
+        ];
+      };
+    };
+
+  serviceEntries = cfg.services |> lib.attrsToList;
+
+  managedServiceConfigs =
+    serviceEntries
     |> imap0 (
       i:
       { name, value }:
       let
-        isContainer = value.target.container != null;
-        containerName = "lc-${name |> lib.substring 0 10}";
+        hasContainer = value.container != null;
+        isExposed = value.expose.enable;
+        containerName = if value.containerName != null then value.containerName else "lc-${name |> lib.substring 0 10}";
         containerUnitName = "container@${containerName}";
+        localAddress = "10.201.${i |> toString}.2";
+        hostAddress = "10.201.${i |> toString}.1";
+        forwardHost = if hasContainer then localAddress else if value.host != null then value.host else "localhost";
 
-        forwardHost = if isContainer then "10.201.${i |> toString}.2" else value.target.host;
+        needsAuth = value.expose.allowedGitHubUsers != [ ];
+        needsHostRewrite = value.expose.useTargetHost && !hasContainer && value.host != null;
 
-        # Check if this app needs auth
-        needsAuth = value.allowedGitHubUsers != [ ];
-
-        # Check if this app needs host header rewrite
-        needsHostRewrite = value.useTargetHost && !isContainer && value.target.host != null;
-
-        # Generate Traefik config for each port
         traefikConfigs =
-          value.target.ports
+          value.expose.ports
           |> map (
             portCfg:
             let
@@ -59,9 +153,7 @@ let
                 if portCfg.rule != null then
                   portCfg.rule
                 else
-                  "HostRegexp(`^${portCfg.hostname}\\.${config.services.surmhosting.hostname}`)";
-
-              # Build middleware list
+                  "HostRegexp(`^${portCfg.hostname}\\.${cfg.hostname}`)";
               middlewareList =
                 (lib.optional needsAuth "auth-${name}") ++ (lib.optional needsHostRewrite "host-rewrite-${name}");
             in
@@ -77,28 +169,26 @@ let
               ];
             }
             // (lib.optionalAttrs needsHostRewrite {
-              # Add host rewrite middleware if needed
               middlewares."host-rewrite-${name}" = {
-                headers.customRequestHeaders.Host = value.target.host;
+                headers.customRequestHeaders.Host = value.host;
               };
             })
           );
 
-        # Merge all Traefik configs for this app
         mergedTraefikConfig = lib.foldl' lib.recursiveUpdate { } traefikConfigs;
       in
       {
-        services.traefik.dynamicConfigOptions.http = mergedTraefikConfig;
+        services.traefik = mkIf isExposed {
+          dynamicConfigOptions.http = mergedTraefikConfig;
+        };
 
-        systemd.services.${containerUnitName} = mkIf isContainer {
-          wants = [
-            "network-online.target"
-          ]
-          ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
-          after = [
-            "network-online.target"
-          ]
-          ++ (lib.optional config.services.tailscale.enable "tailscaled.service");
+        systemd.services.${containerUnitName} = mkIf hasContainer {
+          wants = [ "network-online.target" ]
+            ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
+            ++ value.containerService.wants;
+          after = [ "network-online.target" ]
+            ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
+            ++ value.containerService.after;
 
           serviceConfig = mkMerge [
             (mkIf (cfg.containerLimits.memoryMax != null) {
@@ -107,10 +197,11 @@ let
             (mkIf (cfg.containerLimits.memorySwapMax != null) {
               MemorySwapMax = mkDefault cfg.containerLimits.memorySwapMax;
             })
+            value.containerService.serviceConfig
           ];
         };
 
-        containers.${containerName} = mkIf isContainer (mkMerge [
+        containers.${containerName} = mkIf hasContainer (mkMerge [
           {
             config = {
               users.users.${cfg.containeruser.name} = mkDefault {
@@ -118,30 +209,48 @@ let
                 isNormalUser = true;
               };
               networking.firewall.enable = mkDefault false;
-              networking.useHostResolvConf = mkDefault false;
+              networking.useHostResolvConf = mkForce false;
               networking.nameservers = mkDefault [ "8.8.8.8" ];
             };
 
             nixpkgs = mkDefault pkgs.path;
             privateNetwork = mkDefault true;
-            localAddress = mkDefault forwardHost;
-            hostAddress = mkDefault "10.201.${i |> toString}.1";
+            localAddress = mkDefault localAddress;
+            hostAddress = mkDefault hostAddress;
             ephemeral = mkDefault true;
             autoStart = mkDefault true;
           }
-          value.target.container
+          value.container
         ]);
       }
     );
 
-  # Filter apps that need auth
-  appsWithAuth = lib.filterAttrs (name: app: app.allowedGitHubUsers != [ ]) cfg.exposedApps;
+  servicesWithAuth = lib.filterAttrs (_: service: service.expose.allowedGitHubUsers != [ ]) cfg.services;
+  authEnabled = servicesWithAuth != { };
 
-  authEnabled = appsWithAuth != { };
+  serviceAssertions = serviceEntries |> concatMap (
+    { name, value }:
+    [
+      {
+        assertion = !(value.container != null && value.host != null);
+        message = "surmhosting service `${name}` cannot set both `container` and `host`.";
+      }
+      {
+        assertion = (!value.expose.enable) || value.expose.ports != [ ];
+        message = "surmhosting service `${name}` has exposure enabled but no expose.port/expose.ports configured.";
+      }
+      {
+        assertion = value.expose.allowedGitHubUsers == [ ] || value.expose.enable;
+        message = "surmhosting service `${name}` configures expose.allowedGitHubUsers but is not exposed.";
+      }
+      {
+        assertion = !value.expose.useTargetHost || value.expose.enable;
+        message = "surmhosting service `${name}` configures expose.useTargetHost but is not exposed.";
+      }
+    ]
+  );
 
-  # Generate surm-auth container (single instance for all protected apps)
   surmAuthConfig = {
-    # Container definition
     containers."surm-auth" = mkIf authEnabled {
       autoStart = true;
       privateNetwork = true;
@@ -149,7 +258,6 @@ let
       hostAddress = "10.202.0.1";
       ephemeral = true;
 
-      # Bind mount secrets
       bindMounts = {
         secrets = {
           mountPoint = "/var/lib/secrets";
@@ -165,7 +273,7 @@ let
 
           system.stateVersion = "25.05";
 
-          networking.useHostResolvConf = false;
+          networking.useHostResolvConf = mkForce false;
           networking.nameservers = [ "8.8.8.8" ];
 
           services.surm-auth = {
@@ -180,10 +288,9 @@ let
             session.cookieSecretFile = "/var/lib/secrets/cookie-secret";
             session.duration = cfg.auth.sessionDuration;
 
-            # Generate apps config from exposedApps with allowedGitHubUsers
-            apps = lib.mapAttrs (name: app: {
-              allowed_users = app.allowedGitHubUsers;
-            }) appsWithAuth;
+            apps = lib.mapAttrs (_: service: {
+              allowed_users = service.expose.allowedGitHubUsers;
+            }) servicesWithAuth;
           };
 
           networking.firewall.enable = false;
@@ -201,25 +308,21 @@ let
       ];
     };
 
-    # Traefik configuration for surm-auth
     services.traefik.dynamicConfigOptions.http = mkIf authEnabled {
-      # Auth service router (for login page, callback, etc.)
       routers."surm-auth" = {
         rule = "Host(`${cfg.auth.domain}`)";
         service = "surm-auth";
         entryPoints = [ "websecure" ];
       };
 
-      # Auth service
       services."surm-auth".loadBalancer.servers = [
         {
           url = "http://10.202.0.2:8080";
         }
       ];
 
-      # ForwardAuth middlewares (one per app with app name in query param)
       middlewares = lib.mapAttrs' (
-        name: app:
+        name: _service:
         lib.nameValuePair "auth-${name}" {
           forwardAuth = {
             address = "http://10.202.0.2:8080/auth?app=${name}";
@@ -237,67 +340,9 @@ let
             ];
           };
         }
-      ) appsWithAuth;
+      ) servicesWithAuth;
     };
   };
-
-  targetConfig =
-    { name, config, ... }:
-    {
-      options = {
-        rule = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Custom Traefik rule for single-port mode";
-        };
-        target.port = mkOption {
-          type = types.port;
-          default = 8080;
-          description = "Port for single-port mode (automatically added to target.ports)";
-        };
-        target.ports = mkOption {
-          type = types.listOf portConfig;
-          default = [ ];
-          description = "List of ports to expose with their hostnames (for multi-port containers)";
-        };
-        target.host = mkOption {
-          type = types.str;
-          default = "localhost";
-          description = "Host for non-container targets";
-        };
-        target.container = mkOption {
-          type = types.nullOr types.attrs;
-          default = null;
-          description = "Container configuration";
-        };
-        allowedGitHubUsers = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
-          description = ''
-            List of GitHub usernames allowed to access this app.
-            If set, OAuth2 authentication is automatically enabled.
-          '';
-          example = [
-            "surma"
-            "stimhub"
-          ];
-        };
-        useTargetHost = mkOption {
-          type = types.bool;
-          default = false;
-          description = "Whether to rewrite the Host header to match target.host when forwarding requests";
-        };
-      };
-
-      # Automatically populate target.ports from target.port as default
-      config.target.ports = mkDefault [
-        {
-          port = config.target.port;
-          hostname = name;
-          rule = config.rule;
-        }
-      ];
-    };
 in
 {
   options = {
@@ -318,12 +363,12 @@ in
         memoryMax = mkOption {
           type = types.nullOr types.str;
           default = "4G";
-          description = "Default MemoryMax limit applied to all surmhosting app containers (container@lc-* units).";
+          description = "Default MemoryMax limit applied to all surmhosting container units (container@lc-*).";
         };
         memorySwapMax = mkOption {
           type = types.nullOr types.str;
           default = "0";
-          description = "Default MemorySwapMax limit applied to all surmhosting app containers (container@lc-* units).";
+          description = "Default MemorySwapMax limit applied to all surmhosting container units (container@lc-*).";
         };
       };
       tls.enable = mkEnableOption "";
@@ -340,8 +385,8 @@ in
       hostname = mkOption {
         type = types.str;
       };
-      exposedApps = mkOption {
-        type = types.attrsOf (types.submodule targetConfig);
+      services = mkOption {
+        type = types.attrsOf (types.submodule serviceConfig);
         default = { };
       };
       auth = {
@@ -380,37 +425,40 @@ in
       };
     };
   };
+
   config = mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = authEnabled -> cfg.auth.domain != null;
-        message = ''
-          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
-          but services.surmhosting.auth.domain is not set.
-        '';
-      }
-      {
-        assertion = authEnabled -> cfg.auth.github.clientIdFile != null;
-        message = ''
-          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
-          but services.surmhosting.auth.github.clientIdFile is not set.
-        '';
-      }
-      {
-        assertion = authEnabled -> cfg.auth.github.clientSecretFile != null;
-        message = ''
-          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
-          but services.surmhosting.auth.github.clientSecretFile is not set.
-        '';
-      }
-      {
-        assertion = authEnabled -> cfg.auth.cookieSecretFile != null;
-        message = ''
-          OAuth2 authentication is enabled (some apps have allowedGitHubUsers),
-          but services.surmhosting.auth.cookieSecretFile is not set.
-        '';
-      }
-    ];
+    assertions =
+      [
+        {
+          assertion = authEnabled -> cfg.auth.domain != null;
+          message = ''
+            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+            but services.surmhosting.auth.domain is not set.
+          '';
+        }
+        {
+          assertion = authEnabled -> cfg.auth.github.clientIdFile != null;
+          message = ''
+            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+            but services.surmhosting.auth.github.clientIdFile is not set.
+          '';
+        }
+        {
+          assertion = authEnabled -> cfg.auth.github.clientSecretFile != null;
+          message = ''
+            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+            but services.surmhosting.auth.github.clientSecretFile is not set.
+          '';
+        }
+        {
+          assertion = authEnabled -> cfg.auth.cookieSecretFile != null;
+          message = ''
+            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+            but services.surmhosting.auth.cookieSecretFile is not set.
+          '';
+        }
+      ]
+      ++ serviceAssertions;
 
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;
@@ -467,16 +515,17 @@ in
           };
         }
       ]
-      ++ (exposedAppsConfigs |> map (cfg: cfg.services.traefik))
+      ++ (managedServiceConfigs |> map (service: service.services.traefik))
       ++ (lib.optional authEnabled surmAuthConfig.services.traefik)
     );
+
     systemd.services = mkMerge (
-      (exposedAppsConfigs |> map (cfg: cfg.systemd.services))
+      (managedServiceConfigs |> map (service: service.systemd.services))
       ++ (lib.optional authEnabled surmAuthConfig.systemd.services)
     );
 
     containers = mkMerge (
-      (exposedAppsConfigs |> map (cfg: cfg.containers))
+      (managedServiceConfigs |> map (service: service.containers))
       ++ (lib.optional authEnabled surmAuthConfig.containers)
     );
   };
