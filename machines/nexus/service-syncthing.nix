@@ -31,11 +31,13 @@ in
     "arbiter"
   ];
   services.syncthing.settings.folders."surmvault".path = "/dump/surmvault";
-  services.syncthing.settings.folders."surmvault".devices = [ "dragoon" ];
+  services.syncthing.settings.folders."surmvault".devices = [
+    "dragoon"
+    "arbiter"
+  ];
   services.syncthing.settings.devices.dragoon = shared.devices.dragoon;
   services.syncthing.settings.devices.archon = shared.devices.archon;
-  services.syncthing.settings.devices.arbiter.id =
-    "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
+  services.syncthing.settings.devices.arbiter = shared.devices.arbiter;
   services.syncthing.guiAddress = "0.0.0.0:${toString ports.syncthingGui}";
 
   services.surmhosting.services.syncthing.expose.port = ports.syncthingGui;

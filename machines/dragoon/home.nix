@@ -1,4 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
+let
+  shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
+in
 {
   imports = [
     # Programs now globally injected
@@ -83,6 +86,11 @@
   services.syncthing.enable = true;
   services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
   services.syncthing.key = config.secrets.items.dragoon-syncthing.target;
+  services.syncthing.settings.devices.arbiter = shared.devices.arbiter;
+  services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault".devices = lib.mkForce [
+    "nexus"
+    "arbiter"
+  ];
   defaultConfigs.syncthing.enable = true;
   defaultConfigs.syncthing.privateRelay.enable = true;
   defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;

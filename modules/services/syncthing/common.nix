@@ -21,6 +21,12 @@ let
       addresses = [ "dynamic" ];
     };
 
+    # Android device; update the ID here manually if the app/device identity changes.
+    arbiter = {
+      id = "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
+      addresses = [ "dynamic" ];
+    };
+
     shopisurm = {
       id = "DIQ23PM-ULHTRJC-EJVWAAI-NPBLTKZ-6DXSYB5-NYQP3DN-SKFJUVX-JML3PAA";
       addresses = [ "dynamic" ];
