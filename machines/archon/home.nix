@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  lib,
   ...
 }:
 {
@@ -80,7 +79,11 @@
 
     programs.zellij.wl-clipboard.enable = true;
 
+    secrets.items.archon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
+
     services.syncthing.enable = true;
+    services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
+    services.syncthing.key = config.secrets.items.archon-syncthing.target;
     defaultConfigs.syncthing.enable = true;
     services.syncthing.tray.enable = true;
 

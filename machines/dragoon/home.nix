@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 {
   imports = [
     # Programs now globally injected
@@ -77,55 +77,18 @@
     "dump/config.json".text = builtins.toJSON { server = "http://10.0.0.2:8081"; };
   };
 
+  secrets.items.dragoon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
   secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
 
-  home.activation.syncthingPrivateRelay = lib.hm.dag.entryAfter [
-    "writeBoundary"
-    "secrets"
-  ] ''
-    set -euo pipefail
-
-    token_file="${config.secrets.items.syncthing-relay-token.target}"
-    config_xml="$HOME/Library/Application Support/Syncthing/config.xml"
-    relay_prefix="relay://relay.sync.surma.technology:22067/"
-
-    if [ -s "$token_file" ] && [ -f "$config_xml" ]; then
-      api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(configuration/gui/apikey)' "$config_xml" 2>/dev/null || true)"
-      if [ -n "$api_key" ]; then
-        relay_token="$(${pkgs.coreutils}/bin/tr -d '\n' < "$token_file")"
-        relay_url="$relay_prefix?token=$relay_token"
-
-        current_options="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" http://127.0.0.1:8384/rest/config/options 2>/dev/null || true)"
-        if [ -n "$current_options" ]; then
-          updated_options="$(
-            printf '%s' "$current_options" | ${pkgs.jq}/bin/jq --arg relay "$relay_url" --arg prefix "$relay_prefix" '
-              .listenAddresses = (
-                [ $relay ]
-                + ((.listenAddresses // []) | map(select(startswith($prefix) | not)))
-                | unique
-              )
-            '
-          )"
-
-          printf '%s' "$updated_options" \
-            | ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X PUT -d @- http://127.0.0.1:8384/rest/config/options >/dev/null
-
-          restart_required="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" http://127.0.0.1:8384/rest/config/restart-required | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
-          if [ "$restart_required" = "true" ]; then
-            ${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" -X POST http://127.0.0.1:8384/rest/system/restart >/dev/null
-          fi
-        fi
-      fi
-    fi
-  '';
-
   services.syncthing.enable = true;
-  services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault" = {
-    id = "surmvault";
-    devices = [ "nexus" ];
-  };
+  services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
+  services.syncthing.key = config.secrets.items.dragoon-syncthing.target;
   defaultConfigs.syncthing.enable = true;
+  defaultConfigs.syncthing.privateRelay.enable = true;
+  defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;
   defaultConfigs.syncthing.knownFolders.scratch.enable = true;
   defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
+  defaultConfigs.syncthing.knownFolders.surmvault.enable = true;
+  defaultConfigs.syncthing.knownFolders.surmvault.path = "${config.home.homeDirectory}/SurmVault";
 
 }

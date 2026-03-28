@@ -55,6 +55,27 @@
         "nexus"
       ];
     };
+    dragoon-syncthing = {
+      contents = ../machines/dragoon/syncthing/key.pem.age;
+      keys = [
+        "surma"
+        "dragoon"
+      ];
+    };
+    archon-syncthing = {
+      contents = ../machines/archon/syncthing/key.pem.age;
+      keys = [
+        "surma"
+        "archon"
+      ];
+    };
+    shopisurm-syncthing = {
+      contents = ../machines/shopisurm/syncthing/key.pem.age;
+      keys = [
+        "surma"
+        "shopisurm"
+      ];
+    };
     nexus-syncthing = {
       contents = ../machines/nexus/syncthing/key.pem.age;
       keys = [

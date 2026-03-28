@@ -79,6 +79,10 @@
 
   programs.go.enable = true;
 
+  secrets.items.shopisurm-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
+  services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
+  services.syncthing.key = config.secrets.items.shopisurm-syncthing.target;
+
   home.activation.ensureNexusAuthorizedKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     auth_file="$HOME/.ssh/authorized_keys"
     mkdir -p "$HOME/.ssh"

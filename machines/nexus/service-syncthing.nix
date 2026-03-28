@@ -1,6 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   ports = import ./ports.nix;
+  shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
 in
 {
   secrets.items.nexus-syncthing.target = "/var/lib/syncthing/key.pem";
@@ -31,8 +32,8 @@ in
   ];
   services.syncthing.settings.folders."surmvault".path = "/dump/surmvault";
   services.syncthing.settings.folders."surmvault".devices = [ "dragoon" ];
-  services.syncthing.settings.devices.dragoon.id =
-    "TAYU7SA-CCAFI4R-ZLB6FNM-OCPMW5W-6KEYYPI-ANW52FK-DUHVT7Z-L2GYBAB";
+  services.syncthing.settings.devices.dragoon = shared.devices.dragoon;
+  services.syncthing.settings.devices.archon = shared.devices.archon;
   services.syncthing.settings.devices.arbiter.id =
     "7HXMC4G-66H3UDT-BRJ6ATT-3HOXUVN-XIMDBOT-JSFEOO3-HRR3NVF-P4GFUQN";
   services.syncthing.guiAddress = "0.0.0.0:${toString ports.syncthingGui}";
@@ -55,49 +56,12 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = let
-        injectRelay = pkgs.writeShellScript "syncthing-private-relay" ''
-          set -euo pipefail
-
-          token_file="${config.secrets.items.syncthing-relay-token.target}"
-          config_xml="${config.services.syncthing.configDir}/config.xml"
-          relay_prefix="relay://relay.sync.surma.technology:22067/"
-          api_url="http://127.0.0.1:${toString ports.syncthingGui}"
-
-          [ -s "$token_file" ]
-          [ -f "$config_xml" ]
-
-          api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(configuration/gui/apikey)' "$config_xml")"
-          relay_token="$(${pkgs.coreutils}/bin/tr -d '\n' < "$token_file")"
-          relay_url="$relay_prefix?token=$relay_token"
-
-          api_curl() {
-            ${pkgs.curl}/bin/curl -fsSk \
-              --retry 60 \
-              --retry-delay 1 \
-              --retry-all-errors \
-              -H "X-API-Key: $api_key" \
-              "$@"
-          }
-
-          current_options="$(api_curl "$api_url/rest/config/options")"
-          updated_options="$(
-            printf '%s' "$current_options" | ${pkgs.jq}/bin/jq --arg relay "$relay_url" --arg prefix "$relay_prefix" '
-              .listenAddresses = (
-                [ $relay ]
-                + ((.listenAddresses // []) | map(select(startswith($prefix) | not)))
-                | unique
-              )
-            '
-          )"
-
-          printf '%s' "$updated_options" \
-            | api_curl -X PUT -d @- "$api_url/rest/config/options" >/dev/null
-
-          restart_required="$(api_curl "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
-          if [ "$restart_required" = "true" ]; then
-            api_curl -X POST "$api_url/rest/system/restart" >/dev/null
-          fi
-        '';
+        injectRelay = shared.mkPrivateRelayScript {
+          tokenFile = config.secrets.items.syncthing-relay-token.target;
+          configXml = "${config.services.syncthing.configDir}/config.xml";
+          apiUrl = "http://127.0.0.1:${toString ports.syncthingGui}";
+          curlExtraArgs = "--retry 60 --retry-delay 1 --retry-all-errors";
+        };
       in
       "${injectRelay}";
     };
