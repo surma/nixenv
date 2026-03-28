@@ -39,6 +39,14 @@
         identityFile = "~/.ssh/id_repo_scout";
         identitiesOnly = true;
       };
+      matchBlocks."gitea.nexus.hosts.10.0.0.2.nip.io" = {
+        hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
+        port = 2222;
+        user = "containeruser";
+        identityFile = "~/.ssh/id_repo_scout";
+        identitiesOnly = true;
+        extraOptions.StrictHostKeyChecking = "accept-new";
+      };
     };
 
     defaultConfigs.web-search-cli = {
