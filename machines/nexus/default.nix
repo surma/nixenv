@@ -28,6 +28,7 @@
     ./service-voice-memos.nix
     ./service-overview.nix
     ./service-github-runner.nix
+    ./service-gitea-runner.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4

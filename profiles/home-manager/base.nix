@@ -10,7 +10,7 @@ let
 
   not = x: !x;
 
-  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
   # Wrapper for pinentry-curses that fixes $TERM for Ghostty
   pinentry-curses-wrapped = pkgs.writeShellScriptBin "pinentry" ''

@@ -20,7 +20,7 @@ in
       enable = mkEnableOption "Handy speech-to-text tool";
       package = mkOption {
         type = types.package;
-        default = inputs.self.packages.${pkgs.system}.handy;
+        default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.handy;
         description = "The handy package to use";
       };
     };

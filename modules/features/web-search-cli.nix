@@ -20,7 +20,7 @@ in
       enable = mkEnableOption "web-search-cli";
       package = mkOption {
         type = types.package;
-        default = inputs.web-search-cli.packages.${pkgs.system}.default;
+        default = inputs.web-search-cli.packages.${pkgs.stdenv.hostPlatform.system}.default;
         description = "The web-search-cli package to use";
       };
     };

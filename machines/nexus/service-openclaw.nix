@@ -80,7 +80,7 @@ in
         ];
         extraSpecialArgs = {
           inherit inputs;
-          system = pkgs.stdenv.system;
+          system = pkgs.stdenv.hostPlatform.system;
           systemManager = "home-manager";
         };
         users.containeruser = import ../openclaw;
@@ -88,7 +88,7 @@ in
 
       services.openclaw-gateway = {
         enable = true;
-        package = inputs.nix-openclaw.packages.${pkgs.stdenv.system}.openclaw;
+        package = inputs.nix-openclaw.packages.${pkgs.stdenv.hostPlatform.system}.openclaw;
         port = ports.openclaw;
         user = "containeruser";
         group = "users";
@@ -98,7 +98,7 @@ in
         environment = {
           OPENCLAW_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
           CLAWDBOT_CONFIG_PATH = "/var/lib/openclaw/state/openclaw.json";
-          OPENCLAW_BUNDLED_PLUGINS_DIR = "${inputs.nix-openclaw.packages.${pkgs.stdenv.system}.openclaw-gateway}/lib/openclaw/extensions";
+          OPENCLAW_BUNDLED_PLUGINS_DIR = "${inputs.nix-openclaw.packages.${pkgs.stdenv.hostPlatform.system}.openclaw-gateway}/lib/openclaw/extensions";
         };
         execStartPre = [
           "${pkgs.writeShellScript "openclaw-prepare-config" ''
@@ -130,7 +130,7 @@ in
           pkgs.git
           pkgs.nix
           pkgs.openssh
-          inputs.home-manager.packages.${pkgs.stdenv.system}.default
+          inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
           (import ../../modules/home-manager/web-search-cli/package.nix {
             inherit pkgs lib inputs;
             authTokenFile = "/var/lib/credentials/openclaw/llm-proxy-client-key";

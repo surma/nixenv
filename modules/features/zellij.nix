@@ -8,7 +8,7 @@
 }:
 let
   inherit (pkgs) wl-clipboard;
-  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 with lib;
 {

@@ -30,7 +30,7 @@
           SHOPIFY_STOCK_RANGE = "5D";
         };
         serviceConfig = {
-          ExecStart = "${inputs.dashboard.packages.${pkgs.stdenv.system}.server}/bin/overview";
+          ExecStart = "${inputs.dashboard.packages.${pkgs.stdenv.hostPlatform.system}.server}/bin/overview";
           EnvironmentFile = [ "/var/lib/credentials/overview/server.env" ];
           User = "containeruser";
           Restart = "always";

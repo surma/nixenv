@@ -1,6 +1,6 @@
 { pkgs, inputs, ... }:
 let
-  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.system};
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
   services.surmhosting.services.lidarr.expose.port = 8080;

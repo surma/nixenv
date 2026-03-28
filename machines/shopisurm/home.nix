@@ -44,7 +44,7 @@
     [
       # graphite-cli
       keycastr
-      inputs.self.packages.${pkgs.system}.jupyter
+      inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.jupyter
       gopls
       bun
       (python3.withPackages (ps: [
@@ -118,6 +118,8 @@
     '';
   };
   programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
     includes = [
       "~/.spin/ssh/include"
       "~/.config/spin/ssh/include"

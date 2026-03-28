@@ -9,7 +9,7 @@ with lib;
 let
   cfg = config.defaultConfigs.helix;
   slTreeSitter =
-    if cfg.enableSlSyntax then inputs.sl2.packages.${pkgs.system}.tree-sitter-sl else null;
+    if cfg.enableSlSyntax then inputs.sl2.packages.${pkgs.stdenv.hostPlatform.system}.tree-sitter-sl else null;
 in
 {
   options.defaultConfigs.helix = {
