@@ -46,7 +46,7 @@ let
     ../features/web-search-cli.nix
     ../features/syncthing.nix
     ../features/spotify.nix
-    # discord and obsidian are provided by home-manager built-in
+    ../features/qmd.nix
   ];
 
   # Feature modules for standalone home-manager configs

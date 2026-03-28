@@ -73,6 +73,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    qmd.url = "github:surma-dump/qmd?ref=surma/fix-flake";
   };
 
   outputs =

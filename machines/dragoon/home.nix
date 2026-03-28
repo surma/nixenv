@@ -64,6 +64,8 @@ in
   defaultConfigs.handy.enable = true;
   programs.obsidian.enable = true;
 
+  programs.qmd.enable = true;
+
   programs.go.enable = true;
 
   customScripts.denix.enable = true;
