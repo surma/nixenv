@@ -11,9 +11,7 @@ in
   imports = [
     ../../profiles/darwin/base.nix
 
-    # Programs now globally injected
-    # ../../modules/programs/obs
-    # ../../modules/programs/obsidian
+    # Program modules are auto-loaded from ../../modules/programs
 
     ../../scripts
   ];

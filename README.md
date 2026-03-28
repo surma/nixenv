@@ -45,7 +45,7 @@ nixenv/
 │   └── <hostname>/    # Named machine configurations
 │
 ├── modules/           # Reusable Nix modules
-│   ├── programs/      # Interactive applications
+│   ├── programs/      # Interactive applications (auto-loaded from modules/programs/*/default.nix)
 │   ├── services/      # Background services
 │   ├── home-manager/  # Home Manager specific modules
 │   ├── nixos/         # NixOS specific modules

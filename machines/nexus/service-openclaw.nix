@@ -76,7 +76,7 @@ in
         useUserPackages = false;
         sharedModules = [
           ../../modules/features/secrets.nix
-          ../../modules/features/web-search-cli.nix
+          ../../modules/programs/web-search-cli
         ];
         extraSpecialArgs = {
           inherit inputs;

@@ -8,10 +8,7 @@
   imports = [
     ../../profiles/darwin/base.nix
 
-    # Programs now globally injected
-    # ../../modules/programs/signal
-    # ../../modules/programs/obs
-    # ../../modules/programs/obsidian
+    # Program modules are auto-loaded from ../../modules/programs
   ];
 
   system.stateVersion = 5;

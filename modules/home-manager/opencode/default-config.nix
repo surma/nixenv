@@ -3,6 +3,7 @@
   config,
   lib,
   inputs,
+  options,
   ...
 }:
 let
@@ -201,8 +202,10 @@ with lib;
   };
 
   config = mkMerge [
-    {
+    ((lib.optionalAttrs (options ? customScripts) {
       customScripts.noti.enable = mkIf isEnabled true;
+    })
+    // {
       programs.mcp-playwright.enable = mkIf isEnabled true;
       programs.opencode = {
         plugins = {
@@ -218,7 +221,7 @@ with lib;
           };
         };
       };
-    }
+    })
 
     (mkIf (isEnabled && cfg.manageSecret) {
       secrets.items.llm-proxy-client-key.target = mkDefault defaultApiKeyPath;

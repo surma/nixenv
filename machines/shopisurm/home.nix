@@ -7,14 +7,7 @@
 }:
 {
   imports = [
-    # Programs now globally injected
-    # ../../modules/programs/telegram
-
-    # Application modules now globally injected
-    # ../../modules/home-manager/claude-code
-    # ../../modules/home-manager/opencode
-    # ../../modules/home-manager/ghostty
-    # ../../modules/home-manager/handy
+    # Program modules are auto-loaded from ../../modules/programs
 
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/graphical.nix

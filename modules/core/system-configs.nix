@@ -7,51 +7,45 @@
 let
   inherit (lib) mkOption types;
 
-  # Feature modules that work at system level (nixos/darwin)
-  # These handle both system-level AND nested home-manager configs
-  systemFeatures = [
+  programsDir = ../programs;
+
+  programModules =
+    builtins.readDir programsDir
+    |> lib.filterAttrs (
+      name: type: type == "directory" && builtins.pathExists (programsDir + "/${name}/default.nix")
+    )
+    |> lib.attrNames
+    |> lib.sort builtins.lessThan
+    |> builtins.map (name: programsDir + "/${name}");
+
+  systemProgramModules =
+    [
+      "obs"
+      "signal"
+      "telegram"
+    ]
+    |> builtins.map (name: programsDir + "/${name}");
+
+  # Cross-cutting modules that are not really program modules.
+  sharedFeatureModules = [
     ../features/secrets.nix
     ../features/unfree-apps.nix
-    ../features/signal.nix
-    ../features/telegram.nix
-    ../features/obs.nix
+  ];
+
+  # System-only feature modules.
+  systemFeatureModules = [
     ../features/keyd-as-internal.nix
-    # hyprland is Linux-only, loaded via nestedHomeManagerFeatures only
-    # obsidian is provided by home-manager built-in
   ];
 
-  # Feature modules for nested home-manager (within nixos/darwin)
-  # Includes cross-platform features that support home-manager context
-  nestedHomeManagerFeatures = [
-    ../features/unfree-apps.nix
-    ../features/secrets.nix
-    ../features/signal.nix
-    ../features/telegram.nix
-    ../features/obs.nix
-    # obsidian is provided by home-manager built-in
+  # Home-manager-only feature/service modules.
+  homeManagerFeatureModules = [
     ../features/hyprland.nix
-    ../features/zellij.nix
-    ../features/nushell.nix
-    ../features/mcp-playwright.nix
-    ../features/handy.nix
-    ../features/ghostty.nix
-    ../features/wezterm.nix
-    ../features/waybar.nix
     ../features/screenshot.nix
-    ../features/hyprsunset.nix
-    ../features/hyprpaper.nix
-    ../features/pi.nix
-    ../features/claude-code.nix
-    ../features/opencode.nix
-    ../features/web-search-cli.nix
-    ../features/syncthing.nix
-    ../features/spotify.nix
-    ../features/qmd.nix
+    ../services/syncthing
   ];
 
-  # Feature modules for standalone home-manager configs
-  # Only include home-manager compatible features
-  standaloneHomeManagerFeatures = nestedHomeManagerFeatures;
+  systemModules = sharedFeatureModules ++ systemFeatureModules ++ systemProgramModules;
+  homeManagerModules = sharedFeatureModules ++ homeManagerFeatureModules ++ programModules;
 in
 {
   options = {
@@ -121,13 +115,13 @@ in
           cfg
           inputs.home-manager.nixosModules.home-manager
         ]
-        ++ systemFeatures
+        ++ systemModules
         ++ [
           (
-            { config, ... }:
+            { ... }:
             {
               home-manager = {
-                sharedModules = nestedHomeManagerFeatures;
+                sharedModules = homeManagerModules;
                 extraSpecialArgs = {
                   inherit inputs;
                   systemManager = "home-manager";
@@ -152,7 +146,7 @@ in
           cfg
           inputs.home-manager.darwinModules.home-manager
         ]
-        ++ systemFeatures
+        ++ systemModules
         ++ [
           (
             { config, ... }:
@@ -162,7 +156,7 @@ in
                 home = "/Users/${config.system.primaryUser}";
               };
               home-manager = {
-                sharedModules = nestedHomeManagerFeatures;
+                sharedModules = homeManagerModules;
                 extraSpecialArgs = {
                   inherit inputs;
                   systemManager = "home-manager";
@@ -188,9 +182,7 @@ in
       in
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.${system};
-        modules = standaloneHomeManagerFeatures ++ [
-          cfg
-        ];
+        modules = homeManagerModules ++ [ cfg ];
         extraSpecialArgs = {
           inherit inputs system;
           systemManager = "home-manager";
