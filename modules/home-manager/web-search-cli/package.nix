@@ -24,7 +24,7 @@ let
 in
 pkgs.symlinkJoin {
   name = "web-search-cli-wrapped";
-  paths = [ inputs.web-search-cli.packages.${pkgs.system}.default ];
+  paths = [ inputs.web-search-cli.packages.${pkgs.stdenv.hostPlatform.system}.default ];
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram $out/bin/web-search ${lib.concatStringsSep " " wrapperArgs}

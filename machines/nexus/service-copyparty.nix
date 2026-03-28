@@ -17,7 +17,7 @@
           system.stateVersion = "25.05";
           services.copyparty.enable = true;
           services.copyparty.user = "containeruser";
-          services.copyparty.package = inputs.copyparty.packages.${pkgs.stdenv.system}.copyparty;
+          services.copyparty.package = inputs.copyparty.packages.${pkgs.stdenv.hostPlatform.system}.copyparty;
           services.copyparty = {
             accounts.surma.passwordFile = "/var/lib/credentials/copyparty/surma.passwd";
             settings.p = [ 8080 ];

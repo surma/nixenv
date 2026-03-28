@@ -278,7 +278,7 @@ let
 
           services.surm-auth = {
             enable = true;
-            package = inputs.self.packages.${pkgs.system}.surm-auth;
+            package = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
             baseUrl = "https://${cfg.auth.domain}";
 
             github.clientIdFile = "/var/lib/secrets/github-client-id";

@@ -160,7 +160,7 @@ let
       
       # Execute opencode
       let opencode_bin = ($env.OPENCODE_PATH? | default "${
-        inputs.self.packages.${pkgs.system}.opencode
+        inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.opencode
       }/bin/opencode")
       exec $opencode_bin ...$args
     }

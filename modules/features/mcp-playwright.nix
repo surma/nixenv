@@ -13,7 +13,7 @@ with lib;
       enable = mkEnableOption "mcp-playwright server";
       package = mkOption {
         type = types.package;
-        default = inputs.self.packages.${pkgs.system}.mcp-playwright;
+        default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.mcp-playwright;
       };
     };
   };

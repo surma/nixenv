@@ -15,7 +15,7 @@ in
         description = "Dump service";
         wantedBy = [ "multi-user.target" ];
         serviceConfig = {
-          ExecStart = "${inputs.dump.packages.${pkgs.stdenv.system}.default}/bin/dumpd --listen 0.0.0.0:${toString ports.dump} --dir /var/lib/dump --enable-cors";
+          ExecStart = "${inputs.dump.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/dumpd --listen 0.0.0.0:${toString ports.dump} --dir /var/lib/dump --enable-cors";
           User = "containeruser";
           Restart = "always";
         };

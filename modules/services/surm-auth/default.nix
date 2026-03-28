@@ -39,7 +39,7 @@ in
 
     package = mkOption {
       type = types.package;
-      default = inputs.self.packages.${pkgs.system}.surm-auth;
+      default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
       description = "The surm-auth package to use";
     };
 

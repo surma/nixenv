@@ -15,7 +15,7 @@ with lib;
       enable = mkEnableOption "Pi";
       package = mkOption {
         type = types.package;
-        default = inputs.self.packages.${pkgs.system}.pi-coding-agent;
+        default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent;
         description = "The pi-coding-agent package to use";
       };
     };

@@ -22,7 +22,7 @@ let
         export ANTHROPIC_API_KEY=$(cat "${claude-code.overrides.apiKey}" | tr -d '\n')
       fi
     ''}
-    exec ${inputs.self.packages.${pkgs.system}.claude-code}/bin/claude "$@"
+    exec ${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.claude-code}/bin/claude "$@"
   '';
 in
 with lib;

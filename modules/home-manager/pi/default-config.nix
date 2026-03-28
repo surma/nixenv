@@ -31,7 +31,7 @@ let
 
     export PI_SKIP_VERSION_CHECK=1
 
-    exec ${inputs.self.packages.${pkgs.system}.pi-coding-agent}/bin/pi "$@"
+    exec ${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent}/bin/pi "$@"
   '';
 in
 with lib;
