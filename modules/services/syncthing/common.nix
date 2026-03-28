@@ -76,7 +76,24 @@ let
         ${pkgs.curl}/bin/curl -fsSk ${curlExtraArgs} -H "X-API-Key: $api_key" "$@"
       }
 
-      current_options="$(api_curl "$api_url/rest/config/options" 2>/dev/null || true)"
+      wait_for_json() {
+        local url="$1"
+        local response=""
+        local i
+
+        for i in $(${pkgs.coreutils}/bin/seq 1 60); do
+          response="$(api_curl "$url" 2>/dev/null || true)"
+          if [ -n "$response" ] && printf '%s' "$response" | ${pkgs.jq}/bin/jq -e . >/dev/null 2>&1; then
+            printf '%s' "$response"
+            return 0
+          fi
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+
+        return 1
+      }
+
+      current_options="$(wait_for_json "$api_url/rest/config/options" || true)"
       if [ -z "$current_options" ]; then
         ${if allowMissing then "exit 0" else "exit 1"}
       fi
@@ -94,7 +111,7 @@ let
       printf '%s' "$updated_options" \
         | api_curl -X PUT -d @- "$api_url/rest/config/options" >/dev/null
 
-      restart_required="$(api_curl "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
+      restart_required="$(wait_for_json "$api_url/rest/config/restart-required" | ${pkgs.jq}/bin/jq -r '.requiresRestart')"
       if [ "$restart_required" = "true" ]; then
         api_curl -X POST "$api_url/rest/system/restart" >/dev/null
       fi

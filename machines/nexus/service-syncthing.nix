@@ -39,6 +39,26 @@ in
 
   services.surmhosting.services.syncthing.expose.port = ports.syncthingGui;
 
+  systemd.services.syncthing-init.serviceConfig.ExecStartPre = let
+    waitForApi = pkgs.writeShellScript "wait-for-syncthing-api" ''
+      set -euo pipefail
+
+      api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(/configuration/gui/apikey)' ${lib.escapeShellArg "${config.services.syncthing.configDir}/config.xml"} 2>/dev/null)"
+      [ -n "$api_key" ]
+
+      for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
+        response="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" http://127.0.0.1:${toString ports.syncthingGui}/rest/config/options 2>/dev/null || true)"
+        if [ -n "$response" ] && printf '%s' "$response" | ${pkgs.jq}/bin/jq -e . >/dev/null 2>&1; then
+          exit 0
+        fi
+        ${pkgs.coreutils}/bin/sleep 1
+      done
+
+      exit 1
+    '';
+  in
+  [ "${waitForApi}" ];
+
   systemd.services.syncthing-private-relay = {
     description = "Inject private Syncthing relay URL";
     after = [

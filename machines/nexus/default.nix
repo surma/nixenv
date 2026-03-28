@@ -39,7 +39,10 @@
     ../../apps/hate
   ];
 
-  nix.settings.require-sigs = false;
+  nix.settings = {
+    require-sigs = false;
+    trusted-users = [ "@wheel" ];
+  };
 
   secrets.identity = "/home/surma/.ssh/id_machine";
   secrets.items.llm-proxy-secret = {

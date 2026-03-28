@@ -35,11 +35,13 @@
     config = {
       system.stateVersion = "25.05";
 
-      nix.settings.experimental-features = [
-        "nix-command"
-        "flakes"
-        "pipe-operators"
-      ];
+      nix.settings = {
+        experimental-features = [
+          "nix-command"
+          "flakes"
+          "pipe-operators"
+        ];
+      };
 
       users.users.containeruser = {
         isNormalUser = true;
