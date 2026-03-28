@@ -218,7 +218,6 @@ let
             localAddress = mkDefault localAddress;
             hostAddress = mkDefault hostAddress;
             ephemeral = mkDefault true;
-            extraFlags = mkAfter [ "--link-journal=host" ];
             autoStart = mkDefault true;
           }
           value.container
@@ -258,7 +257,6 @@ let
       localAddress = "10.202.0.2";
       hostAddress = "10.202.0.1";
       ephemeral = true;
-      extraFlags = mkAfter [ "--link-journal=host" ];
 
       bindMounts = {
         secrets = {
