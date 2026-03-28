@@ -19,10 +19,7 @@ in
   services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
   services.syncthing.key = config.secrets.items.nexus-syncthing.target;
   services.syncthing.settings.folders."audiobooks".path = "/dump/audiobooks";
-  services.syncthing.settings.folders."audiobooks".devices = [
-    "dragoon"
-    "arbiter"
-  ];
+  services.syncthing.settings.folders."audiobooks".devices = [ "arbiter" ];
   services.syncthing.settings.folders."scratch".path = "/dump/scratch";
   services.syncthing.settings.folders."scratch".devices = [ "dragoon" ];
   services.syncthing.settings.folders."ebooks".path = "/dump/ebooks";
