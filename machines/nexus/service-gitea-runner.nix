@@ -19,8 +19,6 @@
     };
   };
 
-  systemd.services."container@lc-gitea-runn".serviceConfig.Type = lib.mkForce "simple";
-
   services.surmhosting.services.gitea-runner.container = {
     bindMounts = {
       state = {
@@ -85,11 +83,20 @@
       };
 
       systemd.services."gitea-runner-websearchcli" = {
+        wantedBy = lib.mkForce [ ];
         unitConfig.ConditionPathExists = "/var/lib/credentials/gitea-runner/token.env";
         serviceConfig = {
           DynamicUser = lib.mkForce false;
           User = lib.mkForce "containeruser";
           Group = lib.mkForce "users";
+        };
+      };
+
+      systemd.timers."gitea-runner-websearchcli-delayed-start" = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "10s";
+          Unit = "gitea-runner-websearchcli.service";
         };
       };
     };
