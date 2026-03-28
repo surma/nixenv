@@ -175,6 +175,13 @@
         "nexus"
       ];
     };
+    gitea-web-search-cli-runner-token = {
+      contents = ../secrets/gitea-web-search-cli-runner-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     syncthing-relay-token = {
       contents = ../secrets/syncthing-relay-token.age;
       keys = [
