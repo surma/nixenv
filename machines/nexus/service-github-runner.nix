@@ -1,4 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
+let
+  surmaRepos = [ "sl" "parakeeb" "Haven" ];
+in
 {
   secrets.items.github-runner-pat = {
     target = "/var/lib/github-runner/token";
@@ -53,25 +56,25 @@
       systemd.tmpfiles.rules = [
         "d /home/containeruser 0755 containeruser users - -"
         "d /var/lib/github-runner/work 0755 containeruser users - -"
-      ];
+      ] ++ (surmaRepos |> map (name: "d /var/lib/github-runner/work/${name} 0755 containeruser users - -"));
 
-      services.github-runners.sl = {
+      services.github-runners = surmaRepos |> map (name: { inherit name; value = {
         enable = true;
-        url = "https://github.com/surma/sl";
+        url = "https://github.com/surma/${name}";
         tokenFile = "/var/lib/credentials/github-runner/token";
-        name = "nexus-sl-nix-x64";
+        name = "nexus-${name}-nix-x64";
         replace = true;
         runnerGroup = "Default";
         user = "containeruser";
         group = "users";
-        workDir = "/var/lib/github-runner/work";
+        workDir = "/var/lib/github-runner/work/${name}";
         extraLabels = [
           "nix"
           "nixos"
           "nexus"
           "container"
           "x64"
-          "sl"
+          name
         ];
         extraPackages = with pkgs; [
           bash
@@ -85,14 +88,16 @@
           zstd
         ];
         serviceOverrides = {
-          StateDirectory = [ "github-runner/sl" ];
-          RuntimeDirectory = [ "github-runner/sl" ];
-          LogsDirectory = [ "github-runner/sl" ];
+          StateDirectory = [ "github-runner/${name}" ];
+          RuntimeDirectory = [ "github-runner/${name}" ];
+          LogsDirectory = [ "github-runner/${name}" ];
           ProtectHome = false;
           PrivateUsers = false;
           PrivateMounts = false;
+          Restart = lib.mkForce "on-failure";
+          RestartSec = lib.mkForce "15s";
         };
-      };
+      }; }) |> lib.listToAttrs;
     };
   };
 }
