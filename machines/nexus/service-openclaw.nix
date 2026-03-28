@@ -224,7 +224,7 @@ in
           };
 
           agents.defaults.workspace = "/var/lib/openclaw/workspace";
-          agents.defaults.model.primary = "openai/gpt-5.4";
+          agents.defaults.model.primary = "anthropic/claude-opus-4-6";
 
           channels.telegram = {
             enabled = true;
