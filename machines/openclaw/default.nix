@@ -31,6 +31,16 @@
 
     programs.home-manager.enable = true;
 
+    programs.ssh = {
+      enable = true;
+      matchBlocks."github.com" = {
+        hostname = "github.com";
+        user = "git";
+        identityFile = "~/.ssh/id_repo_scout";
+        identitiesOnly = true;
+      };
+    };
+
     defaultConfigs.web-search-cli = {
       enable = true;
       llmProxy = {
