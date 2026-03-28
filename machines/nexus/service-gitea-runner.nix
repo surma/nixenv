@@ -10,7 +10,6 @@
     "d /var/lib/gitea-runner 0755 root root - -"
   ];
 
-  services.surmhosting.services.gitea-runner.containerName = "gitea-runner";
   services.surmhosting.services.gitea-runner.containerService = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
@@ -19,6 +18,8 @@
       MemorySwapMax = "8G";
     };
   };
+
+  systemd.services."container@lc-gitea-runn".serviceConfig.Type = lib.mkForce "simple";
 
   services.surmhosting.services.gitea-runner.container = {
     bindMounts = {
@@ -61,7 +62,7 @@
       services.gitea-actions-runner.instances.websearchcli = {
         enable = true;
         name = "nexus-web-search-cli-nix-x64";
-        url = "https://gitea.surma.technology";
+        url = "http://gitea.nexus.hosts.10.0.0.2.nip.io";
         tokenFile = "/var/lib/credentials/gitea-runner/token.env";
         labels = [ "nixos:host" ];
         hostPackages = with pkgs; [
