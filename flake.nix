@@ -59,7 +59,7 @@
       inputs.home-manager.follows = "home-manager";
     };
     sl2 = {
-      url = "git+ssh://git@github.com/surma/sl?ref=speedrun";
+      url = "git+ssh://git@github.com/surma/sl";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };

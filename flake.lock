@@ -1143,16 +1143,15 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1773752397,
-        "narHash": "sha256-8Osw0ka6PqFYHaU+ZKvSZitswhQ4ulXZ5P8hmZZL1pY=",
-        "ref": "speedrun",
-        "rev": "98b344860bb16cb7fe10b4aa029219622c1720ee",
-        "revCount": 299,
+        "lastModified": 1774615501,
+        "narHash": "sha256-YPjMTouhBFpEoN8F5UBf3ye3MGn0/UC74LtvFlOcnC8=",
+        "ref": "refs/heads/main",
+        "rev": "50fa12e646811060409319073f14cb2a80de51ed",
+        "revCount": 302,
         "type": "git",
         "url": "ssh://git@github.com/surma/sl"
       },
       "original": {
-        "ref": "speedrun",
         "type": "git",
         "url": "ssh://git@github.com/surma/sl"
       }
