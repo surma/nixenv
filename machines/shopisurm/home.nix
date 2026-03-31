@@ -73,8 +73,18 @@
   programs.go.enable = true;
 
   secrets.items.shopisurm-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
+  secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
+
+  services.syncthing.enable = true;
   services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
   services.syncthing.key = config.secrets.items.shopisurm-syncthing.target;
+  defaultConfigs.syncthing.enable = true;
+  defaultConfigs.syncthing.privateRelay.enable = true;
+  defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;
+  defaultConfigs.syncthing.knownFolders.scratch.enable = true;
+  defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
+  defaultConfigs.syncthing.knownFolders.surmvault.enable = true;
+  defaultConfigs.syncthing.knownFolders.surmvault.path = "${config.home.homeDirectory}/SurmVault";
 
   home.activation.ensureNexusAuthorizedKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     auth_file="$HOME/.ssh/authorized_keys"

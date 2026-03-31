@@ -189,6 +189,7 @@
         "dragoon"
         "nexus"
         "pylon"
+        "shopisurm"
       ];
     };
   };
