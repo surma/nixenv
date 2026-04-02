@@ -53,6 +53,7 @@
   defaultConfigs.claude-code.enable = true;
   programs.web-search-cli.enable = true;
   defaultConfigs.web-search-cli.enable = true;
+  programs.agent-browser.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
 
   programs.ghostty.enable = true;
