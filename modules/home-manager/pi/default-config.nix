@@ -15,6 +15,7 @@ let
     defaultModel = "gpt-5.4";
     defaultThinkingLevel = "high";
     packages = [ "ssh://git@github.com/surma/pi-config" ];
+    skills = lib.optional config.programs.agent-browser.enable "${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.agent-browser}/share/pi/skills/agent-browser";
     theme = "gruvbox-dark-medium";
   };
 

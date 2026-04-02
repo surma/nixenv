@@ -38,8 +38,9 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/bin
+    mkdir -p $out/bin $out/share/pi/skills
     cp ${binaryPath} $out/bin/agent-browser
+    cp -R skills/agent-browser $out/share/pi/skills/
     chmod +x $out/bin/agent-browser
 
     ${lib.optionalString stdenv.isLinux ''
