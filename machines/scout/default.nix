@@ -1,28 +1,61 @@
-{ config, lib, ... }:
 {
-  imports = [
-    ../../profiles/home-manager/base.nix
-    ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/dev.nix
-  ];
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+{
+  imports = [ ../../scripts ];
 
-  secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
-  secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
+  config = {
+    home.username = lib.mkDefault "containeruser";
+    home.homeDirectory = lib.mkDefault "/home/containeruser";
+    home.stateVersion = "25.05";
 
-  home.stateVersion = "25.05";
+    nix = {
+      package = lib.mkDefault pkgs.nix;
+      settings.experimental-features = "nix-command flakes pipe-operators";
+    };
 
-  home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
+    home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
 
-  # Best-effort linger enablement for user services to survive logout.
-  home.activation.enableLinger = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    if command -v loginctl >/dev/null 2>&1; then
-      if [ "$(loginctl show-user ${config.home.username} --property=Linger --value 2>/dev/null || true)" != "yes" ]; then
-        loginctl enable-linger ${config.home.username} >/dev/null 2>&1 || true
-      fi
-    fi
-  '';
+    home.packages = with pkgs; [
+      git
+      openssh
+      ripgrep
+      (python3.withPackages (ps: [
+        ps.pip
+        ps.virtualenv
+      ]))
+    ];
 
-  programs.pi.enable = true;
-  defaultConfigs.pi.enable = true;
+    programs.home-manager.enable = true;
+
+    programs.ssh = {
+      enable = true;
+      enableDefaultConfig = false;
+      matchBlocks."github.com" = {
+        hostname = "github.com";
+        user = "git";
+        identityFile = "~/.ssh/id_repo_scout";
+        identitiesOnly = true;
+      };
+      matchBlocks."gitea.nexus.hosts.10.0.0.2.nip.io" = {
+        hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
+        port = 2222;
+        user = "containeruser";
+        identityFile = "~/.ssh/id_repo_scout";
+        identitiesOnly = true;
+        extraOptions.StrictHostKeyChecking = "accept-new";
+      };
+    };
+
+    defaultConfigs.web-search-cli = {
+      enable = true;
+      llmProxy = {
+        manageSecret = false;
+        authTokenFile = "/var/lib/credentials/openclaw/llm-proxy-client-key";
+      };
+    };
+  };
 }
