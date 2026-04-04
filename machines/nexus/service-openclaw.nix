@@ -231,6 +231,7 @@ in
             tokenFile = "/var/lib/credentials/openclaw/telegram-token";
             allowFrom = [ 5248021986 ];
             groups."*".requireMention = true;
+            threadBindings.enabled = true;
           };
         };
       };
