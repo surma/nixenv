@@ -91,12 +91,11 @@
         "nexus"
       ];
     };
-    nexus-redis = {
-      contents = ../machines/nexus/redis/pw.age;
+    nexus-strapi-env = {
+      contents = ../machines/nexus/strapi/env.age;
       keys = [
         "surma"
         "nexus"
-        "shopisurm"
       ];
     };
     llm-proxy-secret = {

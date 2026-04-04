@@ -23,7 +23,7 @@
     ./service-jaeger.nix
     ./service-traefik-tracing.nix
     ./service-vsftpd.nix
-    ./service-redis.nix
+    ./service-strapi.nix
     ./service-dump.nix
     ./service-voice-memos.nix
     ./service-overview.nix
