@@ -5,9 +5,6 @@
   ...
 }:
 {
-  # Temporarily define machines using the old structure
-  # This provides a compatibility layer during migration
-
   config = {
     # NixOS machines
     nixosConfigurations = {
@@ -29,14 +26,14 @@
     # Home-manager standalone configs
     homeConfigurations = {
       generic-linux.imports = [ ../../machines/generic-linux ];
+      forge.imports = [ ../../machines/forge ];
       scout.imports = [ ../../machines/scout ];
-      openclaw.imports = [ ../../machines/openclaw ];
     };
 
     homeConfigurationSystems = {
       generic-linux = "x86_64-linux";
-      scout = "aarch64-linux";
-      openclaw = "x86_64-linux";
+      forge = "aarch64-linux";
+      scout = "x86_64-linux";
     };
 
     # Android configs

@@ -2,7 +2,7 @@
 {
   imports = [
     ./system-configs.nix
-    ./legacy-machines.nix
+    ./machines.nix
     ./packages.nix
   ];
 }

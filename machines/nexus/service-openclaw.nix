@@ -48,7 +48,7 @@ in
   services.surmhosting.services.openclaw.containerService = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
-    serviceConfig.MemoryMax = "8G";
+    serviceConfig.MemoryMax = "12G";
   };
 
   services.surmhosting.services.openclaw.container = {
@@ -83,7 +83,7 @@ in
           system = pkgs.stdenv.hostPlatform.system;
           systemManager = "home-manager";
         };
-        users.containeruser = import ../openclaw;
+        users.containeruser = import ../scout;
       };
 
       services.openclaw-gateway = {
@@ -231,6 +231,7 @@ in
             tokenFile = "/var/lib/credentials/openclaw/telegram-token";
             allowFrom = [ 5248021986 ];
             groups."*".requireMention = true;
+            threadBindings.enabled = true;
           };
         };
       };
