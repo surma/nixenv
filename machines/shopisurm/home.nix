@@ -104,8 +104,15 @@
     maintenance.repositories = [
       "${config.home.homeDirectory}/world/git"
     ];
-    settings.include = {
-      path = "${config.home.homeDirectory}/.config/dev/gitconfig";
+    settings = {
+      include = {
+        path = "${config.home.homeDirectory}/.config/dev/gitconfig";
+      };
+      credential."https://*.quick.shopify.io".helper = [
+        ""
+        "${config.home.homeDirectory}/.config/quick/quick-git-credential.sh"
+      ];
+      http."https://*.quick.shopify.io/".extraHeader = "X-Requested-With: XMLHttpRequest";
     };
   };
 
