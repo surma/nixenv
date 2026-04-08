@@ -25,6 +25,7 @@
     home.stateVersion = "25.05";
 
     home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#nexus";
+    defaultConfigs.agents.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;
     customScripts.oc.enable = true;
