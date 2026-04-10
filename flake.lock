@@ -1042,16 +1042,15 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1774653140,
-        "narHash": "sha256-IMADCdVosYzDZ0ImD06v6baYyuQ7BTX/0PZmT9xiV0g=",
-        "owner": "surma-dump",
+        "lastModified": 1775431035,
+        "narHash": "sha256-m3Z9AyfRFuXSmIac0mt+8BfV/bCjaInooGghvMXo9YI=",
+        "owner": "tobi",
         "repo": "qmd",
-        "rev": "cf9991cfa73af9b5a97778a8a6c7bf3556b805a0",
+        "rev": "c2f3a4037204066455662492518384c9f3a4d247",
         "type": "github"
       },
       "original": {
-        "owner": "surma-dump",
-        "ref": "surma/fix-flake",
+        "owner": "tobi",
         "repo": "qmd",
         "type": "github"
       }
