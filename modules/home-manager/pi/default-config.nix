@@ -9,12 +9,18 @@ let
   isEnabled = config.defaultConfigs.pi.enable;
   piCfg = config.defaultConfigs.pi;
   llmProxyCfg = piCfg.llmProxy;
+  proxyExtensionCfg = piCfg.extensions.proxy;
 
   defaultSettings = {
     defaultProvider = "openai";
     defaultModel = "gpt-5.4";
     defaultThinkingLevel = "high";
-    packages = [ "ssh://git@github.com/surma/pi-config" ];
+    packages = [
+      {
+        source = "ssh://git@github.com/surma/pi-config";
+        extensions = [ "-extensions/proxy.ts" ];
+      }
+    ];
     skills = lib.optional config.programs.agent-browser.enable "${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.agent-browser}/share/pi/skills/agent-browser";
     theme = "gruvbox-dark-medium";
   };
@@ -22,14 +28,17 @@ let
   settings = lib.recursiveUpdate defaultSettings piCfg.settings;
 
   wrapper = pkgs.writeShellScriptBin "pi" ''
-    if [ -f "${llmProxyCfg.apiKeyFile}" ]; then
-      export PI_PROXY_API_KEY="$(tr -d '\n' < "${llmProxyCfg.apiKeyFile}")"
-    fi
+    ${lib.optionalString (llmProxyCfg.apiKeyFile != null) ''
+      if [ -f "${llmProxyCfg.apiKeyFile}" ]; then
+        export PI_PROXY_API_KEY="$(tr -d '\n' < "${llmProxyCfg.apiKeyFile}")"
+      fi
 
-    if [ -n "''${PI_PROXY_API_KEY:-}" ]; then
-      export PI_PROXY_AUTH_HEADER="Bearer ''${PI_PROXY_API_KEY}"
-    fi
+      if [ -n "''${PI_PROXY_API_KEY:-}" ]; then
+        export PI_PROXY_AUTH_HEADER="Bearer ''${PI_PROXY_API_KEY}"
+      fi
+    ''}
 
+    export PI_PROXY_BASE_URL=${lib.escapeShellArg llmProxyCfg.vendorBaseURL}
     export PI_SKIP_VERSION_CHECK=1
 
     exec ${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent}/bin/pi "$@"
@@ -60,6 +69,8 @@ with lib;
           description = "Path to file containing the API key for the LLM proxy";
         };
       };
+
+      extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
     };
   };
 
@@ -69,15 +80,20 @@ with lib;
         enable = true;
       };
 
-      home.file = mkIf isEnabled {
-        ".pi/agent/settings.json" = {
-          text = builtins.toJSON settings;
-          mutable = true;
-        };
-      };
+      home.file = mkIf isEnabled (
+        {
+          ".pi/agent/settings.json" = {
+            text = builtins.toJSON settings;
+            mutable = true;
+          };
+        }
+        // optionalAttrs proxyExtensionCfg.enable {
+          ".pi/agent/extensions/proxy.ts".source = ./extension/proxy.ts;
+        }
+      );
     }
 
-    (mkIf (isEnabled && llmProxyCfg.apiKeyFile != null) {
+    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || proxyExtensionCfg.enable)) {
       programs.pi.package = wrapper;
     })
   ];

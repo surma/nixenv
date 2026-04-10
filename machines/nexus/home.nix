@@ -45,6 +45,7 @@
     defaultConfigs.opencode.enable = true;
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
+    defaultConfigs.pi.extensions.proxy.enable = true;
     defaultConfigs.claude-code.enable = true;
     defaultConfigs.helix.enableSlSyntax = true;
     programs.web-search-cli.enable = true;

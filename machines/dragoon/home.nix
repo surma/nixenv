@@ -50,6 +50,7 @@ in
   programs.agent-browser.enable = true;
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
+  defaultConfigs.pi.extensions.proxy.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;
