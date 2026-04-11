@@ -10,3 +10,8 @@
 
 - **NEVER** run `find`, `grep`, or `rg` on large or unbounded subtrees such as `/`, `~`, or `/nix/store`.
 - For `/nix/store` specifically: use `nix eval` (or similar Nix tooling) to resolve derivation output paths instead of searching the store.
+
+## Git commits must disable GPG signing
+
+- When creating a commit, always pass `--no-gpg-sign`.
+- Without `--no-gpg-sign`, the commit may hang indefinitely waiting for GPG interaction.
