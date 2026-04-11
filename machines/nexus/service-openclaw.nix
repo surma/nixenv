@@ -77,6 +77,7 @@ in
         sharedModules = [
           ../../modules/features/secrets.nix
           ../../modules/programs/web-search-cli
+          ../../modules/programs/agent-browser
         ];
         extraSpecialArgs = {
           inherit inputs;

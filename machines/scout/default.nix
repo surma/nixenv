@@ -50,6 +50,8 @@
       };
     };
 
+    programs.agent-browser.enable = true;
+
     defaultConfigs.web-search-cli = {
       enable = true;
       llmProxy = {
