@@ -12,6 +12,7 @@
     ./service-syncthing-relay.nix
     ./service-traefik-tracing.nix
     ./service-gitea-ssh.nix
+    ./service-tail-proxy.nix
     ./service-music-proxy.nix
     ./service-ha-proxy.nix
     ./service-gitea-proxy.nix

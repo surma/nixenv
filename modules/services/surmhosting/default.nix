@@ -473,8 +473,24 @@ in
       "10.202.0.0/16"
     ];
 
+    networking.nftables.tables = mkIf config.services.tailscale.enable {
+      surmhosting-tailscale-nat = {
+        family = "ip";
+        content = ''
+          chain postrouting {
+            type nat hook postrouting priority srcnat; policy accept;
+            ip saddr { 10.201.0.0/16, 10.202.0.0/16 } oifname "tailscale0" masquerade
+          }
+        '';
+      };
+    };
+
     networking.firewall.allowedTCPPorts = [ 80 ] ++ (lib.optionals cfg.tls.enable [ 443 ]);
     networking.firewall.trustedInterfaces = [ "ve-+" ];
+    networking.firewall.extraForwardRules = lib.optionalString config.services.tailscale.enable ''
+      iifname "ve-+" oifname "tailscale0" accept
+      iifname "tailscale0" oifname "ve-+" ct state established,related accept
+    '';
 
     services.traefik = mkMerge (
       [
