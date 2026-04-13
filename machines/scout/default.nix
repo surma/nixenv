@@ -72,7 +72,7 @@
     home.file = {
       "AGENTS.md".source =
         config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/assets/AGENTS.md";
-      ".local/scout/AGENTS.md".source =
+      ".local/state/scout/AGENTS.md".source =
         config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/machines/scout/AGENTS.md";
     };
 
