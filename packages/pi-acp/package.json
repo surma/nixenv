@@ -1,0 +1,13 @@
+{
+  "name": "pi-acp",
+  "version": "0.0.25",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "pi-acp": "dist/index.js"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^0.12.0",
+    "zod": "^3.25.0"
+  }
+}

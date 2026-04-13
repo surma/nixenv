@@ -135,6 +135,20 @@
         "nexus"
       ];
     };
+    scout-telegram-bot-token = {
+      contents = ../secrets/scout-telegram-bot-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    scout-telegram-chat-id = {
+      contents = ../secrets/scout-telegram-chat-id.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     openrouter-api-key = {
       contents = ../secrets/openrouter-api-key.age;
       keys = [

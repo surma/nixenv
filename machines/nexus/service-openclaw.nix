@@ -22,10 +22,12 @@ in
   '';
 
   secrets.items.llm-proxy-client-key.command = ''
-    mkdir -p /var/lib/openclaw
+    mkdir -p /var/lib/openclaw /var/lib/scout
     key="$(cat)"
     printf '%s\n' "$key" > /var/lib/openclaw/llm-proxy-client-key
     chmod 0644 /var/lib/openclaw/llm-proxy-client-key
+    printf '%s\n' "$key" > /var/lib/scout/llm-proxy-client-key
+    chmod 0644 /var/lib/scout/llm-proxy-client-key
     {
       printf 'LLM_PROXY_API_KEY=%s\n' "$key"
       printf 'PI_PROXY_API_KEY=%s\n' "$key"
@@ -38,6 +40,18 @@ in
       printf 'XAI_API_KEY=%s\n' "$key"
     } > /var/lib/openclaw/llm-proxy.env
     chmod 0644 /var/lib/openclaw/llm-proxy.env
+    {
+      printf 'LLM_PROXY_API_KEY=%s\n' "$key"
+      printf 'PI_PROXY_API_KEY=%s\n' "$key"
+      printf 'PI_PROXY_AUTH_HEADER=Bearer %s\n' "$key"
+      printf 'OPENAI_API_KEY=%s\n' "$key"
+      printf 'ANTHROPIC_API_KEY=%s\n' "$key"
+      printf 'GEMINI_API_KEY=%s\n' "$key"
+      printf 'GOOGLE_API_KEY=%s\n' "$key"
+      printf 'GROQ_API_KEY=%s\n' "$key"
+      printf 'XAI_API_KEY=%s\n' "$key"
+    } > /var/lib/scout/llm-proxy.env
+    chmod 0644 /var/lib/scout/llm-proxy.env
   '';
 
   services.surmhosting.services.openclaw.expose.port = ports.openclaw;
