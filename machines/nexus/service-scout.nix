@@ -85,7 +85,8 @@ in
         useGlobalPkgs = true;
         useUserPackages = false;
         sharedModules = [
-          ../../modules/home-manager/mutable-files
+          ../../modules/features/secrets.nix
+          ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
           ../../modules/programs/pi
         ];
@@ -94,41 +95,7 @@ in
           inherit system;
           systemManager = "home-manager";
         };
-        users.containeruser = {
-          config,
-          ...
-        }:
-        {
-          home.username = "containeruser";
-          home.homeDirectory = "/home/containeruser";
-          home.stateVersion = "25.05";
-
-          home.packages = with pkgs; [
-            git
-            nix
-            openssh
-          ];
-
-          programs.home-manager.enable = true;
-
-          programs.ssh = {
-            enable = true;
-            enableDefaultConfig = false;
-            matchBlocks."github.com" = {
-              hostname = "github.com";
-              user = "git";
-              identityFile = [ "~/.ssh/id_surma" ];
-              identitiesOnly = true;
-              extraOptions.StrictHostKeyChecking = "accept-new";
-            };
-          };
-
-          programs.pi.enable = true;
-          defaultConfigs.pi.enable = true;
-          defaultConfigs.pi.extensions.proxy.enable = true;
-          defaultConfigs.pi.settings.quietStartup = true;
-          defaultConfigs.pi.llmProxy.apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
-        };
+        users.containeruser = import ../scout;
       };
 
       systemd.services.scout = {
