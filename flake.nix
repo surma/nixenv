@@ -53,11 +53,6 @@
       url = "github:anomalyco/opencode?ref=v1.2.14";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-openclaw = {
-      url = "github:openclaw/nix-openclaw";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
     sl2 = {
       url = "git+ssh://git@github.com/surma/sl";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -80,7 +80,7 @@
       enable = true;
       llmProxy = {
         manageSecret = false;
-        authTokenFile = "/var/lib/credentials/openclaw/llm-proxy-client-key";
+        authTokenFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
     };
   };

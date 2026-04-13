@@ -9,7 +9,6 @@
     ./hardware.nix
     ./service-syncthing.nix
     ./service-mosquitto.nix
-    ./service-openclaw.nix
     ./service-scout.nix
     ./service-gitea.nix
     ./service-lidarr.nix

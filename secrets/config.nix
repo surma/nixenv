@@ -121,20 +121,6 @@
         "scout"
       ];
     };
-    openclaw-telegram-token = {
-      contents = ../secrets/openclaw-telegram-token.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
-    openclaw-gateway-token = {
-      contents = ../secrets/openclaw-gateway-token.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
     scout-telegram-bot-token = {
       contents = ../secrets/scout-telegram-bot-token.age;
       keys = [
