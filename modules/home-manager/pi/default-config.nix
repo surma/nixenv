@@ -10,6 +10,7 @@ let
   piCfg = config.defaultConfigs.pi;
   llmProxyCfg = piCfg.llmProxy;
   proxyExtensionCfg = piCfg.extensions.proxy;
+  mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
   defaultSettings = {
     defaultProvider = "openai";
@@ -25,7 +26,14 @@ let
     theme = "gruvbox-dark-medium";
   };
 
-  settings = lib.recursiveUpdate defaultSettings piCfg.settings;
+  settings =
+    let
+      mergedSettings = lib.recursiveUpdate defaultSettings piCfg.settings;
+    in
+    mergedSettings
+    // lib.optionalAttrs mcpAdapterCfg.enable {
+      packages = (mergedSettings.packages or [ ]) ++ [ "npm:pi-mcp-adapter" ];
+    };
 
   wrapper = pkgs.writeShellScriptBin "pi" ''
     ${lib.optionalString (llmProxyCfg.apiKeyFile != null) ''
@@ -71,6 +79,14 @@ with lib;
       };
 
       extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
+
+      packages.mcpAdapter.enable = mkEnableOption "the pi-mcp-adapter Pi package";
+
+      mcpConfig = mkOption {
+        type = types.nullOr (types.attrsOf types.anything);
+        default = null;
+        description = "JSON content written to ~/.pi/agent/mcp.json";
+      };
     };
   };
 
@@ -84,6 +100,12 @@ with lib;
         {
           ".pi/agent/settings.json" = {
             text = builtins.toJSON settings;
+            mutable = true;
+          };
+        }
+        // optionalAttrs (piCfg.mcpConfig != null) {
+          ".pi/agent/mcp.json" = {
+            text = builtins.toJSON piCfg.mcpConfig;
             mutable = true;
           };
         }

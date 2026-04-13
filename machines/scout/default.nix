@@ -9,6 +9,7 @@
   imports = [
     ../../scripts
     ../../modules/home-manager/mutable-files
+    ../../modules/defaultConfigs/npm
   ];
 
   config = {
@@ -26,6 +27,7 @@
     home.packages = with pkgs; [
       git
       jq
+      nodejs_24
       openssh
       ripgrep
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -37,6 +39,8 @@
 
     programs.home-manager.enable = true;
 
+    defaultConfigs.npm.enable = true;
+
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;
@@ -45,6 +49,17 @@
         user = "git";
         identityFile = "~/.ssh/id_repo_scout";
         identitiesOnly = true;
+      };
+      matchBlocks."gitea.surma.technology" = {
+        hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
+        port = 2222;
+        user = "containeruser";
+        identityFile = "~/.ssh/id_repo_scout";
+        identitiesOnly = true;
+        extraOptions = {
+          StrictHostKeyChecking = "accept-new";
+          HostKeyAlias = "gitea.nexus.hosts.10.0.0.2.nip.io";
+        };
       };
       matchBlocks."gitea.nexus.hosts.10.0.0.2.nip.io" = {
         hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
@@ -60,8 +75,17 @@
 
     defaultConfigs.pi = {
       enable = true;
+      packages.mcpAdapter.enable = true;
       extensions.proxy.enable = true;
       llmProxy.apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
+      mcpConfig = {
+        settings.toolPrefix = "none";
+        mcpServers.scout = {
+          url = "http://127.0.0.1:32445/mcp";
+          lifecycle = "eager";
+          directTools = true;
+        };
+      };
       settings = {
         defaultProvider = "anthropic";
         defaultModel = "claude-opus-4.6";

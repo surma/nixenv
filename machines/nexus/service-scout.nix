@@ -1,12 +1,13 @@
 { pkgs, lib, inputs, ... }:
 let
   system = pkgs.stdenv.hostPlatform.system;
+  scoutMcpPort = 32445;
 
   scoutPiAcp = pkgs.writeShellScriptBin "scout-pi-acp" ''
     export GEMINI_API_KEY=dummy
     export PI_PROXY_BASE_URL=${lib.escapeShellArg "https://vendors.llm.surma.technology"}
     export PI_SKIP_VERSION_CHECK=1
-    export PATH=${lib.makeBinPath [ inputs.self.packages.${system}.pi-coding-agent pkgs.git pkgs.nix pkgs.openssh ]}:$PATH
+    export PATH=${lib.makeBinPath [ inputs.self.packages.${system}.pi-coding-agent pkgs.coreutils pkgs.git pkgs.nix pkgs.openssh pkgs.procps ]}:$PATH
 
     exec ${inputs.self.packages.${system}.pi-acp}/bin/pi-acp "$@"
   '';
@@ -64,6 +65,7 @@ in
   services.surmhosting.services.scout.containerService = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
+    serviceConfig.MemoryMax = "16G";
   };
 
   services.surmhosting.services.scout.container = {
@@ -109,11 +111,13 @@ in
           pkgs.coreutils
           pkgs.git
           pkgs.nix
+          pkgs.nodejs_24
           pkgs.openssh
         ];
         environment = {
           SCOUT_ACP_COMMAND = "${scoutPiAcp}/bin/scout-pi-acp";
           SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
+          SCOUT_MCP_PORT = toString scoutMcpPort;
           SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
         };
         serviceConfig = {
