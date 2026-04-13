@@ -2,10 +2,14 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 {
-  imports = [ ../../scripts ];
+  imports = [
+    ../../scripts
+    ../../modules/home-manager/mutable-files
+  ];
 
   config = {
     home.username = lib.mkDefault "containeruser";
@@ -21,8 +25,10 @@
 
     home.packages = with pkgs; [
       git
+      jq
       openssh
       ripgrep
+      inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -51,6 +57,24 @@
     };
 
     programs.agent-browser.enable = true;
+
+    defaultConfigs.pi = {
+      enable = true;
+      extensions.proxy.enable = true;
+      llmProxy.apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
+      settings = {
+        defaultProvider = "anthropic";
+        defaultModel = "claude-opus-4.6";
+        quietStartup = true;
+      };
+    };
+
+    home.file = {
+      "AGENTS.md".source =
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/assets/AGENTS.md";
+      ".local/scout/AGENTS.md".source =
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/machines/scout/AGENTS.md";
+    };
 
     defaultConfigs.web-search-cli = {
       enable = true;
