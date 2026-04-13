@@ -14,9 +14,13 @@ in
 {
   secrets.items.ssh-keys.command = ''
     mkdir -p /dump/state/scout/.ssh
+    chown surma:users /dump/state/scout/.ssh
+    chmod 0700 /dump/state/scout/.ssh
+
     install -m 0644 ${../../assets/ssh-keys/id_surma.pub} /dump/state/scout/.ssh/id_surma.pub
     cat > /dump/state/scout/.ssh/id_surma
     echo >> /dump/state/scout/.ssh/id_surma
+    chown surma:users /dump/state/scout/.ssh/id_surma.pub /dump/state/scout/.ssh/id_surma
     chmod 0600 /dump/state/scout/.ssh/id_surma
   '';
 
@@ -112,6 +116,7 @@ in
         description = "Scout Telegram bridge";
         wantedBy = [ "multi-user.target" ];
         wants = [ "network-online.target" ];
+        requires = [ "home-manager-containeruser.service" ];
         after = [ "network-online.target" "home-manager-containeruser.service" ];
         path = [
           pkgs.bash
