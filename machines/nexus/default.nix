@@ -54,6 +54,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  hardware.graphics.enable = true;
+
   networking.hostName = "nexus";
   networking.networkmanager.enable = true;
   networking.nftables.enable = true;
