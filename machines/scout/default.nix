@@ -78,14 +78,6 @@
       packages.mcpAdapter.enable = true;
       extensions.proxy.enable = true;
       llmProxy.apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
-      mcpConfig = {
-        settings.toolPrefix = "none";
-        mcpServers.scout = {
-          url = "http://127.0.0.1:32445/mcp";
-          lifecycle = "eager";
-          directTools = true;
-        };
-      };
       settings = {
         defaultProvider = "anthropic";
         defaultModel = "claude-opus-4.6";

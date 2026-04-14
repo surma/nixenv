@@ -15,6 +15,7 @@ in
         MusicFolder = "/dump/music";
         DataFolder = "/dump/state/navidrome";
         DefaultDownloadableShare = true;
+        Scanner.PurgeMissing = "full";
         Address = "0.0.0.0";
         Port = 8080;
       };
