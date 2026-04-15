@@ -51,7 +51,7 @@
     };
     opencode = {
       url = "github:anomalyco/opencode?ref=v1.4.6";
-      # inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     sl2 = {
       url = "git+ssh://git@github.com/surma/sl";
