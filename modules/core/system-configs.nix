@@ -39,6 +39,7 @@ let
 
   # Home-manager-only feature/service modules.
   homeManagerFeatureModules = [
+    ../home-manager/agent
     ../features/hyprland.nix
     ../features/screenshot.nix
     ../services/syncthing

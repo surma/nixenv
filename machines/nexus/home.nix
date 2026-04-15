@@ -12,6 +12,7 @@
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
+    ../../profiles/home-manager/ai.nix
 
   ];
 
@@ -41,15 +42,8 @@
     );
     programs.go.enable = true;
 
-    programs.opencode.enable = true;
-    defaultConfigs.opencode.enable = true;
-    programs.pi.enable = true;
-    defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
     defaultConfigs.claude-code.enable = true;
     defaultConfigs.helix.enableSlSyntax = true;
-    programs.web-search-cli.enable = true;
-    defaultConfigs.web-search-cli.enable = true;
-    programs.agent-browser.enable = true;
   };
 }

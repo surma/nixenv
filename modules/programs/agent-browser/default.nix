@@ -21,5 +21,8 @@ with lib;
 
   config = mkIf (systemManager == "home-manager" && config.programs.agent-browser.enable) {
     home.packages = [ config.programs.agent-browser.package ];
+    agent.skills = [ "${config.programs.agent-browser.package}/share/pi/skills/agent-browser" ];
+    home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH =
+      lib.getExe (if pkgs.stdenv.isDarwin then pkgs.google-chrome else pkgs.chromium);
   };
 }

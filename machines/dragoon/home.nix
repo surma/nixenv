@@ -15,6 +15,7 @@ in
     ../../profiles/home-manager/experiments.nix
     ../../profiles/home-manager/cloud.nix
     ../../profiles/home-manager/nixdev.nix
+    ../../profiles/home-manager/ai.nix
     ../../profiles/home-manager/javascript.nix
     ../../profiles/home-manager/godot.nix
   ];
@@ -43,13 +44,6 @@ in
   );
 
   programs.telegram.enable = true;
-  programs.opencode.enable = true;
-  defaultConfigs.opencode.enable = true;
-  programs.web-search-cli.enable = true;
-  defaultConfigs.web-search-cli.enable = true;
-  programs.agent-browser.enable = true;
-  programs.pi.enable = true;
-  defaultConfigs.pi.enable = true;
   defaultConfigs.pi.extensions.proxy.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
   programs.ghostty.enable = true;

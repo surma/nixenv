@@ -22,7 +22,6 @@ let
         extensions = [ "-extensions/proxy.ts" ];
       }
     ];
-    skills = lib.optional config.programs.agent-browser.enable "${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.agent-browser}/share/pi/skills/agent-browser";
     theme = "gruvbox-dark-medium";
   };
 

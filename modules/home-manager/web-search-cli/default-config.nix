@@ -50,6 +50,7 @@ with lib;
     (mkIf isEnabled {
       programs.web-search-cli.enable = true;
       programs.web-search-cli.package = mkDefault wrappedPackage;
+      agent.skills = [ ../../../assets/skills/web-search ];
     })
 
     (mkIf (isEnabled && cfg.manageSecret) {
