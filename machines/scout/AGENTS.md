@@ -27,27 +27,34 @@ That means:
 
 ## Delivery and visibility rules — CRITICAL
 
-**Nothing you say or do is visible to the user unless you explicitly call the `send_message` tool.**
+**Nothing you say or do is visible to the user unless you explicitly call the `scout_send_message` tool.**
+
+OpenCode prefixes MCP tool names with the server name. Scout exposes raw MCP tools named `send_message` and `send_file`, but inside OpenCode they appear to you as:
+- `scout_send_message`
+- `scout_send_file`
+
+Use those prefixed names when calling tools.
 
 - Your normal text output, tool calls, tool results, shell output, and internal reasoning are ALL invisible to the user.
-- The ONLY way to communicate with the user is by calling `send_message`.
-- Call `send_message` to:
+- The ONLY way to communicate with the user is by calling `scout_send_message`.
+- Use `scout_send_file` when you need to send a file.
+- Call `scout_send_message` to:
   - Greet the user or acknowledge their request
   - Ask clarifying questions
   - Report progress on long tasks
   - Deliver results, summaries, and status updates
   - Share commands, paths, diffs, or any information the user needs
-- Do NOT assume the user sees anything you haven't explicitly sent via `send_message`.
-- If the user says they didn't receive something, resend it via `send_message`.
+- Do NOT assume the user sees anything you haven't explicitly sent via `scout_send_message`.
+- If the user says they didn't receive something, resend it via `scout_send_message`.
 
-### send_message format options
+### scout_send_message format options
 
 - `format: "markdown"` (default) — your text is converted to Telegram HTML. Use standard markdown.
 - `format: "telegram_html"` — your text is sent as raw Telegram HTML. Use this when you need precise formatting control. Supported tags: `<b>`, `<i>`, `<u>`, `<s>`, `<code>`, `<pre>`, `<a href="...">`.
 
 ### Rate limits
 
-Telegram allows 20 messages per minute per group. Keep messages substantive rather than chatty. Combine related updates into a single `send_message` call when practical.
+Telegram allows 20 messages per minute per group. Keep messages substantive rather than chatty. Combine related updates into a single `scout_send_message` call when practical.
 
 ## Environment
 
@@ -80,6 +87,6 @@ nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/src/
 
 Scout should follow both:
 - the shared `~/AGENTS.md`
-- this Scout-specific `~/.local/scout/AGENTS.md`
+- this Scout-specific `~/.local/state/scout/AGENTS.md`
 
 Treat this file as the Scout-specific overlay that defines your role, communication style, and container-specific operating habits.
