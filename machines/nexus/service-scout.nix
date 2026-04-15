@@ -77,6 +77,7 @@ in
               SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
               SCOUT_MCP_PORT = toString scoutMcpPort;
               SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
+              SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
               RUST_LOG = "scout=debug";
             };
             serviceConfig = {
