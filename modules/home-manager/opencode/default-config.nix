@@ -206,19 +206,13 @@ with lib;
       customScripts.noti.enable = mkIf isEnabled true;
     })
     // {
-      programs.mcp-playwright.enable = mkIf isEnabled true;
+      programs.opencode.enable = mkIf isEnabled true;
       programs.opencode = {
         plugins = {
           "notification.js" = builtins.readFile ./plugin/notification.js;
         };
         extraConfig = {
           # model and provider config will be injected via OPENCODE_CONFIG_CONTENT
-        };
-        mcps = {
-          mcp-playwright = {
-            type = "local";
-            command = [ "mcp-playwright" ];
-          };
         };
       };
     })

@@ -73,15 +73,11 @@
 
     programs.agent-browser.enable = true;
 
-    defaultConfigs.pi = {
+    defaultConfigs.opencode = {
       enable = true;
-      packages.mcpAdapter.enable = true;
-      extensions.proxy.enable = true;
-      llmProxy.apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
-      settings = {
-        defaultProvider = "anthropic";
-        defaultModel = "claude-opus-4.6";
-        quietStartup = true;
+      llmProxy = {
+        manageSecret = false;
+        apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
     };
 

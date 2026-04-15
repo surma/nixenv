@@ -2,15 +2,6 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   scoutMcpPort = 32445;
-
-  scoutPiAcp = pkgs.writeShellScriptBin "scout-pi-acp" ''
-    export GEMINI_API_KEY=dummy
-    export PI_PROXY_BASE_URL=${lib.escapeShellArg "https://vendors.llm.surma.technology"}
-    export PI_SKIP_VERSION_CHECK=1
-    export PATH=${lib.makeBinPath [ inputs.self.packages.${system}.pi-coding-agent pkgs.coreutils pkgs.git pkgs.nix pkgs.openssh pkgs.procps ]}:$PATH
-
-    exec ${inputs.self.packages.${system}.pi-acp}/bin/pi-acp "$@"
-  '';
 in
 {
   secrets.items.ssh-keys.command = ''
@@ -44,18 +35,6 @@ in
     key="$(cat)"
     printf '%s\n' "$key" > /var/lib/scout/llm-proxy-client-key
     chmod 0644 /var/lib/scout/llm-proxy-client-key
-    {
-      printf 'LLM_PROXY_API_KEY=%s\n' "$key"
-      printf 'PI_PROXY_API_KEY=%s\n' "$key"
-      printf 'PI_PROXY_AUTH_HEADER=Bearer %s\n' "$key"
-      printf 'OPENAI_API_KEY=%s\n' "$key"
-      printf 'ANTHROPIC_API_KEY=%s\n' "$key"
-      printf 'GEMINI_API_KEY=%s\n' "$key"
-      printf 'GOOGLE_API_KEY=%s\n' "$key"
-      printf 'GROQ_API_KEY=%s\n' "$key"
-      printf 'XAI_API_KEY=%s\n' "$key"
-    } > /var/lib/scout/llm-proxy.env
-    chmod 0644 /var/lib/scout/llm-proxy.env
   '';
 
   systemd.tmpfiles.rules = [
@@ -70,7 +49,50 @@ in
 
   services.surmhosting.services.scout.container = {
     config = {
-      imports = [ inputs.home-manager.nixosModules.home-manager ];
+      imports = [
+        inputs.home-manager.nixosModules.home-manager
+        # Module that wires the scout systemd service, with access to the
+        # container's evaluated config (needed to reference the wrapped
+        # opencode package produced by home-manager).
+        ({ config, ... }: {
+          systemd.services.scout = let
+            opencode = config.home-manager.users.containeruser.programs.opencode.package;
+          in {
+            description = "Scout Telegram bridge";
+            wantedBy = [ "multi-user.target" ];
+            wants = [ "network-online.target" ];
+            requires = [ "home-manager-containeruser.service" ];
+            after = [ "network-online.target" "home-manager-containeruser.service" ];
+            path = [
+              pkgs.bash
+              pkgs.coreutils
+              pkgs.git
+              pkgs.nix
+              pkgs.nodejs_24
+              pkgs.openssh
+              pkgs.procps
+            ];
+            environment = {
+              SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
+              SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
+              SCOUT_MCP_PORT = toString scoutMcpPort;
+              SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
+            };
+            serviceConfig = {
+              EnvironmentFile = [
+                "/var/lib/credentials/scout/telegram-bot-token.env"
+                "/var/lib/credentials/scout/scout.env"
+              ];
+              User = "containeruser";
+              Group = "users";
+              WorkingDirectory = "/home/containeruser";
+              Restart = "always";
+              RestartSec = 5;
+              ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
+            };
+          };
+        })
+      ];
       system.stateVersion = "25.05";
 
       users.users.containeruser = {
@@ -90,7 +112,7 @@ in
           ../../modules/features/secrets.nix
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
-          ../../modules/programs/pi
+          ../../modules/programs/opencode
         ];
         extraSpecialArgs = {
           inherit inputs;
@@ -98,41 +120,6 @@ in
           systemManager = "home-manager";
         };
         users.containeruser = import ../scout;
-      };
-
-      systemd.services.scout = {
-        description = "Scout Telegram bridge";
-        wantedBy = [ "multi-user.target" ];
-        wants = [ "network-online.target" ];
-        requires = [ "home-manager-containeruser.service" ];
-        after = [ "network-online.target" "home-manager-containeruser.service" ];
-        path = [
-          pkgs.bash
-          pkgs.coreutils
-          pkgs.git
-          pkgs.nix
-          pkgs.nodejs_24
-          pkgs.openssh
-        ];
-        environment = {
-          SCOUT_ACP_COMMAND = "${scoutPiAcp}/bin/scout-pi-acp";
-          SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
-          SCOUT_MCP_PORT = toString scoutMcpPort;
-          SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
-        };
-        serviceConfig = {
-          EnvironmentFile = [
-            "/var/lib/credentials/scout/llm-proxy.env"
-            "/var/lib/credentials/scout/telegram-bot-token.env"
-            "/var/lib/credentials/scout/scout.env"
-          ];
-          User = "containeruser";
-          Group = "users";
-          WorkingDirectory = "/home/containeruser";
-          Restart = "always";
-          RestartSec = 5;
-          ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
-        };
       };
     };
 
