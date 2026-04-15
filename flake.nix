@@ -73,7 +73,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
-    qmd.url = "github:tobi/qmd";
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs =

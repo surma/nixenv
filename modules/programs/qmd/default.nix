@@ -13,7 +13,7 @@ with lib;
       enable = mkEnableOption "Pi";
       package = mkOption {
         type = types.package;
-        default = inputs.qmd.packages.${pkgs.stdenv.hostPlatform.system}.qmd;
+        default = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.qmd;
         description = "Query Markdown Documents";
       };
     };

@@ -184,6 +184,13 @@
         "nexus"
       ];
     };
+    nexus-upsmon-password = {
+      contents = ../machines/nexus/ups/upsmon.password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     syncthing-relay-token = {
       contents = ../secrets/syncthing-relay-token.age;
       keys = [
