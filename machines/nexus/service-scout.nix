@@ -110,6 +110,7 @@ in
         useUserPackages = false;
         sharedModules = [
           ../../modules/features/secrets.nix
+          ../../modules/home-manager/agent
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
           ../../modules/programs/opencode
