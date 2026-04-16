@@ -1,0 +1,78 @@
+const DEFAULT_PROXY_BASE = "https://vendors.llm.surma.technology";
+const USAGE_TAG_PREFIX = ["opencode", "coding-agent"];
+const GOOGLE_ROUTE =
+  "/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
+
+function trimSlash(value) {
+  return value.replace(/\/$/, "");
+}
+
+function resolveProxyBase() {
+  const envUrl = process.env.OPENCODE_PROXY_BASE_URL ?? process.env.OPENAI_BASE_URL;
+
+  if (envUrl?.startsWith("http")) {
+    return trimSlash(envUrl).replace(/\/v1$/, "");
+  }
+
+  return DEFAULT_PROXY_BASE;
+}
+
+function buildUsageTag(sessionId, source) {
+  return JSON.stringify([...USAGE_TAG_PREFIX, source, sessionId]);
+}
+
+function getProviders(proxyBase) {
+  return {
+    anthropic: `${proxyBase}/apis/anthropic/v1`,
+    openai: `${proxyBase}/v1`,
+    google: `${proxyBase}${GOOGLE_ROUTE}`,
+    groq: `${proxyBase}/groq/openai/v1`,
+    xai: `${proxyBase}/xai/v1`,
+    cohere: `${proxyBase}/cohere/v2`,
+    perplexity: `${proxyBase}/perplexity`,
+  };
+}
+
+export default async function shopifyProxyPlugin() {
+  const sessionId = crypto.randomUUID();
+  const inputSource = process.env.OPENCODE_USAGE_SOURCE ?? "interactive";
+
+  return {
+    async config(config) {
+      const token = process.env.OPENCODE_API_KEY?.trim();
+
+      if (!token) {
+        throw new Error("OpenCode proxy API key is not configured.");
+      }
+
+      const usageTag = buildUsageTag(sessionId, inputSource);
+      const providers = getProviders(resolveProxyBase());
+
+      config.provider ??= {};
+
+      for (const [name, baseURL] of Object.entries(providers)) {
+        const existingConfig = config.provider[name] ?? {};
+        const existingOptions = existingConfig.options ?? {};
+
+        config.provider[name] = {
+          ...existingConfig,
+          options: {
+            ...existingOptions,
+            baseURL,
+            apiKey: token,
+            headers: {
+              ...existingOptions.headers,
+              "Shopify-Usage-Tag": usageTag,
+              "X-Shopify-Session-Affinity-Header": "opencode-session-id",
+              "opencode-session-id": sessionId,
+              ...(name === "google" ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
+        };
+      }
+
+      const existingProviders = config.enabled_providers ?? [];
+      config.enabled_providers = [...new Set([...existingProviders, ...Object.keys(providers)])];
+    },
+  };
+}

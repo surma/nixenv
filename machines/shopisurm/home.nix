@@ -51,11 +51,12 @@
   defaultConfigs.claude-code.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
 
-  programs.ghostty.enable = true;
-  defaultConfigs.ghostty.enable = true;
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;
-
+  
+  programs.opencode.enable = true;
+  defaultConfigs.opencode.enable = true;
+  
   customScripts.denix.enable = true;
   customScripts.noti.enable = true;
   customScripts.ghclone.enable = true;

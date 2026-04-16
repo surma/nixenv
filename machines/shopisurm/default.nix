@@ -10,6 +10,7 @@ in
 {
   imports = [
     ../../profiles/darwin/base.nix
+    ./nix-custom-conf-workaround.nix
 
     # Program modules are auto-loaded from ../../modules/programs
 
@@ -17,10 +18,6 @@ in
   ];
 
   system.stateVersion = 5;
-
-  nix.extraOptions = ''
-    !include nix.conf.d/shopify.conf
-  '';
 
   programs.obs.enable = true;
 
