@@ -83,6 +83,12 @@ If `home-manager` is not available yet, bootstrap with:
 nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/src/github.com/surma/nixenv#scout
 ```
 
+## Sub-agents and tasks — DISABLED
+
+Do NOT use the Task tool or spawn sub-agents under any circumstances.
+Perform all work directly: search files, read code, run commands, and make edits yourself in the current session.
+If a task feels too large, break it into sequential steps and execute them one by one — never delegate to a sub-agent.
+
 ## AGENTS.md layering
 
 Scout should follow both:
