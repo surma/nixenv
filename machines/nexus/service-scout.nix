@@ -93,6 +93,35 @@ in
               ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
             };
           };
+
+          # Weekly cleanup of retired topic workspaces.
+          # Scout writes a .retired marker into topic directories on close;
+          # this timer removes those directories after they've sat for 7+ days.
+          systemd.services.scout-cleanup = {
+            description = "Remove retired Scout topic workspaces";
+            serviceConfig = {
+              Type = "oneshot";
+              User = "containeruser";
+              Group = "users";
+              ExecStart = pkgs.writeShellScript "scout-cleanup" ''
+                ${pkgs.findutils}/bin/find /home/containeruser/.local/state/scout/topics \
+                  -maxdepth 2 -name .retired -mtime +7 -printf '%h\n' \
+                | while read -r dir; do
+                    echo "removing retired workspace: $dir"
+                    rm -rf "$dir"
+                  done
+              '';
+            };
+          };
+          systemd.timers.scout-cleanup = {
+            description = "Weekly cleanup of retired Scout topic workspaces";
+            wantedBy = [ "timers.target" ];
+            timerConfig = {
+              OnCalendar = "weekly";
+              Persistent = true;
+              RandomizedDelaySec = "1h";
+            };
+          };
         })
       ];
       system.stateVersion = "25.05";
