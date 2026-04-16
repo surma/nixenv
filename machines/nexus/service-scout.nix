@@ -1,4 +1,9 @@
-{ pkgs, lib, inputs, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 let
   system = pkgs.stdenv.hostPlatform.system;
   scoutMcpPort = 32445;
@@ -54,75 +59,83 @@ in
         # Module that wires the scout systemd service, with access to the
         # container's evaluated config (needed to reference the wrapped
         # opencode package produced by home-manager).
-        ({ config, ... }: {
-          systemd.services.scout = let
-            opencode = config.home-manager.users.containeruser.programs.opencode.package;
-          in {
-            description = "Scout Telegram bridge";
-            wantedBy = [ "multi-user.target" ];
-            wants = [ "network-online.target" ];
-            requires = [ "home-manager-containeruser.service" ];
-            after = [ "network-online.target" "home-manager-containeruser.service" ];
-            path = [
-              pkgs.bash
-              pkgs.coreutils
-              pkgs.git
-              pkgs.nix
-              pkgs.nodejs_24
-              pkgs.openssh
-              pkgs.procps
-            ];
-            environment = {
-              SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
-              SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
-              SCOUT_MCP_PORT = toString scoutMcpPort;
-              SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
-              SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
-              RUST_LOG = "scout=debug";
-            };
-            serviceConfig = {
-              EnvironmentFile = [
-                "/var/lib/credentials/scout/telegram-bot-token.env"
-                "/var/lib/credentials/scout/scout.env"
-              ];
-              User = "containeruser";
-              Group = "users";
-              WorkingDirectory = "/home/containeruser";
-              Restart = "always";
-              RestartSec = 5;
-              ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
-            };
-          };
+        (
+          { config, ... }:
+          {
+            systemd.services.scout =
+              let
+                opencode = config.home-manager.users.containeruser.programs.opencode.package;
+              in
+              {
+                description = "Scout Telegram bridge";
+                wantedBy = [ "multi-user.target" ];
+                wants = [ "network-online.target" ];
+                requires = [ "home-manager-containeruser.service" ];
+                after = [
+                  "network-online.target"
+                  "home-manager-containeruser.service"
+                ];
+                path = [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.git
+                  pkgs.nix
+                  pkgs.nodejs_24
+                  pkgs.openssh
+                  pkgs.procps
+                ];
+                environment = {
+                  SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
+                  SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
+                  SCOUT_MCP_PORT = toString scoutMcpPort;
+                  SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
+                  SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
+                  RUST_LOG = "scout=debug";
+                };
+                serviceConfig = {
+                  EnvironmentFile = [
+                    "/var/lib/credentials/scout/telegram-bot-token.env"
+                    "/var/lib/credentials/scout/scout.env"
+                  ];
+                  User = "containeruser";
+                  Group = "users";
+                  WorkingDirectory = "/home/containeruser";
+                  Restart = "always";
+                  RestartSec = 5;
+                  ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
+                };
+              };
 
-          # Weekly cleanup of retired topic workspaces.
-          # Scout writes a .retired marker into topic directories on close;
-          # this timer removes those directories after they've sat for 7+ days.
-          systemd.services.scout-cleanup = {
-            description = "Remove retired Scout topic workspaces";
-            serviceConfig = {
-              Type = "oneshot";
-              User = "containeruser";
-              Group = "users";
-              ExecStart = pkgs.writeShellScript "scout-cleanup" ''
-                ${pkgs.findutils}/bin/find /home/containeruser/.local/state/scout/topics \
-                  -maxdepth 2 -name .retired -mtime +7 -printf '%h\n' \
-                | while read -r dir; do
-                    echo "removing retired workspace: $dir"
-                    rm -rf "$dir"
-                  done
-              '';
+            # Weekly cleanup of retired topic workspaces.
+            # Scout writes a .retired marker into topic directories on close;
+            # this timer removes those directories after they've sat for 7+ days.
+            systemd.services.scout-cleanup = {
+              description = "Remove retired Scout topic workspaces";
+              serviceConfig = {
+                Type = "oneshot";
+                User = "containeruser";
+                Group = "users";
+                ExecStart = pkgs.writeShellScript "scout-cleanup" ''
+                  ${pkgs.findutils}/bin/find /home/containeruser/.local/state/scout/topics \
+                    -maxdepth 2 -name .retired -mtime +7 -printf '%h\n' \
+                  | while read -r dir; do
+                      echo "removing retired workspace: $dir"
+                      rm -rf "$dir"
+                    done
+                '';
+              };
             };
-          };
-          systemd.timers.scout-cleanup = {
-            description = "Weekly cleanup of retired Scout topic workspaces";
-            wantedBy = [ "timers.target" ];
-            timerConfig = {
-              OnCalendar = "weekly";
-              Persistent = true;
-              RandomizedDelaySec = "1h";
+            systemd.timers.scout-cleanup = {
+              description = "Weekly cleanup of retired Scout topic workspaces";
+              wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnCalendar = "weekly";
+                Persistent = true;
+                RandomizedDelaySec = "1h";
+              };
             };
-          };
-        })
+          }
+        )
       ];
       system.stateVersion = "25.05";
 

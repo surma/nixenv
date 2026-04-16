@@ -14,7 +14,9 @@
           SHARED_SECRET = "test1234";
         };
         serviceConfig = {
-          ExecStart = "${inputs.voice-memos.packages.${pkgs.stdenv.hostPlatform.system}.backend-server}/bin/voicememos-server";
+          ExecStart = "${
+            inputs.voice-memos.packages.${pkgs.stdenv.hostPlatform.system}.backend-server
+          }/bin/voicememos-server";
           User = "containeruser";
           Restart = "always";
         };
@@ -26,7 +28,9 @@
         wantedBy = [ "multi-user.target" ];
         environment.STORAGE_DIR = "/dump/state/voice-memos";
         serviceConfig = {
-          ExecStart = "${inputs.voice-memos.packages.${pkgs.stdenv.hostPlatform.system}.backend-worker}/bin/voicememos-worker";
+          ExecStart = "${
+            inputs.voice-memos.packages.${pkgs.stdenv.hostPlatform.system}.backend-worker
+          }/bin/voicememos-worker";
           User = "containeruser";
           Restart = "always";
         };

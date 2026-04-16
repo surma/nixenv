@@ -77,22 +77,24 @@ with lib;
   };
 
   config = mkMerge [
-    ((lib.optionalAttrs (options ? customScripts) {
-      customScripts.noti.enable = mkIf isEnabled true;
-    })
-    // {
-      programs.opencode.enable = mkIf isEnabled true;
-      programs.opencode = {
-        plugins = {
-          "notification.js" = builtins.readFile ./plugin/notification.js;
-          "shopify-proxy.js" = builtins.readFile ./plugin/shopify-proxy.js;
+    (
+      (lib.optionalAttrs (options ? customScripts) {
+        customScripts.noti.enable = mkIf isEnabled true;
+      })
+      // {
+        programs.opencode.enable = mkIf isEnabled true;
+        programs.opencode = {
+          plugins = {
+            "notification.js" = builtins.readFile ./plugin/notification.js;
+            "shopify-proxy.js" = builtins.readFile ./plugin/shopify-proxy.js;
+          };
+          extraConfig = {
+            model = "anthropic/claude-sonnet-4-5";
+            plugin = [ "file://${config.home.homeDirectory}/.config/opencode/plugin/shopify-proxy.js" ];
+          };
         };
-        extraConfig = {
-          model = "anthropic/claude-sonnet-4-5";
-          plugin = [ "file://${config.home.homeDirectory}/.config/opencode/plugin/shopify-proxy.js" ];
-        };
-      };
-    })
+      }
+    )
 
     (mkIf (isEnabled && cfg.manageSecret) {
       secrets.items.llm-proxy-client-key.target = mkDefault defaultApiKeyPath;

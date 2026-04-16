@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
 in

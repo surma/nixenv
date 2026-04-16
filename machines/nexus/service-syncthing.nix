@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   ports = import ./ports.nix;
   shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
@@ -45,25 +50,26 @@ in
 
   services.surmhosting.services.syncthing.expose.port = ports.syncthingGui;
 
-  systemd.services.syncthing-init.serviceConfig.ExecStartPre = let
-    waitForApi = pkgs.writeShellScript "wait-for-syncthing-api" ''
-      set -euo pipefail
+  systemd.services.syncthing-init.serviceConfig.ExecStartPre =
+    let
+      waitForApi = pkgs.writeShellScript "wait-for-syncthing-api" ''
+        set -euo pipefail
 
-      api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(/configuration/gui/apikey)' ${lib.escapeShellArg "${config.services.syncthing.configDir}/config.xml"} 2>/dev/null)"
-      [ -n "$api_key" ]
+        api_key="$(${pkgs.libxml2}/bin/xmllint --xpath 'string(/configuration/gui/apikey)' ${lib.escapeShellArg "${config.services.syncthing.configDir}/config.xml"} 2>/dev/null)"
+        [ -n "$api_key" ]
 
-      for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
-        response="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" http://127.0.0.1:${toString ports.syncthingGui}/rest/config/options 2>/dev/null || true)"
-        if [ -n "$response" ] && printf '%s' "$response" | ${pkgs.jq}/bin/jq -e . >/dev/null 2>&1; then
-          exit 0
-        fi
-        ${pkgs.coreutils}/bin/sleep 1
-      done
+        for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
+          response="$(${pkgs.curl}/bin/curl -fsSk -H "X-API-Key: $api_key" http://127.0.0.1:${toString ports.syncthingGui}/rest/config/options 2>/dev/null || true)"
+          if [ -n "$response" ] && printf '%s' "$response" | ${pkgs.jq}/bin/jq -e . >/dev/null 2>&1; then
+            exit 0
+          fi
+          ${pkgs.coreutils}/bin/sleep 1
+        done
 
-      exit 1
-    '';
-  in
-  [ "${waitForApi}" ];
+        exit 1
+      '';
+    in
+    [ "${waitForApi}" ];
 
   systemd.services.syncthing-private-relay = {
     description = "Inject private Syncthing relay URL";
@@ -80,15 +86,16 @@ in
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = let
-        injectRelay = shared.mkPrivateRelayScript {
-          tokenFile = config.secrets.items.syncthing-relay-token.target;
-          configXml = "${config.services.syncthing.configDir}/config.xml";
-          apiUrl = "http://127.0.0.1:${toString ports.syncthingGui}";
-          curlExtraArgs = "--retry 60 --retry-delay 1 --retry-all-errors";
-        };
-      in
-      "${injectRelay}";
+      ExecStart =
+        let
+          injectRelay = shared.mkPrivateRelayScript {
+            tokenFile = config.secrets.items.syncthing-relay-token.target;
+            configXml = "${config.services.syncthing.configDir}/config.xml";
+            apiUrl = "http://127.0.0.1:${toString ports.syncthingGui}";
+            curlExtraArgs = "--retry 60 --retry-delay 1 --retry-all-errors";
+          };
+        in
+        "${injectRelay}";
     };
   };
 }

@@ -133,11 +133,18 @@ let
       let
         hasContainer = value.container != null;
         isExposed = value.expose.enable;
-        containerName = if value.containerName != null then value.containerName else "lc-${name |> lib.substring 0 10}";
+        containerName =
+          if value.containerName != null then value.containerName else "lc-${name |> lib.substring 0 10}";
         containerUnitName = "container@${containerName}";
         localAddress = "10.201.${i |> toString}.2";
         hostAddress = "10.201.${i |> toString}.1";
-        forwardHost = if hasContainer then localAddress else if value.host != null then value.host else "localhost";
+        forwardHost =
+          if hasContainer then
+            localAddress
+          else if value.host != null then
+            value.host
+          else
+            "localhost";
 
         needsAuth = value.expose.allowedGitHubUsers != [ ];
         needsHostRewrite = value.expose.useTargetHost && !hasContainer && value.host != null;
@@ -183,12 +190,16 @@ let
         };
 
         systemd.services.${containerUnitName} = mkIf hasContainer {
-          wants = [ "network-online.target" ]
-            ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
-            ++ value.containerService.wants;
-          after = [ "network-online.target" ]
-            ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
-            ++ value.containerService.after;
+          wants = [
+            "network-online.target"
+          ]
+          ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
+          ++ value.containerService.wants;
+          after = [
+            "network-online.target"
+          ]
+          ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
+          ++ value.containerService.after;
 
           serviceConfig = mkMerge [
             (mkIf (cfg.containerLimits.memoryMax != null) {
@@ -225,30 +236,34 @@ let
       }
     );
 
-  servicesWithAuth = lib.filterAttrs (_: service: service.expose.allowedGitHubUsers != [ ]) cfg.services;
+  servicesWithAuth = lib.filterAttrs (
+    _: service: service.expose.allowedGitHubUsers != [ ]
+  ) cfg.services;
   authEnabled = servicesWithAuth != { };
 
-  serviceAssertions = serviceEntries |> concatMap (
-    { name, value }:
-    [
-      {
-        assertion = !(value.container != null && value.host != null);
-        message = "surmhosting service `${name}` cannot set both `container` and `host`.";
-      }
-      {
-        assertion = (!value.expose.enable) || value.expose.ports != [ ];
-        message = "surmhosting service `${name}` has exposure enabled but no expose.port/expose.ports configured.";
-      }
-      {
-        assertion = value.expose.allowedGitHubUsers == [ ] || value.expose.enable;
-        message = "surmhosting service `${name}` configures expose.allowedGitHubUsers but is not exposed.";
-      }
-      {
-        assertion = !value.expose.useTargetHost || value.expose.enable;
-        message = "surmhosting service `${name}` configures expose.useTargetHost but is not exposed.";
-      }
-    ]
-  );
+  serviceAssertions =
+    serviceEntries
+    |> concatMap (
+      { name, value }:
+      [
+        {
+          assertion = !(value.container != null && value.host != null);
+          message = "surmhosting service `${name}` cannot set both `container` and `host`.";
+        }
+        {
+          assertion = (!value.expose.enable) || value.expose.ports != [ ];
+          message = "surmhosting service `${name}` has exposure enabled but no expose.port/expose.ports configured.";
+        }
+        {
+          assertion = value.expose.allowedGitHubUsers == [ ] || value.expose.enable;
+          message = "surmhosting service `${name}` configures expose.allowedGitHubUsers but is not exposed.";
+        }
+        {
+          assertion = !value.expose.useTargetHost || value.expose.enable;
+          message = "surmhosting service `${name}` configures expose.useTargetHost but is not exposed.";
+        }
+      ]
+    );
 
   surmAuthConfig = {
     containers."surm-auth" = mkIf authEnabled {
@@ -427,38 +442,37 @@ in
   };
 
   config = mkIf cfg.enable {
-    assertions =
-      [
-        {
-          assertion = authEnabled -> cfg.auth.domain != null;
-          message = ''
-            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
-            but services.surmhosting.auth.domain is not set.
-          '';
-        }
-        {
-          assertion = authEnabled -> cfg.auth.github.clientIdFile != null;
-          message = ''
-            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
-            but services.surmhosting.auth.github.clientIdFile is not set.
-          '';
-        }
-        {
-          assertion = authEnabled -> cfg.auth.github.clientSecretFile != null;
-          message = ''
-            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
-            but services.surmhosting.auth.github.clientSecretFile is not set.
-          '';
-        }
-        {
-          assertion = authEnabled -> cfg.auth.cookieSecretFile != null;
-          message = ''
-            OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
-            but services.surmhosting.auth.cookieSecretFile is not set.
-          '';
-        }
-      ]
-      ++ serviceAssertions;
+    assertions = [
+      {
+        assertion = authEnabled -> cfg.auth.domain != null;
+        message = ''
+          OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+          but services.surmhosting.auth.domain is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.github.clientIdFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+          but services.surmhosting.auth.github.clientIdFile is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.github.clientSecretFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+          but services.surmhosting.auth.github.clientSecretFile is not set.
+        '';
+      }
+      {
+        assertion = authEnabled -> cfg.auth.cookieSecretFile != null;
+        message = ''
+          OAuth2 authentication is enabled (some services have expose.allowedGitHubUsers),
+          but services.surmhosting.auth.cookieSecretFile is not set.
+        '';
+      }
+    ]
+    ++ serviceAssertions;
 
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
       enable = true;

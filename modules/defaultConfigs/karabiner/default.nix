@@ -5,7 +5,6 @@ with lib;
 
   config = mkIf config.defaultConfigs.karabiner.enable {
     home.file.".config/karabiner/karabiner.json".source =
-      config.lib.file.mkOutOfStoreSymlink
-        "${config.home.homeDirectory}/src/github.com/surma/nixenv/modules/defaultConfigs/karabiner/config.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/modules/defaultConfigs/karabiner/config.json";
   };
 }

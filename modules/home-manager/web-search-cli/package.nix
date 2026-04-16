@@ -17,10 +17,11 @@ let
     export CHROME_EXECUTABLE_PATH="${browserExecutable}"
   '';
 
-  wrapperArgs =
-    [ "--set WEB_SEARCH_PERPLEXITY_API_BASE ${lib.escapeShellArg perplexityApiBase}" ]
-    ++ lib.optional (tokenExportCommand != null) "--run ${lib.escapeShellArg tokenExportCommand}"
-    ++ lib.optional (browserExportCommand != "") "--run ${lib.escapeShellArg browserExportCommand}";
+  wrapperArgs = [
+    "--set WEB_SEARCH_PERPLEXITY_API_BASE ${lib.escapeShellArg perplexityApiBase}"
+  ]
+  ++ lib.optional (tokenExportCommand != null) "--run ${lib.escapeShellArg tokenExportCommand}"
+  ++ lib.optional (browserExportCommand != "") "--run ${lib.escapeShellArg browserExportCommand}";
 in
 pkgs.symlinkJoin {
   name = "web-search-cli-wrapped";

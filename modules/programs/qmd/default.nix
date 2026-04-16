@@ -23,4 +23,3 @@ with lib;
     home.packages = [ config.programs.qmd.package ];
   };
 }
-
