@@ -76,6 +76,7 @@ in
                   "home-manager-containeruser.service"
                 ];
                 path = [
+                  "/home/containeruser/.nix-profile"
                   pkgs.bash
                   pkgs.coreutils
                   pkgs.git
