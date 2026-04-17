@@ -139,6 +139,8 @@ in
       ];
       system.stateVersion = "25.05";
 
+      hardware.graphics.enable = true;
+
       users.users.containeruser = {
         isNormalUser = true;
         group = "users";
@@ -168,6 +170,11 @@ in
       };
     };
 
+    allowedDevices = [
+      { modifier = "rw"; node = "/dev/dri/renderD128"; }
+      { modifier = "rw"; node = "/dev/dri/card0"; }
+    ];
+
     bindMounts = {
       home = {
         mountPoint = "/home/containeruser";
@@ -178,6 +185,11 @@ in
         mountPoint = "/var/lib/credentials/scout";
         hostPath = "/var/lib/scout";
         isReadOnly = true;
+      };
+      dri = {
+        mountPoint = "/dev/dri";
+        hostPath = "/dev/dri";
+        isReadOnly = false;
       };
     };
   };
