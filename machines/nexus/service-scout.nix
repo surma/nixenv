@@ -7,6 +7,15 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   scoutMcpPort = 32445;
+
+  # Hook scripts for Scout topic lifecycle. Copied into the Nix store
+  # so they're available at a stable path for SCOUT_HOOKS_DIR.
+  scoutHooksDir = pkgs.runCommand "scout-hooks" {} ''
+    mkdir -p $out
+    cp ${../../assets/scout-hooks/topic-create} $out/topic-create
+    cp ${../../assets/scout-hooks/topic-close} $out/topic-close
+    chmod +x $out/topic-create $out/topic-close
+  '';
 in
 {
   secrets.items.ssh-keys.command = ''
@@ -62,6 +71,12 @@ in
         (
           { config, ... }:
           {
+            # Register the dotenv plugin for opencode — needed so that
+            # BRAIN_PATH from the topic .env file reaches brain commands.
+            home-manager.users.containeruser.programs.opencode.plugins = {
+              "dotenv.js" = builtins.readFile ../../packages/opencode-dotenv-plugin/dotenv.js;
+            };
+
             systemd.services.scout =
               let
                 opencode = config.home-manager.users.containeruser.programs.opencode.package;
@@ -84,12 +99,14 @@ in
                   pkgs.nodejs_24
                   pkgs.openssh
                   pkgs.procps
+                  pkgs.sqlite
                 ];
                 environment = {
                   SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
                   SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
                   SCOUT_MCP_PORT = toString scoutMcpPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
+                  SCOUT_HOOKS_DIR = "${scoutHooksDir}";
                   SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
                   RUST_LOG = "scout=debug";
                 };
@@ -135,6 +152,32 @@ in
                 RandomizedDelaySec = "1h";
               };
             };
+            # Periodic brain sync on the main clone.
+            # Keeps documents and the SQLite index/embeddings fresh so new
+            # topic worktrees start with an up-to-date DB copy.
+            systemd.services.brain-sync = {
+              description = "Sync Brain knowledge base (main clone)";
+              path = [
+                pkgs.git
+                pkgs.openssh
+              ];
+              serviceConfig = {
+                Type = "oneshot";
+                User = "containeruser";
+                Group = "users";
+                Environment = "BRAIN_PATH=/home/containeruser/.local/state/brain";
+                ExecStart = "${inputs.brain.packages.${system}.default}/bin/brain sync";
+              };
+            };
+            systemd.timers.brain-sync = {
+              description = "Hourly Brain knowledge base sync";
+              wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnCalendar = "hourly";
+                Persistent = true;
+                RandomizedDelaySec = "5m";
+              };
+            };
           }
         )
       ];
@@ -158,6 +201,7 @@ in
         sharedModules = [
           ../../modules/features/secrets.nix
           ../../modules/home-manager/agent
+          ../../modules/home-manager/brain
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
           ../../modules/programs/opencode

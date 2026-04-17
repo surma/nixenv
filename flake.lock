@@ -58,6 +58,30 @@
         "type": "github"
       }
     },
+    "brain": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1776262875,
+        "narHash": "sha256-hGt16eb8ASjh1zM2p5OXohBVBdhFKyCvWu2H5Ko8d/w=",
+        "ref": "main",
+        "rev": "3bcecf907a2c1e50456bd4bc23143df09ab7ab97",
+        "revCount": 82,
+        "type": "git",
+        "url": "ssh://git@github.com/surma/brain"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/surma/brain"
+      }
+    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -1093,6 +1117,7 @@
     },
     "root": {
       "inputs": {
+        "brain": "brain",
         "copyparty": "copyparty",
         "dashboard": "dashboard",
         "dump": "dump",

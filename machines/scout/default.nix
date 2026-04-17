@@ -10,6 +10,7 @@
     ../../scripts
     ../../modules/home-manager/mutable-files
     ../../modules/defaultConfigs/npm
+    ../../modules/home-manager/brain
   ];
 
   config = {
@@ -30,7 +31,9 @@
       nodejs_24
       openssh
       ripgrep
+      sqlite
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
+      inputs.brain.packages.${pkgs.stdenv.hostPlatform.system}.default
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -72,6 +75,7 @@
     };
 
     programs.agent-browser.enable = true;
+    programs.brain.enable = true;
 
     defaultConfigs.opencode = {
       enable = true;

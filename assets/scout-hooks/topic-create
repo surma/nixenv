@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BRAIN_MAIN="$HOME/.local/state/brain"
+BRAIN_WORKTREE="$TOPIC_DIR/brain"
+BRANCH="topic-$TOPIC_ID"
+
+# Create worktree
+cd "$BRAIN_MAIN"
+git worktree add -b "$BRANCH" "$BRAIN_WORKTREE" 2>/dev/null || \
+  git worktree add "$BRAIN_WORKTREE" "$BRANCH"
+
+# Configure upstream to track origin/main
+cd "$BRAIN_WORKTREE"
+git config "branch.$BRANCH.remote" origin
+git config "branch.$BRANCH.merge" refs/heads/main
+
+# Copy SQLite DB from main clone (avoids re-embedding).
+# Use sqlite3 .backup for a safe hot copy — plain cp of WAL-mode files
+# risks copying inconsistent wal/shm state if brain or the sync timer
+# is writing concurrently.
+if [ -f "$BRAIN_MAIN/.brain.db" ]; then
+  sqlite3 "$BRAIN_MAIN/.brain.db" ".backup '$BRAIN_WORKTREE/.brain.db'"
+fi
+
+# Write BRAIN_PATH to .env for the dotenv plugin
+echo "BRAIN_PATH=$BRAIN_WORKTREE" >> "$TOPIC_DIR/.env"

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BRAIN_MAIN="$HOME/.local/state/brain"
+BRAIN_WORKTREE="$TOPIC_DIR/brain"
+BRANCH="topic-$TOPIC_ID"
+
+if [ -d "$BRAIN_WORKTREE" ]; then
+  cd "$BRAIN_MAIN"
+  git worktree remove "$BRAIN_WORKTREE" --force
+  # Clean up the topic branch. It was only used locally.
+  git branch -D "$BRANCH" 2>/dev/null || true
+fi
