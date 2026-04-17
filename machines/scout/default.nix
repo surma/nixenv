@@ -26,7 +26,6 @@
     home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
 
     home.packages = with pkgs; [
-      git
       jq
       nodejs_24
       openssh
@@ -41,6 +40,15 @@
     ];
 
     programs.home-manager.enable = true;
+
+    programs.git = {
+      enable = true;
+      settings = {
+        user.name = "Surma";
+        user.email = "surma@surma.dev";
+        init.defaultBranch = "main";
+      };
+    };
 
     defaultConfigs.npm.enable = true;
 
