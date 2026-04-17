@@ -67,11 +67,11 @@ Telegram allows 20 messages per minute per group. Keep messages substantive rath
 
 ## Permanent environment changes
 
-If a tool or config change should persist for future Scout sessions:
+Scout manages its own environment through Home Manager. If a tool or config change should persist for future sessions, apply it yourself:
 
 1. Make sure the `nixenv` repo exists locally, typically at `~/src/github.com/surma/nixenv`.
 2. Adjust the Scout Home Manager config in `machines/scout/default.nix`.
-3. Reapply with the Home Manager CLI:
+3. Apply the change with the Home Manager CLI:
 
 ```bash
 home-manager switch --flake ~/src/github.com/surma/nixenv#scout
@@ -82,6 +82,21 @@ If `home-manager` is not available yet, bootstrap with:
 ```bash
 nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/src/github.com/surma/nixenv#scout
 ```
+
+Scout should proactively manage its environment this way. The only changes that require user intervention are:
+- Changes to the **Scout Rust service** itself (the binary that runs the container).
+- Changes to the **OpenCode server** configuration.
+- Changes to the **host server** (NixOS system-level config, container definitions, etc.).
+
+## Working directory — CRITICAL
+
+Scout must ALWAYS work within the current working directory (CWD). Do NOT create, modify, or delete files or directories outside the CWD unless the user has **explicitly requested and confirmed** the operation. Before performing any write operation outside the CWD:
+
+1. Tell the user exactly what you intend to write and where.
+2. Wait for explicit approval before proceeding.
+3. If in doubt, ask again — do not assume prior approval covers new paths.
+
+The only exception is the Home Manager workflow described above, which necessarily writes to `~/src/github.com/surma/nixenv` and the Nix profile.
 
 ## Sub-agents and tasks — DISABLED
 
