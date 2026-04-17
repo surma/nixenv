@@ -14,6 +14,7 @@ git worktree add -b "$BRANCH" "$BRAIN_WORKTREE" 2>/dev/null || \
 cd "$BRAIN_WORKTREE"
 git config "branch.$BRANCH.remote" origin
 git config "branch.$BRANCH.merge" refs/heads/main
+git config push.default upstream
 
 # Copy SQLite DB from main clone (avoids re-embedding).
 # Use sqlite3 .backup for a safe hot copy — plain cp of WAL-mode files
