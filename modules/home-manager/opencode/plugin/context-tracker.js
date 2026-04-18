@@ -1,16 +1,16 @@
 export const ContextTracker = async ({ client, directory }) => {
-  // Cache: populated lazily and from events — never block init or hooks.
   const contextLimits = {} // { "providerID:modelID": number }
   const lastUsage = {} // { sessionID: { used, providerID, modelID } }
   let limitsLoaded = false
 
-  // Fetch provider context limits in the background. Must not await during
-  // plugin init — the server cannot serve HTTP while plugin init is in progress,
-  // so an SDK call here would deadlock.
+  // Fetch provider context limits. Returns a promise so callers can optionally
+  // await it. Must not be awaited during plugin init — the server cannot serve
+  // HTTP while init is in progress, so an SDK call there would deadlock.
+  let limitsPromise = null
   function fetchLimits() {
-    if (limitsLoaded) return
-    limitsLoaded = true // prevent duplicate fetches
-    client.config
+    if (limitsLoaded) return Promise.resolve()
+    if (limitsPromise) return limitsPromise
+    limitsPromise = client.config
       .providers({ query: { directory }, throwOnError: true })
       .then((resp) => {
         for (const provider of resp.data.providers) {
@@ -20,10 +20,38 @@ export const ContextTracker = async ({ client, directory }) => {
             }
           }
         }
+        limitsLoaded = true
       })
       .catch(() => {
-        limitsLoaded = false // allow retry on next event
+        limitsPromise = null // allow retry
       })
+    return limitsPromise
+  }
+
+  // Seed the usage cache from session history. Called from hooks when we have
+  // no cached data (e.g. after a restart into a resumed session).
+  async function seedUsage(sessionID) {
+    try {
+      const resp = await client.session.messages({
+        path: { id: sessionID },
+        query: { directory },
+        throwOnError: true,
+      })
+      const lastAssistant = [...resp.data]
+        .reverse()
+        .find((m) => m.info.role === "assistant")
+      if (lastAssistant && lastAssistant.info.role === "assistant") {
+        const info = lastAssistant.info
+        lastUsage[sessionID] = {
+          used: info.tokens.input + (info.tokens.cache?.read ?? 0),
+          providerID: info.providerID,
+          modelID: info.modelID,
+        }
+        await fetchLimits()
+      }
+    } catch {
+      // Non-fatal — tag will show "no data yet".
+    }
   }
 
   function usageTag(sessionID) {
@@ -45,7 +73,7 @@ export const ContextTracker = async ({ client, directory }) => {
       if (event.type !== "message.updated") return
       const info = event.properties.info
       if (info.role !== "assistant") return
-      fetchLimits() // trigger background fetch on first assistant message
+      fetchLimits()
       lastUsage[info.sessionID] = {
         used: info.tokens.input + (info.tokens.cache?.read ?? 0),
         providerID: info.providerID,
@@ -54,15 +82,14 @@ export const ContextTracker = async ({ client, directory }) => {
     },
 
     "tool.execute.after": async (_input, output) => {
+      if (!lastUsage[_input.sessionID]) await seedUsage(_input.sessionID)
       const tag = usageTag(_input.sessionID)
       output.output = `${output.output}\n\n${tag}`
     },
 
     "chat.message": async (input, output) => {
+      if (!lastUsage[input.sessionID]) await seedUsage(input.sessionID)
       const tag = usageTag(input.sessionID)
-      // Append to the last text part rather than pushing a new one.
-      // output.parts contains full Part objects with required id/sessionID/messageID
-      // fields — pushing a bare {type, text} object fails validation.
       const last = [...output.parts].reverse().find((p) => p.type === "text")
       if (last) {
         last.text += `\n\n${tag}`
