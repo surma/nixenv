@@ -2,11 +2,13 @@ export const ContextTracker = async ({ client, directory }) => {
   async function usageTag(sessionID) {
     const now = new Date().toISOString()
     try {
-      const messages = await client.session
-        .messages({ sessionID, directory }, { throwOnError: true })
-        .then((r) => r.data)
+      const resp = await client.session.messages({
+        path: { id: sessionID },
+        query: { directory },
+        throwOnError: true,
+      })
 
-      const lastAssistant = [...messages]
+      const lastAssistant = [...resp.data]
         .reverse()
         .find((m) => m.info.role === "assistant")
 
@@ -17,11 +19,14 @@ export const ContextTracker = async ({ client, directory }) => {
       const msg = lastAssistant.info
       const used = msg.tokens.input + (msg.tokens.cache?.read ?? 0)
 
-      const providers = await client.config
-        .providers({ directory }, { throwOnError: true })
-        .then((r) => r.data)
+      const provResp = await client.config.providers({
+        query: { directory },
+        throwOnError: true,
+      })
 
-      const provider = providers.providers.find((p) => p.id === msg.providerID)
+      const provider = provResp.data.providers.find(
+        (p) => p.id === msg.providerID,
+      )
       const model = provider?.models[msg.modelID]
       const size = model?.limit?.context
 
