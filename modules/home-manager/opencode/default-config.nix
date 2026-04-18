@@ -87,6 +87,7 @@ with lib;
           plugins = {
             "notification.js" = builtins.readFile ./plugin/notification.js;
             "shopify-proxy.js" = builtins.readFile ./plugin/shopify-proxy.js;
+            "context-tracker.js" = builtins.readFile ./plugin/context-tracker.js;
           };
           extraConfig = {
             model = "anthropic/claude-sonnet-4-5";
