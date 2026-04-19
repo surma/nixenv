@@ -372,7 +372,8 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 			}
 			// If we never saw a DONE line, the process was killed/cancelled.
 			// Check meta.json for final status.
-			metaPath := filepath.Join(e.cfg.StateDir, "deploys", active.ID, "meta.json")
+			deploysDir := filepath.Join(e.cfg.StateDir, "deploys", active.ID)
+			metaPath := filepath.Join(deploysDir, "meta.json")
 			data, err := os.ReadFile(metaPath)
 			if err == nil {
 				var m DeployMeta
@@ -381,7 +382,26 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 					return
 				}
 			}
-			// Process was killed without writing final status (cancelled)
+			// Process was killed without writing final status — cancelled.
+			// Persist cancelled status to meta.json
+			if err == nil {
+				var cm DeployMeta
+				if json.Unmarshal(data, &cm) == nil {
+					cm.Status = StatusCancelled
+					now := time.Now().UTC()
+					cm.FinishedAt = &now
+					wd, _ := json.MarshalIndent(cm, "", "  ")
+					os.WriteFile(metaPath, wd, 0644)
+				}
+			}
+			// Append DONE marker to deploy.log on disk
+			if dlf, derr := os.OpenFile(
+				filepath.Join(deploysDir, "deploy.log"),
+				os.O_APPEND|os.O_WRONLY, 0644,
+			); derr == nil {
+				fmt.Fprintln(dlf, "[deploy] DONE:cancelled")
+				dlf.Close()
+			}
 			active.LogBuf.Append("[deploy] DONE:cancelled")
 			active.Broadcaster.Send("[deploy] DONE:cancelled")
 			return
