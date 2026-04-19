@@ -64,7 +64,7 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     scout = {
-      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/scout?ref=main";
+      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/scout?ref=error-notification";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
