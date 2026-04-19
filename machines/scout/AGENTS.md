@@ -86,7 +86,45 @@ nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/src/
 Scout should proactively manage its environment this way. The only changes that require user intervention are:
 - Changes to the **Scout Rust service** itself (the binary that runs the container).
 - Changes to the **OpenCode server** configuration.
-- Changes to the **host server** (NixOS system-level config, container definitions, etc.).
+
+## Deploying host-level NixOS changes (Nexus)
+
+Host-level NixOS configuration changes (anything under `machines/nexus/`, system services, container definitions, etc.) are deployed via the **NixOS Deploy** microservice running on Nexus.
+
+**Base URL**: `http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/`
+**Brain project**: `nixos-deploy-tcbbb23t`
+
+### How to deploy
+
+```bash
+# Deploy from the default flake (github:surma/nixenv#nexus):
+curl -X POST http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy
+
+# Deploy from a specific branch:
+curl -X POST http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy \
+  -H 'Content-Type: application/json' \
+  -d '{"flake_url":"github:surma/nixenv/my-branch#nexus"}'
+```
+
+### How to monitor
+
+```bash
+# SSE stream (replays all logs, then streams live):
+curl -sN http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/stream
+
+# Check deploy status:
+curl -s http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploys
+```
+
+The SSE stream ends with `[deploy] DONE:<status>` where status is one of: `success`, `build-failed`, `switch-failed`, `rollback-failed`, `cancelled`.
+
+### CRITICAL: requires explicit user confirmation
+
+Deploying to the host is a **high-impact, potentially destructive** operation. Before triggering any deploy:
+
+1. **Always ask the user for explicit confirmation.** State which flake URL will be deployed.
+2. **Wait for a clear "yes"** before calling the deploy API. Do not infer approval from the user asking you to make code changes — code changes and deployment are separate steps.
+3. If the deploy fails, report the full status and logs to the user. Do not automatically retry or attempt rollback overrides without asking.
 
 ## Working directory — CRITICAL
 
