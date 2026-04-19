@@ -82,6 +82,12 @@ export const ContextTracker = async ({ client, directory }) => {
     },
 
     "tool.execute.after": async (_input, output) => {
+      // Skip tools whose output is structured JSON that OpenCode parses
+      // internally (e.g. todowrite → JSON.parse in acp/agent.ts).
+      // Appending a system-reminder tag would make the output unparseable
+      // and permanently break session resume for any session that used
+      // the tool.
+      if (_input.tool === "todowrite") return
       if (!lastUsage[_input.sessionID]) await seedUsage(_input.sessionID)
       const tag = usageTag(_input.sessionID)
       output.output = `${output.output}\n\n${tag}`
