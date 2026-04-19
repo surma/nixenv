@@ -81,6 +81,7 @@ in
         pkgs.nixos-rebuild
         pkgs.git
         pkgs.coreutils
+        pkgs.systemd
       ];
     };
   };
