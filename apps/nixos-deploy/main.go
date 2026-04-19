@@ -163,21 +163,26 @@ func NewDeployEngine(cfg Config) *DeployEngine {
 	return &DeployEngine{cfg: cfg}
 }
 
-// RecoverActive checks for an in-progress deploy on startup (e.g., after server restart).
+// RecoverActive checks for in-progress deploys on startup (e.g., after server restart).
+// It first marks all orphaned (dead) running deploys as failed, then reconnects to
+// at most one still-live deploy.
 func (e *DeployEngine) RecoverActive() {
 	metas, err := listDeploys(e.cfg.StateDir)
 	if err != nil {
 		return
 	}
+
+	// First pass: clean up all orphaned running deploys whose units are gone.
+	// Collect the single still-live deploy (if any) for reconnection.
+	var liveID string
+	var liveUnit string
 	for _, m := range metas {
 		if m.Status != StatusRunning {
 			continue
 		}
-		// Check if the systemd unit is still running
 		unit := systemdUnitName(m.ID)
 		if err := exec.Command("systemctl", "is-active", "--quiet", unit+".service").Run(); err != nil {
-			// Unit is not running but meta says running — it was interrupted.
-			// Mark as failed.
+			// Unit is not running — mark as failed.
 			slog.Warn("found orphaned running deploy, marking as failed", "id", m.ID)
 			m.Status = StatusSwitchFailed
 			now := time.Now().UTC()
@@ -185,7 +190,6 @@ func (e *DeployEngine) RecoverActive() {
 			deploysDir := filepath.Join(e.cfg.StateDir, "deploys", m.ID)
 			data, _ := json.MarshalIndent(m, "", "  ")
 			os.WriteFile(filepath.Join(deploysDir, "meta.json"), data, 0644)
-			// Append a note to deploy.log
 			if f, err := os.OpenFile(filepath.Join(deploysDir, "deploy.log"), os.O_APPEND|os.O_WRONLY, 0644); err == nil {
 				fmt.Fprintln(f, "[deploy] server restarted — deploy process was interrupted")
 				fmt.Fprintln(f, "[deploy] DONE:switch-failed")
@@ -193,11 +197,19 @@ func (e *DeployEngine) RecoverActive() {
 			}
 			continue
 		}
+		// Unit still running — remember the most recent one (list is sorted newest-first)
+		if liveID == "" {
+			liveID = m.ID
+			liveUnit = unit
+		}
+	}
 
-		// Unit is still running — reconnect to it
-		slog.Info("reconnecting to running deploy", "id", m.ID)
+	// Second pass: reconnect to the live deploy (if any).
+	if liveID != "" {
+		slog.Info("reconnecting to running deploy", "id", liveID)
+		unit := liveUnit
 		active := &ActiveDeploy{
-			ID:          m.ID,
+			ID:          liveID,
 			Broadcaster: NewBroadcaster(),
 			LogBuf:      &LogBuffer{},
 			cancel: func() {
@@ -207,9 +219,7 @@ func (e *DeployEngine) RecoverActive() {
 		e.mu.Lock()
 		e.activeDeploy = active
 		e.mu.Unlock()
-
 		go e.tailDeployLog(active)
-		return // only one active deploy at a time
 	}
 }
 
