@@ -326,6 +326,12 @@ func (e *DeployEngine) GetActive() *ActiveDeploy {
 // tailDeployLog watches the deploy.log file and broadcasts lines to SSE subscribers.
 // It keeps running until it sees a DONE line or the file stops growing after the
 // systemd unit exits.
+//
+// NOTE: We use bufio.Reader instead of bufio.Scanner because Scanner caches the
+// EOF state internally and never retries the underlying reader once it has seen
+// io.EOF. Since deploy.log is a regular file being appended to by a separate
+// process (the transient systemd unit), we need a reader that will pick up new
+// data on subsequent reads after hitting EOF.
 func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 	defer func() {
 		active.LogBuf.MarkDone()
@@ -353,39 +359,67 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 256*1024), 256*1024)
-
+	reader := bufio.NewReaderSize(f, 256*1024)
 	unit := systemdUnitName(active.ID)
-	idleCount := 0
+
+	emit := func(line string) bool {
+		active.LogBuf.Append(line)
+		active.Broadcaster.Send(line)
+		return strings.HasPrefix(line, "[deploy] DONE:")
+	}
+
+	// partialLine accumulates bytes when ReadString hits EOF mid-line.
+	var partialLine string
 
 	for {
-		if scanner.Scan() {
-			idleCount = 0
-			line := scanner.Text()
-			active.LogBuf.Append(line)
-			active.Broadcaster.Send(line)
+		line, err := reader.ReadString('\n')
+		partialLine += line
 
-			if strings.HasPrefix(line, "[deploy] DONE:") {
+		if err == nil {
+			// Complete line (includes trailing \n).
+			trimmed := strings.TrimRight(partialLine, "\r\n")
+			partialLine = ""
+			if emit(trimmed) {
 				return
 			}
 			continue
 		}
 
-		// No more data right now. Check if the unit is still running.
-		if err := exec.Command("systemctl", "is-active", "--quiet", unit+".service").Run(); err != nil {
-			// Unit exited. Read any remaining lines.
-			for scanner.Scan() {
-				line := scanner.Text()
-				active.LogBuf.Append(line)
-				active.Broadcaster.Send(line)
+		if err != io.EOF {
+			slog.Error("error reading deploy.log", "error", err)
+			return
+		}
+
+		// EOF — no more data right now. Check if the unit is still running.
+		if execErr := exec.Command("systemctl", "is-active", "--quiet", unit+".service").Run(); execErr != nil {
+			// Unit exited. Drain any remaining data.
+			for {
+				more, readErr := reader.ReadString('\n')
+				partialLine += more
+				if idx := strings.Index(partialLine, "\n"); idx >= 0 {
+					trimmed := strings.TrimRight(partialLine[:idx], "\r\n")
+					partialLine = partialLine[idx+1:]
+					if emit(trimmed) {
+						return
+					}
+					continue
+				}
+				if readErr != nil {
+					break
+				}
 			}
+			// Emit any trailing partial line.
+			if rest := strings.TrimRight(partialLine, "\r\n"); rest != "" {
+				if emit(rest) {
+					return
+				}
+			}
+
 			// If we never saw a DONE line, the process was killed/cancelled.
-			// Check meta.json for final status.
 			deploysDir := filepath.Join(e.cfg.StateDir, "deploys", active.ID)
 			metaPath := filepath.Join(deploysDir, "meta.json")
-			data, err := os.ReadFile(metaPath)
-			if err == nil {
+			data, readErr := os.ReadFile(metaPath)
+			if readErr == nil {
 				var m DeployMeta
 				if json.Unmarshal(data, &m) == nil && m.Status != StatusRunning {
 					// Deploy subcommand wrote final status
@@ -393,8 +427,7 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 				}
 			}
 			// Process was killed without writing final status — cancelled.
-			// Persist cancelled status to meta.json
-			if err == nil {
+			if readErr == nil {
 				var cm DeployMeta
 				if json.Unmarshal(data, &cm) == nil {
 					cm.Status = StatusCancelled
@@ -404,7 +437,6 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 					os.WriteFile(metaPath, wd, 0644)
 				}
 			}
-			// Append DONE marker to deploy.log on disk
 			if dlf, derr := os.OpenFile(
 				filepath.Join(deploysDir, "deploy.log"),
 				os.O_APPEND|os.O_WRONLY, 0644,
@@ -418,7 +450,6 @@ func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 		}
 
 		// Unit still running, just no output yet. Wait and retry.
-		idleCount++
 		time.Sleep(200 * time.Millisecond)
 	}
 }
