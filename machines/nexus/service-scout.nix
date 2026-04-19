@@ -30,6 +30,29 @@ in
     chmod 0600 /dump/state/scout/.ssh/id_surma
   '';
 
+  secrets.items.scout-repo-ssh-key.command = ''
+    key="$(cat)"
+
+    # Scout container (bind-mounted as /home/containeruser/.ssh inside the container)
+    mkdir -p /dump/state/scout/.ssh
+    chown surma:users /dump/state/scout/.ssh
+    chmod 0700 /dump/state/scout/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /dump/state/scout/.ssh/id_repo_scout.pub
+    chown surma:users /dump/state/scout/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > /dump/state/scout/.ssh/id_repo_scout
+    chown surma:users /dump/state/scout/.ssh/id_repo_scout
+    chmod 0600 /dump/state/scout/.ssh/id_repo_scout
+
+    # NixOS deploy service (HOME=/var/lib/nixos-deploy)
+    mkdir -p /var/lib/nixos-deploy/.ssh
+    chmod 0700 /var/lib/nixos-deploy/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nixos-deploy/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > /var/lib/nixos-deploy/.ssh/id_repo_scout
+    chmod 0600 /var/lib/nixos-deploy/.ssh/id_repo_scout
+  '';
+
   secrets.items.scout-telegram-bot-token.command = ''
     mkdir -p /var/lib/scout
     token="$(cat)"

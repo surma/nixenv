@@ -201,5 +201,12 @@
         "shopisurm"
       ];
     };
+    scout-repo-ssh-key = {
+      contents = ../assets/ssh-keys/id_repo_scout.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
