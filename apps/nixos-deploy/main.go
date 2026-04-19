@@ -30,14 +30,13 @@ type Config struct {
 	WebhookURL      string
 }
 
-func configFromFlags() Config {
-	cfg := Config{}
-	flag.StringVar(&cfg.ListenAddr, "listen", envOr("NIXOS_DEPLOY_LISTEN", ":8080"), "Listen address")
-	flag.StringVar(&cfg.DefaultFlakeURL, "flake-url", envOr("NIXOS_DEPLOY_FLAKE_URL", ""), "Default flake URL")
-	flag.StringVar(&cfg.StateDir, "state-dir", envOr("NIXOS_DEPLOY_STATE_DIR", "/var/lib/nixos-deploy"), "State directory for logs")
-	flag.StringVar(&cfg.WebhookURL, "webhook-url", envOr("NIXOS_DEPLOY_WEBHOOK_URL", ""), "Webhook URL for notifications")
-	flag.Parse()
-	return cfg
+func configFromEnv() Config {
+	return Config{
+		ListenAddr:      envOr("NIXOS_DEPLOY_LISTEN", ":8080"),
+		DefaultFlakeURL: envOr("NIXOS_DEPLOY_FLAKE_URL", ""),
+		StateDir:        envOr("NIXOS_DEPLOY_STATE_DIR", "/var/lib/nixos-deploy"),
+		WebhookURL:      envOr("NIXOS_DEPLOY_WEBHOOK_URL", ""),
+	}
 }
 
 func envOr(key, fallback string) string {
@@ -52,11 +51,12 @@ func envOr(key, fallback string) string {
 type DeployStatus string
 
 const (
-	StatusRunning      DeployStatus = "running"
-	StatusSuccess      DeployStatus = "success"
-	StatusBuildFailed  DeployStatus = "build-failed"
-	StatusSwitchFailed DeployStatus = "switch-failed"
+	StatusRunning        DeployStatus = "running"
+	StatusSuccess        DeployStatus = "success"
+	StatusBuildFailed    DeployStatus = "build-failed"
+	StatusSwitchFailed   DeployStatus = "switch-failed"
 	StatusRollbackFailed DeployStatus = "rollback-failed"
+	StatusCancelled      DeployStatus = "cancelled"
 )
 
 type DeployMeta struct {
@@ -101,30 +101,36 @@ func (b *Broadcaster) Send(line string) {
 		select {
 		case ch <- line:
 		default:
-			// drop if subscriber is slow
 		}
 	}
 }
 
 // --- Deploy engine ---
 
+// systemdUnitName returns the transient systemd unit name for a deploy.
+func systemdUnitName(id string) string {
+	return "nixos-deploy-job-" + id
+}
+
 type DeployEngine struct {
 	cfg Config
 
-	mu          sync.Mutex
+	mu           sync.Mutex
 	activeDeploy *ActiveDeploy
 }
 
 type ActiveDeploy struct {
-	Meta        DeployMeta
+	ID          string
 	Broadcaster *Broadcaster
 	LogBuf      *LogBuffer
+	cancel      func() // stops the systemd transient unit
 }
 
 // LogBuffer stores log lines and allows replay.
 type LogBuffer struct {
 	mu    sync.Mutex
 	lines []string
+	done  bool
 }
 
 func (lb *LogBuffer) Append(line string) {
@@ -141,15 +147,77 @@ func (lb *LogBuffer) Lines() []string {
 	return cp
 }
 
+func (lb *LogBuffer) MarkDone() {
+	lb.mu.Lock()
+	lb.done = true
+	lb.mu.Unlock()
+}
+
+func (lb *LogBuffer) IsDone() bool {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+	return lb.done
+}
+
 func NewDeployEngine(cfg Config) *DeployEngine {
 	return &DeployEngine{cfg: cfg}
+}
+
+// RecoverActive checks for an in-progress deploy on startup (e.g., after server restart).
+func (e *DeployEngine) RecoverActive() {
+	metas, err := listDeploys(e.cfg.StateDir)
+	if err != nil {
+		return
+	}
+	for _, m := range metas {
+		if m.Status != StatusRunning {
+			continue
+		}
+		// Check if the systemd unit is still running
+		unit := systemdUnitName(m.ID)
+		if err := exec.Command("systemctl", "is-active", "--quiet", unit+".service").Run(); err != nil {
+			// Unit is not running but meta says running — it was interrupted.
+			// Mark as failed.
+			slog.Warn("found orphaned running deploy, marking as failed", "id", m.ID)
+			m.Status = StatusSwitchFailed
+			now := time.Now().UTC()
+			m.FinishedAt = &now
+			deploysDir := filepath.Join(e.cfg.StateDir, "deploys", m.ID)
+			data, _ := json.MarshalIndent(m, "", "  ")
+			os.WriteFile(filepath.Join(deploysDir, "meta.json"), data, 0644)
+			// Append a note to deploy.log
+			if f, err := os.OpenFile(filepath.Join(deploysDir, "deploy.log"), os.O_APPEND|os.O_WRONLY, 0644); err == nil {
+				fmt.Fprintln(f, "[deploy] server restarted — deploy process was interrupted")
+				fmt.Fprintln(f, "[deploy] DONE:switch-failed")
+				f.Close()
+			}
+			continue
+		}
+
+		// Unit is still running — reconnect to it
+		slog.Info("reconnecting to running deploy", "id", m.ID)
+		active := &ActiveDeploy{
+			ID:          m.ID,
+			Broadcaster: NewBroadcaster(),
+			LogBuf:      &LogBuffer{},
+			cancel: func() {
+				exec.Command("systemctl", "stop", unit+".service").Run()
+			},
+		}
+		e.mu.Lock()
+		e.activeDeploy = active
+		e.mu.Unlock()
+
+		go e.tailDeployLog(active)
+		return // only one active deploy at a time
+	}
 }
 
 func (e *DeployEngine) StartDeploy(flakeURL string) (*DeployMeta, error) {
 	e.mu.Lock()
 	if e.activeDeploy != nil {
 		e.mu.Unlock()
-		return nil, fmt.Errorf("a deploy is already running: %s", e.activeDeploy.Meta.ID)
+		return nil, fmt.Errorf("a deploy is already running: %s", e.activeDeploy.ID)
 	}
 
 	id := ulid.Make().String()
@@ -160,16 +228,83 @@ func (e *DeployEngine) StartDeploy(flakeURL string) (*DeployMeta, error) {
 		StartedAt: time.Now().UTC(),
 	}
 
+	deploysDir := filepath.Join(e.cfg.StateDir, "deploys", id)
+	if err := os.MkdirAll(deploysDir, 0755); err != nil {
+		e.mu.Unlock()
+		return nil, fmt.Errorf("failed to create deploy dir: %w", err)
+	}
+
+	// Write initial meta.json so the deploy subcommand can read it
+	metaPath := filepath.Join(deploysDir, "meta.json")
+	data, _ := json.MarshalIndent(meta, "", "  ")
+	if err := os.WriteFile(metaPath, data, 0644); err != nil {
+		e.mu.Unlock()
+		return nil, fmt.Errorf("failed to write meta.json: %w", err)
+	}
+
+	// Find our own binary path
+	self, err := os.Executable()
+	if err != nil {
+		e.mu.Unlock()
+		return nil, fmt.Errorf("failed to find own executable: %w", err)
+	}
+
+	// Launch the deploy pipeline as a transient systemd unit
+	unit := systemdUnitName(id)
+	args := []string{
+		"systemd-run",
+		"--unit=" + unit,
+		"--description=NixOS deploy " + id,
+		"--collect",        // auto-remove when done
+		"--same-dir",       // inherit working directory
+		"--setenv=PATH=" + os.Getenv("PATH"),
+		"--setenv=HOME=" + os.Getenv("HOME"),
+		"--setenv=NIX_REMOTE=daemon",
+		self, "run-deploy",
+		"--deploy-id=" + id,
+		"--flake-url=" + flakeURL,
+		"--state-dir=" + e.cfg.StateDir,
+	}
+	if e.cfg.WebhookURL != "" {
+		args = append(args, "--webhook-url="+e.cfg.WebhookURL)
+	}
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		e.mu.Unlock()
+		return nil, fmt.Errorf("failed to start systemd unit: %w", err)
+	}
+
 	active := &ActiveDeploy{
-		Meta:        meta,
+		ID:          id,
 		Broadcaster: NewBroadcaster(),
 		LogBuf:      &LogBuffer{},
+		cancel: func() {
+			exec.Command("systemctl", "stop", unit+".service").Run()
+		},
 	}
 	e.activeDeploy = active
 	e.mu.Unlock()
 
-	go e.runDeploy(active)
+	// Start tailing the deploy.log
+	go e.tailDeployLog(active)
+
 	return &meta, nil
+}
+
+func (e *DeployEngine) CancelDeploy(id string) error {
+	e.mu.Lock()
+	active := e.activeDeploy
+	e.mu.Unlock()
+
+	if active == nil || active.ID != id {
+		return fmt.Errorf("no active deploy with id %s", id)
+	}
+
+	active.cancel()
+	return nil
 }
 
 func (e *DeployEngine) GetActive() *ActiveDeploy {
@@ -178,185 +313,84 @@ func (e *DeployEngine) GetActive() *ActiveDeploy {
 	return e.activeDeploy
 }
 
-func (e *DeployEngine) runDeploy(active *ActiveDeploy) {
+// tailDeployLog watches the deploy.log file and broadcasts lines to SSE subscribers.
+// It keeps running until it sees a DONE line or the file stops growing after the
+// systemd unit exits.
+func (e *DeployEngine) tailDeployLog(active *ActiveDeploy) {
 	defer func() {
+		active.LogBuf.MarkDone()
 		e.mu.Lock()
-		e.activeDeploy = nil
+		if e.activeDeploy == active {
+			e.activeDeploy = nil
+		}
 		e.mu.Unlock()
 	}()
 
-	meta := &active.Meta
+	deployLogPath := filepath.Join(e.cfg.StateDir, "deploys", active.ID, "deploy.log")
 
-	deploysDir := filepath.Join(e.cfg.StateDir, "deploys", meta.ID)
-	if err := os.MkdirAll(deploysDir, 0755); err != nil {
-		slog.Error("failed to create deploy dir", "error", err)
+	// Wait for the file to appear (the deploy subcommand creates it)
+	for i := 0; i < 100; i++ {
+		if _, err := os.Stat(deployLogPath); err == nil {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	f, err := os.Open(deployLogPath)
+	if err != nil {
+		slog.Error("failed to open deploy.log for tailing", "error", err)
 		return
 	}
+	defer f.Close()
 
-	// Open a combined deploy.log that captures everything (status messages + command output).
-	// This is used for replay of completed deploys.
-	deployLogPath := filepath.Join(deploysDir, "deploy.log")
-	deployLogFile, err := os.Create(deployLogPath)
-	if err != nil {
-		slog.Error("failed to create deploy.log", "error", err)
-	}
-	defer func() {
-		if deployLogFile != nil {
-			deployLogFile.Close()
-		}
-	}()
-
-	broadcast := func(line string) {
-		active.LogBuf.Append(line)
-		active.Broadcaster.Send(line)
-		if deployLogFile != nil {
-			fmt.Fprintln(deployLogFile, line)
-		}
-	}
-
-	// Step 1: Record current generation
-	gen, err := currentGeneration()
-	if err != nil {
-		broadcast(fmt.Sprintf("[deploy] failed to read current generation: %v", err))
-		slog.Error("failed to read generation", "error", err)
-		meta.PreGeneration = -1
-	} else {
-		meta.PreGeneration = gen
-		broadcast(fmt.Sprintf("[deploy] current NixOS generation: %d", gen))
-	}
-
-	// Step 2: Build
-	broadcast("[deploy] === BUILD PHASE ===")
-	broadcast(fmt.Sprintf("[deploy] nixos-rebuild build --flake %s --refresh", meta.FlakeURL))
-	buildLog := filepath.Join(deploysDir, "build.log")
-	buildOk := e.runCommand(active, buildLog, deployLogFile, "nixos-rebuild", "build", "--flake", meta.FlakeURL, "--refresh")
-
-	if !buildOk {
-		meta.Status = StatusBuildFailed
-		broadcast("[deploy] BUILD FAILED")
-		e.finishDeploy(active, deploysDir)
-		return
-	}
-	broadcast("[deploy] build succeeded")
-
-	// Step 3: Switch
-	broadcast("[deploy] === SWITCH PHASE ===")
-	broadcast(fmt.Sprintf("[deploy] nixos-rebuild switch --flake %s --refresh", meta.FlakeURL))
-	switchLog := filepath.Join(deploysDir, "switch.log")
-	switchOk := e.runCommand(active, switchLog, deployLogFile, "nixos-rebuild", "switch", "--flake", meta.FlakeURL, "--refresh")
-
-	if !switchOk {
-		meta.Status = StatusSwitchFailed
-		broadcast("[deploy] SWITCH FAILED — initiating rollback")
-
-		// Step 4: Rollback to recorded generation
-		if meta.PreGeneration > 0 {
-			broadcast(fmt.Sprintf("[deploy] === ROLLBACK to generation %d ===", meta.PreGeneration))
-			rollbackLog := filepath.Join(deploysDir, "rollback.log")
-			profileLink := fmt.Sprintf("/nix/var/nix/profiles/system-%d-link/bin/switch-to-configuration", meta.PreGeneration)
-			rollbackOk := e.runCommand(active, rollbackLog, deployLogFile, profileLink, "switch")
-			if !rollbackOk {
-				meta.Status = StatusRollbackFailed
-				broadcast("[deploy] ROLLBACK FAILED — system may be in inconsistent state")
-			} else {
-				broadcast("[deploy] rollback succeeded")
-			}
-		} else {
-			broadcast("[deploy] cannot rollback: pre-deploy generation unknown")
-		}
-
-		e.finishDeploy(active, deploysDir)
-		return
-	}
-
-	meta.Status = StatusSuccess
-	broadcast("[deploy] === DEPLOY SUCCEEDED ===")
-	e.finishDeploy(active, deploysDir)
-}
-
-func (e *DeployEngine) finishDeploy(active *ActiveDeploy, deploysDir string) {
-	now := time.Now().UTC()
-	active.Meta.FinishedAt = &now
-
-	// Write meta.json
-	metaPath := filepath.Join(deploysDir, "meta.json")
-	data, _ := json.MarshalIndent(active.Meta, "", "  ")
-	os.WriteFile(metaPath, data, 0644)
-
-	// Send done event
-	active.Broadcaster.Send("[deploy] DONE:" + string(active.Meta.Status))
-
-	// Fire webhook
-	if e.cfg.WebhookURL != "" {
-		go e.fireWebhook(active.Meta)
-	}
-}
-
-func (e *DeployEngine) runCommand(active *ActiveDeploy, logFile string, deployLog *os.File, name string, args ...string) bool {
-	cmd := exec.Command(name, args...)
-	cmd.Env = append(os.Environ(), "NIX_REMOTE=daemon")
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		line := fmt.Sprintf("[error] pipe: %v", err)
-		active.LogBuf.Append(line)
-		active.Broadcaster.Send(line)
-		if deployLog != nil {
-			fmt.Fprintln(deployLog, line)
-		}
-		return false
-	}
-	cmd.Stderr = cmd.Stdout // merge stderr into stdout
-
-	f, err := os.Create(logFile)
-	if err != nil {
-		slog.Error("failed to create log file", "path", logFile, "error", err)
-	}
-	defer func() {
-		if f != nil {
-			f.Close()
-		}
-	}()
-
-	if err := cmd.Start(); err != nil {
-		line := fmt.Sprintf("[error] exec: %v", err)
-		active.LogBuf.Append(line)
-		active.Broadcaster.Send(line)
-		if f != nil {
-			fmt.Fprintln(f, line)
-		}
-		if deployLog != nil {
-			fmt.Fprintln(deployLog, line)
-		}
-		return false
-	}
-
-	scanner := bufio.NewScanner(stdout)
+	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 256*1024), 256*1024)
-	for scanner.Scan() {
-		line := scanner.Text()
-		active.LogBuf.Append(line)
-		active.Broadcaster.Send(line)
-		if f != nil {
-			fmt.Fprintln(f, line)
-		}
-		if deployLog != nil {
-			fmt.Fprintln(deployLog, line)
-		}
-	}
 
-	return cmd.Wait() == nil
-}
+	unit := systemdUnitName(active.ID)
+	idleCount := 0
 
-func (e *DeployEngine) fireWebhook(meta DeployMeta) {
-	payload, _ := json.Marshal(meta)
-	resp, err := http.Post(e.cfg.WebhookURL, "application/json", bytes.NewReader(payload))
-	if err != nil {
-		slog.Error("webhook failed", "error", err)
-		return
+	for {
+		if scanner.Scan() {
+			idleCount = 0
+			line := scanner.Text()
+			active.LogBuf.Append(line)
+			active.Broadcaster.Send(line)
+
+			if strings.HasPrefix(line, "[deploy] DONE:") {
+				return
+			}
+			continue
+		}
+
+		// No more data right now. Check if the unit is still running.
+		if err := exec.Command("systemctl", "is-active", "--quiet", unit+".service").Run(); err != nil {
+			// Unit exited. Read any remaining lines.
+			for scanner.Scan() {
+				line := scanner.Text()
+				active.LogBuf.Append(line)
+				active.Broadcaster.Send(line)
+			}
+			// If we never saw a DONE line, the process was killed/cancelled.
+			// Check meta.json for final status.
+			metaPath := filepath.Join(e.cfg.StateDir, "deploys", active.ID, "meta.json")
+			data, err := os.ReadFile(metaPath)
+			if err == nil {
+				var m DeployMeta
+				if json.Unmarshal(data, &m) == nil && m.Status != StatusRunning {
+					// Deploy subcommand wrote final status
+					return
+				}
+			}
+			// Process was killed without writing final status (cancelled)
+			active.LogBuf.Append("[deploy] DONE:cancelled")
+			active.Broadcaster.Send("[deploy] DONE:cancelled")
+			return
+		}
+
+		// Unit still running, just no output yet. Wait and retry.
+		idleCount++
+		time.Sleep(200 * time.Millisecond)
 	}
-	resp.Body.Close()
-	slog.Info("webhook sent", "status", resp.StatusCode)
 }
 
 // --- Generation detection ---
@@ -375,6 +409,184 @@ func currentGeneration() (int, error) {
 	var gen int
 	fmt.Sscanf(m[1], "%d", &gen)
 	return gen, nil
+}
+
+// --- Deploy subcommand (runs in transient systemd unit) ---
+
+func runDeploySubcommand() {
+	var (
+		deployID   string
+		flakeURL   string
+		stateDir   string
+		webhookURL string
+	)
+	fs := flag.NewFlagSet("run-deploy", flag.ExitOnError)
+	fs.StringVar(&deployID, "deploy-id", "", "Deploy ID")
+	fs.StringVar(&flakeURL, "flake-url", "", "Flake URL")
+	fs.StringVar(&stateDir, "state-dir", "/var/lib/nixos-deploy", "State directory")
+	fs.StringVar(&webhookURL, "webhook-url", "", "Webhook URL")
+	fs.Parse(os.Args[2:])
+
+	if deployID == "" || flakeURL == "" {
+		slog.Error("deploy-id and flake-url are required")
+		os.Exit(1)
+	}
+
+	deploysDir := filepath.Join(stateDir, "deploys", deployID)
+
+	// Read initial meta
+	metaPath := filepath.Join(deploysDir, "meta.json")
+	metaData, err := os.ReadFile(metaPath)
+	if err != nil {
+		slog.Error("failed to read meta.json", "error", err)
+		os.Exit(1)
+	}
+	var meta DeployMeta
+	if err := json.Unmarshal(metaData, &meta); err != nil {
+		slog.Error("failed to parse meta.json", "error", err)
+		os.Exit(1)
+	}
+
+	// Open deploy.log
+	deployLogPath := filepath.Join(deploysDir, "deploy.log")
+	deployLog, err := os.Create(deployLogPath)
+	if err != nil {
+		slog.Error("failed to create deploy.log", "error", err)
+		os.Exit(1)
+	}
+	defer deployLog.Close()
+
+	logLine := func(line string) {
+		fmt.Fprintln(deployLog, line)
+		deployLog.Sync()
+	}
+
+	writeMeta := func() {
+		data, _ := json.MarshalIndent(meta, "", "  ")
+		os.WriteFile(metaPath, data, 0644)
+	}
+
+	finish := func() {
+		now := time.Now().UTC()
+		meta.FinishedAt = &now
+		writeMeta()
+		logLine("[deploy] DONE:" + string(meta.Status))
+		if webhookURL != "" {
+			go fireWebhook(webhookURL, meta)
+		}
+		// Give webhook a moment to fire
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	// Step 1: Record current generation
+	gen, err := currentGeneration()
+	if err != nil {
+		logLine(fmt.Sprintf("[deploy] failed to read current generation: %v", err))
+		meta.PreGeneration = -1
+	} else {
+		meta.PreGeneration = gen
+		logLine(fmt.Sprintf("[deploy] current NixOS generation: %d", gen))
+	}
+	writeMeta()
+
+	// Step 2: Build
+	logLine("[deploy] === BUILD PHASE ===")
+	logLine(fmt.Sprintf("[deploy] nixos-rebuild build --flake %s --refresh", flakeURL))
+	buildLog := filepath.Join(deploysDir, "build.log")
+	if !runPipelineCommand(deployLog, buildLog, "nixos-rebuild", "build", "--flake", flakeURL, "--refresh") {
+		meta.Status = StatusBuildFailed
+		logLine("[deploy] BUILD FAILED")
+		finish()
+		return
+	}
+	logLine("[deploy] build succeeded")
+
+	// Step 3: Switch
+	logLine("[deploy] === SWITCH PHASE ===")
+	logLine(fmt.Sprintf("[deploy] nixos-rebuild switch --flake %s --refresh", flakeURL))
+	switchLog := filepath.Join(deploysDir, "switch.log")
+	if !runPipelineCommand(deployLog, switchLog, "nixos-rebuild", "switch", "--flake", flakeURL, "--refresh") {
+		meta.Status = StatusSwitchFailed
+		logLine("[deploy] SWITCH FAILED — initiating rollback")
+
+		if meta.PreGeneration > 0 {
+			logLine(fmt.Sprintf("[deploy] === ROLLBACK to generation %d ===", meta.PreGeneration))
+			rollbackLog := filepath.Join(deploysDir, "rollback.log")
+			profileLink := fmt.Sprintf("/nix/var/nix/profiles/system-%d-link/bin/switch-to-configuration", meta.PreGeneration)
+			if !runPipelineCommand(deployLog, rollbackLog, profileLink, "switch") {
+				meta.Status = StatusRollbackFailed
+				logLine("[deploy] ROLLBACK FAILED — system may be in inconsistent state")
+			} else {
+				logLine("[deploy] rollback succeeded")
+			}
+		} else {
+			logLine("[deploy] cannot rollback: pre-deploy generation unknown")
+		}
+
+		finish()
+		return
+	}
+
+	meta.Status = StatusSuccess
+	logLine("[deploy] === DEPLOY SUCCEEDED ===")
+	finish()
+}
+
+// runPipelineCommand executes a command, writing output to both a phase log and the deploy log.
+func runPipelineCommand(deployLog *os.File, phaseLogPath string, name string, args ...string) bool {
+	cmd := exec.Command(name, args...)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		line := fmt.Sprintf("[error] pipe: %v", err)
+		fmt.Fprintln(deployLog, line)
+		deployLog.Sync()
+		return false
+	}
+	cmd.Stderr = cmd.Stdout
+
+	phaseLog, err := os.Create(phaseLogPath)
+	if err != nil {
+		slog.Error("failed to create phase log", "path", phaseLogPath, "error", err)
+	}
+	defer func() {
+		if phaseLog != nil {
+			phaseLog.Close()
+		}
+	}()
+
+	if err := cmd.Start(); err != nil {
+		line := fmt.Sprintf("[error] exec: %v", err)
+		fmt.Fprintln(deployLog, line)
+		deployLog.Sync()
+		if phaseLog != nil {
+			fmt.Fprintln(phaseLog, line)
+		}
+		return false
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 0, 256*1024), 256*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Fprintln(deployLog, line)
+		deployLog.Sync()
+		if phaseLog != nil {
+			fmt.Fprintln(phaseLog, line)
+		}
+	}
+
+	return cmd.Wait() == nil
+}
+
+func fireWebhook(webhookURL string, meta DeployMeta) {
+	payload, _ := json.Marshal(meta)
+	resp, err := http.Post(webhookURL, "application/json", bytes.NewReader(payload))
+	if err != nil {
+		slog.Error("webhook failed", "error", err)
+		return
+	}
+	resp.Body.Close()
 }
 
 // --- Stored deploys ---
@@ -405,7 +617,6 @@ func listDeploys(stateDir string) ([]DeployMeta, error) {
 		}
 	}
 
-	// Sort newest first
 	sort.Slice(metas, func(i, j int) bool {
 		return metas[i].StartedAt.After(metas[j].StartedAt)
 	})
@@ -413,17 +624,14 @@ func listDeploys(stateDir string) ([]DeployMeta, error) {
 }
 
 func readDeployLog(stateDir, deployID string) (string, error) {
-	// Prefer the combined deploy.log which has full context
 	deployLogPath := filepath.Join(stateDir, "deploys", deployID, "deploy.log")
 	data, err := os.ReadFile(deployLogPath)
 	if err == nil {
 		return string(data), nil
 	}
 
-	// Fallback to per-phase logs for backwards compat
 	deploysDir := filepath.Join(stateDir, "deploys", deployID)
 	var combined strings.Builder
-
 	for _, name := range []string{"build.log", "switch.log", "rollback.log"} {
 		phaseData, err := os.ReadFile(filepath.Join(deploysDir, name))
 		if err != nil {
@@ -433,7 +641,6 @@ func readDeployLog(stateDir, deployID string) (string, error) {
 		combined.Write(phaseData)
 		combined.WriteString("\n")
 	}
-
 	if combined.Len() == 0 {
 		return "", fmt.Errorf("no logs found for deploy %s", deployID)
 	}
@@ -453,11 +660,6 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func handlePostDeploy(engine *DeployEngine, defaultFlakeURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
 		var req struct {
 			FlakeURL string `json:"flake_url"`
 		}
@@ -483,6 +685,20 @@ func handlePostDeploy(engine *DeployEngine, defaultFlakeURL string) http.Handler
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusAccepted)
 		json.NewEncoder(w).Encode(meta)
+	}
+}
+
+func handleCancelDeploy(engine *DeployEngine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		deployID := r.PathValue("id")
+		if err := engine.CancelDeploy(deployID); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "cancelling"})
 	}
 }
 
@@ -512,10 +728,14 @@ func handleDeployStream(engine *DeployEngine, stateDir string) http.HandlerFunc 
 
 		// Check if this is the active deploy
 		active := engine.GetActive()
-		if active != nil && active.Meta.ID == deployID {
+		if active != nil && active.ID == deployID {
 			// Replay existing lines
 			for _, line := range active.LogBuf.Lines() {
 				sendSSE(line)
+			}
+
+			if active.LogBuf.IsDone() {
+				return
 			}
 
 			// Subscribe to live updates
@@ -551,7 +771,6 @@ func handleDeployStream(engine *DeployEngine, stateDir string) http.HandlerFunc 
 			}
 		}
 
-		// Read stored meta to send done event
 		metaPath := filepath.Join(stateDir, "deploys", deployID, "meta.json")
 		metaData, err := os.ReadFile(metaPath)
 		if err == nil {
@@ -563,7 +782,7 @@ func handleDeployStream(engine *DeployEngine, stateDir string) http.HandlerFunc 
 	}
 }
 
-func handleListDeploys(stateDir string) http.HandlerFunc {
+func handleListDeploys(engine *DeployEngine, stateDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metas, err := listDeploys(stateDir)
 		if err != nil {
@@ -573,8 +792,19 @@ func handleListDeploys(stateDir string) http.HandlerFunc {
 		if metas == nil {
 			metas = []DeployMeta{}
 		}
+
+		// Inject active deploy ID so the UI knows which one is live
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(metas)
+		active := engine.GetActive()
+		type listResponse struct {
+			ActiveID string       `json:"active_id,omitempty"`
+			Deploys  []DeployMeta `json:"deploys"`
+		}
+		resp := listResponse{Deploys: metas}
+		if active != nil {
+			resp.ActiveID = active.ID
+		}
+		json.NewEncoder(w).Encode(resp)
 	}
 }
 
@@ -594,7 +824,20 @@ func handleDeployLog(stateDir string) http.HandlerFunc {
 // --- Main ---
 
 func main() {
-	cfg := configFromFlags()
+	// Check for subcommand
+	if len(os.Args) > 1 && os.Args[1] == "run-deploy" {
+		runDeploySubcommand()
+		return
+	}
+
+	cfg := configFromEnv()
+
+	// Also support flags for backwards compat / manual runs
+	flag.StringVar(&cfg.ListenAddr, "listen", cfg.ListenAddr, "Listen address")
+	flag.StringVar(&cfg.DefaultFlakeURL, "flake-url", cfg.DefaultFlakeURL, "Default flake URL")
+	flag.StringVar(&cfg.StateDir, "state-dir", cfg.StateDir, "State directory for logs")
+	flag.StringVar(&cfg.WebhookURL, "webhook-url", cfg.WebhookURL, "Webhook URL for notifications")
+	flag.Parse()
 
 	if cfg.DefaultFlakeURL == "" {
 		slog.Warn("no default flake URL configured; deploys will require explicit flake_url")
@@ -607,11 +850,15 @@ func main() {
 
 	engine := NewDeployEngine(cfg)
 
+	// Check for any deploy that was running when we last exited
+	engine.RecoverActive()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("POST /api/deploy", handlePostDeploy(engine, cfg.DefaultFlakeURL))
+	mux.HandleFunc("POST /api/deploy/{id}/cancel", handleCancelDeploy(engine))
 	mux.HandleFunc("GET /api/deploy/{id}/stream", handleDeployStream(engine, cfg.StateDir))
-	mux.HandleFunc("GET /api/deploys", handleListDeploys(cfg.StateDir))
+	mux.HandleFunc("GET /api/deploys", handleListDeploys(engine, cfg.StateDir))
 	mux.HandleFunc("GET /api/deploys/{id}/log", handleDeployLog(cfg.StateDir))
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

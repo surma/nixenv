@@ -33,6 +33,8 @@ const indexHTML = `<!DOCTYPE html>
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-deploy { background: #238636; color: #fff; }
   .btn-deploy:hover:not(:disabled) { background: #2ea043; }
+  .btn-cancel { background: #da3633; color: #fff; display: none; }
+  .btn-cancel:hover:not(:disabled) { background: #f85149; }
 
   #log-area {
     background: #010409; border: 1px solid #30363d; border-radius: 6px;
@@ -69,6 +71,7 @@ const indexHTML = `<!DOCTYPE html>
   .badge-success { background: #238636; color: #fff; }
   .badge-running { background: #1f6feb; color: #fff; }
   .badge-failed { background: #da3633; color: #fff; }
+  .badge-cancelled { background: #8b949e; color: #fff; }
 </style>
 </head>
 <body>
@@ -77,6 +80,7 @@ const indexHTML = `<!DOCTYPE html>
 <div class="controls">
   <input type="text" id="flake-url" placeholder="Flake URL (leave empty for default)">
   <button class="btn-deploy" id="deploy-btn" onclick="startDeploy()">Deploy</button>
+  <button class="btn-cancel" id="cancel-btn" onclick="cancelDeploy()">Cancel</button>
 </div>
 
 <div id="log-area"></div>
@@ -89,9 +93,11 @@ const indexHTML = `<!DOCTYPE html>
 <script>
 const logArea = document.getElementById('log-area');
 const deployBtn = document.getElementById('deploy-btn');
+const cancelBtn = document.getElementById('cancel-btn');
 const flakeInput = document.getElementById('flake-url');
 const historyList = document.getElementById('history-list');
 let evtSource = null;
+let activeDeployId = null;
 
 function appendLog(text) {
   const div = document.createElement('div');
@@ -99,7 +105,7 @@ function appendLog(text) {
   if (text.startsWith('[deploy]')) {
     if (text.includes('SUCCEEDED') || text.startsWith('[deploy] DONE:success')) {
       div.className += ' done-success';
-    } else if (text.includes('FAILED') || (text.startsWith('[deploy] DONE:') && !text.includes('success'))) {
+    } else if (text.includes('FAILED') || text.includes('cancelled') || (text.startsWith('[deploy] DONE:') && !text.includes('success'))) {
       div.className += ' done-fail';
     } else {
       div.className += ' deploy-msg';
@@ -110,6 +116,19 @@ function appendLog(text) {
   div.textContent = text;
   logArea.appendChild(div);
   logArea.scrollTop = logArea.scrollHeight;
+}
+
+function setDeploying(id) {
+  activeDeployId = id;
+  deployBtn.disabled = true;
+  cancelBtn.style.display = 'inline-block';
+  cancelBtn.disabled = false;
+}
+
+function setIdle() {
+  activeDeployId = null;
+  deployBtn.disabled = false;
+  cancelBtn.style.display = 'none';
 }
 
 function startDeploy() {
@@ -131,13 +150,28 @@ function startDeploy() {
     return r.json();
   })
   .then(meta => {
+    setDeploying(meta.id);
     appendLog('[deploy] started: ' + meta.id);
     subscribeToStream(meta.id);
   })
   .catch(err => {
     appendLog('[error] ' + err.message);
-    deployBtn.disabled = false;
+    setIdle();
   });
+}
+
+function cancelDeploy() {
+  if (!activeDeployId) return;
+  cancelBtn.disabled = true;
+  fetch('/api/deploy/' + activeDeployId + '/cancel', { method: 'POST' })
+    .then(r => {
+      if (!r.ok) return r.json().then(e => { throw new Error(e.error || r.statusText); });
+      appendLog('[deploy] cancel requested...');
+    })
+    .catch(err => {
+      appendLog('[error] cancel failed: ' + err.message);
+      cancelBtn.disabled = false;
+    });
 }
 
 function subscribeToStream(id) {
@@ -148,21 +182,51 @@ function subscribeToStream(id) {
     if (e.data.startsWith('[deploy] DONE:')) {
       evtSource.close();
       evtSource = null;
-      deployBtn.disabled = false;
+      setIdle();
       loadHistory();
     }
   };
   evtSource.onerror = function() {
+    // Server may have restarted. Try reconnecting after a delay.
     evtSource.close();
     evtSource = null;
-    deployBtn.disabled = false;
+    appendLog('[deploy] connection lost, reconnecting...');
+    setTimeout(function() {
+      // Check if deploy is still active
+      fetch('/api/deploys')
+        .then(r => r.json())
+        .then(data => {
+          if (data.active_id === id) {
+            subscribeToStream(id);
+          } else {
+            setIdle();
+            loadHistory();
+            // Reload the log for this deploy
+            viewStream(id);
+          }
+        })
+        .catch(() => {
+          // Server still down, retry later
+          setTimeout(function() { subscribeToStream(id); }, 3000);
+        });
+    }, 2000);
   };
 }
 
 function loadHistory() {
   fetch('/api/deploys')
     .then(r => r.json())
-    .then(deploys => {
+    .then(data => {
+      const deploys = data.deploys || [];
+      const activeId = data.active_id || null;
+
+      // If there's an active deploy and we're not tracking it, pick it up
+      if (activeId && !activeDeployId) {
+        setDeploying(activeId);
+        logArea.innerHTML = '';
+        subscribeToStream(activeId);
+      }
+
       historyList.innerHTML = '';
       if (deploys.length === 0) {
         historyList.innerHTML = '<li class="meta">No deploys yet.</li>';
@@ -172,10 +236,11 @@ function loadHistory() {
         const li = document.createElement('li');
         const started = new Date(d.started_at).toLocaleString();
         const badgeClass = d.status === 'success' ? 'badge-success' :
-                           d.status === 'running' ? 'badge-running' : 'badge-failed';
+                           d.status === 'running' ? 'badge-running' :
+                           d.status === 'cancelled' ? 'badge-cancelled' : 'badge-failed';
         li.innerHTML =
           '<span>' +
-            '<span class="badge ' + badgeClass + '">' + d.status + '</span> ' +
+            '<span class="badge ' + badgeClass + '">' + escapeHtml(d.status) + '</span> ' +
             '<span class="meta">' + started + '</span> ' +
             '<span class="meta">' + escapeHtml(d.flake_url) + '</span>' +
           '</span>' +
@@ -220,7 +285,7 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
-// Load history on page load
+// Load history on page load (also picks up active deploys after server restart)
 loadHistory();
 </script>
 </body>
