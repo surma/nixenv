@@ -55,6 +55,9 @@ in
         NIXOS_DEPLOY_LISTEN = cfg.listenAddress;
         NIXOS_DEPLOY_FLAKE_URL = cfg.flakeURL;
         NIXOS_DEPLOY_STATE_DIR = cfg.stateDir;
+        # Point HOME at the state dir so nix cache writes go there
+        # instead of /root (which is read-only due to ProtectHome).
+        HOME = cfg.stateDir;
       } // (lib.optionalAttrs (cfg.webhookURL != null) {
         NIXOS_DEPLOY_WEBHOOK_URL = cfg.webhookURL;
       });
