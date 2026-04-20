@@ -46,6 +46,7 @@ in
 
   config = mkIf cfg.enable {
     systemd.services.nixos-deploy = {
+      # dummy: force rebuild for streaming test
       description = "NixOS Deploy — web UI for nixos-rebuild";
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
