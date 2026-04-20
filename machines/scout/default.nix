@@ -84,6 +84,7 @@
 
     programs.agent-browser.enable = true;
     programs.brain.enable = true;
+    programs.parakeet.enable = true;
 
     defaultConfigs.opencode = {
       enable = true;
