@@ -201,8 +201,6 @@ function subscribeToStream(id) {
           } else {
             setIdle();
             loadHistory();
-            // Reload the log for this deploy
-            viewStream(id);
           }
         })
         .catch(() => {
@@ -245,8 +243,7 @@ function loadHistory() {
             '<span class="meta">' + escapeHtml(d.flake_url) + '</span>' +
           '</span>' +
           '<span>' +
-            '<a href="#" onclick="viewLog(\'' + d.id + '\'); return false;">log</a> ' +
-            '<a href="#" onclick="viewStream(\'' + d.id + '\'); return false;">stream</a>' +
+            '<a href="#" onclick="viewDeploy(\'' + d.id + '\', \'' + escapeHtml(d.status) + '\'); return false;">view</a>' +
           '</span>';
         historyList.appendChild(li);
       });
@@ -256,27 +253,25 @@ function loadHistory() {
     });
 }
 
-function viewLog(id) {
+function viewDeploy(id, status) {
   logArea.innerHTML = '';
-  appendLog('[loading log for ' + id + '...]');
-  fetch('/api/deploys/' + id + '/log')
-    .then(r => {
-      if (!r.ok) throw new Error('not found');
-      return r.text();
-    })
-    .then(text => {
-      logArea.innerHTML = '';
-      text.split('\n').forEach(line => { if (line) appendLog(line); });
-    })
-    .catch(err => {
-      logArea.innerHTML = '';
-      appendLog('[error] ' + err.message);
-    });
-}
-
-function viewStream(id) {
-  logArea.innerHTML = '';
-  subscribeToStream(id);
+  if (status === 'running') {
+    subscribeToStream(id);
+  } else {
+    fetch('/api/deploys/' + id + '/log')
+      .then(r => {
+        if (!r.ok) throw new Error('not found');
+        return r.text();
+      })
+      .then(text => {
+        logArea.innerHTML = '';
+        text.split('\n').forEach(line => { if (line) appendLog(line); });
+      })
+      .catch(err => {
+        logArea.innerHTML = '';
+        appendLog('[error] ' + err.message);
+      });
+  }
 }
 
 function escapeHtml(s) {
