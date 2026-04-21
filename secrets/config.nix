@@ -208,5 +208,12 @@
         "nexus"
       ];
     };
+    scout-gws-credentials = {
+      contents = ../secrets/scout-gws-credentials.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

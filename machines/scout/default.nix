@@ -24,6 +24,8 @@
     };
 
     home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
+    home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
+    home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
 
     home.packages = with pkgs; [
       jq
@@ -33,6 +35,7 @@
       sqlite
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.brain.packages.${pkgs.stdenv.hostPlatform.system}.default
+      inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
