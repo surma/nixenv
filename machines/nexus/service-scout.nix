@@ -88,7 +88,7 @@ in
   secrets.items.scout-gws-credentials.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/gws-credentials.json
-    chmod 0600 /var/lib/scout/gws-credentials.json
+    chmod 0644 /var/lib/scout/gws-credentials.json
   '';
 
   systemd.tmpfiles.rules = [
