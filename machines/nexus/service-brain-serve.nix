@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, lib, inputs, ... }:
 let
   system = pkgs.stdenv.hostPlatform.system;
   brainPkg = inputs.brain.packages.${system}.default;
@@ -7,7 +7,7 @@ let
 
   sshConfig = pkgs.writeText "brain-serve-ssh-config" ''
     Host gitea.surma.technology
-      Hostname gitea.nexus.hosts.10.0.0.2.nip.io
+      Hostname 10.0.0.2
       Port 2222
       User containeruser
       IdentityFile /var/lib/brain-serve/.ssh/id_repo_scout
@@ -19,15 +19,16 @@ let
 
   gitSshCommand = "ssh -F ${sshConfig}";
 
-  brainSetup = pkgs.writeShellScript "brain-serve-setup" ''
+  brainSync = pkgs.writeShellScript "brain-serve-sync" ''
     set -euo pipefail
     export GIT_SSH_COMMAND="${gitSshCommand}"
     if [ ! -d "${brainPath}/.git" ]; then
       echo "Cloning brain repository..."
+      rm -rf "${brainPath}"
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
     echo "Running brain sync..."
-    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+    BRAIN_SKIP_QMD=1 BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
   '';
 in
 {
@@ -45,34 +46,40 @@ in
     config = {
       system.stateVersion = "25.05";
 
-      systemd.services.brain-serve-setup = {
-        description = "Clone and sync brain repository";
-        wantedBy = [ "multi-user.target" ];
+      # brain-serve is NOT wantedBy multi-user.target — it's started by
+      # a timer 10s after boot. This prevents the slow clone/sync from
+      # blocking container boot and causing the host container unit to
+      # time out during switch-to-configuration.
+      systemd.services.brain-serve = {
+        description = "Brain knowledge base web server";
         wants = [ "network-online.target" ];
         after = [ "network-online.target" ];
         path = [
           pkgs.git
           pkgs.openssh
         ];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          User = "containeruser";
-          ExecStart = brainSetup;
+        environment = {
+          BRAIN_PATH = brainPath;
+          GIT_SSH_COMMAND = gitSshCommand;
+          HOME = "/var/lib/brain-serve";
         };
-      };
-
-      systemd.services.brain-serve = {
-        description = "Brain knowledge base web server";
-        wantedBy = [ "multi-user.target" ];
-        requires = [ "brain-serve-setup.service" ];
-        after = [ "brain-serve-setup.service" ];
-        environment.BRAIN_PATH = brainPath;
         serviceConfig = {
+          ExecStartPre = "${brainSync}";
           ExecStart = "${brainPkg}/bin/brain serve --port 8080";
           User = "containeruser";
           Restart = "always";
-          RestartSec = 5;
+          RestartSec = 30;
+          TimeoutStartSec = 900;
+        };
+      };
+
+      # Start brain-serve 10s after boot, giving the container network
+      # time to come up without blocking the boot sequence.
+      systemd.timers.brain-serve = {
+        description = "Delayed start for brain-serve";
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "10s";
         };
       };
 
@@ -85,11 +92,13 @@ in
         environment = {
           GIT_SSH_COMMAND = gitSshCommand;
           BRAIN_PATH = brainPath;
+          HOME = "/var/lib/brain-serve";
         };
         serviceConfig = {
           Type = "oneshot";
           User = "containeruser";
-          ExecStart = "${brainPkg}/bin/brain sync";
+          ExecStart = "${brainSync}";
+          TimeoutStartSec = 900;
         };
       };
 
