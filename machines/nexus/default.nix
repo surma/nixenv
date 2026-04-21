@@ -31,6 +31,7 @@
     ./service-github-runner.nix
     ./service-gitea-runner.nix
     ./service-nixos-deploy.nix
+    ./service-brain-serve.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
