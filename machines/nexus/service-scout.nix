@@ -51,6 +51,17 @@ in
     install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nixos-deploy/.ssh/id_repo_scout.pub
     printf '%s\n' "$key" > /var/lib/nixos-deploy/.ssh/id_repo_scout
     chmod 0600 /var/lib/nixos-deploy/.ssh/id_repo_scout
+
+    # Brain serve container
+    mkdir -p /dump/state/brain-serve/.ssh
+    chown surma:users /dump/state/brain-serve/.ssh
+    chmod 0700 /dump/state/brain-serve/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /dump/state/brain-serve/.ssh/id_repo_scout.pub
+    chown surma:users /dump/state/brain-serve/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > /dump/state/brain-serve/.ssh/id_repo_scout
+    chown surma:users /dump/state/brain-serve/.ssh/id_repo_scout
+    chmod 0600 /dump/state/brain-serve/.ssh/id_repo_scout
   '';
 
   secrets.items.scout-telegram-bot-token.command = ''
