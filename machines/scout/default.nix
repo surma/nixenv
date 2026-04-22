@@ -37,6 +37,7 @@
       inputs.brain.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
+      inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.presage-cli
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -94,6 +95,7 @@
       ../../assets/skills/gws
       ../../assets/skills/nexus-admin
       ../../assets/skills/whatsapp
+      ../../assets/skills/signal
     ];
 
     defaultConfigs.opencode = {
