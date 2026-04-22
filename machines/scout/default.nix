@@ -93,6 +93,7 @@
     agent.skills = [
       ../../assets/skills/gws
       ../../assets/skills/nexus-admin
+      ../../assets/skills/whatsapp
     ];
 
     defaultConfigs.opencode = {
