@@ -20,13 +20,29 @@ def main [] {
 # all secrets (or specific ones) with the current set of public
 # keys defined in secrets/config.nix. Useful after adding or
 # removing machines from the key list.
+#
+# With no arguments, recrypts every secret. Pass secret names
+# positionally to limit the set, or use --machine to recrypt
+# every secret that lists a given machine as a recipient (handy
+# after rotating that machine's key). --machine and positional
+# names are mutually exclusive.
+#
+# Note: decryption uses ~/.ssh/id_machine and ~/.ssh/id_surma,
+# so when rotating a machine key you must run this from a host
+# that still holds a valid recipient key for the affected secrets.
 def "main recrypt" [
-  --root (-r): string  # Path to flake root (defaults to git root)
-  ...files: string     # Specific secret names to recrypt (optional, recrypts all if empty)
+  --root (-r): string     # Path to flake root (defaults to git root)
+  --machine (-m): string  # Recrypt all secrets that list this machine as a recipient
+  ...files: string        # Specific secret names to recrypt (optional, recrypts all if empty)
 ] {
+  if $machine != null and (not ($files | is-empty)) {
+    error make {msg: "--machine and positional secret names are mutually exclusive"}
+  }
   let flake_root = (get-root $root)
   let config = (nix eval --impure --json --expr $"import ($flake_root)/secrets/config.nix" | from json)
-  let secrets = if ($files | is-empty) {
+  let secrets = if $machine != null {
+    $config.secrets | values | where {|secret| $machine in $secret.keys }
+  } else if ($files | is-empty) {
     $config.secrets | values
   } else {
     $config.secrets | transpose key value | where {|secret| $secret.key in $files } | get value 

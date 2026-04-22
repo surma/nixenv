@@ -11,7 +11,7 @@
     archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMGHVSc2lTehmhEl87rp3m15b8Q1GojwNJsnbxJxWe99";
     surmturntable = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBb7S7oe5a61I0TH+2xmI68rGVflyftTvjQlVinJgFOr surma@surmturntable";
     nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW surma@nexus";
-    forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIORN5qJptvGmSMNkrN23fjStvAZ52erxAH6RuD7WcZy6 surma@forge";
+    forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILrXa3Rnz2M+BtpydthCXDsQfeZbmu4cDtxxCtMpxvG6 surma@forge";
     scout = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ/0OJdh2REKlxM7Ybfl+5a9XlqWuvkDowwnvpHfBd4W";
   };
   secrets = {
