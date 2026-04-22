@@ -89,7 +89,10 @@
     programs.brain.enable = true;
     programs.parakeet.enable = true;
 
-    agent.skills = [ ../../assets/skills/gws ];
+    agent.skills = [
+      ../../assets/skills/gws
+      ../../assets/skills/nexus-admin
+    ];
 
     defaultConfigs.opencode = {
       enable = true;

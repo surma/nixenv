@@ -89,34 +89,9 @@ Scout should proactively manage its environment this way. The only changes that 
 
 ## Deploying host-level NixOS changes (Nexus)
 
-Host-level NixOS configuration changes (anything under `machines/nexus/`, system services, container definitions, etc.) are deployed via the **NixOS Deploy** microservice running on Nexus.
+Load the **nexus-admin** skill for full API reference, workflows, and examples.
 
-**Base URL**: `http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/`
-**Brain project**: `nixos-deploy-tcbbb23t`
-
-### How to deploy
-
-```bash
-# Deploy from the default flake (github:surma/nixenv#nexus):
-curl -X POST http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy
-
-# Deploy from a specific branch:
-curl -X POST http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy \
-  -H 'Content-Type: application/json' \
-  -d '{"flake_url":"github:surma/nixenv/my-branch#nexus"}'
-```
-
-### How to monitor
-
-```bash
-# SSE stream (replays all logs, then streams live):
-curl -sN http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/stream
-
-# Check deploy status:
-curl -s http://nixos-deploy.nexus.hosts.10.0.0.2.nip.io/api/deploys
-```
-
-The SSE stream ends with `[deploy] DONE:<status>` where status is one of: `success`, `build-failed`, `switch-failed`, `rollback-failed`, `cancelled`.
+The Nexus Admin service manages NixOS deployments and provides journal log access for the host and all containers. **Base URL:** `http://nexus-admin.nexus.hosts.10.0.0.2.nip.io`
 
 ### CRITICAL: requires explicit user confirmation
 
