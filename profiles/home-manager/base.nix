@@ -46,6 +46,7 @@ in
     tree
     pinentry-curses
     chafa
+    tailscale
 
     fzf
     dprint
