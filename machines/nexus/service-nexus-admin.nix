@@ -1,0 +1,67 @@
+{ pkgs, ... }:
+let
+  port = 8092;
+  stateDir = "/var/lib/nexus-admin";
+
+  # SSH config for git+ssh:// flake inputs (private repos on GitHub and Gitea).
+  # The key is populated by the secrets service into $stateDir/.ssh/.
+  sshConfig = pkgs.writeText "nexus-admin-ssh-config" ''
+    Host github.com
+      IdentitiesOnly yes
+      User git
+      HostName github.com
+      IdentityFile ${stateDir}/.ssh/id_repo_scout
+      StrictHostKeyChecking accept-new
+
+    Host gitea.surma.technology
+      Port 2222
+      IdentitiesOnly yes
+      User containeruser
+      HostName gitea.nexus.hosts.10.0.0.2.nip.io
+      IdentityFile ${stateDir}/.ssh/id_repo_scout
+      HostKeyAlias gitea.nexus.hosts.10.0.0.2.nip.io
+      StrictHostKeyChecking accept-new
+
+    Host gitea.nexus.hosts.10.0.0.2.nip.io
+      Port 2222
+      IdentitiesOnly yes
+      User containeruser
+      HostName gitea.nexus.hosts.10.0.0.2.nip.io
+      IdentityFile ${stateDir}/.ssh/id_repo_scout
+      StrictHostKeyChecking accept-new
+  '';
+
+  knownHosts = pkgs.writeText "nexus-admin-known-hosts" ''
+    github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+    github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+  '';
+in
+{
+  imports = [
+    ../../modules/services/nexus-admin
+  ];
+
+  services.nexus-admin = {
+    enable = true;
+    listenAddress = "127.0.0.1:${toString port}";
+    flakeURL = "github:surma/nixenv#nexus";
+  };
+
+  # Overlay: add SSH support for git+ssh:// flake inputs.
+  systemd.services.nexus-admin = {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+    path = [ pkgs.openssh ];
+    preStart = ''
+      mkdir -p ${stateDir}/.ssh
+      chmod 0700 ${stateDir}/.ssh
+      install -m 0600 ${sshConfig} ${stateDir}/.ssh/config
+      install -m 0644 ${knownHosts} ${stateDir}/.ssh/known_hosts
+    '';
+  };
+
+  services.surmhosting.services.nexus-admin = {
+    host = "localhost";
+    expose.port = port;
+  };
+}

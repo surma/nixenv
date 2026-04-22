@@ -30,7 +30,7 @@
     ./service-overview.nix
     ./service-github-runner.nix
     ./service-gitea-runner.nix
-    ./service-nixos-deploy.nix
+    ./service-nexus-admin.nix
     ./service-brain-serve.nix
     # ./service-hate.nix
 

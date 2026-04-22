@@ -44,13 +44,13 @@ in
     chown surma:users /dump/state/scout/.ssh/id_repo_scout
     chmod 0600 /dump/state/scout/.ssh/id_repo_scout
 
-    # NixOS deploy service (HOME=/var/lib/nixos-deploy)
-    mkdir -p /var/lib/nixos-deploy/.ssh
-    chmod 0700 /var/lib/nixos-deploy/.ssh
+    # Nexus Admin service (HOME=/var/lib/nexus-admin)
+    mkdir -p /var/lib/nexus-admin/.ssh
+    chmod 0700 /var/lib/nexus-admin/.ssh
 
-    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nixos-deploy/.ssh/id_repo_scout.pub
-    printf '%s\n' "$key" > /var/lib/nixos-deploy/.ssh/id_repo_scout
-    chmod 0600 /var/lib/nixos-deploy/.ssh/id_repo_scout
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nexus-admin/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > /var/lib/nexus-admin/.ssh/id_repo_scout
+    chmod 0600 /var/lib/nexus-admin/.ssh/id_repo_scout
 
     # Brain serve container
     mkdir -p /dump/state/brain-serve/.ssh
