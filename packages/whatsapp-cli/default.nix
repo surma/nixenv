@@ -38,7 +38,7 @@ buildGoModule {
     description = "Command-line interface for WhatsApp built on the WhatsApp Web multidevice protocol";
     homepage = "https://github.com/vicentereig/whatsapp-cli";
     license = lib.licenses.mit;
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
     mainProgram = "whatsapp-cli";
   };
 }
