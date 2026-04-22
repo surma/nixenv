@@ -89,6 +89,8 @@
     programs.brain.enable = true;
     programs.parakeet.enable = true;
 
+    agent.skills = [ ../../assets/skills/gws ];
+
     defaultConfigs.opencode = {
       enable = true;
       llmProxy = {
