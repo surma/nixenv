@@ -1,8 +1,12 @@
-{ lib, systemManager, ... }:
+{ config, lib, systemManager, ... }:
 {
   # Nushell is home-manager only
   config = lib.mkIf (systemManager == "home-manager") {
     programs.nushell = {
+      # `home.sessionVariables` are emitted via hm-session-vars.sh for POSIX shells,
+      # but Nushell needs them expressed separately in env.nu.
+      environmentVariables = config.home.sessionVariables;
+
       extraConfig = ''
         def ngs [...args] {
           git status --porcelain ...$args | from ssv -n -m 1 | rename status path | update path { [(git rev-parse --show-toplevel) $in] | path join }
