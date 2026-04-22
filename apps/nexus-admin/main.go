@@ -947,6 +947,8 @@ func handleUnits() http.HandlerFunc {
 			if line == "" {
 				continue
 			}
+			// systemctl prepends a bullet (●) for failed units — strip it.
+			line = strings.TrimLeft(line, "● \t")
 			// systemctl list-units columns: UNIT LOAD ACTIVE SUB DESCRIPTION...
 			fields := strings.Fields(line)
 			if len(fields) < 4 {
