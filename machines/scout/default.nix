@@ -36,6 +36,7 @@
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.brain.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
+      inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -92,6 +93,7 @@
     agent.skills = [
       ../../assets/skills/gws
       ../../assets/skills/nexus-admin
+      ../../assets/skills/whatsapp
     ];
 
     defaultConfigs.opencode = {
