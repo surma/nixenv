@@ -1,4 +1,9 @@
-{ pkgs, lib, inputs, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 let
   system = pkgs.stdenv.hostPlatform.system;
   brainPkg = inputs.brain.packages.${system}.default;

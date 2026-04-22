@@ -1,4 +1,9 @@
-{ config, lib, systemManager, ... }:
+{
+  config,
+  lib,
+  systemManager,
+  ...
+}:
 {
   # Nushell is home-manager only
   config = lib.mkIf (systemManager == "home-manager") {

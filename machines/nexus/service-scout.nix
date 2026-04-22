@@ -10,7 +10,7 @@ let
 
   # Hook scripts for Scout topic lifecycle. Copied into the Nix store
   # so they're available at a stable path for SCOUT_HOOKS_DIR.
-  scoutHooksDir = pkgs.runCommand "scout-hooks" {} ''
+  scoutHooksDir = pkgs.runCommand "scout-hooks" { } ''
     mkdir -p $out
     cp ${../../assets/scout-hooks/topic-create} $out/topic-create
     cp ${../../assets/scout-hooks/topic-close} $out/topic-close
@@ -257,8 +257,14 @@ in
     };
 
     allowedDevices = [
-      { modifier = "rw"; node = "/dev/dri/renderD128"; }
-      { modifier = "rw"; node = "/dev/dri/card0"; }
+      {
+        modifier = "rw";
+        node = "/dev/dri/renderD128";
+      }
+      {
+        modifier = "rw";
+        node = "/dev/dri/card0";
+      }
     ];
 
     bindMounts = {

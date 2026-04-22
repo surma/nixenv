@@ -13,9 +13,10 @@ let
 
   # parakeet-mlx on Darwin (Apple Silicon), chough on Linux
   defaultPackage =
-    if pkgs.stdenv.hostPlatform.isDarwin
-    then inputs.self.packages.${system}.parakeet-mlx
-    else inputs.self.packages.${system}.chough;
+    if pkgs.stdenv.hostPlatform.isDarwin then
+      inputs.self.packages.${system}.parakeet-mlx
+    else
+      inputs.self.packages.${system}.chough;
 in
 {
   imports = [

@@ -58,7 +58,8 @@ in
         # Point HOME at the state dir so nix cache writes go there
         # instead of /root (which is read-only due to ProtectHome).
         HOME = cfg.stateDir;
-      } // (lib.optionalAttrs (cfg.webhookURL != null) {
+      }
+      // (lib.optionalAttrs (cfg.webhookURL != null) {
         NEXUS_ADMIN_WEBHOOK_URL = cfg.webhookURL;
       });
 
