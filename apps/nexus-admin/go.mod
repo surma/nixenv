@@ -1,4 +1,4 @@
-module github.com/surma/nixos-deploy
+module github.com/surma/nexus-admin
 
 go 1.24
 

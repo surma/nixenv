@@ -7,16 +7,16 @@
 }:
 with lib;
 let
-  cfg = config.services.nixos-deploy;
+  cfg = config.services.nexus-admin;
 in
 {
-  options.services.nixos-deploy = {
-    enable = mkEnableOption "nixos-deploy web UI for triggering nixos-rebuild";
+  options.services.nexus-admin = {
+    enable = mkEnableOption "Nexus Admin — web UI for NixOS deploys, journal logs, and unit management";
 
     package = mkOption {
       type = types.package;
-      default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.nixos-deploy;
-      description = "The nixos-deploy package to use.";
+      default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.nexus-admin;
+      description = "The nexus-admin package to use.";
     };
 
     listenAddress = mkOption {
@@ -33,7 +33,7 @@ in
 
     stateDir = mkOption {
       type = types.str;
-      default = "/var/lib/nixos-deploy";
+      default = "/var/lib/nexus-admin";
       description = "Directory to store deploy logs and metadata.";
     };
 
@@ -45,31 +45,31 @@ in
   };
 
   config = mkIf cfg.enable {
-    systemd.services.nixos-deploy = {
-      description = "NixOS Deploy — web UI for nixos-rebuild";
+    systemd.services.nexus-admin = {
+      description = "Nexus Admin — web UI for NixOS deploys and journal logs";
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
       environment = {
-        NIXOS_DEPLOY_LISTEN = cfg.listenAddress;
-        NIXOS_DEPLOY_FLAKE_URL = cfg.flakeURL;
-        NIXOS_DEPLOY_STATE_DIR = cfg.stateDir;
+        NEXUS_ADMIN_LISTEN = cfg.listenAddress;
+        NEXUS_ADMIN_FLAKE_URL = cfg.flakeURL;
+        NEXUS_ADMIN_STATE_DIR = cfg.stateDir;
         # Point HOME at the state dir so nix cache writes go there
         # instead of /root (which is read-only due to ProtectHome).
         HOME = cfg.stateDir;
       } // (lib.optionalAttrs (cfg.webhookURL != null) {
-        NIXOS_DEPLOY_WEBHOOK_URL = cfg.webhookURL;
+        NEXUS_ADMIN_WEBHOOK_URL = cfg.webhookURL;
       });
 
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${cfg.package}/bin/nixos-deploy";
+        ExecStart = "${cfg.package}/bin/nexus-admin";
         Restart = "always";
         RestartSec = "5s";
-        StateDirectory = "nixos-deploy";
+        StateDirectory = "nexus-admin";
 
-        # Runs as root because nixos-rebuild requires it.
+        # Runs as root because nixos-rebuild and journalctl -M require it.
         # Hardened where possible despite root.
         PrivateTmp = true;
         ProtectHome = true;

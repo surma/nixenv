@@ -6,20 +6,20 @@
 }:
 
 buildGoModule {
-  pname = "nixos-deploy";
-  version = "0.1.0";
+  pname = "nexus-admin";
+  version = "0.2.0";
 
-  src = inputs.self + "/apps/nixos-deploy";
+  src = inputs.self + "/apps/nexus-admin";
 
   vendorHash = "sha256-snAjZ8SWi9VkdVptjyKc03mlPFTS179EMk1sjsHUMZQ=";
 
   env.CGO_ENABLED = 0;
 
   meta = with lib; {
-    description = "Single-button web UI for triggering nixos-rebuild against a flake URL";
+    description = "Web UI and REST API for NixOS deploys, journal logs, and unit management";
     homepage = "https://github.com/surma/nixenv";
     license = licenses.mit;
     maintainers = [ ];
-    mainProgram = "nixos-deploy";
+    mainProgram = "nexus-admin";
   };
 }

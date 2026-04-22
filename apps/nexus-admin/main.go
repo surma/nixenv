@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,10 +33,10 @@ type Config struct {
 
 func configFromEnv() Config {
 	return Config{
-		ListenAddr:      envOr("NIXOS_DEPLOY_LISTEN", ":8080"),
-		DefaultFlakeURL: envOr("NIXOS_DEPLOY_FLAKE_URL", ""),
-		StateDir:        envOr("NIXOS_DEPLOY_STATE_DIR", "/var/lib/nixos-deploy"),
-		WebhookURL:      envOr("NIXOS_DEPLOY_WEBHOOK_URL", ""),
+		ListenAddr:      envOr("NEXUS_ADMIN_LISTEN", ":8080"),
+		DefaultFlakeURL: envOr("NEXUS_ADMIN_FLAKE_URL", ""),
+		StateDir:        envOr("NEXUS_ADMIN_STATE_DIR", "/var/lib/nexus-admin"),
+		WebhookURL:      envOr("NEXUS_ADMIN_WEBHOOK_URL", ""),
 	}
 }
 
@@ -109,7 +110,7 @@ func (b *Broadcaster) Send(line string) {
 
 // systemdUnitName returns the transient systemd unit name for a deploy.
 func systemdUnitName(id string) string {
-	return "nixos-deploy-job-" + id
+	return "nexus-admin-job-" + id
 }
 
 type DeployEngine struct {
@@ -484,7 +485,7 @@ func runDeploySubcommand() {
 	fs := flag.NewFlagSet("run-deploy", flag.ExitOnError)
 	fs.StringVar(&deployID, "deploy-id", "", "Deploy ID")
 	fs.StringVar(&flakeURL, "flake-url", "", "Flake URL")
-	fs.StringVar(&stateDir, "state-dir", "/var/lib/nixos-deploy", "State directory")
+	fs.StringVar(&stateDir, "state-dir", "/var/lib/nexus-admin", "State directory")
 	fs.StringVar(&webhookURL, "webhook-url", "", "Webhook URL")
 	fs.Parse(os.Args[2:])
 
@@ -882,6 +883,155 @@ func handleDeployLog(stateDir string) http.HandlerFunc {
 	}
 }
 
+// --- Journal / systemd handlers ---
+
+// handleContainers lists available systemd-nspawn machines.
+func handleContainers() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cmd := exec.Command("machinectl", "list", "--no-legend", "--no-pager")
+		out, err := cmd.Output()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("machinectl failed: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var containers []string
+		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// machinectl list columns: MACHINE CLASS SERVICE OS VERSION ADDRESSES
+			fields := strings.Fields(line)
+			if len(fields) >= 1 {
+				containers = append(containers, fields[0])
+			}
+		}
+		if containers == nil {
+			containers = []string{}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{"containers": containers})
+	}
+}
+
+// handleUnits lists systemd service units on the host or inside a container.
+func handleUnits() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		container := r.URL.Query().Get("container")
+
+		args := []string{"list-units", "--type=service", "--no-pager", "--no-legend"}
+		if container != "" {
+			args = append([]string{"-M", container}, args...)
+		}
+
+		cmd := exec.Command("systemctl", args...)
+		out, err := cmd.Output()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("systemctl failed: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		type UnitInfo struct {
+			Unit   string `json:"unit"`
+			Load   string `json:"load"`
+			Active string `json:"active"`
+			Sub    string `json:"sub"`
+			Desc   string `json:"description"`
+		}
+
+		var units []UnitInfo
+		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// systemctl prepends a bullet (●) for failed units — strip it.
+			line = strings.TrimLeft(line, "● \t")
+			// systemctl list-units columns: UNIT LOAD ACTIVE SUB DESCRIPTION...
+			fields := strings.Fields(line)
+			if len(fields) < 4 {
+				continue
+			}
+			desc := ""
+			if len(fields) > 4 {
+				desc = strings.Join(fields[4:], " ")
+			}
+			units = append(units, UnitInfo{
+				Unit:   fields[0],
+				Load:   fields[1],
+				Active: fields[2],
+				Sub:    fields[3],
+				Desc:   desc,
+			})
+		}
+		if units == nil {
+			units = []UnitInfo{}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{"units": units})
+	}
+}
+
+// handleLogs fetches journal logs for a specific unit.
+func handleLogs() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		unit := r.URL.Query().Get("unit")
+		if unit == "" {
+			http.Error(w, `{"error":"unit parameter is required"}`, http.StatusBadRequest)
+			return
+		}
+
+		container := r.URL.Query().Get("container")
+		linesStr := r.URL.Query().Get("lines")
+		boot := r.URL.Query().Get("boot")
+		since := r.URL.Query().Get("since")
+		until := r.URL.Query().Get("until")
+
+		lines := 100
+		if linesStr != "" {
+			if n, err := strconv.Atoi(linesStr); err == nil && n > 0 {
+				lines = n
+			}
+		}
+		// Cap at a reasonable maximum to avoid OOM
+		if lines > 10000 {
+			lines = 10000
+		}
+
+		args := []string{"-u", unit, "--no-pager", "-n", strconv.Itoa(lines), "-o", "short-iso"}
+		if container != "" {
+			args = append([]string{"-M", container}, args...)
+		}
+		if boot == "true" || boot == "1" {
+			args = append(args, "-b")
+		}
+		if since != "" {
+			args = append(args, "--since="+since)
+		}
+		if until != "" {
+			args = append(args, "--until="+until)
+		}
+
+		cmd := exec.Command("journalctl", args...)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			// journalctl returns exit 1 when no entries are found, which is not
+			// really an error. Return the output either way so the caller sees
+			// the "No entries" message.
+			if len(out) == 0 {
+				http.Error(w, fmt.Sprintf("journalctl failed: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write(out)
+	}
+}
+
 // --- Main ---
 
 func main() {
@@ -921,12 +1071,15 @@ func main() {
 	mux.HandleFunc("GET /api/deploy/{id}/stream", handleDeployStream(engine, cfg.StateDir))
 	mux.HandleFunc("GET /api/deploys", handleListDeploys(engine, cfg.StateDir))
 	mux.HandleFunc("GET /api/deploys/{id}/log", handleDeployLog(cfg.StateDir))
+	mux.HandleFunc("GET /api/containers", handleContainers())
+	mux.HandleFunc("GET /api/units", handleUnits())
+	mux.HandleFunc("GET /api/logs", handleLogs())
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "OK")
 	})
 
-	slog.Info("starting nixos-deploy", "listen", cfg.ListenAddr, "flake_url", cfg.DefaultFlakeURL, "state_dir", cfg.StateDir)
+	slog.Info("starting nexus-admin", "listen", cfg.ListenAddr, "flake_url", cfg.DefaultFlakeURL, "state_dir", cfg.StateDir)
 	if err := http.ListenAndServe(cfg.ListenAddr, mux); err != nil {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
