@@ -33,22 +33,16 @@ const indexHTML = `<!DOCTYPE html>
   .tab-content.active { display: block; }
 
   /* Shared controls */
-  .controls {
+  .deploy-controls {
     display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: stretch;
-    flex-wrap: wrap;
   }
-  .controls input, .controls select {
+  input, select {
     padding: 0.5rem 0.75rem;
     background: #161b22; border: 1px solid #30363d; color: #c9d1d9;
     border-radius: 6px; font-family: monospace; font-size: 0.9rem;
   }
-  .controls input { flex: 1; min-width: 150px; }
-  .controls select { min-width: 120px; }
-  .controls input:focus, .controls select:focus { outline: none; border-color: #58a6ff; }
-  .controls label {
-    display: flex; align-items: center; gap: 0.35rem;
-    font-size: 0.85rem; color: #8b949e; white-space: nowrap;
-  }
+  input:focus, select:focus { outline: none; border-color: #58a6ff; }
+  .deploy-controls input { flex: 1; }
   button {
     padding: 0.5rem 1.25rem; border: none; border-radius: 6px;
     font-weight: 600; cursor: pointer; font-size: 0.9rem;
@@ -61,6 +55,44 @@ const indexHTML = `<!DOCTYPE html>
   .btn-cancel:hover:not(:disabled) { background: #f85149; }
   .btn-fetch { background: #1f6feb; color: #fff; }
   .btn-fetch:hover:not(:disabled) { background: #388bfd; }
+
+  /* Logs form */
+  .logs-form { margin-bottom: 1rem; }
+  .logs-form .field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .logs-form .field label {
+    font-size: 0.75rem; font-weight: 600; color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .logs-form select, .logs-form input { width: 100%; }
+  .logs-primary {
+    display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .logs-secondary {
+    display: grid; grid-template-columns: auto 1fr 1fr; gap: 0.5rem;
+    align-items: end;
+  }
+  .logs-secondary .lines-boot {
+    display: flex; gap: 0.5rem; align-items: end;
+  }
+  .logs-secondary .lines-boot .field-lines { width: 5rem; }
+  .logs-secondary .field-boot {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding-bottom: 0.5rem;
+  }
+  .logs-secondary .field-boot input[type="checkbox"] { margin: 0; }
+  .logs-secondary .field-boot label {
+    font-size: 0.85rem; color: #8b949e; white-space: nowrap;
+    text-transform: none; letter-spacing: normal;
+  }
+  .logs-actions {
+    display: flex; justify-content: flex-end; margin-top: 0.75rem;
+  }
+  @media (max-width: 600px) {
+    .logs-primary { grid-template-columns: 1fr; }
+    .logs-secondary { grid-template-columns: 1fr; }
+    .logs-secondary .lines-boot { flex-wrap: wrap; }
+  }
 
   .log-area {
     background: #010409; border: 1px solid #30363d; border-radius: 6px;
@@ -115,7 +147,7 @@ const indexHTML = `<!DOCTYPE html>
 <!-- ===== Deploy Tab ===== -->
 <div id="tab-deploy" class="tab-content active">
 
-<div class="controls">
+<div class="deploy-controls">
   <input type="text" id="flake-url" placeholder="Flake URL (leave empty for default)">
   <button class="btn-deploy" id="deploy-btn" onclick="startDeploy()">Deploy</button>
   <button class="btn-cancel" id="cancel-btn" onclick="cancelDeploy()">Cancel</button>
@@ -133,18 +165,44 @@ const indexHTML = `<!DOCTYPE html>
 <!-- ===== Logs Tab ===== -->
 <div id="tab-logs" class="tab-content">
 
-<div class="controls">
-  <select id="logs-container">
-    <option value="">host</option>
-  </select>
-  <select id="logs-unit">
-    <option value="">-- select unit --</option>
-  </select>
-  <input type="number" id="logs-lines" value="100" min="1" max="10000" style="width:80px; flex:none;" title="Number of lines">
-  <label><input type="checkbox" id="logs-boot"> current boot</label>
-  <input type="text" id="logs-since" placeholder="since (e.g. -1h, 2026-01-01)" style="min-width:180px;">
-  <input type="text" id="logs-until" placeholder="until" style="min-width:180px;">
-  <button class="btn-fetch" id="logs-fetch-btn" onclick="fetchLogs()">Fetch</button>
+<div class="logs-form">
+  <div class="logs-primary">
+    <div class="field">
+      <label for="logs-container">Container</label>
+      <select id="logs-container">
+        <option value="">host</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="logs-unit">Unit</label>
+      <select id="logs-unit">
+        <option value="">-- select unit --</option>
+      </select>
+    </div>
+  </div>
+  <div class="logs-secondary">
+    <div class="lines-boot">
+      <div class="field field-lines">
+        <label for="logs-lines">Lines</label>
+        <input type="number" id="logs-lines" value="100" min="1" max="10000">
+      </div>
+      <div class="field-boot">
+        <input type="checkbox" id="logs-boot">
+        <label for="logs-boot">current boot</label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="logs-since">Since</label>
+      <input type="text" id="logs-since" placeholder="e.g. -1h, 2026-01-01">
+    </div>
+    <div class="field">
+      <label for="logs-until">Until</label>
+      <input type="text" id="logs-until" placeholder="e.g. -30min, 2026-01-02">
+    </div>
+  </div>
+  <div class="logs-actions">
+    <button class="btn-fetch" id="logs-fetch-btn" onclick="fetchLogs()">Fetch Logs</button>
+  </div>
 </div>
 
 <div class="log-area" id="logs-output"></div>
