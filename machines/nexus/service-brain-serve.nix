@@ -55,6 +55,7 @@ in
         wants = [ "network-online.target" ];
         after = [ "network-online.target" ];
         path = [
+          brainPkg
           pkgs.git
           pkgs.openssh
         ];
