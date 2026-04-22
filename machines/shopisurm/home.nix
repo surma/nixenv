@@ -42,6 +42,9 @@
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.jupyter
       gopls
       bun
+      (inputs.nixpkgs-unstable.legacyPackages.${stdenv.hostPlatform.system}.lima.override {
+        withAdditionalGuestAgents = true;
+      })
       (python3.withPackages (ps: [
         ps.distutils
       ]))
