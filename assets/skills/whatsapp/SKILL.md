@@ -92,8 +92,87 @@ whatsapp-cli chats --format human --store ~/.config/whatsapp-cli
 WhatsApp JIDs (chat identifiers) look like:
 - Individual: `<country><number>@s.whatsapp.net` (e.g. `447774333068@s.whatsapp.net`)
 - Group: `<id>@g.us`
+- LID (linked identity): `<id>@lid` — WhatsApp's internal identifier, maps to a phone JID
 
 Use `chats` or `contacts` to discover JIDs.
+
+To look up a phone number's LID or vice versa, query the session DB:
+```bash
+sqlite3 ~/.config/whatsapp-cli/store/session.db "SELECT * FROM whatsmeow_lid_map WHERE pn='<phone-number>';"
+```
+
+## History sync and backfill
+
+### How the initial sync works
+
+After pairing, WhatsApp sends history in chunks. The initial sync typically delivers a small fraction of total messages. Our patched build sets `RequireFullSync=true` and `OnDemandReady=true` in the device registration to request more history.
+
+**Critical:** The user's phone must have WhatsApp **open and in the foreground** during sync. The phone is the source of history data — if it's locked or WhatsApp is backgrounded, sync stalls.
+
+To maximize initial sync data, run `sync --follow` immediately after auth and keep it running:
+```bash
+whatsapp-cli sync --follow --store ~/.config/whatsapp-cli
+```
+
+### Checking what the server knows about
+
+The CLI's `messages.db` only contains messages where content was delivered. But WhatsApp may have sent **message secret keys** (encryption references) for many more chats. Check the session DB:
+
+```bash
+# All chats the server knows about (even without message content):
+sqlite3 ~/.config/whatsapp-cli/store/session.db \
+  "SELECT chat_jid, COUNT(*) as cnt FROM whatsmeow_message_secrets GROUP BY chat_jid ORDER BY cnt DESC;"
+
+# Contacts with names:
+sqlite3 ~/.config/whatsapp-cli/store/session.db \
+  "SELECT their_jid, full_name, push_name FROM whatsmeow_contacts;"
+```
+
+This is useful when a chat doesn't appear in `whatsapp-cli chats` — it may still exist in the session DB with secret keys but no delivered content.
+
+### On-demand backfill (pulling older messages)
+
+The `backfill` command requests older messages for a chat you already have messages in. It requires a **real message ID** as an anchor point.
+
+**Important constraints:**
+- The anchor message must be a **received** message (`is_from_me=0`). Sent messages don't work as anchors.
+- The user's phone must have WhatsApp **open** for the phone to respond.
+- Each request returns ~50 messages going further back in time.
+- Chain multiple requests to go deeper: after each batch, use the new oldest message as the next anchor.
+
+```bash
+whatsapp-cli backfill <jid> --count 50 --store ~/.config/whatsapp-cli
+```
+
+Note: the built-in `backfill` command works but the CLI doesn't wait for the response or chain requests. For deeper backfill, there is a standalone `do-backfill` tool at `/tmp/do-backfill` that:
+- Takes a store dir, chat JID, message ID, and unix timestamp
+- Sends the on-demand history request
+- Persists received messages directly to `messages.db`
+- Prints results
+
+Usage:
+```bash
+# Get oldest received message as anchor
+sqlite3 ~/.config/whatsapp-cli/store/messages.db \
+  "SELECT id, strftime('%s', timestamp) FROM messages WHERE chat_jid='<jid>' AND is_from_me=0 ORDER BY timestamp ASC LIMIT 1;"
+
+# Request 50 messages before that anchor
+/tmp/do-backfill ~/.config/whatsapp-cli "<jid>" "<msg-id>" "<unix-timestamp>" 50
+```
+
+Chain requests by re-querying the oldest message after each round.
+
+### Chats with no messages (placeholder problem)
+
+Some chats have message secret keys in the session DB but no content in `messages.db`. This happens when:
+1. The history sync delivered only encryption keys (placeholders), not message content
+2. The websocket connection dropped before content chunks arrived
+
+Currently there is no reliable way to fetch content for placeholder-only chats. The workaround is to have a new message sent in that chat (even a short one), which triggers live sync and creates an anchor for on-demand backfill.
+
+### Websocket EOF errors
+
+The connection frequently drops with `failed to read frame header: EOF`. This is a known whatsmeow issue in server/container environments. It doesn't corrupt the session — just reconnect. For long-running syncs, use `--follow` mode which auto-reconnects, or restart manually.
 
 ## Re-authentication (QR code rescan)
 
@@ -103,9 +182,13 @@ Sessions last ~20 days. When expired, the CLI will fail to connect. Since Scout 
 
 **IMPORTANT:** The user must be able to scan a QR code on their phone. If they are only on mobile, this will not work — they need a second device to view the QR image from Telegram while scanning with their phone's WhatsApp.
 
-#### Option A: User authenticates locally (preferred)
+#### Option A: Pair from the container (preferred)
 
-Ask the user to run on their own machine:
+Pairing directly from the container works with the eddmann CLI — its `auth login` does an initial sync as part of the auth flow, which completes the handshake. See Option B below for the QR capture procedure. After successful auth, immediately run `sync --follow` with the phone's WhatsApp open to maximize history delivery.
+
+#### Option B: User authenticates locally (fallback)
+
+If pairing from the container fails repeatedly, ask the user to run on their own machine:
 
 ```bash
 nix run 'git+ssh://git@github.com/surma/nixenv#whatsapp-cli' -- auth login --store ~/wa-store
@@ -124,9 +207,9 @@ nix shell nixpkgs#gnutar nixpkgs#gzip -c bash -c \
 
 Verify with `whatsapp-cli chats --store ~/.config/whatsapp-cli`.
 
-#### Option B: QR via Telegram (fallback)
+#### Option C: QR via Telegram (for container pairing)
 
-Use this when the user cannot run the CLI locally. This is fragile because:
+This is the QR capture procedure used by Option A. It can be fragile because:
 - QR codes expire in ~30 seconds and regenerate
 - The QR must be captured, converted to an image, and sent before it expires
 - Multiple failed scan attempts trigger WhatsApp rate limiting (~30-60 min cooldown)
@@ -177,6 +260,6 @@ Steps:
 
 ### Known issues
 
-- **Server-side pairing failures:** Pairing from a server/container environment can fail even with correct credentials. The CLI reports "Successfully authenticated!" but the phone shows "couldn't log in" after a 30-second spinner. This is a known whatsmeow issue related to server detection by WhatsApp. Option A (local auth) avoids this entirely.
+- **Server-side pairing failures:** Pairing from the container can fail with the vicentereig CLI (the phone shows "couldn't log in" after a 30-second spinner). The eddmann CLI works because its `auth login` command does an initial sync as part of the auth flow, which completes the handshake. If pairing fails, wait 30-60 minutes (rate limiting) before retrying. Option B (local auth) avoids server issues entirely.
 - **Session expiry:** Sessions last ~20 days. After expiry, all commands will fail and re-authentication is required.
 - **App state sync errors:** After fresh pairing, the first sync may fail with "didn't find app state key". This is transient; retry after a few seconds.
