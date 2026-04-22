@@ -69,29 +69,30 @@ const indexHTML = `<!DOCTYPE html>
     margin-bottom: 0.5rem;
   }
   .logs-secondary {
-    display: grid; grid-template-columns: auto 1fr 1fr; gap: 0.5rem;
+    display: grid; grid-template-columns: 5rem auto 1fr 1fr; gap: 0.5rem;
     align-items: end;
   }
-  .logs-secondary .lines-boot {
-    display: flex; gap: 0.5rem; align-items: end;
-  }
-  .logs-secondary .lines-boot .field-lines { width: 5rem; }
   .logs-secondary .field-boot {
+    display: flex; flex-direction: column; gap: 0.25rem;
+  }
+  .logs-secondary .field-boot .boot-label {
+    font-size: 0.75rem; font-weight: 600; color: #8b949e;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .logs-secondary .field-boot .boot-control {
     display: flex; align-items: center; gap: 0.35rem;
-    padding-bottom: 0.5rem;
+    height: 2.15rem;
   }
   .logs-secondary .field-boot input[type="checkbox"] { margin: 0; }
-  .logs-secondary .field-boot label {
-    font-size: 0.85rem; color: #8b949e; white-space: nowrap;
-    text-transform: none; letter-spacing: normal;
+  .logs-secondary .field-boot .boot-control label {
+    font-size: 0.85rem; color: #c9d1d9; white-space: nowrap;
   }
   .logs-actions {
     display: flex; justify-content: flex-end; margin-top: 0.75rem;
   }
   @media (max-width: 600px) {
     .logs-primary { grid-template-columns: 1fr; }
-    .logs-secondary { grid-template-columns: 1fr; }
-    .logs-secondary .lines-boot { flex-wrap: wrap; }
+    .logs-secondary { grid-template-columns: 1fr 1fr; }
   }
 
   .log-area {
@@ -181,14 +182,15 @@ const indexHTML = `<!DOCTYPE html>
     </div>
   </div>
   <div class="logs-secondary">
-    <div class="lines-boot">
-      <div class="field field-lines">
-        <label for="logs-lines">Lines</label>
-        <input type="number" id="logs-lines" value="100" min="1" max="10000">
-      </div>
-      <div class="field-boot">
+    <div class="field">
+      <label for="logs-lines">Lines</label>
+      <input type="number" id="logs-lines" value="100" min="1" max="10000">
+    </div>
+    <div class="field-boot">
+      <span class="boot-label">Boot</span>
+      <div class="boot-control">
         <input type="checkbox" id="logs-boot">
-        <label for="logs-boot">current boot</label>
+        <label for="logs-boot">current only</label>
       </div>
     </div>
     <div class="field">
