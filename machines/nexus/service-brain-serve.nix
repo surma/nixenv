@@ -62,6 +62,10 @@ in
           BRAIN_PATH = brainPath;
           GIT_SSH_COMMAND = gitSshCommand;
           HOME = "/var/lib/brain-serve";
+          GIT_AUTHOR_NAME = "Surma";
+          GIT_AUTHOR_EMAIL = "surma@surma.dev";
+          GIT_COMMITTER_NAME = "Surma";
+          GIT_COMMITTER_EMAIL = "surma@surma.dev";
         };
         serviceConfig = {
           ExecStartPre = "${brainSync}";
@@ -93,6 +97,10 @@ in
           GIT_SSH_COMMAND = gitSshCommand;
           BRAIN_PATH = brainPath;
           HOME = "/var/lib/brain-serve";
+          GIT_AUTHOR_NAME = "Surma";
+          GIT_AUTHOR_EMAIL = "surma@surma.dev";
+          GIT_COMMITTER_NAME = "Surma";
+          GIT_COMMITTER_EMAIL = "surma@surma.dev";
         };
         serviceConfig = {
           Type = "oneshot";
