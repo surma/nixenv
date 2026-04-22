@@ -1,0 +1,79 @@
+diff --git a/internal/whatsapp/client.go b/internal/whatsapp/client.go
+index d1da667..558f8c9 100644
+--- a/internal/whatsapp/client.go
++++ b/internal/whatsapp/client.go
+@@ -2,6 +2,7 @@ package whatsapp
+ 
+ import (
+ 	"context"
++	"time"
+ 	"database/sql"
+ 	"fmt"
+ 	"log/slog"
+@@ -11,6 +12,8 @@ import (
+ 	"github.com/rs/zerolog"
+ 	"go.mau.fi/whatsmeow"
+ 	"go.mau.fi/whatsmeow/store/sqlstore"
++	waStore "go.mau.fi/whatsmeow/store"
++	"google.golang.org/protobuf/proto"
+ 	"go.mau.fi/whatsmeow/types"
+ 	waLog "go.mau.fi/whatsmeow/util/log"
+ 
+@@ -79,6 +82,13 @@ func New(db *store.DB, baseDir string, verbose bool, logger *slog.Logger) (*Clie
+ 		}
+ 	}
+ 
++	// Configure device props for full history sync and on-demand backfill
++	waStore.DeviceProps.RequireFullSync = proto.Bool(true)
++	if waStore.DeviceProps.HistorySyncConfig != nil {
++		waStore.DeviceProps.HistorySyncConfig.OnDemandReady = proto.Bool(true)
++		waStore.DeviceProps.HistorySyncConfig.CompleteOnDemandReady = proto.Bool(true)
++	}
++
+ 	client := whatsmeow.NewClient(deviceStore, waLogger)
+ 	if client == nil {
+ 		return nil, fmt.Errorf("failed to create client")
+@@ -170,24 +180,32 @@ func (c *Client) getChatName(jid, chatJID string, _ any, sender string) string {
+ 	return chatJID
+ }
+ 
+-// RequestBackfill requests historical messages for a chat.
+-// Note: WhatsApp controls how much history is sent.
++// RequestBackfill requests historical messages for a chat via on-demand history sync.
+ func (c *Client) RequestBackfill(jidStr string, count int) error {
+-	jid, err := parseJID(jidStr)
++	chatJID, err := parseJID(jidStr)
+ 	if err != nil {
+ 		return err
+ 	}
+ 
+-	// Request history sync for the chat
+-	// Note: whatsmeow doesn't have a direct backfill method,
+-	// but we can use the built-in history request if available
+ 	c.Logger.Info("requesting backfill", "jid", jidStr, "count", count)
+ 
+-	// The history is typically received during the initial sync
+-	// and through periodic history sync events. We can't directly
+-	// request more, but logging the intent helps for debugging.
+-	_ = jid
+-	_ = count
++	// Build an anchor point with a specific timestamp.
++	anchor := &types.MessageInfo{
++		MessageSource: types.MessageSource{
++			Chat:     chatJID,
++		},
++		ID:        "BACKFILL_ANCHOR",
++
++		Timestamp: time.Now(),
++	}
++
++	msg := c.WA.BuildHistorySyncRequest(anchor, count)
++	resp, err := c.WA.SendPeerMessage(context.Background(), msg)
++	if err != nil {
++		return fmt.Errorf("failed to send backfill request: %w", err)
++	}
++
++	c.Logger.Info("backfill request sent", "jid", jidStr, "msg_id", resp.ID)
+ 
+ 	return nil
+ }

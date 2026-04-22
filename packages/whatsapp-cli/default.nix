@@ -23,6 +23,10 @@ buildGoModule {
     # to pick up the latest client version number required by WhatsApp.
     # Drop this patch once upstream releases a version with the bump.
     ./eddmann-bump-whatsmeow.patch
+    # Enable full history sync (RequireFullSync=true), on-demand backfill
+    # (OnDemandReady + CompleteOnDemandReady), and implement the backfill
+    # command which was a no-op upstream.
+    ./full-sync-and-backfill.patch
   ];
 
   vendorHash = "sha256-eaGJ8MEVctO0+i5POj9Z4HjfzaH2PCCOHG78qSKOksk=";
