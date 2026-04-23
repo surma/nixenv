@@ -1,12 +1,12 @@
 ---
 name: gws
-description: Interact with Google Workspace APIs (Gmail, Drive, Sheets, Calendar, Docs, and more) via the `gws` CLI. Use when the user asks to read or send email, manage Drive files, read or write spreadsheets, check calendar events, or perform any Google Workspace operation.
+description: Interact with Google Workspace APIs (Gmail, Drive, Sheets, Calendar, Docs, and more) via the `gws` CLI, and Google Maps/Places via the REST API. Use when the user asks to read or send email, manage Drive files, read or write spreadsheets, check calendar events, perform any Google Workspace operation, or search for places/restaurants/businesses on Google Maps.
 compatibility: Requires the `gws` CLI to be installed and authenticated.
 ---
 
 # Google Workspace CLI (`gws`)
 
-Use this skill whenever you need to interact with Google Workspace services: Gmail, Drive, Sheets, Calendar, Docs, Slides, Tasks, People, Chat, and more.
+Use this skill whenever you need to interact with Google Workspace services (Gmail, Drive, Sheets, Calendar, Docs, Slides, Tasks, People, Chat, and more) or the Google Maps/Places API.
 
 ## When to use
 
@@ -15,6 +15,8 @@ Use this skill whenever you need to interact with Google Workspace services: Gma
 - The user asks to read or write spreadsheet data
 - The user asks about calendar events or scheduling
 - Any task involving Google Workspace data
+- The user asks to search for places, restaurants, or businesses
+- The user asks for directions, place details, or ratings from Google Maps
 
 ## Verify the CLI
 
@@ -210,3 +212,91 @@ gws drive files list --params '{"pageSize": 100, "pageToken": "<token>"}'
 - **Use `--format table`** for quick human-readable output when exploring.
 - **Gmail message bodies are base64url-encoded** — decode with: `echo '<data>' | tr '_-' '/+' | base64 -d`
 - **Drive file IDs** can be extracted from Google Docs/Sheets/Drive URLs: the ID is the long alphanumeric string in the URL path.
+
+## Google Maps / Places API (New)
+
+The `gws` CLI does not cover Google Maps, but the same OAuth credentials can be used to call the [Places API (New)](https://developers.google.com/maps/documentation/places/web-service/op-overview) directly via `curl`. The credentials file contains a `client_id`, `client_secret`, and `refresh_token` with the `cloud-platform` scope, which covers the Places API.
+
+### Obtaining an access token
+
+Every Places API call needs a Bearer token. Mint one from the refresh token:
+
+```bash
+CREDS=/var/lib/credentials/scout/gws-credentials.json
+CLIENT_ID=$(jq -r .client_id "$CREDS")
+CLIENT_SECRET=$(jq -r .client_secret "$CREDS")
+REFRESH_TOKEN=$(jq -r .refresh_token "$CREDS")
+
+ACCESS_TOKEN=$(nix shell nixpkgs#curl -c curl -s -X POST https://oauth2.googleapis.com/token \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  -d "refresh_token=$REFRESH_TOKEN" \
+  -d "grant_type=refresh_token" | jq -r '.access_token')
+```
+
+### Text search (find places by query)
+
+```bash
+nix shell nixpkgs#curl -c curl -s -X POST "https://places.googleapis.com/v1/places:searchText" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.rating,places.googleMapsUri,places.priceLevel,places.currentOpeningHours,places.websiteUri" \
+  -d '{"textQuery": "Da Bucatino Rome"}' | jq .
+```
+
+### Nearby search
+
+```bash
+nix shell nixpkgs#curl -c curl -s -X POST "https://places.googleapis.com/v1/places:searchNearby" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.rating,places.googleMapsUri" \
+  -d '{
+    "includedTypes": ["restaurant"],
+    "maxResultCount": 10,
+    "locationRestriction": {
+      "circle": {
+        "center": {"latitude": 41.8902, "longitude": 12.4922},
+        "radius": 500.0
+      }
+    }
+  }' | jq .
+```
+
+### Get place details
+
+Use a place ID returned from a search:
+
+```bash
+nix shell nixpkgs#curl -c curl -s \
+  "https://places.googleapis.com/v1/places/PLACE_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "X-Goog-FieldMask: displayName,formattedAddress,rating,reviews,currentOpeningHours,websiteUri,googleMapsUri,priceLevel" | jq .
+```
+
+### Field masks
+
+The Places API (New) requires an `X-Goog-FieldMask` header to specify which fields to return. Common fields:
+
+| Field | Description |
+|---|---|
+| `places.displayName` | Place name |
+| `places.formattedAddress` | Full address |
+| `places.rating` | Average rating (1-5) |
+| `places.userRatingCount` | Number of ratings |
+| `places.priceLevel` | Price level enum |
+| `places.currentOpeningHours` | Current opening hours |
+| `places.websiteUri` | Website URL |
+| `places.googleMapsUri` | Google Maps link |
+| `places.reviews` | User reviews |
+| `places.location` | Lat/lng coordinates |
+| `places.types` | Place type tags |
+
+Use `*` as the field mask to return all fields (useful for exploration, but slower and more expensive).
+
+### Tips
+
+- **Always use `nix shell nixpkgs#curl -c curl ...`** since `curl` is not in the base environment.
+- **The field mask is required** — omitting it returns an error.
+- **Place IDs** from search results look like `places/ChIJ...` — pass the full string including the `places/` prefix to the details endpoint.
+- **API reference:** https://developers.google.com/maps/documentation/places/web-service/op-overview
