@@ -10,7 +10,7 @@
     nixosConfigurations = {
       generic-nixos.imports = [ ../../machines/generic-nixos ];
       archon.imports = [ ../../machines/archon ];
-      surmrock.imports = [ ../../machines/surmrock ];
+      citadel.imports = [ ../../machines/citadel ];
       nexus.imports = [ ../../machines/nexus ];
       pylon.imports = [ ../../machines/pylon ];
       testcontainer.imports = [ ../../machines/testcontainer ];
