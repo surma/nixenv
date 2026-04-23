@@ -24,7 +24,7 @@ let
 
   gitSshCommand = "ssh -F ${sshConfig}";
 
-  llmApiKeyFile = "/var/lib/brain-serve/credentials/llm-proxy-client-key";
+  llmApiKeyFile = "/var/lib/credentials/llm-proxy-client-key";
   llmEndpoint = "https://vendors.llm.surma.technology/openai/v1";
   llmModel = "anthropic/claude-sonnet-4-20250514";
 
@@ -150,7 +150,7 @@ in
     # Bind-mount the LLM proxy client key (provisioned by the host
     # secrets service) into the container read-only.
     bindMounts.llm-key = {
-      mountPoint = "/var/lib/brain-serve/credentials";
+      mountPoint = "/var/lib/credentials";
       hostPath = "/var/lib/scout";
       isReadOnly = true;
     };
