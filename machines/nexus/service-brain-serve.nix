@@ -24,6 +24,10 @@ let
 
   gitSshCommand = "ssh -F ${sshConfig}";
 
+  llmApiKeyFile = "/var/lib/brain-serve/credentials/llm-proxy-client-key";
+  llmEndpoint = "https://vendors.llm.surma.technology/openai/v1";
+  llmModel = "anthropic/claude-sonnet-4-20250514";
+
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
     set -euo pipefail
     export GIT_SSH_COMMAND="${gitSshCommand}"
@@ -34,6 +38,16 @@ let
     fi
     echo "Running brain sync..."
     BRAIN_SKIP_QMD=1 BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+  '';
+
+  brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
+    set -euo pipefail
+    LLM_FLAGS=""
+    if [ -f "${llmApiKeyFile}" ]; then
+      LLM_KEY="$(cat "${llmApiKeyFile}")"
+      LLM_FLAGS="--llm-endpoint ${llmEndpoint} --llm-api-key $LLM_KEY --llm-model ${llmModel}"
+    fi
+    exec ${brainPkg}/bin/brain serve --port 8080 $LLM_FLAGS
   '';
 in
 {
@@ -75,7 +89,7 @@ in
         };
         serviceConfig = {
           ExecStartPre = "${brainSync}";
-          ExecStart = "${brainPkg}/bin/brain serve --port 8080";
+          ExecStart = "${brainServeStart}";
           User = "containeruser";
           Restart = "always";
           RestartSec = 30;
@@ -131,6 +145,14 @@ in
       mountPoint = "/var/lib/brain-serve";
       hostPath = "/dump/state/brain-serve";
       isReadOnly = false;
+    };
+
+    # Bind-mount the LLM proxy client key (provisioned by the host
+    # secrets service) into the container read-only.
+    bindMounts.llm-key = {
+      mountPoint = "/var/lib/brain-serve/credentials";
+      hostPath = "/var/lib/scout";
+      isReadOnly = true;
     };
   };
 }
