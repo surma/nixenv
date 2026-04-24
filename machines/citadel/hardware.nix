@@ -41,10 +41,10 @@
   # The reason: USB-PD negotiation must complete within 5 s of connection, but
   # the board takes longer than that to boot into the kernel driver. The PSU
   # responds with a hard-reset of VBUS, which power-cycles the whole board.
-  # Enabling it in a DT overlay reproduces this exactly.
+  # Enabling it in a DT overlay reproduces this exactly — do not do this.
   #
-  # The correct fix is a U-Boot that negotiates PD before handing off to Linux.
-  # Until the SPI-flash firmware is updated, use a charger that either:
-  #   a) provides ≥12 V by default without PD negotiation, or
-  #   b) does not enforce the 5 s PD timeout (e.g. the official Radxa PD 30W).
+  # The SPI flash holds EDK2 UEFI firmware (edk2-rk3588 v1.1) which negotiates
+  # USB-PD in the bootloader, giving the board its full power budget before the
+  # kernel starts. This is the correct fix; the kernel-side FUSB302 node can
+  # stay disabled.
 }
