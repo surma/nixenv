@@ -283,6 +283,11 @@ in
         hostPath = "/dev/dri";
         isReadOnly = false;
       };
+      surmvault = {
+        mountPoint = "/home/containeruser/surmvault";
+        hostPath = "/dump/surmvault";
+        isReadOnly = true;
+      };
     };
   };
 }
