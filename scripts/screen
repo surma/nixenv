@@ -1,0 +1,9 @@
+#!/usr/bin/env nu
+
+def "main half" [] {
+	hyprctl keyword monitor HDMI-A-1,1720x1440@59.98,0x0,1
+}
+
+def "main full" [] {
+	hyprctl keyword monitor HDMI-A-1,3440x1440@59.98,0x0,1
+}

@@ -28,6 +28,7 @@
     customScripts.toggle-sunset.asDesktopItem = true;
     customScripts.wallpaper-shuffle.enable = true;
     customScripts.wallpaper-shuffle.asDesktopItem = true;
+    customScripts.screen.enable = true;
 
     home.packages = (
       with pkgs;
