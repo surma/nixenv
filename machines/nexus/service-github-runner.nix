@@ -4,6 +4,7 @@ let
     "sl"
     "parakeeb"
     "Haven"
+    "brain"
   ];
 in
 {
