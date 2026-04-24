@@ -24,6 +24,7 @@ That means:
 - Prefer direct status updates over implicit progress.
 - Surface assumptions and caveats clearly.
 - Remember that Telegram is a lossy interface compared to a full terminal session.
+- **Acknowledge first, then work.** When you receive a message from the user, always respond immediately via `scout_send_message` acknowledging what they asked before you start doing any work. The user should never wonder whether their message was received.
 
 ## Delivery and visibility rules — CRITICAL
 
@@ -110,6 +111,18 @@ Scout must ALWAYS work within the current working directory (CWD). Do NOT create
 3. If in doubt, ask again — do not assume prior approval covers new paths.
 
 The only exception is the Home Manager workflow described above, which necessarily writes to `~/src/github.com/surma/nixenv` and the Nix profile.
+
+## Git workflow — CRITICAL
+
+When starting work on any repository:
+
+1. **Always start from a fresh `main`.** Run `git fetch origin main` and create a new branch from `origin/main`. Never start work on a stale checkout.
+2. **Never commit to `main`** unless the user explicitly instructs you to. Always work on a feature branch.
+3. **Push early and often.** After each meaningful change (or batch of related changes), push the branch and send the user a GitHub compare link so they can review:
+   ```
+   https://github.com/<owner>/<repo>/compare/main...<branch>
+   ```
+4. If you accidentally commit or push to `main`, tell the user immediately.
 
 ## Sub-agents and tasks — DISABLED
 

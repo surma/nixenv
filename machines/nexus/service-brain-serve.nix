@@ -25,8 +25,8 @@ let
   gitSshCommand = "ssh -F ${sshConfig}";
 
   llmApiKeyFile = "/var/lib/credentials/llm-proxy-client-key";
-  llmEndpoint = "https://vendors.llm.surma.technology/openai/v1";
-  llmModel = "anthropic/claude-sonnet-4-20250514";
+  llmEndpoint = "https://proxy.llm.surma.technology/v1";
+  llmModel = "shopify:anthropic:claude-haiku-4-5";
 
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
     set -euo pipefail
@@ -37,7 +37,7 @@ let
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
     echo "Running brain sync..."
-    BRAIN_SKIP_QMD=1 BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
   '';
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
@@ -58,12 +58,31 @@ in
   services.surmhosting.services.brain-serve.containerService = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
+    # QMD model loading needs ~4GB; give headroom for the server + sync.
+    serviceConfig.MemoryMax = "8G";
   };
 
   services.surmhosting.services.brain-serve.expose.port = 8080;
   services.surmhosting.services.brain-serve.container = {
+    # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
+    allowedDevices = [
+      { modifier = "rw"; node = "/dev/dri/renderD128"; }
+      { modifier = "rw"; node = "/dev/dri/card1"; }
+    ];
+    bindMounts.dri = {
+      mountPoint = "/dev/dri";
+      hostPath = "/dev/dri";
+      isReadOnly = false;
+    };
+
     config = {
       system.stateVersion = "25.05";
+
+      # Vulkan drivers for Intel iGPU — needed by node-llama-cpp for
+      # GPU-accelerated QMD inference.
+      hardware.graphics.enable = true;
+      hardware.graphics.extraPackages = [ pkgs.intel-compute-runtime ];
+      environment.systemPackages = [ pkgs.vulkan-tools ];
 
       # brain-serve is NOT wantedBy multi-user.target — it's started by
       # a timer 10s after boot. This prevents the slow clone/sync from
