@@ -68,16 +68,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1776972702,
-        "narHash": "sha256-WKY2nsgmKUJYnbK5wsE51wmQMZ//kXfUT+BNcHBAC60=",
-        "ref": "feature/brain-surf-search-chat",
-        "rev": "4dc729e7fefd4ddb60380865f549e0c59010c94f",
-        "revCount": 95,
+        "lastModified": 1777013310,
+        "narHash": "sha256-H4XUfQDC+4VUNhnprXNiLW0Ies7ZFpM7uDkz15XaTnE=",
+        "ref": "main",
+        "rev": "5b94f7164a3740fd6a937bb7242759f1b7d9fd7e",
+        "revCount": 99,
         "type": "git",
         "url": "ssh://git@github.com/surma/brain"
       },
       "original": {
-        "ref": "feature/brain-surf-search-chat",
+        "ref": "main",
         "type": "git",
         "url": "ssh://git@github.com/surma/brain"
       }
