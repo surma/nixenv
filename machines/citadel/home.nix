@@ -15,4 +15,7 @@
 
   home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#citadel";
 
+  programs.pi.enable = true;
+  defaultConfigs.pi.enable = true;
+
 }

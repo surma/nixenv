@@ -21,6 +21,8 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.firewall.enable = false;
+  networking.networkmanager.enable = true;
+  programs.nm-applet.enable = true;
 
   services.openssh.enable = true;
 
