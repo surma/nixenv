@@ -11,6 +11,8 @@
   networking.hostName = "citadel";
 
   nix.settings.require-sigs = false;
+  nix.settings.max-jobs = 4;
+  nix.settings.cores = 2;
   secrets.identity = "/home/surma/.ssh/id_machine";
 
   boot.loader.systemd-boot.enable = true;
