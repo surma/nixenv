@@ -32,6 +32,21 @@
     "kernel.dmesg_restrict" = 0;
   };
 
+  # Serial debug console on UART2 (40-pin header pins 8/10, GND on pin 6).
+  # 1.5 Mbaud matches what the DT's chosen/stdout-path advertises and what
+  # BL31/EDK2 use, so we get a continuous output stream from firmware through
+  # to userspace with no baud rate switch in the middle.
+  # earlycon covers the gap between firmware and full kernel init -- the
+  # exact window in which fusb302-test crashes on the MBP charger.
+  boot.kernelParams = [
+    "earlycon=uart8250,mmio32,0xfeb50000"
+    "console=tty1"
+    "console=ttyS2,1500000n8"
+  ];
+
+  # Serial getty so we can log in over the UART if the network is down.
+  systemd.services."serial-getty@ttyS2".enable = true;
+
   # Cap RK3588 big-core max OPP at 2016 MHz to avoid hard-reset brownouts under
   # combined CPU + NVMe write load (see Brain: citadel-25b48j44).
   # Verified 2026-04-25: kitchen-sink stress (cpu8 + vm + io + hdd-fsync) survives
