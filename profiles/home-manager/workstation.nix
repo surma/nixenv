@@ -9,6 +9,7 @@ with lib;
   imports = [
     ../../modules/home-manager/ssh-keys
     ../../modules/home-manager/gpg-keys
+    ../../modules/home-manager/brain
   ];
 
   options.defaultConfigs.agents.enable = mkEnableOption "symlink ~/AGENTS.md to the repo copy";
@@ -39,6 +40,8 @@ with lib;
           wasmtime
         ]
       );
+
+      programs.brain.enable = true;
     }
 
     (mkIf config.defaultConfigs.agents.enable {

@@ -35,7 +35,6 @@
       sqlite
       tmux
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
-      inputs.brain.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.presage-cli
