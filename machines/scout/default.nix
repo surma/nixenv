@@ -26,6 +26,7 @@
     home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
+    home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
 
     home.packages = with pkgs; [
       jq
@@ -38,6 +39,7 @@
       inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.presage-cli
+      inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.homeassistant-cli
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -93,6 +95,7 @@
 
     agent.skills = [
       ../../assets/skills/gws
+      ../../assets/skills/homeassistant
       ../../assets/skills/nexus-admin
       ../../assets/skills/whatsapp
       ../../assets/skills/signal
@@ -105,6 +108,17 @@
         apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
     };
+
+    home.activation.hassio-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      tokenFile="/var/lib/credentials/scout/hassio-token"
+      if [ -f "$tokenFile" ]; then
+        mkdir -p "${config.home.homeDirectory}/.hassio-cli"
+        token="$(cat "$tokenFile")"
+        printf '{"url":"http://10.0.0.5:8123","token":"%s"}\n' "$token" \
+          > "${config.home.homeDirectory}/.hassio-cli/settings.json"
+        chmod 0600 "${config.home.homeDirectory}/.hassio-cli/settings.json"
+      fi
+    '';
 
     home.file = {
       "AGENTS.md".source = ../../assets/AGENTS.md;

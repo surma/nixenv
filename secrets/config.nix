@@ -216,5 +216,12 @@
         "nexus"
       ];
     };
+    scout-hassio-token = {
+      contents = ../secrets/scout-hassio-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

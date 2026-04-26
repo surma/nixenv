@@ -91,6 +91,12 @@ in
     chmod 0644 /var/lib/scout/gws-credentials.json
   '';
 
+  secrets.items.scout-hassio-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/hassio-token
+    chmod 0600 /var/lib/scout/hassio-token
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
