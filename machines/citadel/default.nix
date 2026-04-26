@@ -47,29 +47,9 @@
   # Serial getty so we can log in over the UART if the network is down.
   systemd.services."serial-getty@ttyS2".enable = true;
 
-  # Cap RK3588 big-core max OPP at 2016 MHz to avoid hard-reset brownouts under
-  # combined CPU + NVMe write load (see Brain: citadel-25b48j44).
-  # Verified 2026-04-25: kitchen-sink stress (cpu8 + vm + io + hdd-fsync) survives
-  # at 2016 MHz / 0.925 V; crashes within ~15s at 2208 MHz / 0.9875 V or
-  # 2400 MHz / 1.000 V. Both A76 clusters at the top OPP plus PCIe-NVMe write
-  # bursts exceed the available VBUS current budget the EDK2-negotiated PD
-  # contract provides, and VBUS collapses (instant power-off, no kernel notice).
-  systemd.services.cap-big-core-freq = {
-    description = "Cap RK3588 big-core max frequency (brownout mitigation)";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "sysinit.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      for p in /sys/devices/system/cpu/cpufreq/policy4 /sys/devices/system/cpu/cpufreq/policy6; do
-        if [ -w "$p/scaling_max_freq" ]; then
-          echo 2016000 > "$p/scaling_max_freq"
-        fi
-      done
-    '';
-  };
+  # No big-core OPP cap: verified safe uncapped on the Pi 27 W charger.
+  # If switching to the MBP charger or 65 W GaN, re-add a 2016 MHz cap.
+  # See Brain: 7awkp1jk Chapter 8.
 
   networking.firewall.enable = false;
   networking.networkmanager.enable = true;
