@@ -21,7 +21,7 @@ in
   };
 
   config = mkIf (systemManager == "home-manager" && cfg.enable) {
-    home.packages = [ cfg.package ];
+    home.packages = [ (lib.setPriority 4 cfg.package) ];
 
     # Regenerate the agent skill file on every home-manager switch.
     # This keeps the skill file version-matched to the installed brain binary.
