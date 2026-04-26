@@ -68,11 +68,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1777047480,
-        "narHash": "sha256-WUc+lXfn82o26BOkE7lpg63fwTrK93NMXaUi+lDT+uM=",
+        "lastModified": 1777205414,
+        "narHash": "sha256-DCGzVvIAMur74AsPD34mEQ6lgG7B14i01kaK2AZo5t4=",
         "ref": "main",
-        "rev": "a3dac6be7edc65c5b6558efa54880c6a6a7f4677",
-        "revCount": 111,
+        "rev": "e87ec22631bec8eab424837ca3f6a8ab9b12d63b",
+        "revCount": 118,
         "type": "git",
         "url": "ssh://git@github.com/surma/brain"
       },
