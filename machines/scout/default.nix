@@ -99,6 +99,9 @@
       ../../assets/skills/nexus-admin
       ../../assets/skills/whatsapp
       ../../assets/skills/signal
+      ../../assets/skills/brainstorming
+      ../../assets/skills/planning
+      ../../assets/skills/debugging
     ];
 
     defaultConfigs.opencode = {

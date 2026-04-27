@@ -7,4 +7,10 @@
   defaultConfigs.web-search-cli.enable = true;
 
   programs.agent-browser.enable = true;
+
+  agent.skills = [
+    ../../assets/skills/brainstorming
+    ../../assets/skills/planning
+    ../../assets/skills/debugging
+  ];
 }
