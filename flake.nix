@@ -50,7 +50,7 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     opencode = {
-      url = "github:anomalyco/opencode?ref=v1.4.6";
+      url = "github:anomalyco/opencode?ref=v1.14.28";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     sl2 = {
