@@ -26,7 +26,7 @@ in
     # Regenerate the agent skill file on every home-manager switch.
     # This keeps the skill file version-matched to the installed brain binary.
     home.activation.brain-skill = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      run ${lib.getExe cfg.package} skill write --base "$HOME/.agents/skills"
+      run ${lib.getExe cfg.package} skill write --base "$HOME/.agents"
     '';
   };
 }
