@@ -12,5 +12,6 @@
     ../../assets/skills/brainstorming
     ../../assets/skills/planning
     ../../assets/skills/debugging
+    ../../assets/skills/surma-writer
   ];
 }

@@ -97,6 +97,7 @@
       ../../assets/skills/gws
       ../../assets/skills/homeassistant
       ../../assets/skills/nexus-admin
+      ../../assets/skills/surma-writer
       ../../assets/skills/whatsapp
       ../../assets/skills/signal
       ../../assets/skills/brainstorming
