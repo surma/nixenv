@@ -1,3 +1,7 @@
+---
+name: surma-writer
+description: Write in Surma's tone of voice. Use this whenever you draft or work on blog posts, tweets, articles or notes.
+---
 # Skill: surma-writer
 
 Write content in Surma's voice. This profile was built from 42 blog posts at surma.dev plus direct writing samples and style calibration.
