@@ -1,6 +1,6 @@
 ---
 name: homeassistant
-description: Control Home Assistant devices and query entities via the `hassio` CLI (unbraind/homeassistant-cli). Use when the user asks to control lights, switches, climate, fans, locks, covers, or other smart home devices, check sensor states, view or manage shopping lists and to-do lists, inspect automations, view calendars, or perform any Home Assistant operation.
+description: Control Home Assistant devices and manage lists via the `hassio` CLI (unbraind/homeassistant-cli). Use when the user asks to control lights, switches, climate, fans, locks, covers, or other smart home devices, check sensor states, inspect automations, view calendars, or perform any Home Assistant operation. Also use when the user asks about shopping lists, to-do lists, or task lists — these are managed as Home Assistant `todo` entities (e.g. adding/removing items from a shopping list, checking what's on a to-do list).
 compatibility: Requires `hassio` CLI to be installed and configured with a valid Home Assistant URL and long-lived access token.
 ---
 
