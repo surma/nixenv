@@ -94,6 +94,7 @@ in
   secrets.items.scout-hassio-token.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/hassio-token
+    chown surma:users /var/lib/scout/hassio-token
     chmod 0600 /var/lib/scout/hassio-token
   '';
 
