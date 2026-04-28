@@ -15,6 +15,7 @@
     ../../profiles/home-manager/graphical.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/experiments.nix
+    ../../profiles/home-manager/ai.nix
 
     ../../profiles/home-manager/webapps.nix
   ];
@@ -119,5 +120,18 @@
 
     services.blueman-applet.enable = true;
     services.dunst.enable = true;
+
+    # Workaround: hyprpolkitagent 0.1.2 crashes on this AMD iGPU because Qt6
+    # cannot create an EGL context for the auth window ("qt.qpa.wayland: EGL
+    # not available" -> SIGABRT in QSGRenderLoop). When polkit invokes the
+    # agent (e.g. for 1Password SSH-key unlock via fingerprint), it dies
+    # before showing the prompt, so the unlock silently fails. Forcing the
+    # software Qt Quick scenegraph keeps the agent alive and lets the PAM
+    # flow (incl. fprintd) run normally. sudo isn't affected because it
+    # talks to PAM directly without going through polkit.
+    xdg.configFile."systemd/user/hyprpolkitagent.service.d/qt-software.conf".text = ''
+      [Service]
+      Environment=QT_QUICK_BACKEND=software
+    '';
   };
 }
