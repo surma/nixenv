@@ -46,6 +46,8 @@
     pulse.enable = true;
   };
 
+  services.seatd.enable = true;
+
   services.keyd = {
     enable = true;
     treat-as-internal-keyboard = true;
@@ -103,6 +105,7 @@
       "input"
       "video"
       "audio"
+      "seat"
     ];
     shell = pkgs.zsh;
   };
