@@ -29,7 +29,7 @@ let
   llmModel = "shopify:anthropic:claude-haiku-4-5";
 
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
-    set -uo pipefail
+    set -euo pipefail
     export GIT_SSH_COMMAND="${gitSshCommand}"
     export NO_COLOR=1
     if [ ! -d "${brainPath}/.git" ]; then
@@ -37,17 +37,17 @@ let
       rm -rf "${brainPath}"
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
+
+    # Hard-reset to upstream before sync. brain-serve is a read-only
+    # mirror — any local state (stale rebase, uncommitted changes) is
+    # expendable and must not block startup.
+    echo "Resetting to origin/main..."
+    ${pkgs.git}/bin/git -C ${brainPath} fetch origin main
+    ${pkgs.git}/bin/git -C ${brainPath} rebase --abort 2>/dev/null || true
+    ${pkgs.git}/bin/git -C ${brainPath} reset --hard origin/main
+
     echo "Running brain sync..."
-    if ! BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync 2>/tmp/brain-sync-err.log; then
-      echo "brain sync failed (exit $?). stderr:" >&2
-      ${pkgs.coreutils}/bin/cat -v /tmp/brain-sync-err.log >&2
-      exit 1
-    fi
-    # Print any warnings (cat -v makes non-printable chars visible)
-    if [ -s /tmp/brain-sync-err.log ]; then
-      echo "brain sync warnings:" >&2
-      ${pkgs.coreutils}/bin/cat -v /tmp/brain-sync-err.log >&2
-    fi
+    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
   '';
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
