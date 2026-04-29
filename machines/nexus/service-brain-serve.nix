@@ -29,7 +29,7 @@ let
   llmModel = "shopify:anthropic:claude-haiku-4-5";
 
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
-    set -euo pipefail
+    set -uo pipefail
     export GIT_SSH_COMMAND="${gitSshCommand}"
     export NO_COLOR=1
     if [ ! -d "${brainPath}/.git" ]; then
@@ -38,8 +38,16 @@ let
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
     echo "Running brain sync..."
-    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync 2>&1 | ${pkgs.gnused}/bin/sed 's/\x1b\[[0-9;]*m//g'
-    exit "''${PIPESTATUS[0]}"
+    if ! BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync 2>/tmp/brain-sync-err.log; then
+      echo "brain sync failed (exit $?). stderr:" >&2
+      ${pkgs.coreutils}/bin/cat -v /tmp/brain-sync-err.log >&2
+      exit 1
+    fi
+    # Print any warnings (cat -v makes non-printable chars visible)
+    if [ -s /tmp/brain-sync-err.log ]; then
+      echo "brain sync warnings:" >&2
+      ${pkgs.coreutils}/bin/cat -v /tmp/brain-sync-err.log >&2
+    fi
   '';
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
