@@ -31,6 +31,7 @@ let
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
     set -euo pipefail
     export GIT_SSH_COMMAND="${gitSshCommand}"
+    export NO_COLOR=1
     if [ ! -d "${brainPath}/.git" ]; then
       echo "Cloning brain repository..."
       rm -rf "${brainPath}"
@@ -42,6 +43,7 @@ let
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
     set -euo pipefail
+    export NO_COLOR=1
     LLM_FLAGS=""
     if [ -f "${llmApiKeyFile}" ]; then
       LLM_KEY="$(cat "${llmApiKeyFile}")"
