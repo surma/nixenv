@@ -38,7 +38,8 @@ let
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
     echo "Running brain sync..."
-    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync 2>&1 | ${pkgs.gnused}/bin/sed 's/\x1b\[[0-9;]*m//g'
+    exit "''${PIPESTATUS[0]}"
   '';
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
