@@ -1,7 +1,13 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../../profiles/home-manager/base.nix
+    ../../profiles/home-manager/ai.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/dev.nix
@@ -13,6 +19,11 @@
   home.stateVersion = "25.05";
 
   home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#forge";
+
+  home.packages = with pkgs; [
+    picocom
+    tio
+  ];
 
   # Best-effort linger enablement for user services to survive logout.
   home.activation.enableLinger = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
@@ -26,4 +37,6 @@
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
   defaultConfigs.pi.extensions.proxy.enable = true;
+
+  programs.brain.enable = true;
 }
