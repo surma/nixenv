@@ -46,10 +46,6 @@ let
     ${pkgs.git}/bin/git -C ${brainPath} rebase --abort 2>/dev/null || true
     ${pkgs.git}/bin/git -C ${brainPath} reset --hard origin/main
 
-    # Clear LaTeX SVG cache on startup so updated rendering code
-    # takes effect immediately (cache keys don't include code version).
-    rm -rf /var/lib/brain-serve/.cache/brain/latex
-
     echo "Running brain sync..."
     BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
   '';
