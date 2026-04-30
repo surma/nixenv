@@ -9,7 +9,7 @@ let
   scoutMcpPort = 32445;
 
   # Which ACP harness Scout uses: "opencode" or "claude-code"
-  harness = "claude-code";
+  harness = "opencode";
 
   claudeCodeAcp = inputs.self.packages.${system}.claude-code-acp;
 
