@@ -8,6 +8,11 @@ let
   system = pkgs.stdenv.hostPlatform.system;
   scoutMcpPort = 32445;
 
+  # Which ACP harness Scout uses: "opencode" or "claude-code"
+  harness = "opencode";
+
+  claudeCodeAcp = inputs.self.packages.${system}.claude-code-acp;
+
   # Hook scripts for Scout topic lifecycle. Copied into the Nix store
   # so they're available at a stable path for SCOUT_HOOKS_DIR.
   scoutHooksDir = pkgs.runCommand "scout-hooks" { } ''
@@ -120,13 +125,32 @@ in
           {
             # Register the dotenv plugin for opencode — needed so that
             # BRAIN_PATH from the topic .env file reaches brain commands.
-            home-manager.users.containeruser.programs.opencode.plugins = {
+            home-manager.users.containeruser.programs.opencode.plugins = lib.mkIf (harness == "opencode") {
               "dotenv.js" = builtins.readFile ../../packages/opencode-dotenv-plugin/dotenv.js;
             };
 
             systemd.services.scout =
               let
                 opencode = config.home-manager.users.containeruser.programs.opencode.package;
+
+                # Per-harness ACP command and default model.
+                # Claude Code reads ANTHROPIC_API_KEY from the credentials
+                # file at launch; the env vars are inlined in the bash -c
+                # command that Scout uses to spawn the ACP subprocess.
+                acpCommand = {
+                  "opencode" = "${opencode}/bin/opencode acp";
+                  "claude-code" = builtins.concatStringsSep " " [
+                    "ANTHROPIC_API_KEY=$(cat /var/lib/credentials/scout/llm-proxy-client-key)"
+                    "ANTHROPIC_BASE_URL=https://vendors.llm.surma.technology/anthropic-claude-code"
+                    "ANTHROPIC_MODEL=claude-opus-4-6"
+                    "${claudeCodeAcp}/bin/claude-code-acp"
+                  ];
+                }.${harness};
+
+                defaultModel = {
+                  "opencode" = "anthropic/claude-opus-4-6/high";
+                  "claude-code" = "claude-opus-4-6";
+                }.${harness};
               in
               {
                 description = "Scout Telegram bridge";
@@ -149,12 +173,12 @@ in
                   pkgs.sqlite
                 ];
                 environment = {
-                  SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
+                  SCOUT_ACP_COMMAND = acpCommand;
                   SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
                   SCOUT_MCP_PORT = toString scoutMcpPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
-                  SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
+                  SCOUT_DEFAULT_MODEL = defaultModel;
                   RUST_LOG = "scout=debug";
                 };
                 serviceConfig = {
