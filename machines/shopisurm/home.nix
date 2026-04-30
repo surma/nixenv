@@ -30,6 +30,10 @@
   home.sessionVariables.FLAKE_CONFIG_URI = "${config.home.homeDirectory}/src/github.com/surma/nixenv#shopisurm";
   defaultConfigs.agents.enable = true;
 
+  agent.skills = [
+    ../../assets/skills/agent-slack-write
+  ];
+
   programs.starship.settings.custom.cwd.command = lib.mkForce "worldpath";
 
   allowedUnfreeApps = [ ];
