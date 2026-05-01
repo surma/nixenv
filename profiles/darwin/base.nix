@@ -2,6 +2,7 @@
   pkgs,
   system,
   lib,
+  inputs,
   ...
 }@args:
 {
@@ -9,6 +10,10 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.enable = true;
+
+  environment.systemPackages = [
+    inputs.nix-darwin.packages.${system}.default
+  ];
 
   nix.settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
 
