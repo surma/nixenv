@@ -1,9 +1,17 @@
-import { tool } from "@opencode-ai/plugin";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, isAbsolute } from "node:path";
 import { randomBytes } from "node:crypto";
+
+// HM symlinks plugins into the Nix store, breaking bare module resolution.
+// Use createRequire anchored at the OpenCode config dir where node_modules lives.
+const _require = createRequire(
+  join(process.env.HOME, ".config", "opencode", "package.json")
+);
+const { z } = _require("zod");
+const tool = (def) => def;
 
 const LOG_DIR = join(tmpdir(), "opencode-bash-jobs");
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -459,20 +467,20 @@ export const BashJobsPlugin = async ({ directory }) => {
           "Do not use shell backgrounding (&, nohup, disown) — prefer managed bash jobs.",
         ].join(" "),
         args: {
-          command: tool.schema.string().min(1).describe("The command to execute"),
-          description: tool.schema
+          command: z.string().min(1).describe("The command to execute"),
+          description: z
             .string()
             .optional()
             .describe(
               "Clear, concise description of what this command does in 5-10 words"
             ),
-          timeout: tool.schema
+          timeout: z
             .number()
             .optional()
             .describe(
               `Optional timeout in milliseconds (default: ${DEFAULT_TIMEOUT_MS}ms). If exceeded, the command keeps running as a managed job.`
             ),
-          workdir: tool.schema
+          workdir: z
             .string()
             .optional()
             .describe(
@@ -490,8 +498,8 @@ export const BashJobsPlugin = async ({ directory }) => {
         description:
           "Wait for a managed bash job to finish, or for additional time to elapse. Returns updated output and status without rerunning the command.",
         args: {
-          jobId: tool.schema.string().describe("Managed bash job id"),
-          timeout: tool.schema
+          jobId: z.string().describe("Managed bash job id"),
+          timeout: z
             .number()
             .optional()
             .describe(
@@ -525,7 +533,7 @@ export const BashJobsPlugin = async ({ directory }) => {
         description:
           "Inspect the current status of a managed bash job, including elapsed time, log path, and recent output.",
         args: {
-          jobId: tool.schema.string().describe("Managed bash job id"),
+          jobId: z.string().describe("Managed bash job id"),
         },
         async execute(args) {
           const job = getJob(args.jobId);
@@ -540,7 +548,7 @@ export const BashJobsPlugin = async ({ directory }) => {
         description:
           "Kill a running managed bash job and return its final known output tail.",
         args: {
-          jobId: tool.schema.string().describe("Managed bash job id"),
+          jobId: z.string().describe("Managed bash job id"),
         },
         async execute(args) {
           const job = getJob(args.jobId);
