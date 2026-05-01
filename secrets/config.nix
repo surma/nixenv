@@ -258,5 +258,12 @@
         "nexus"
       ];
     };
+    firefly-app-key = {
+      contents = ../secrets/firefly-app-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
