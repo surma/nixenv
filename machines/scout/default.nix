@@ -113,6 +113,8 @@
       };
     };
 
+    programs.opencode.plugins."bash-jobs.js" = builtins.readFile ./plugins/bash-jobs.js;
+
     home.activation.hassio-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       tokenFile="/var/lib/credentials/scout/hassio-token"
       if [ -f "$tokenFile" ]; then
