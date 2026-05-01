@@ -98,6 +98,7 @@
   ];
 
   services.udisks2.enable = true;
+  services.tailscale.enable = true;
 
   system.stateVersion = "25.05";
 
