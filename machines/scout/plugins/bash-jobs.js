@@ -7,10 +7,14 @@ import { randomBytes } from "node:crypto";
 
 const LOG_DIR = join(tmpdir(), "opencode-bash-jobs");
 const DEFAULT_TIMEOUT_MS = 120_000;
+const MAX_WAIT_MS = 300_000;
+const COMPLETED_JOB_TTL_MS = 10 * 60 * 1000;
+const GC_INTERVAL_MS = 60_000;
 const MAX_TAIL_BYTES = 102_400;
 const MAX_TAIL_LINES = 200;
 const STALL_CHECK_INTERVAL_MS = 5_000;
 const STALL_THRESHOLD_MS = 45_000;
+const SIGTERM_GRACE_MS = 3_000;
 const KILL_WAIT_DEADLINE_MS = 5_000;
 
 const PROMPT_PATTERNS = [
@@ -119,6 +123,18 @@ function killProcessGroup(pid, signal = "SIGKILL") {
 
 export const BashJobsPlugin = async ({ directory }) => {
   const jobs = new Map();
+
+  // ── GC for completed jobs ─────────────────────────────────────────
+
+  const gcTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [id, job] of jobs) {
+      if (job.status !== "running" && job.endedAt && now - job.endedAt > COMPLETED_JOB_TTL_MS) {
+        jobs.delete(id);
+      }
+    }
+  }, GC_INTERVAL_MS);
+  if (gcTimer.unref) gcTimer.unref();
 
   // ── Job lifecycle ──────────────────────────────────────────────────
 
@@ -373,6 +389,8 @@ export const BashJobsPlugin = async ({ directory }) => {
 
   async function waitForJob(job, timeoutMs) {
     if (job.status !== "running") return;
+    // Cap at MAX_WAIT_MS to prevent indefinite hangs
+    const effectiveTimeout = Math.min(timeoutMs ?? MAX_WAIT_MS, MAX_WAIT_MS);
     await new Promise((resolve) => {
       let settled = false;
       const finish = () => {
@@ -382,31 +400,46 @@ export const BashJobsPlugin = async ({ directory }) => {
         resolve();
       };
       job.completion.promise.then(finish);
-      let timeoutHandle;
-      if (timeoutMs !== undefined && timeoutMs > 0) {
-        timeoutHandle = setTimeout(finish, timeoutMs);
-        if (timeoutHandle.unref) timeoutHandle.unref();
-      }
+      const timeoutHandle = setTimeout(finish, effectiveTimeout);
+      if (timeoutHandle.unref) timeoutHandle.unref();
     });
   }
 
   async function killJob(job) {
     if (job.status !== "running") return;
     job.killRequested = true;
-    killProcessGroup(job.pid);
+
+    // Phase 1: SIGTERM for graceful shutdown
+    killProcessGroup(job.pid, "SIGTERM");
+
+    // Wait for graceful exit or escalate to SIGKILL
     await new Promise((resolve) => {
       let settled = false;
+      let graceHandle;
+      let deadlineHandle;
+
       const finish = () => {
         if (settled) return;
         settled = true;
+        if (graceHandle) clearTimeout(graceHandle);
         if (deadlineHandle) clearTimeout(deadlineHandle);
         resolve();
       };
+
       job.completion.promise.then(finish);
-      const deadlineHandle = setTimeout(() => {
+
+      // Phase 2: SIGKILL after grace period
+      graceHandle = setTimeout(() => {
+        if (job.status !== "running") return;
+        killProcessGroup(job.pid, "SIGKILL");
+      }, SIGTERM_GRACE_MS);
+      if (graceHandle.unref) graceHandle.unref();
+
+      // Hard deadline: force-finalize if still stuck after SIGKILL
+      deadlineHandle = setTimeout(() => {
         finalizeJob(job, null);
         finish();
-      }, KILL_WAIT_DEADLINE_MS);
+      }, SIGTERM_GRACE_MS + KILL_WAIT_DEADLINE_MS);
       if (deadlineHandle.unref) deadlineHandle.unref();
     });
   }
@@ -426,7 +459,7 @@ export const BashJobsPlugin = async ({ directory }) => {
           "Do not use shell backgrounding (&, nohup, disown) — prefer managed bash jobs.",
         ].join(" "),
         args: {
-          command: tool.schema.string().describe("The command to execute"),
+          command: tool.schema.string().min(1).describe("The command to execute"),
           description: tool.schema
             .string()
             .optional()
@@ -462,7 +495,7 @@ export const BashJobsPlugin = async ({ directory }) => {
             .number()
             .optional()
             .describe(
-              "Additional time to wait in milliseconds (optional, no default timeout — waits indefinitely if omitted)"
+              `Additional time to wait in milliseconds (optional, defaults to ${MAX_WAIT_MS / 1000}s, capped at ${MAX_WAIT_MS / 1000}s)`
             ),
         },
         async execute(args) {
