@@ -38,8 +38,9 @@
 
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
     surma
-    surmrock
     surmbook
+    shopisurm
+    citadel
   ];
 
   networking.interfaces.enp1s0.useDHCP = true;
