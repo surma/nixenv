@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   secrets.items.firefly-access-token = {
     target = "/var/lib/firefly-importer/access-token.txt";
@@ -30,7 +30,16 @@
           LUNCH_FLOW_API_KEY_FILE = "/var/lib/credentials/firefly-importer/lunchflow-api-key.txt";
           TRUSTED_PROXIES = "**";
         };
+        poolConfig = {
+          "request_terminate_timeout" = "1800";
+        };
       };
+
+      # Increase nginx fastcgi timeout for long-running imports (30 min)
+      services.nginx.appendHttpConfig = ''
+        fastcgi_read_timeout 1800s;
+        fastcgi_send_timeout 1800s;
+      '';
     };
 
     bindMounts.creds = {
