@@ -13,8 +13,8 @@ let
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
   defaultSettings = {
-    defaultProvider = "openai";
-    defaultModel = "gpt-5.4";
+    defaultProvider = "anthropic";
+    defaultModel = "claude-opus-4-7";
     defaultThinkingLevel = "high";
     packages = [
       {
