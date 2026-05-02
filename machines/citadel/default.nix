@@ -1,5 +1,7 @@
 {
+  config,
   pkgs,
+  inputs,
   ...
 }:
 {
@@ -9,6 +11,8 @@
 
     ../../modules/nixos/hyprland
     ../../modules/nixos/1password-wrapper
+    ../../modules/services/surmhosting
+    ./service-nixos-admin.nix
   ];
 
   allowedUnfreeApps = [
@@ -99,6 +103,11 @@
 
   services.udisks2.enable = true;
   services.tailscale.enable = true;
+
+  services.surmhosting.enable = true;
+  services.surmhosting.hostname = "citadel";
+  services.surmhosting.containeruser.uid = config.users.users.surma.uid;
+  services.surmhosting.externalInterface = "end1"; # TODO: verify interface name
 
   system.stateVersion = "25.05";
 

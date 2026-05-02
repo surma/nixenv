@@ -4,7 +4,6 @@ let
   stateDir = "/var/lib/nixos-admin";
 
   # SSH config for git+ssh:// flake inputs (private repos on GitHub and Gitea).
-  # The key is populated by the secrets service into $stateDir/.ssh/.
   sshConfig = pkgs.writeText "nixos-admin-ssh-config" ''
     Host github.com
       IdentitiesOnly yes
@@ -45,7 +44,7 @@ in
     enable = true;
     package = inputs.nixos-admin-web.packages.${pkgs.stdenv.hostPlatform.system}.default;
     listenAddress = "127.0.0.1:${toString port}";
-    flakeURL = "github:surma/nixenv#nexus";
+    flakeURL = "github:surma/nixenv#citadel";
   };
 
   # Overlay: add SSH support for git+ssh:// flake inputs.
@@ -61,7 +60,7 @@ in
     '';
   };
 
-  services.surmhosting.services.nexus-admin = {
+  services.surmhosting.services.citadel-admin = {
     host = "localhost";
     expose.port = port;
   };
