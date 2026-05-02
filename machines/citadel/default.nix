@@ -107,7 +107,7 @@
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "citadel";
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
-  services.surmhosting.externalInterface = "end1"; # TODO: verify interface name
+  services.surmhosting.externalInterface = "wlP2p33s0";
 
   system.stateVersion = "25.05";
 
