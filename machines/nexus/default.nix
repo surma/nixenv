@@ -32,6 +32,8 @@
     ./service-gitea-runner.nix
     ./service-nexus-admin.nix
     ./service-brain-serve.nix
+    ./service-firefly.nix
+    ./service-firefly-importer.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4

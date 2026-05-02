@@ -258,5 +258,26 @@
         "nexus"
       ];
     };
+    firefly-app-key = {
+      contents = ../secrets/firefly-app-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    firefly-access-token = {
+      contents = ../secrets/firefly-access-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    firefly-lunchflow-api-key = {
+      contents = ../secrets/firefly-lunchflow-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
