@@ -126,6 +126,13 @@ in
     chmod 0600 /var/lib/scout/prowlarr-api-key
   '';
 
+  secrets.items.scout-navidrome-password.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/navidrome-password
+    chown surma:users /var/lib/scout/navidrome-password
+    chmod 0600 /var/lib/scout/navidrome-password
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
