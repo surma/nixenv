@@ -885,6 +885,30 @@
         "type": "github"
       }
     },
+    "nixos-admin-web": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1777750409,
+        "narHash": "sha256-HuwzR8Ia9//aJGhKKUd9+9AehgEuWRoid1QgAPvYEF4=",
+        "ref": "main",
+        "rev": "9ce066cd9c2bdc8491df6c5ee5e596aaaebde616",
+        "revCount": 1,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git"
+      }
+    },
     "nixos-hardware": {
       "locked": {
         "lastModified": 1750837715,
@@ -1153,6 +1177,7 @@
         "nix-darwin": "nix-darwin",
         "nix-on-droid": "nix-on-droid",
         "nix-system-graphics": "nix-system-graphics",
+        "nixos-admin-web": "nixos-admin-web",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
