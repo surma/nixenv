@@ -96,11 +96,10 @@
 
   services.openssh.enable = true;
 
-  # Disabled 2026-05-02: receiver on pylon returning HTTP 500.
-  # services.key-poller.enable = true;
-  # services.key-poller.secretFile = "/var/lib/key-poller/receiver-secret";
-  # services.key-poller.remoteNuBin = "/Users/surma/.nix-profile/bin/nu";
-  # services.key-poller.remoteGcloudBin = "/Users/surma/.nix-profile/bin/gcloud";
+  services.key-poller.enable = true;
+  services.key-poller.secretFile = "/var/lib/key-poller/receiver-secret";
+  services.key-poller.remoteNuBin = "/Users/surma/.nix-profile/bin/nu";
+  services.key-poller.remoteGcloudBin = "/Users/surma/.nix-profile/bin/gcloud";
 
   programs.mosh.enable = true;
 
