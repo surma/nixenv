@@ -61,7 +61,7 @@ in
     '';
   };
 
-  services.surmhosting.services.nexus-admin = {
+  services.surmhosting.services.admin = {
     host = "localhost";
     expose.port = port;
   };
