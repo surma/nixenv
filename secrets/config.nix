@@ -223,5 +223,33 @@
         "nexus"
       ];
     };
+    scout-lidarr-api-key = {
+      contents = ../secrets/lidarr-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    scout-radarr-api-key = {
+      contents = ../secrets/radarr-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    scout-sonarr-api-key = {
+      contents = ../secrets/sonarr-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    scout-prowlarr-api-key = {
+      contents = ../secrets/prowlarr-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
