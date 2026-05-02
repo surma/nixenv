@@ -251,5 +251,12 @@
         "nexus"
       ];
     };
+    scout-navidrome-password = {
+      contents = ../secrets/navidrome-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

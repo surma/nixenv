@@ -21,6 +21,7 @@ in
         DataFolder = "/dump/state/navidrome";
         DefaultDownloadableShare = true;
         Scanner.PurgeMissing = "full";
+        Scanner.Schedule = "@every 5m";
         Address = "0.0.0.0";
         Port = 8080;
       };
