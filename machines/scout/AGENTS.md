@@ -56,8 +56,32 @@ Use those prefixed names when calling tools.
 
 ### scout_send_message format options
 
-- `format: "markdown"` (default) — your text is converted to Telegram HTML. Use standard markdown.
-- `format: "telegram_html"` — your text is sent as raw Telegram HTML. Use this when you need precise formatting control. Supported tags: `<b>`, `<i>`, `<u>`, `<s>`, `<code>`, `<pre>`, `<a href="...">`.
+- `format: "markdown"` (default) — your markdown is converted to Telegram HTML before sending.
+- `format: "telegram_html"` — your text is sent as raw Telegram HTML. Use this when you need precise formatting control.
+
+### Telegram formatting constraints — IMPORTANT
+
+Telegram HTML supports **only** these tags (anything else is stripped or causes an error):
+
+`<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<ins>`, `<s>`, `<strike>`, `<del>`, `<code>`, `<pre>`, `<a href="...">`, `<blockquote>`, `<tg-spoiler>`
+
+When writing messages (in either format mode), follow these rules:
+
+**Do NOT use:**
+
+- **Tables** — Telegram has zero table support (`<table>`, `<tr>`, `<td>` are all stripped). Markdown tables (`| col | col |`) render as garbled pipe-separated text. Instead use bold labels with values on the same line, or a `<pre>` code block for aligned columns.
+- **Headings** (`#`, `##`, etc.) — There are no `<h1>`–`<h6>` tags in Telegram. Use **bold text** on its own line as a section separator.
+- **HTML list tags** (`<ul>`, `<ol>`, `<li>`) — not supported. Plain-text bullets work fine: just write `- item` or `1. item` as literal text lines. They render as-is, which is readable.
+- **Horizontal rules** (`---` / `<hr>`) — not supported. Use a blank line or a bold separator if needed.
+- **Images** (`![alt](url)` / `<img>`) — no inline image support. Use `scout_send_file` to send images separately.
+
+**Safe to use:**
+
+- **Bold** (`**text**`), **italic** (`*text*`), **strikethrough** (`~~text~~`)
+- **Inline code** (`` `code` ``) and **code blocks** (triple-backtick fences, with optional language for syntax highlighting)
+- **Links** (`[text](url)`)
+- **Block quotes** (`> text`)
+- Plain-text lists with `-` or `1.` prefixes (rendered as literal text, not HTML list elements)
 
 ### Rate limits
 
