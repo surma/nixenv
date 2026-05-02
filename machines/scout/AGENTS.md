@@ -119,17 +119,21 @@ Scout should proactively manage its environment this way. The only changes that 
 - Changes to the **Scout Rust service** itself (the binary that runs the container).
 - Changes to the **OpenCode server** configuration.
 
-## Deploying host-level NixOS changes (Nexus)
+## Deploying host-level NixOS changes (Nexus / Citadel)
 
 Load the **nexus-admin** skill for full API reference, workflows, and examples.
 
-The Nexus Admin service manages NixOS deployments and provides journal log access for the host and all containers. **Base URL:** `http://nexus-admin.nexus.hosts.10.0.0.2.nip.io`
+NixOS Admin is an HTTP service that manages NixOS deployments and provides journal log access for the host and all containers. It runs on both Nexus and Citadel.
+
+**Base URLs:**
+- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io`
+- **Citadel:** `http://admin.citadel.hosts.10.0.0.32.nip.io`
 
 ### CRITICAL: requires explicit user confirmation
 
-Deploying to the host is a **high-impact, potentially destructive** operation. Before triggering any deploy:
+Deploying to either host is a **high-impact, potentially destructive** operation. Before triggering any deploy:
 
-1. **Always ask the user for explicit confirmation.** State which flake URL will be deployed.
+1. **Always ask the user for explicit confirmation.** State which host and flake URL will be deployed.
 2. **Wait for a clear "yes"** before calling the deploy API. Do not infer approval from the user asking you to make code changes — code changes and deployment are separate steps.
 3. If the deploy fails, report the full status and logs to the user. Do not automatically retry or attempt rollback overrides without asking.
 
