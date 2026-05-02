@@ -155,6 +155,17 @@ When starting work on any repository:
    ```
 4. If you accidentally commit or push to `main`, tell the user immediately.
 
+## Long-running commands — use short timeouts and check in
+
+Prefer short, realistic timeouts on bash commands. When a command exceeds its timeout, it stays alive as a managed background job — this is a feature, not a failure.
+
+**Strategy:**
+- Set timeouts based on expected runtime, not worst-case. 30–60 seconds is a good default for most builds and syncs.
+- When a command becomes a managed job, use `bash_status` or `bash_wait` (with a short timeout) to check progress periodically.
+- **Inspect logs early.** If a build has already errored out but the process is still running, there is no point waiting. Read the log, spot the failure, and `bash_kill` it.
+- **Do other work while waiting.** A managed job runs in the background — use the time to make edits, run searches, or send the user a status update instead of blocking.
+- Never set a large timeout just to avoid dealing with a managed job. Short timeouts give you earlier visibility into problems.
+
 ## Sub-agents and tasks — DISABLED
 
 Do NOT use the Task tool or spawn sub-agents under any circumstances.
