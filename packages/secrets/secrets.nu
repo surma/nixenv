@@ -49,7 +49,14 @@ def "main recrypt" [
   }
   $secrets | each {|secret|
     let recepients = ($secret.keys | each {|k| ["-r" ($config.keys | get $k)]} | flatten)
-    let resecret = (open -r $secret.contents | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma | age --encrypt ...$recepients -a)
+    let decrypted = (open -r $secret.contents | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma)
+    if ($decrypted | is-empty) {
+      error make {msg: $"Decryption of ($secret.contents) produced empty output — refusing to overwrite. Check that a valid identity key is available."}
+    }
+    let resecret = ($decrypted | age --encrypt ...$recepients -a)
+    if ($resecret | is-empty) {
+      error make {msg: $"Re-encryption of ($secret.contents) produced empty output — refusing to overwrite."}
+    }
     $resecret | save -rf $secret.contents
     $secret.contents
   }
@@ -60,7 +67,11 @@ def encrypt [
   out: string
   file: string
 ] {
-  open -r $file | age --encrypt -R ~/.ssh/id_machine.pub -a | save -rf $out
+  let encrypted = (open -r $file | age --encrypt -R ~/.ssh/id_machine.pub -a)
+  if ($encrypted | is-empty) {
+    error make {msg: $"Encryption of ($file) produced empty output — refusing to write."}
+  }
+  $encrypted | save -rf $out
   if not $keep_original {
     rm $file
   }
@@ -92,7 +103,12 @@ def "main edit" [
   file: string         # Encrypted file to edit
 ] {
   let tmp = (mktemp)
-  open -r $file | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma | save -rf $tmp
+  let decrypted = (open -r $file | age --decrypt -i ~/.ssh/id_machine -i ~/.ssh/id_surma)
+  if ($decrypted | is-empty) {
+    rm $tmp
+    error make {msg: $"Decryption of ($file) produced empty output. Check that a valid identity key is available."}
+  }
+  $decrypted | save -rf $tmp
   ^$env.EDITOR $tmp
   encrypt false $file $tmp
   print "The secret was encrypted for the local machine. To apply the public keys, run `recrypt`"
