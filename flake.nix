@@ -85,7 +85,7 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     nixos-admin-web = {
-      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git?ref=main";
+      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git?ref=feat/timer-triggering";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
