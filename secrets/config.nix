@@ -207,6 +207,7 @@
       keys = [
         "surma"
         "nexus"
+        "citadel"
       ];
     };
     scout-gws-credentials = {

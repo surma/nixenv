@@ -1,14 +1,18 @@
 ---
 name: nexus-admin
-description: Deploy NixOS configuration to the Nexus host, inspect deploy history and logs, list containers and systemd units, and fetch journal logs — all via the Nexus Admin HTTP API. Use when the user asks to deploy, check deploy status, view service logs, inspect containers, or troubleshoot the Nexus host.
-compatibility: Requires network access to the Nexus Admin service.
+description: Deploy NixOS configuration to Nexus or Citadel, inspect deploy history and logs, list containers and systemd units, and fetch journal logs — all via the NixOS Admin HTTP API. Use when the user asks to deploy, check deploy status, view service logs, inspect containers, or troubleshoot Nexus or Citadel.
+compatibility: Requires network access to the NixOS Admin service on the target host.
 ---
 
-# Nexus Admin
+# NixOS Admin
 
-Nexus Admin is an HTTP service running on the Nexus host that manages NixOS deployments and provides access to systemd journal logs — both on the host and inside systemd-nspawn containers.
+NixOS Admin is an HTTP service that manages NixOS deployments and provides access to systemd journal logs — both on the host and inside systemd-nspawn containers. It runs on both Nexus and Citadel.
 
-**Base URL:** `http://nexus-admin.nexus.hosts.10.0.0.2.nip.io`
+**Base URLs:**
+- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io`
+- **Citadel:** `http://admin.citadel.hosts.10.0.0.32.nip.io`
+
+All examples below use the Nexus URL. Replace the base URL with the Citadel one when targeting Citadel.
 
 ## CRITICAL: deploys require explicit user confirmation
 
@@ -29,10 +33,10 @@ All endpoints are relative to the base URL above. Use `curl` (via `nix run nixpk
 
 ```bash
 # Deploy from the default flake (github:surma/nixenv#nexus):
-curl -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy
 
 # Deploy from a specific branch:
-curl -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
   -H 'Content-Type: application/json' \
   -d '{"flake_url":"github:surma/nixenv/my-branch#nexus"}'
 ```
@@ -54,13 +58,13 @@ Returns `409 Conflict` if a deploy is already running.
 #### Cancel a running deploy
 
 ```bash
-curl -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/cancel
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/cancel
 ```
 
 #### List all deploys
 
 ```bash
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploys
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys
 ```
 
 Returns:
@@ -86,7 +90,7 @@ Returns:
 #### Read deploy logs (plain text)
 
 ```bash
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
 ```
 
 Returns the full deploy log as plain text.
@@ -94,7 +98,7 @@ Returns the full deploy log as plain text.
 #### Stream deploy logs (SSE)
 
 ```bash
-curl -sN http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/stream
+curl -sN http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/stream
 ```
 
 Returns a Server-Sent Events stream. Each `data:` line is a log line. For active deploys, existing lines are replayed first, then new lines stream live.
@@ -122,7 +126,7 @@ The stream ends with a line matching `[deploy] DONE:<status>` where status is on
 #### List containers
 
 ```bash
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/containers
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/containers
 ```
 
 Returns:
@@ -141,10 +145,10 @@ These are systemd-nspawn machines visible via `machinectl list`.
 
 ```bash
 # Host units:
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/units
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/units
 
 # Units inside a container:
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout'
 ```
 
 Returns:
@@ -169,13 +173,13 @@ Returns:
 
 ```bash
 # Basic usage (last 100 lines):
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service'
 
 # Inside a container:
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout'
 
 # With options:
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service&lines=200&boot=true&since=-1h'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service&lines=200&boot=true&since=-1h'
 ```
 
 Returns plain text (journalctl output in `short-iso` format).
@@ -197,17 +201,17 @@ Returns plain text (journalctl output in `short-iso` format).
 
 ```bash
 # 1. Start the deploy (uses default flake: github:surma/nixenv#nexus)
-DEPLOY=$(curl -s -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy)
+DEPLOY=$(curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy)
 ID=$(echo "$DEPLOY" | jq -r '.id')
 
 # 2. Stream logs until done
-curl -sN "http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/$ID/stream"
+curl -sN "http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/$ID/stream"
 ```
 
 ### Deploy from a branch
 
 ```bash
-curl -s -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
   -H 'Content-Type: application/json' \
   -d '{"flake_url":"github:surma/nixenv/my-feature-branch#nexus"}'
 ```
@@ -216,36 +220,36 @@ curl -s -X POST http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
 
 ```bash
 # List all service units in the scout container
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.sub != "dead")'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.sub != "dead")'
 ```
 
 ### Troubleshoot a service
 
 ```bash
 # 1. Check the unit status
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.unit == "opencode.service")'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.unit == "opencode.service")'
 
 # 2. Fetch recent logs
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&lines=200'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&lines=200'
 
 # 3. Fetch logs from the last hour only
-curl -s 'http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&since=-1h'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&since=-1h'
 ```
 
 ### Check deploy history
 
 ```bash
 # List recent deploys
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploys | jq '.deploys[:5]'
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys | jq '.deploys[:5]'
 
 # Read logs for a specific past deploy
-curl -s http://nexus-admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
 ```
 
 ## Tips
 
-- The default flake URL is `github:surma/nixenv#nexus`. You only need to specify `flake_url` when deploying from a branch or a different flake.
-- Only one deploy can run at a time. Check `active_id` in the list response to see if one is in progress.
+- The default flake URL depends on the host: `github:surma/nixenv#nexus` for Nexus, `github:surma/nixenv#citadel` for Citadel. You only need to specify `flake_url` when deploying from a branch or a different flake.
+- Only one deploy can run at a time per host. Check `active_id` in the list response to see if one is in progress.
 - Deploy phases: the service runs `nixos-rebuild build` first, then `nixos-rebuild switch`. If switch fails, it automatically attempts rollback to the pre-deploy generation.
 - The web UI is available at the base URL in a browser for manual use.
 - `curl` may not be on PATH in Scout's container — use `nix run nixpkgs#curl -- <args>` as a workaround.

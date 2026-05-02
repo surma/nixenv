@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, inputs, lib, ... }:
 let
   port = 8092;
   stateDir = "/var/lib/nixos-admin";
@@ -60,8 +60,20 @@ in
     '';
   };
 
-  services.surmhosting.services.citadel-admin = {
+  services.surmhosting.services.admin = {
     host = "localhost";
     expose.port = port;
   };
+
+  # Deploy the SSH key for git+ssh:// flake inputs used by nixos-rebuild.
+  secrets.items.scout-repo-ssh-key.command = ''
+    key="$(cat)"
+
+    mkdir -p ${stateDir}/.ssh
+    chmod 0700 ${stateDir}/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} ${stateDir}/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > ${stateDir}/.ssh/id_repo_scout
+    chmod 0600 ${stateDir}/.ssh/id_repo_scout
+  '';
 }
