@@ -98,6 +98,34 @@ in
     chmod 0600 /var/lib/scout/hassio-token
   '';
 
+  secrets.items.scout-lidarr-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/lidarr-api-key
+    chown surma:users /var/lib/scout/lidarr-api-key
+    chmod 0600 /var/lib/scout/lidarr-api-key
+  '';
+
+  secrets.items.scout-radarr-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/radarr-api-key
+    chown surma:users /var/lib/scout/radarr-api-key
+    chmod 0600 /var/lib/scout/radarr-api-key
+  '';
+
+  secrets.items.scout-sonarr-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/sonarr-api-key
+    chown surma:users /var/lib/scout/sonarr-api-key
+    chmod 0600 /var/lib/scout/sonarr-api-key
+  '';
+
+  secrets.items.scout-prowlarr-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/prowlarr-api-key
+    chown surma:users /var/lib/scout/prowlarr-api-key
+    chmod 0600 /var/lib/scout/prowlarr-api-key
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
