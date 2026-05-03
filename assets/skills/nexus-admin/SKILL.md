@@ -1,12 +1,12 @@
 ---
 name: nexus-admin
-description: Deploy NixOS configuration to Nexus or Citadel, inspect deploy history and logs, list containers and systemd units, and fetch journal logs — all via the NixOS Admin HTTP API. Use when the user asks to deploy, check deploy status, view service logs, inspect containers, or troubleshoot Nexus or Citadel.
+description: Deploy NixOS configuration to Nexus or Citadel, inspect deploy history and logs, list containers and systemd units, manage systemd timers, and fetch journal logs — all via the NixOS Admin HTTP API. Use when the user asks to deploy, check deploy status, view service logs, inspect containers, list or trigger timers, or troubleshoot Nexus or Citadel.
 compatibility: Requires network access to the NixOS Admin service on the target host.
 ---
 
 # NixOS Admin
 
-NixOS Admin is an HTTP service that manages NixOS deployments and provides access to systemd journal logs — both on the host and inside systemd-nspawn containers. It runs on both Nexus and Citadel.
+NixOS Admin is an HTTP service that manages NixOS deployments and provides access to systemd journal logs, units, and timers — both on the host and inside systemd-nspawn containers. It runs on both Nexus and Citadel.
 
 **Base URLs:**
 - **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io`
@@ -167,6 +167,62 @@ Returns:
 }
 ```
 
+### Systemd timers
+
+#### List timers
+
+```bash
+# Host timers:
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers
+
+# Timers inside a container:
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers?container=scout'
+```
+
+Returns:
+
+```json
+{
+  "timers": [
+    {
+      "unit": "logrotate.timer",
+      "activates": "logrotate.service",
+      "next": "Sun 2026-05-04 00:00:00 BST",
+      "left": "in 12h 30min",
+      "last": "Sat 2026-05-03 00:00:00 BST",
+      "passed": "11h 30min ago"
+    }
+  ]
+}
+```
+
+Fields `next`, `left`, `last`, and `passed` may be `null` if the timer has never run or has no scheduled next run.
+
+If the container is unreachable, returns an empty list rather than an error.
+
+#### Trigger a timer (run now)
+
+```bash
+# Trigger a timer's associated service on the host:
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/logrotate.service/trigger
+
+# Trigger inside a container:
+curl -s -X POST 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/logrotate.service/trigger?container=scout'
+```
+
+The `{unit}` in the URL is the **activates** service name (not the timer unit).
+
+Returns on success:
+
+```json
+{
+  "status": "started",
+  "unit": "logrotate.service"
+}
+```
+
+Returns `502` if the container is unreachable, `500` for other failures.
+
 ### Journal logs
 
 #### Fetch logs for a unit
@@ -194,6 +250,14 @@ Returns plain text (journalctl output in `short-iso` format).
 | `boot` | no | `true` to limit to current boot |
 | `since` | no | Show entries since this time (e.g. `-1h`, `2026-01-01`) |
 | `until` | no | Show entries until this time |
+
+### Health check
+
+```bash
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/health
+```
+
+Returns `200 OK` with `{"status":"ok"}`. Useful for verifying the service is up.
 
 ## Recommended workflows
 
@@ -234,6 +298,16 @@ curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service
 
 # 3. Fetch logs from the last hour only
 curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&since=-1h'
+```
+
+### List and trigger timers
+
+```bash
+# List all timers on the host
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers | jq '.timers[] | {unit, activates, next, last}'
+
+# Manually trigger a backup (runs the associated service immediately)
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/restic-backups-nexus-local.service/trigger
 ```
 
 ### Check deploy history
