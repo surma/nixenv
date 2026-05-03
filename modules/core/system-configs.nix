@@ -121,6 +121,7 @@ in
           (
             { ... }:
             {
+              system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or "dirty";
               home-manager = {
                 sharedModules = homeManagerModules;
                 extraSpecialArgs = {
