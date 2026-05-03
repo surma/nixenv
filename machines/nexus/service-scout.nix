@@ -133,6 +133,20 @@ in
     chmod 0600 /var/lib/scout/navidrome-password
   '';
 
+  secrets.items.scout-spotify-credentials.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/spotify-credentials.json
+    chown surma:users /var/lib/scout/spotify-credentials.json
+    chmod 0600 /var/lib/scout/spotify-credentials.json
+  '';
+
+  secrets.items.scout-spotify-client-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/spotify-client-token.json
+    chown surma:users /var/lib/scout/spotify-client-token.json
+    chmod 0600 /var/lib/scout/spotify-client-token.json
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];

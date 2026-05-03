@@ -40,6 +40,7 @@
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.presage-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.homeassistant-cli
+      spotify-player
       (python3.withPackages (ps: [
         ps.pip
         ps.virtualenv
@@ -103,6 +104,7 @@
       ../../assets/skills/brainstorming
       ../../assets/skills/planning
       ../../assets/skills/debugging
+      ../../assets/skills/music
     ];
 
     defaultConfigs.opencode = {
@@ -123,6 +125,17 @@
         printf '{"url":"http://10.0.0.5:8123","token":"%s"}\n' "$token" \
           > "${config.home.homeDirectory}/.hassio-cli/settings.json"
         chmod 0600 "${config.home.homeDirectory}/.hassio-cli/settings.json"
+      fi
+    '';
+
+    home.activation.spotify-credentials = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      credDir="/var/lib/credentials/scout"
+      cacheDir="${config.home.homeDirectory}/.cache/spotify-player"
+      if [ -f "$credDir/spotify-credentials.json" ]; then
+        mkdir -p "$cacheDir"
+        cp "$credDir/spotify-credentials.json" "$cacheDir/credentials.json"
+        cp "$credDir/spotify-client-token.json" "$cacheDir/user_client_token.json"
+        chmod 0600 "$cacheDir/credentials.json" "$cacheDir/user_client_token.json"
       fi
     '';
 
