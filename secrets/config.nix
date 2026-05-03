@@ -268,6 +268,20 @@
         "nexus"
       ];
     };
+    scout-spotify-credentials = {
+      contents = ../secrets/spotify-credentials.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    scout-spotify-client-token = {
+      contents = ../secrets/spotify-client-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     firefly-app-key = {
       contents = ../secrets/firefly-app-key.age;
       keys = [
