@@ -75,6 +75,10 @@ def main [] {
     { name: "handy" }
     { name: "claude-code" version: $claude_version requires_version: true }
     { name: "surm-auth" version: $surm_auth_version requires_version: true }
+    { name: "agent-browser" }
+    { name: "homeassistant-cli" }
+    { name: "pi-acp" }
+    { name: "rtk" }
   ]
 
   for pkg in $packages {

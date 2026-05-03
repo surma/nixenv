@@ -2,19 +2,26 @@
   config,
   lib,
   pkgs,
+  inputs,
   systemManager,
   ...
 }:
 let
   name = "telegram";
   appConfig = config.programs.${name};
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 with lib;
 {
   options = {
     programs.${name} = {
       enable = mkEnableOption "Telegram messenger";
-      package = mkPackageOption pkgs "telegram-desktop" { };
+      package = mkOption {
+        type = types.package;
+        default = pkgs-unstable.telegram-desktop;
+        defaultText = literalExpression "inputs.nixpkgs-unstable.legacyPackages.\${system}.telegram-desktop";
+        description = "Telegram Desktop package (defaults to nixpkgs-unstable for a newer version).";
+      };
     };
   };
 

@@ -92,7 +92,6 @@
 
     programs.agent-browser.enable = true;
     programs.brain.enable = true;
-    programs.parakeet.enable = true;
 
     agent.skills = [
       ../../assets/skills/gws

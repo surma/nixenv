@@ -8,7 +8,7 @@
   ...
 }:
 let
-  version = "0.0.25";
+  version = "0.0.26";
 in
 buildNpmPackage {
   pname = "pi-acp";
@@ -16,7 +16,7 @@ buildNpmPackage {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/pi-acp/-/pi-acp-${version}.tgz";
-    hash = "sha256-5pKB1nsSt/iv3lcMj0py5OLCIRxt14ikd3yHYVl8j0k=";
+    hash = "sha256-45ebEgihAxcrYcCv0eyLz6IST8IWK+PrBeGhzy0+nwE=";
   };
   sourceRoot = "package";
 
