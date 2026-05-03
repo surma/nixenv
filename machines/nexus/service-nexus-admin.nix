@@ -32,7 +32,7 @@ let
       StrictHostKeyChecking accept-new
 
     Host pylon
-      HostName 49.12.5.28
+      HostName surmedge.hosts.surma.link
       User root
       IdentitiesOnly yes
       IdentityFile ${stateDir}/.ssh/id_deploy
