@@ -41,6 +41,7 @@
     surmbook
     shopisurm
     citadel
+    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
 
   networking.interfaces.enp1s0.useDHCP = true;

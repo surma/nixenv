@@ -3,7 +3,9 @@ let
   port = 8092;
   stateDir = "/var/lib/nixos-admin";
 
-  # SSH config for git+ssh:// flake inputs (private repos on GitHub and Gitea).
+  # SSH config for git+ssh:// flake inputs and remote deploys.
+  # Repo key is populated by the scout-repo-ssh-key secret.
+  # Deploy key is populated by the nixos-admin-deploy-key secret.
   sshConfig = pkgs.writeText "nixos-admin-ssh-config" ''
     Host github.com
       IdentitiesOnly yes
@@ -27,6 +29,20 @@ let
       User containeruser
       HostName gitea.nexus.hosts.10.0.0.2.nip.io
       IdentityFile ${stateDir}/.ssh/id_repo_scout
+      StrictHostKeyChecking accept-new
+
+    Host pylon
+      HostName 49.12.5.28
+      User root
+      IdentitiesOnly yes
+      IdentityFile ${stateDir}/.ssh/id_deploy
+      StrictHostKeyChecking accept-new
+
+    Host nexus
+      HostName 10.0.0.2
+      User root
+      IdentitiesOnly yes
+      IdentityFile ${stateDir}/.ssh/id_deploy
       StrictHostKeyChecking accept-new
   '';
 
@@ -75,5 +91,17 @@ in
     install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} ${stateDir}/.ssh/id_repo_scout.pub
     printf '%s\n' "$key" > ${stateDir}/.ssh/id_repo_scout
     chmod 0600 ${stateDir}/.ssh/id_repo_scout
+  '';
+
+  # Deploy key for remote NixOS deploys (machine-to-machine SSH).
+  secrets.items.nixos-admin-deploy-key.command = ''
+    key="$(cat)"
+
+    mkdir -p ${stateDir}/.ssh
+    chmod 0700 ${stateDir}/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_deploy.pub} ${stateDir}/.ssh/id_deploy.pub
+    printf '%s\n' "$key" > ${stateDir}/.ssh/id_deploy
+    chmod 0600 ${stateDir}/.ssh/id_deploy
   '';
 }

@@ -83,6 +83,7 @@
     surma
     dragoon
     archon
+    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
 
   virtualisation.oci-containers.backend = "podman";

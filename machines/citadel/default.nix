@@ -73,6 +73,11 @@
 
   services.openssh.enable = true;
 
+  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
+    surma
+    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
+  ];
+
   environment.systemPackages = with pkgs; [
     hyprpolkitagent
     hyprlock

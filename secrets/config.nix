@@ -210,6 +210,15 @@
         "citadel"
       ];
     };
+    nixos-admin-deploy-key = {
+      contents = ../assets/ssh-keys/id_deploy.age;
+      keys = [
+        "surma"
+        "nexus"
+        "citadel"
+        "pylon"
+      ];
+    };
     scout-gws-credentials = {
       contents = ../secrets/scout-gws-credentials.age;
       keys = [
