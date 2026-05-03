@@ -895,16 +895,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1777797681,
-        "narHash": "sha256-7TgaY1rV1BpEFBwdXXnyzzITDBhB9B80bIPypUoPj1E=",
-        "ref": "main",
-        "rev": "3443d1d5824ba5aa7c0d49c02977f3601cd70ccb",
-        "revCount": 5,
+        "lastModified": 1777799679,
+        "narHash": "sha256-QSrlrYPJRzlo1QfmKUivS12YZCXWJ1gbzkQJsIx4UfA=",
+        "ref": "feat/ssh-config",
+        "rev": "25d459f69706c96d2b8cb5ec4421760be71a8b85",
+        "revCount": 6,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git"
       },
       "original": {
-        "ref": "main",
+        "ref": "feat/ssh-config",
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git"
       }

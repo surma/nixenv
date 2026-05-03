@@ -45,13 +45,13 @@ in
     package = inputs.nixos-admin-web.packages.${pkgs.stdenv.hostPlatform.system}.default;
     listenAddress = "127.0.0.1:${toString port}";
     flakeURL = "github:surma/nixenv#citadel";
+    sshConfigFile = "${stateDir}/.ssh/config";
   };
 
-  # Overlay: add SSH support for git+ssh:// flake inputs.
+  # Overlay: SSH key + config deployment for git+ssh:// flake inputs.
   systemd.services.nixos-admin = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
-    path = [ pkgs.openssh ];
     preStart = ''
       mkdir -p ${stateDir}/.ssh
       chmod 0700 ${stateDir}/.ssh
