@@ -43,8 +43,15 @@
   # responds with a hard-reset of VBUS, which power-cycles the whole board.
   # Enabling it in a DT overlay reproduces this exactly — do not do this.
   #
-  # The SPI flash holds EDK2 UEFI firmware (edk2-rk3588 v1.1) which negotiates
-  # USB-PD in the bootloader, giving the board its full power budget before the
-  # kernel starts. This is the correct fix; the kernel-side FUSB302 node can
-  # stay disabled.
+  # The SPI flash holds mainline U-Boot 2025.10 (flashed 2026-04-30) which has
+  # full FUSB302/TCPM support and negotiates a 20V/5A/100W PD_PPS contract in
+  # the bootloader, well before the kernel starts. The board boots via
+  # extlinux.conf written by boot.loader.generic-extlinux-compatible. The
+  # kernel-side FUSB302 node stays disabled. See Brain: xbkzm7fk, 7awkp1jk.
+  #
+  # Cold-boot caveat: the kernel TCPM driver hits an RX-FIFO race on first
+  # bind, issues a USB-PD Hard Reset, and the board reboots once (~10 s).
+  # Subsequent boots and warm reboots are clean. Reichel's v6.17 cache-PD-RX
+  # patch is present but addresses a different race; the U-Boot→kernel handoff
+  # gap is on his "future work" list.
 }

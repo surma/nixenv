@@ -23,12 +23,18 @@
   networking.hostName = "citadel";
 
   nix.settings.require-sigs = false;
-  nix.settings.max-jobs = 4;
-  nix.settings.cores = 2;
+  # No nix.settings.max-jobs/cores caps: with mainline U-Boot 2025.10 in SPI
+  # negotiating a 100W PD contract, the EDK2-era 15W cap is no longer needed.
+  # See Brain: 7awkp1jk (stress test 2026-04-30, 22 stressors, 0 brownouts).
   secrets.identity = "/home/surma/.ssh/id_machine";
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # SPI flash holds mainline U-Boot 2025.10 (flashed 2026-04-30), which boots
+  # via extlinux.conf -- not systemd-boot. See Brain: xbkzm7fk, 7awkp1jk.
+  boot.loader.systemd-boot.enable = false;
+  boot.loader.grub.enable = false;
+  boot.loader.generic-extlinux-compatible.enable = true;
+  boot.loader.efi.canTouchEfiVariables = false;
+  hardware.deviceTree.name = "rockchip/rk3588-rock-5b.dtb";
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
