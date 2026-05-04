@@ -6,7 +6,7 @@ export const NotificationPlugin = async ({ client, $ }) => {
           path: { id: event.properties.sessionID },
         })
         if (!session.data?.parentID) {
-          await $`noti "OpenCode is done coding"`
+          await $`noti local "OpenCode is done coding"`
         }
       }
     },
