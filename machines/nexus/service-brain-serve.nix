@@ -81,7 +81,7 @@ in
 
   services.surmhosting.services.brain-serve.expose.ports = [
     { port = 8080; hostname = "brain-serve"; }
-    { port = 8081; hostname = "public-brain"; }
+    { port = 8081; hostname = "public-brain"; rule = "HostRegexp(`^public-brain\\.`) || Host(`public-brain.surma.technology`)"; }
   ];
   services.surmhosting.services.brain-serve.container = {
     # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
