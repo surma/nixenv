@@ -64,7 +64,7 @@
     # programs.spotify.platform = "wayland";
     programs.discord.enable = true;
     # programs.discord.platform = "wayland";
-    programs.telegram.enable = true;
+    # programs.telegram.enable = true;
     programs.whatsapp.enable = true;
     programs.squoosh.enable = true;
     programs.geforce-now.enable = true;
