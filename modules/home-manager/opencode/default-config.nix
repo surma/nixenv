@@ -78,10 +78,8 @@ with lib;
 
   config = mkMerge [
     (
-      (lib.optionalAttrs (options ? customScripts) {
-        customScripts.noti.enable = mkIf isEnabled true;
-      })
-      // {
+      {
+        defaultConfigs.noti.enable = mkIf isEnabled true;
         programs.opencode.enable = mkIf isEnabled true;
         programs.opencode = {
           plugins = {
