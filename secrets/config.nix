@@ -303,5 +303,12 @@
         "nexus"
       ];
     };
+    brain-jwt-secret = {
+      contents = ../secrets/brain-jwt-secret.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

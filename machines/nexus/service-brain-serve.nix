@@ -61,10 +61,17 @@ let
     exec ${brainPkg}/bin/brain serve --port 8080 $LLM_FLAGS
   '';
 
+  jwtSecretFile = "/var/lib/credentials/brain-jwt-secret";
+
   brainServePublicStart = pkgs.writeShellScript "brain-serve-public-start" ''
     set -euo pipefail
     export NO_COLOR=1
-    exec ${brainPkg}/bin/brain serve --port 8081 --public
+    JWT_FLAGS=""
+    if [ -f "${jwtSecretFile}" ]; then
+      JWT_SECRET="$(cat "${jwtSecretFile}")"
+      JWT_FLAGS="--jwt-secret $JWT_SECRET"
+    fi
+    exec ${brainPkg}/bin/brain serve --port 8081 --public $JWT_FLAGS
   '';
 in
 {

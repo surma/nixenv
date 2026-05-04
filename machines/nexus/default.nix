@@ -54,6 +54,10 @@
     target = "/var/lib/key-poller/receiver-secret";
     mode = "0400";
   };
+  secrets.items.brain-jwt-secret = {
+    target = "/var/lib/scout/brain-jwt-secret";
+    mode = "0400";
+  };
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
