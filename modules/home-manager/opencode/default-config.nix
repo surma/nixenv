@@ -78,7 +78,7 @@ with lib;
   config = mkMerge [
     (
       {
-        defaultConfigs.noti.enable = mkIf isEnabled true;
+        defaultConfigs.surma-noti.enable = mkIf isEnabled true;
         programs.opencode.enable = mkIf isEnabled true;
         programs.opencode = {
           plugins = {
