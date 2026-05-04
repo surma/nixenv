@@ -60,6 +60,12 @@ let
     fi
     exec ${brainPkg}/bin/brain serve --port 8080 $LLM_FLAGS
   '';
+
+  brainServePublicStart = pkgs.writeShellScript "brain-serve-public-start" ''
+    set -euo pipefail
+    export NO_COLOR=1
+    exec ${brainPkg}/bin/brain serve --port 8081 --public
+  '';
 in
 {
   systemd.tmpfiles.rules = [
@@ -73,7 +79,10 @@ in
     serviceConfig.MemoryMax = "8G";
   };
 
-  services.surmhosting.services.brain-serve.expose.port = 8080;
+  services.surmhosting.services.brain-serve.expose.ports = [
+    { port = 8080; hostname = "brain-serve"; }
+    { port = 8081; hostname = "public-brain"; rule = "Host(`public-brain.surma.technology`)"; }
+  ];
   services.surmhosting.services.brain-serve.container = {
     # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
     allowedDevices = [
@@ -124,6 +133,25 @@ in
           Restart = "always";
           RestartSec = 30;
           TimeoutStartSec = 900;
+        };
+      };
+
+      # Public brain-serve: read-only, serves only public: true docs.
+      # Starts after brain-serve so the clone/sync has completed.
+      systemd.services.brain-serve-public = {
+        description = "Brain public web server";
+        requires = [ "brain-serve.service" ];
+        after = [ "brain-serve.service" ];
+        path = [ brainPkg ];
+        environment = {
+          BRAIN_PATH = brainPath;
+          HOME = "/var/lib/brain-serve";
+        };
+        serviceConfig = {
+          ExecStart = "${brainServePublicStart}";
+          User = "containeruser";
+          Restart = "always";
+          RestartSec = 10;
         };
       };
 

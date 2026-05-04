@@ -17,6 +17,7 @@
     ./service-gitea-proxy.nix
     ./service-dump-proxy.nix
     ./service-brain-proxy.nix
+    ./service-public-brain-proxy.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
     ../../modules/services/surmhosting
