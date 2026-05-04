@@ -8,7 +8,7 @@
 with lib;
 let
   cfg = config.programs.noti;
-  notiPackage = pkgs.callPackage ../../../scripts/noti {
+  notiPackage = pkgs.callPackage ../../../packages/noti {
     defaultMobileDevice =
       if cfg.defaultMobileDevice != null then cfg.defaultMobileDevice else null;
   };

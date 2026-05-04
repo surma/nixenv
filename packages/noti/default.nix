@@ -3,6 +3,7 @@
   lib,
   stdenv,
   defaultMobileDevice ? null,
+  ...
 }:
 stdenv.mkDerivation {
   name = "noti";
