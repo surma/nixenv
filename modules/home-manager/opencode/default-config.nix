@@ -33,7 +33,6 @@ let
       }
 
       $env.OPENCODE_PROXY_BASE_URL = "${cfg.baseURL}"
-      $env.OPENCODE_USAGE_SOURCE = if ($args | is-empty) { "interactive" } else { "cli" }
 
       let opencode_bin = ($env.OPENCODE_PATH? | default "${
         inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.opencode

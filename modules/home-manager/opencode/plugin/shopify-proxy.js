@@ -1,5 +1,4 @@
 const DEFAULT_PROXY_BASE = "https://vendors.llm.surma.technology";
-const USAGE_TAG_PREFIX = ["opencode", "coding-agent"];
 const GOOGLE_ROUTE =
   "/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google";
 
@@ -17,8 +16,12 @@ function resolveProxyBase() {
   return DEFAULT_PROXY_BASE;
 }
 
-function buildUsageTag(sessionId, source) {
-  return JSON.stringify([...USAGE_TAG_PREFIX, source, sessionId]);
+// Matches the format emitted by world's @shopify-internal/opencode-proxy-plugin
+// so the proxy attributes traffic as opencode usage:
+//   ["opencode", <sessionId>, "rtk:<enabled|disabled>"]
+// nixenv has no rtk integration, so the third segment is always "rtk:disabled".
+function buildUsageTag(sessionId) {
+  return JSON.stringify(["opencode", sessionId, "rtk:disabled"]);
 }
 
 function getProviders(proxyBase) {
@@ -35,7 +38,6 @@ function getProviders(proxyBase) {
 
 export default async function shopifyProxyPlugin() {
   const sessionId = crypto.randomUUID();
-  const inputSource = process.env.OPENCODE_USAGE_SOURCE ?? "interactive";
 
   return {
     async config(config) {
@@ -45,7 +47,7 @@ export default async function shopifyProxyPlugin() {
         throw new Error("OpenCode proxy API key is not configured.");
       }
 
-      const usageTag = buildUsageTag(sessionId, inputSource);
+      const usageTag = buildUsageTag(sessionId);
       const providers = getProviders(resolveProxyBase());
 
       config.provider ??= {};
