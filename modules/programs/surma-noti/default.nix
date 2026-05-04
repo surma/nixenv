@@ -7,7 +7,7 @@
 }:
 with lib;
 let
-  cfg = config.programs.noti;
+  cfg = config.programs.surma-noti;
   notiPackage = pkgs.callPackage ../../../packages/noti {
     defaultMobileDevice =
       if cfg.defaultMobileDevice != null then cfg.defaultMobileDevice else null;
@@ -15,10 +15,10 @@ let
 in
 {
   imports = [
-    ../../home-manager/noti/default-config.nix
+    ../../home-manager/surma-noti/default-config.nix
   ];
 
-  options.programs.noti = {
+  options.programs.surma-noti = {
     enable = mkEnableOption "noti notification CLI";
     package = mkOption {
       type = types.package;

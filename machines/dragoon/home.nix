@@ -61,7 +61,7 @@ in
   programs.go.enable = true;
 
   customScripts.denix.enable = true;
-  programs.noti.enable = true;
+  programs.surma-noti.enable = true;
   customScripts.llm-proxy.enable = true;
   customScripts.ghclone.enable = true;
   customScripts.ccp.enable = true;
