@@ -56,7 +56,7 @@
   };
   secrets.items.brain-jwt-secret = {
     target = "/var/lib/scout/brain-jwt-secret";
-    mode = "0400";
+    mode = "0644";
   };
 
   boot.loader.systemd-boot.enable = true;

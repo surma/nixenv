@@ -67,7 +67,7 @@ let
     set -euo pipefail
     export NO_COLOR=1
     JWT_FLAGS=""
-    if [ -f "${jwtSecretFile}" ]; then
+    if [ -r "${jwtSecretFile}" ]; then
       JWT_SECRET="$(cat "${jwtSecretFile}")"
       JWT_FLAGS="--jwt-secret $JWT_SECRET"
     fi
