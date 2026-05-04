@@ -25,7 +25,7 @@ stdenv.mkDerivation {
 
     patchShebangs $out/bin/noti
     wrapProgram $out/bin/noti \
-      --set PATH ${lib.makeBinPath (with pkgs; lib.optionals stdenv.isLinux [ libnotify ])}
+      --prefix PATH : ${lib.makeBinPath (with pkgs; lib.optionals stdenv.isLinux [ libnotify ])}
 
     runHook postFixup
   '';
