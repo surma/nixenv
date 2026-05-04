@@ -110,7 +110,7 @@ in
       # time out during switch-to-configuration.
       systemd.services.brain-serve = {
         description = "Brain knowledge base web server";
-        wants = [ "network-online.target" ];
+        wants = [ "network-online.target" "brain-serve-public.service" ];
         after = [ "network-online.target" ];
         path = [
           brainPkg
@@ -137,10 +137,12 @@ in
       };
 
       # Public brain-serve: read-only, serves only public: true docs.
-      # Starts after brain-serve so the clone/sync has completed.
+      # BindsTo brain-serve so it starts/stops together with it.
+      # brain-serve is timer-activated (not WantedBy multi-user.target),
+      # so this unit must be pulled in via Wants on brain-serve.
       systemd.services.brain-serve-public = {
         description = "Brain public web server";
-        requires = [ "brain-serve.service" ];
+        bindsTo = [ "brain-serve.service" ];
         after = [ "brain-serve.service" ];
         path = [ brainPkg ];
         environment = {
@@ -154,6 +156,8 @@ in
           RestartSec = 10;
         };
       };
+
+
 
       # Start brain-serve 10s after boot, giving the container network
       # time to come up without blocking the boot sequence.
