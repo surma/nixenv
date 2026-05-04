@@ -301,6 +301,7 @@ in
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
           ../../modules/programs/opencode
+          ../../modules/programs/surma-noti
         ];
         extraSpecialArgs = {
           inherit inputs;
