@@ -16,12 +16,40 @@ All examples below use the Nexus URL. Replace the base URL with the Citadel one 
 
 ## CRITICAL: deploys require explicit user confirmation
 
-Deploying to the host is a **high-impact, potentially destructive** operation.
+Deploying is a **high-impact, potentially destructive** operation.
 
-1. **Always ask the user for explicit confirmation.** State which flake URL will be deployed.
+1. **Always ask the user for explicit confirmation.** State which host and flake URL will be deployed.
 2. **Wait for a clear "yes"** before calling the deploy API.
 3. Do not infer approval from the user asking you to make code changes — code changes and deployment are separate steps.
 4. If the deploy fails, report the full status and logs to the user. Do not automatically retry or attempt rollback without asking.
+
+## CRITICAL: local vs remote deploys — read this before ANY deploy
+
+The deploy API runs `nixos-rebuild switch` **on the machine where the admin service is running** by default. To deploy to a DIFFERENT machine, you **MUST** pass `target_host` in the request body. Without it, the config will be applied to the machine running the admin API — which **WILL BRICK THE MACHINE** if it's the wrong config (wrong hostname, wrong network config, wrong services).
+
+**Deploy request fields:**
+- `flake_url` (string): The NixOS flake to deploy (e.g., `github:surma/nixenv#nexus`)
+- `target_host` (string, optional): SSH host to deploy to remotely. If omitted, deploys LOCALLY.
+- `use_remote_sudo` (boolean, optional): Use sudo on the remote host.
+
+**Machine topology and correct deploy commands:**
+
+| Target | Admin API | flake_url | target_host | use_remote_sudo |
+|--------|-----------|-----------|-------------|-----------------|
+| Nexus  | Nexus     | `#nexus`  | *(omit)*    | *(omit)*        |
+| Citadel | Citadel  | `#citadel` | *(omit)*   | *(omit)*        |
+| Pylon  | Citadel   | `#pylon`  | `"pylon"`   | `false`         |
+
+**Deploying Pylon (via Citadel):**
+```bash
+curl -X POST http://admin.citadel.hosts.10.0.0.32.nip.io/api/deploy \
+  -H 'Content-Type: application/json' \
+  -d '{"flake_url":"github:surma/nixenv#pylon","target_host":"pylon"}'
+```
+
+The SSH config on Citadel maps `pylon` to `root@surmedge.hosts.surma.link` with the deploy key.
+
+**NEVER send a flake URL with a hostname fragment (e.g. `#pylon`, `#nexus`) to an admin API on a different machine without `target_host`. This applies the wrong NixOS config locally and will make the machine unresponsive.**
 
 ## API reference
 
