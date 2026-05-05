@@ -48,6 +48,7 @@ in
           FIREFLY_III_ACCESS_TOKEN_FILE = "/var/lib/credentials/firefly-importer/access-token.txt";
           LUNCH_FLOW_API_KEY_FILE = "/var/lib/credentials/firefly-importer/lunchflow-api-key.txt";
           TRUSTED_PROXIES = "**";
+          IMPORT_DIR_ALLOWLIST = "/nix/store";
         };
         poolConfig = {
           "request_terminate_timeout" = "1800";
