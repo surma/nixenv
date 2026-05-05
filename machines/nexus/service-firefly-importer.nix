@@ -13,6 +13,7 @@ let
     TRUSTED_PROXIES="**"
     FIREFLY_III_ACCESS_TOKEN="$(< /var/lib/credentials/firefly-importer/access-token.txt)"
     LUNCH_FLOW_API_KEY="$(< /var/lib/credentials/firefly-importer/lunchflow-api-key.txt)"
+    IMPORT_DIR_ALLOWLIST=/nix/store
     set +a
     exec ${artisan} importer:import ${importConfigFile}
   '';
