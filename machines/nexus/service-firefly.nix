@@ -46,10 +46,11 @@
               db = "/var/lib/firefly-iii/storage/database/database.sqlite";
             in
             pkgs.writeShellScript "firefly-enable-batch" ''
-              ${pkgs.sqlite}/bin/sqlite3 ${db} \
-                "INSERT INTO configuration (name, data, created_at, updated_at)
-                 VALUES ('enable_batch_processing', 'true', datetime('now'), datetime('now'))
-                 ON CONFLICT(name) DO UPDATE SET data='true', updated_at=datetime('now');"
+              ${pkgs.sqlite}/bin/sqlite3 ${db} <<'EOF'
+              DELETE FROM configuration WHERE name = 'enable_batch_processing' AND deleted_at IS NULL;
+              INSERT INTO configuration (name, data, created_at, updated_at)
+                VALUES ('enable_batch_processing', 'true', datetime('now'), datetime('now'));
+              EOF
             '';
         };
       };
