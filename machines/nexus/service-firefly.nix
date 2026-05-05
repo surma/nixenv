@@ -26,15 +26,13 @@
           DB_CONNECTION = "sqlite";
           APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
           TRUSTED_PROXIES = "**";
-          # Force running balance off for import performance
-          USE_RUNNING_BALANCE = "false";
+          USE_RUNNING_BALANCE = "true";
         };
       };
 
       # Enable batch processing so the data importer's batch_submission flag
       # is honored — defers rules, balance recalc, webhooks, and stats to
       # the end of the batch instead of running them per-transaction.
-      # Also disables running balance to avoid O(N) recalc on tag updates.
       systemd.services.firefly-iii-batch-config = {
         description = "Enable Firefly III batch processing";
         after = [ "firefly-iii-setup.service" ];
@@ -55,7 +53,7 @@
                 VALUES ('enable_batch_processing', 'true', datetime('now'), datetime('now'));
               DELETE FROM configuration WHERE name = 'use_running_balance' AND deleted_at IS NULL;
               INSERT INTO configuration (name, data, created_at, updated_at)
-                VALUES ('use_running_balance', 'false', datetime('now'), datetime('now'));
+                VALUES ('use_running_balance', 'true', datetime('now'), datetime('now'));
               EOF
             '';
         };

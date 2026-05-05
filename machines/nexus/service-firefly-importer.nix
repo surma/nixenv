@@ -61,7 +61,7 @@ in
         fastcgi_send_timeout 1800s;
       '';
 
-      # CLI import service — triggered manually via systemd, no timeout issues
+      # CLI import service — triggered manually or by timer
       systemd.services.firefly-import = {
         description = "Firefly III Data Importer - CLI Import";
         after = [ "firefly-iii-data-importer-setup.service" ];
@@ -74,6 +74,17 @@ in
           ExecStart = runImport;
           ReadWritePaths = [ "/var/lib/firefly-iii-data-importer" ];
           TimeoutStartSec = "7200";
+        };
+      };
+
+      # Run import twice daily (6:00 and 18:00)
+      systemd.timers.firefly-import = {
+        description = "Firefly III periodic import timer";
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnCalendar = "*-*-* 06,18:00:00";
+          Persistent = true;
+          RandomizedDelaySec = "15min";
         };
       };
     };
