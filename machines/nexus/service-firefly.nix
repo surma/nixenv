@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   secrets.items.firefly-app-key = {
     target = "/var/lib/firefly/app-key.txt";
@@ -26,6 +26,31 @@
           DB_CONNECTION = "sqlite";
           APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
           TRUSTED_PROXIES = "**";
+        };
+      };
+
+      # Enable batch processing so the data importer's batch_submission flag
+      # is honored — defers rules, balance recalc, webhooks, and stats to
+      # the end of the batch instead of running them per-transaction.
+      systemd.services.firefly-iii-batch-config = {
+        description = "Enable Firefly III batch processing";
+        after = [ "firefly-iii-setup.service" ];
+        requires = [ "firefly-iii-setup.service" ];
+        requiredBy = [ "phpfpm-firefly-iii.service" ];
+        before = [ "phpfpm-firefly-iii.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart =
+            let
+              db = "/var/lib/firefly-iii/storage/database/database.sqlite";
+            in
+            pkgs.writeShellScript "firefly-enable-batch" ''
+              ${pkgs.sqlite}/bin/sqlite3 ${db} \
+                "INSERT INTO configuration (name, data, created_at, updated_at)
+                 VALUES ('enable_batch_processing', 'true', datetime('now'), datetime('now'))
+                 ON CONFLICT(name) DO UPDATE SET data='true', updated_at=datetime('now');"
+            '';
         };
       };
     };
