@@ -17,5 +17,6 @@
     ../../assets/skills/planning
     ../../assets/skills/debugging
     ../../assets/skills/surma-writer
+    ../../assets/skills/triple-helix
   ];
 }
