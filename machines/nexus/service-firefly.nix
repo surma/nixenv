@@ -27,6 +27,7 @@
           APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
           TRUSTED_PROXIES = "**";
           USE_RUNNING_BALANCE = "true";
+          ALLOW_REGISTRATION = "true";
         };
       };
 
