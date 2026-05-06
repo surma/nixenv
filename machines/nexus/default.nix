@@ -34,6 +34,7 @@
     ./service-brain-serve.nix
     ./service-firefly.nix
     ./service-firefly-importer.nix
+    ./service-firefly-enricher.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
