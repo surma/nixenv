@@ -31,7 +31,7 @@ Turn ideas into fully formed designs through collaborative dialogue. Understand 
 ## After the Design
 
 **Documentation:**
-- Offer to write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Ask the user where to persist the design, if at all
 - Do not commit unless the user explicitly asks you to
 
 **Implementation (if continuing):**

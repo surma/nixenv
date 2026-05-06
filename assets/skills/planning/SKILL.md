@@ -9,7 +9,7 @@ description: Use when you have a spec or requirements for a multi-step task. Cov
 
 Write comprehensive implementation plans assuming the engineer has zero codebase context and questionable taste. Document everything: which files to touch, complete code, testing, verification commands.
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+Plans should probably be persisted. Ask the user where to.
 
 ### Plan Document Header
 
