@@ -1,0 +1,1136 @@
+{
+  "ASDA STORES UK": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "REDCLIFFE STORE PREMIER": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "REDCLIFFE STORE - PREMIER": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "McDonalds 8261307": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "KAROLINA ARUTYUNYA": {
+    "category": "Cash & Transfers",
+    "tags": []
+  },
+  "UBER EATS": {
+    "category": "Food Delivery",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SHELL CENTRALISED INDOOR": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "DM ASHFIELD": {
+    "category": "Cash & Transfers",
+    "tags": []
+  },
+  "DELIVEROO": {
+    "category": "Food Delivery",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SAINSBURYS SUPERMARKET LTD-SACAT": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "TFL TRAVEL CHARGE": {
+    "category": "Public Transport",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "TRAINLINECOM": {
+    "category": "Public Transport",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "GOOGLE SERVICES": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "WHSMITH": {
+    "category": "Restaurants & Takeaway",
+    "tags": []
+  },
+  "TESCO STORES": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "GOOGLE": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work"
+    ]
+  },
+  "WAITROSE CLIFTON": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "BETTER FOOD - WAPPING WHARF": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "MOKOKO COFFEE BAKERY - GAOL FERRY STEPS": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "BRITISH AIRWAYS": {
+    "category": "Air Travel",
+    "tags": [
+      "Travel"
+    ]
+  },
+  "BRISTOL ROYAL INFIRMARY": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "BONVIVAN": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "ARKLE G": {
+    "category": "Mortgage & Rent",
+    "tags": [
+      "Housing",
+      "Recurring"
+    ]
+  },
+  "CLUB LLOYDS FEE": {
+    "category": "Fees & Charges",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "MARKS AND SPENCER UK - BRISTOL CABOT CIRCUS": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "ASTERLEY BROS": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "TV LICENCE MBP": {
+    "category": "Utilities",
+    "tags": [
+      "Recurring",
+      "Housing"
+    ]
+  },
+  "DVLA-LS70EGX": {
+    "category": "Motoring",
+    "tags": [
+      "Transport",
+      "Recurring"
+    ]
+  },
+  "PET HEALTH CLUB": {
+    "category": "Pet Care",
+    "tags": [
+      "Pets",
+      "Recurring"
+    ]
+  },
+  "NUFFIELD HEALTH": {
+    "category": "Fitness & Wellness",
+    "tags": [
+      "Self Care",
+      "Recurring"
+    ]
+  },
+  "E.ON NEXT LTD": {
+    "category": "Utilities",
+    "tags": [
+      "Recurring",
+      "Housing"
+    ]
+  },
+  "BRISTOL CC L TAX": {
+    "category": "Council Tax",
+    "tags": [
+      "Recurring",
+      "Housing"
+    ]
+  },
+  "SANTANDER MORTGAGE": {
+    "category": "Mortgage & Rent",
+    "tags": [
+      "Recurring",
+      "Housing"
+    ]
+  },
+  "Butternut Box": {
+    "category": "Pet Care",
+    "tags": [
+      "Pets",
+      "Recurring"
+    ]
+  },
+  "SQUARESPACE": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work"
+    ]
+  },
+  "FIG 1": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "The Coffee Cabin": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "EE LIMITED": {
+    "category": "Utilities",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "TREEHOUSE HOTEL": {
+    "category": "Hotels & Accommodation",
+    "tags": [
+      "Travel"
+    ]
+  },
+  "BOOTS UK": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "SPOTIFY": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "HYPEROPTIC DD": {
+    "category": "Utilities",
+    "tags": [
+      "Recurring",
+      "Housing"
+    ]
+  },
+  "ANIMAL FRIENDS INS": {
+    "category": "Insurance",
+    "tags": [
+      "Recurring",
+      "Pets"
+    ]
+  },
+  "SIGNAL TECHNOLOGY FOUNDATION": {
+    "category": "Charity & Donations",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "SAINSBURYS": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "DNSIMPLE": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work",
+      "International"
+    ]
+  },
+  "Onlyfans.com*F": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "Ocado": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "FARM RIO": {
+    "category": "Refunds & Reimbursements",
+    "tags": [
+      "Income"
+    ]
+  },
+  "OF": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "CLUB LLOYDS WAIVED": {
+    "category": "Refunds & Reimbursements",
+    "tags": [
+      "Income"
+    ]
+  },
+  "INTEREST (GROSS)": {
+    "category": "Investment Income",
+    "tags": [
+      "Income"
+    ]
+  },
+  "Shopify": {
+    "category": "Salary",
+    "tags": [
+      "Income",
+      "Work",
+      "Recurring"
+    ]
+  },
+  "RINGGO PARKING": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "POST OFFICE": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "ADDICTED": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping"
+    ]
+  },
+  "NATIONAL LOTTERY": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "SELFRIDGES": {
+    "category": "Clothing & Accessories",
+    "tags": []
+  },
+  "MARKS AND SPENCER IMPERIAL PARK BRISTOL": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "McDonalds 8260182": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LEFT HANDED GIANT BREW": {
+    "category": "Pubs & Bars",
+    "tags": [
+      "Food"
+    ]
+  },
+  "ABERCROMBIE COM": {
+    "category": "Refunds & Reimbursements",
+    "tags": [
+      "Income"
+    ]
+  },
+  "EVERYMANWEB": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "BOOTS THE CHEMIST": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "ALL SAINTS DOT.COM": {
+    "category": "Refunds & Reimbursements",
+    "tags": [
+      "Income"
+    ]
+  },
+  "AWS EMEA": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Work",
+      "Recurring"
+    ]
+  },
+  "GOOGLE *WORKSPACE SURM": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work"
+    ]
+  },
+  "UBER PAYMENTS": {
+    "category": "Taxi & Rideshare",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "AIRALO": {
+    "category": "Utilities",
+    "tags": [
+      "Travel",
+      "International"
+    ]
+  },
+  "CLOUDRX": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "CLINICAL PARTNERS": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "PHARMACY2U": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "UBER RIDES": {
+    "category": "Taxi & Rideshare",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "THE WHITE HART": {
+    "category": "Pubs & Bars",
+    "tags": [
+      "Food"
+    ]
+  },
+  "TESCO": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SP ROUGH TRADE UK": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "MR WOLFS": {
+    "category": "Pubs & Bars",
+    "tags": [
+      "Food"
+    ]
+  },
+  "REDCLIFFE PHARMACY": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "Shopify (reimbursement)": {
+    "category": "Refunds & Reimbursements",
+    "tags": [
+      "Income",
+      "Work"
+    ]
+  },
+  "SOCIAL IMPACT COFFEE CIC": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "EVERYMANMEMBERSHIP": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "MARKS AND SPENCER WHITELADIES ROAD BRISTOL SF": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "YORK ROAD SERVICE STATION": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "CHIEVELEY BURGER KING": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "WWW.CABOTCIRCUS.COM": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "JOHNSONS CLEANERS 6149": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "AWS EMEA GBP": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Work",
+      "Recurring"
+    ]
+  },
+  "LUNCH FLOW": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Work"
+    ]
+  },
+  "THE ART WAREHOUSE": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "EE TOPUP  VESTA": {
+    "category": "Utilities",
+    "tags": []
+  },
+  "THE PI HUT": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Online Shopping"
+    ]
+  },
+  "TOCAYO": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "DTYM  MAY 26": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "NOCI": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "CAFFE PAOLA": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "THE COTTAGE INN": {
+    "category": "Pubs & Bars",
+    "tags": [
+      "Food"
+    ]
+  },
+  "PETS AT HOME": {
+    "category": "Pet Care",
+    "tags": [
+      "Pets"
+    ]
+  },
+  "NEW YORK TIMES": {
+    "category": "Subscriptions",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "ROYAL MAIL GROUP LIMIT": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "ABERCROMBIE AND FITCH OXF": {
+    "category": "Clothing & Accessories",
+    "tags": []
+  },
+  "BQ": {
+    "category": "Home & Garden",
+    "tags": [
+      "Housing"
+    ]
+  },
+  "BRISTOL GENERAL TE": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "BAR KROKETA BEAK STREET": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "Treehouse Hotel": {
+    "category": "Hotels & Accommodation",
+    "tags": [
+      "Travel"
+    ]
+  },
+  "SOUTHERN CO-OP BRISTOL REDCLIFFE STREET": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LIGHTSANDLAMPS.COM": {
+    "category": "Home & Garden",
+    "tags": [
+      "Online Shopping",
+      "Housing"
+    ]
+  },
+  "Bristol Beacon": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "RP *Fresh Car Valeting": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "PIZZAROVA": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "THE BRISTOL LOAF BEACON": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "Koottaan Bristol": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LOOP EARPLUGS": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care",
+      "Online Shopping",
+      "International"
+    ]
+  },
+  "EVERYMAN MEDIA GROUP": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "MICROSOFT*STORE": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring"
+    ]
+  },
+  "CABVISION": {
+    "category": "Taxi & Rideshare",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "Ku Lounge": {
+    "category": "Pubs & Bars",
+    "tags": [
+      "Food"
+    ]
+  },
+  "ZAIN LONDON": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "ZARA BRISTOL": {
+    "category": "Clothing & Accessories",
+    "tags": []
+  },
+  "OPIUM COCKTAIL DIM SUM PARLOUR": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SIX BY NICO": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "TFL TRAVEL CH": {
+    "category": "Public Transport",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "SAINSBURYS SUPERMARKET LTD-SACAT-SCO": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "4699 ANTHROPOLOGIECOUK": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping"
+    ]
+  },
+  "REWE": {
+    "category": "Groceries",
+    "tags": [
+      "Food",
+      "International"
+    ]
+  },
+  "MARKS AND SPENCER PADDINGTON SACAT": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "MARKS AND SPENCER HEATHROW SACAT": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "HEATH EXP AMEX GBP WEB": {
+    "category": "Public Transport",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "SumUp  *Taxenbetrieb A": {
+    "category": "Taxi & Rideshare",
+    "tags": [
+      "Transport",
+      "International"
+    ]
+  },
+  "DORINT HOTEL HAMBURG E": {
+    "category": "Hotels & Accommodation",
+    "tags": [
+      "Travel",
+      "International"
+    ]
+  },
+  "FIVE GUYS JV": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LITTLE VICTORIES": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LOOKFANTASTIC": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care",
+      "Online Shopping"
+    ]
+  },
+  "SK CHASE": {
+    "category": "Hotels & Accommodation",
+    "tags": [
+      "Travel"
+    ]
+  },
+  "SPORTS DIRECT": {
+    "category": "Clothing & Accessories",
+    "tags": []
+  },
+  "THE CHEESE CONNECTION": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "AARIA": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "McDonalds 8261635": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "LUSH RETAIL": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "TST-Cafe Rene Portland": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food",
+      "International"
+    ]
+  },
+  "UPS": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "*SPADINA & DUNDAS #3": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food",
+      "International"
+    ]
+  },
+  "SDM 1393": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care",
+      "International"
+    ]
+  },
+  "CLIFTON VETERINARY PRA": {
+    "category": "Pet Care",
+    "tags": [
+      "Pets"
+    ]
+  },
+  "TFL BUSINESS BOPS WEB": {
+    "category": "Public Transport",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "THE BRISTOL LOAF - BEDMINSTER": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "THE SUKHA COMPANY": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping",
+      "International"
+    ]
+  },
+  "CNG SOLID TRUST RK FAMILY TRUST": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping",
+      "International"
+    ]
+  },
+  "CAFE NERO": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "HETZNER ONLINE GMBH": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work",
+      "International"
+    ]
+  },
+  "STOP & SHOP": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "TST-Wahaca - Covent Ga": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "PPOINT_*BIG BITE LTD 1": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "JUSTPARK PARKING": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "BOOKHAUS": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "REMARKABLE OPERATIONS": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Work"
+    ]
+  },
+  "BENTO BOSS": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SINGLE VARIETY": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "THEOUTNET": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping",
+      "International"
+    ]
+  },
+  "QUEEN SQUARE DENTAL CL": {
+    "category": "Healthcare",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "GATWICK AIRPORT": {
+    "category": "Air Travel",
+    "tags": [
+      "Travel",
+      "Transport"
+    ]
+  },
+  "LUSH UK": {
+    "category": "Beauty & Personal Care",
+    "tags": [
+      "Self Care"
+    ]
+  },
+  "www.cabotcircus.com": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "FOOD FOR LIFE": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "R O O T": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "WH SMITH BRISTOL ROYAL INFIRMARY": {
+    "category": "Restaurants & Takeaway",
+    "tags": []
+  },
+  "BAUWERK COLOUR UK": {
+    "category": "Home & Garden",
+    "tags": [
+      "Housing",
+      "Online Shopping"
+    ]
+  },
+  "REDBUBBLE": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping"
+    ]
+  },
+  "DB KEBAB": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "PREMIER SHOP HOTWELLS ROAD": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "NESPRESSO": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "EMILY TORR": {
+    "category": "Cash & Transfers",
+    "tags": []
+  },
+  "EVERYMAN": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "ST PETERS HOSPICE": {
+    "category": "Charity & Donations",
+    "tags": []
+  },
+  "PASSENGER": {
+    "category": "Clothing & Accessories",
+    "tags": [
+      "Online Shopping"
+    ]
+  },
+  "PPOINT_*CLIFTON CONV S": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "WHO GIVES A CRAP": {
+    "category": "Home & Garden",
+    "tags": [
+      "Online Shopping",
+      "Housing"
+    ]
+  },
+  "BACKWELL SERVICE STATION": {
+    "category": "Motoring",
+    "tags": [
+      "Transport"
+    ]
+  },
+  "PIPP CO": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "FULL COURT PRESS - SPECIALTY COFFEE": {
+    "category": "Coffee",
+    "tags": [
+      "Food"
+    ]
+  },
+  "PREMIER STORES": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "MARKS SPENCER WATERLOO STATION SOUTH": {
+    "category": "Groceries",
+    "tags": [
+      "Food"
+    ]
+  },
+  "KCL KINGS FOOD": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "BANDCAMPDISCOLYPSO": {
+    "category": "Entertainment",
+    "tags": [
+      "International"
+    ]
+  },
+  "THE PANCAKE MAN": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  },
+  "SEZANE": {
+    "category": "Clothing & Accessories",
+    "tags": []
+  },
+  "BRISTOL FILM FESTIVAL": {
+    "category": "Entertainment",
+    "tags": []
+  },
+  "SCRIBBLER": {
+    "category": "Home & Garden",
+    "tags": []
+  },
+  "SumUp **THE ANIMAL REH": {
+    "category": "Charity & Donations",
+    "tags": []
+  },
+  "CLOUDFLARE PD": {
+    "category": "Software & Tech Services",
+    "tags": [
+      "Recurring",
+      "Work"
+    ]
+  },
+  "HOTEL CHALET MIRABELL": {
+    "category": "Hotels & Accommodation",
+    "tags": [
+      "Travel",
+      "International"
+    ]
+  },
+  "CLR*JKSRESTAURANTS": {
+    "category": "Restaurants & Takeaway",
+    "tags": [
+      "Food"
+    ]
+  }
+}

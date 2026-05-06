@@ -17,6 +17,11 @@ let
     set +a
     exec ${artisan} importer:import ${importConfigFile}
   '';
+
+  stampImportSuccess = pkgs.writeShellScript "firefly-import-stamp-success.sh" ''
+    set -euo pipefail
+    ${pkgs.coreutils}/bin/date -u +%FT%T.%NZ > /var/lib/firefly-importer-stamps/last-import-success
+  '';
 in
 {
   secrets.items.firefly-access-token = {
@@ -27,6 +32,10 @@ in
     target = "/var/lib/firefly-importer/lunchflow-api-key.txt";
     mode = "0644";
   };
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/firefly-importer-stamps 0755 root root -"
+  ];
 
   services.surmhosting.services.firefly-imp.containerService = {
     wants = [ "secrets.service" ];
@@ -72,7 +81,11 @@ in
           Group = "nginx";
           WorkingDirectory = fireflyImporter;
           ExecStart = runImport;
-          ReadWritePaths = [ "/var/lib/firefly-iii-data-importer" ];
+          ExecStartPost = stampImportSuccess;
+          ReadWritePaths = [
+            "/var/lib/firefly-iii-data-importer"
+            "/var/lib/firefly-importer-stamps"
+          ];
           TimeoutStartSec = "7200";
         };
       };
@@ -93,6 +106,12 @@ in
       mountPoint = "/var/lib/credentials/firefly-importer";
       hostPath = "/var/lib/firefly-importer";
       isReadOnly = true;
+    };
+
+    bindMounts.stamps = {
+      mountPoint = "/var/lib/firefly-importer-stamps";
+      hostPath = "/var/lib/firefly-importer-stamps";
+      isReadOnly = false;
     };
   };
 }

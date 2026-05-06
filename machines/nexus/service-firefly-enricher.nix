@@ -42,6 +42,7 @@ in
       "network-online.target"
       "secrets.service"
     ];
+    unitConfig.OnSuccess = "firefly-categoriser.service";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = runEnricher;
@@ -50,15 +51,12 @@ in
     };
   };
 
-  # Run shortly after each scheduled import (06:00, 18:00). 15 min is plenty
-  # for the importer to finish.
-  systemd.timers.firefly-enricher = {
-    description = "Firefly III enricher periodic timer";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "*-*-* 06,18:15:00";
-      Persistent = true;
-      RandomizedDelaySec = "10min";
+  systemd.paths.firefly-pipeline = {
+    description = "Trigger Firefly enrichment pipeline after successful import";
+    wantedBy = [ "multi-user.target" ];
+    pathConfig = {
+      PathChanged = "/var/lib/firefly-importer-stamps/last-import-success";
+      Unit = "firefly-enricher.service";
     };
   };
 }
