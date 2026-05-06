@@ -909,11 +909,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1777817544,
-        "narHash": "sha256-Za6JiUBRBG09vgYRR/8djPqt4dCVOETVBHG208Fv8Uw=",
+        "lastModified": 1778085006,
+        "narHash": "sha256-Dt3zq1h2mjJVYzCUcaGMwP/Lj80apTCRqY4DisXESj4=",
         "ref": "main",
-        "rev": "9fa1510ae2dbd550b7f8322008003bf14520546c",
-        "revCount": 12,
+        "rev": "d91b739b5d51ba4807ded00fc7fc26b3ce29bc57",
+        "revCount": 13,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/nixos-admin-web.git"
       },
@@ -1283,11 +1283,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1777827608,
-        "narHash": "sha256-j94SGj4onDUbXj+YS6q/I4SPrWSp8D48ExqfmVXWGi8=",
+        "lastModified": 1778083684,
+        "narHash": "sha256-UeGrvGkpCU9iGzvYJ+m3BoTyjHvJiRiScT2dId+aEGA=",
         "ref": "main",
-        "rev": "3d559a3e1d1d122a6df9296cdc0d2d970d8278fb",
-        "revCount": 46,
+        "rev": "9e4ac72233a377e1e4bec24fada68c4d2bd8bf9f",
+        "revCount": 48,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
       },
