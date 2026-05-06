@@ -33,7 +33,7 @@ let
 in
 {
   systemd.services.firefly-enricher = {
-    description = "Firefly III enricher (PayPal merchant resolution from Gmail)";
+    description = "Firefly III enricher (resolves opaque merchants from Gmail receipts)";
     after = [
       "network-online.target"
       "secrets.service"
