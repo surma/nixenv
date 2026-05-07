@@ -5,8 +5,12 @@ let
   fireflyImporter = pkgs.firefly-iii-data-importer;
   artisan = "${fireflyImporter}/artisan";
 
+  importCompletedMarker = "/var/lib/firefly-iii-data-importer/import-completed-for-pipeline";
+  importPipelineLog = "/var/lib/firefly-iii-data-importer/import-for-pipeline.log";
+
   runImport = pkgs.writeShellScript "firefly-run-import.sh" ''
     set -euo pipefail
+    ${pkgs.coreutils}/bin/rm -f ${importCompletedMarker}
     set -a
     FIREFLY_III_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
     VANITY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
@@ -15,12 +19,25 @@ let
     LUNCH_FLOW_API_KEY="$(< /var/lib/credentials/firefly-importer/lunchflow-api-key.txt)"
     IMPORT_DIR_ALLOWLIST=/nix/store
     set +a
-    exec ${artisan} importer:import ${importConfigFile}
+
+    set +e
+    ${artisan} importer:import ${importConfigFile} 2>&1 | ${pkgs.coreutils}/bin/tee ${importPipelineLog}
+    import_status=''${PIPESTATUS[0]}
+    set -e
+
+    if ${pkgs.gnugrep}/bin/grep -q '^Done!$' ${importPipelineLog} && ${pkgs.gnugrep}/bin/grep -q 'Created event ImportedTransactions' ${importPipelineLog}; then
+      ${pkgs.coreutils}/bin/date -u +%FT%T.%NZ > ${importCompletedMarker}
+    fi
+
+    exit "$import_status"
   '';
 
-  stampImportSuccess = pkgs.writeShellScript "firefly-import-stamp-success.sh" ''
+  stampImportCompleted = pkgs.writeShellScript "firefly-import-stamp-completed.sh" ''
     set -euo pipefail
-    ${pkgs.coreutils}/bin/date -u +%FT%T.%NZ > /var/lib/firefly-importer-stamps/last-import-success
+    if [[ -e ${importCompletedMarker} ]]; then
+      ${pkgs.coreutils}/bin/date -u +%FT%T.%NZ > /var/lib/firefly-importer-stamps/last-import-success
+      ${pkgs.coreutils}/bin/rm -f ${importCompletedMarker}
+    fi
   '';
 in
 {
@@ -81,7 +98,7 @@ in
           Group = "nginx";
           WorkingDirectory = fireflyImporter;
           ExecStart = runImport;
-          ExecStartPost = stampImportSuccess;
+          ExecStopPost = "+${stampImportCompleted}";
           ReadWritePaths = [
             "/var/lib/firefly-iii-data-importer"
             "/var/lib/firefly-importer-stamps"

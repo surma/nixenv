@@ -25,6 +25,7 @@ let
   runEnricher = pkgs.writeShellScript "firefly-run-enricher.sh" ''
     set -euo pipefail
     export PATH=${gwsPkg}/bin:${pkgs.coreutils}/bin:$PATH
+    export HOME=/var/cache/firefly-enricher
     export GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/var/lib/scout/gws-credentials.json
     export FIREFLY_TOKEN_FILE=/var/lib/firefly-importer/access-token.txt
     export FIREFLY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
@@ -47,6 +48,7 @@ in
       Type = "oneshot";
       ExecStart = runEnricher;
       DynamicUser = true;
+      CacheDirectory = "firefly-enricher";
       TimeoutStartSec = "1800";
     };
   };
