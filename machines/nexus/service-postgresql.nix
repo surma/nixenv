@@ -31,8 +31,8 @@ in
 
   services.postgresql = {
     enable = true;
-    package = pkgs.postgresql_16;
-    dataDir = "/dump/state/postgres/16";
+    package = pkgs.postgresql_17;
+    dataDir = "/dump/state/postgres/17";
 
     # Listen on every interface; access is gated by pg_hba below + the
     # firewall rules at the bottom of this file.
@@ -67,7 +67,8 @@ in
   #
   # Required state on disk:
   #   /dump/state/postgres     drwxr-xr-x  postgres:postgres
-  #   /dump/state/postgres/16  drwx------  postgres:postgres
+  #   /dump/state/postgres/17  drwx------  postgres:postgres   (currently active)
+  #   /dump/state/postgres/16  drwx------  postgres:postgres   (old PG16 cluster, kept until verified)
 
   # After Postgres is up *and* the agenix env files exist on disk, set each
   # role's password and grant it ownership of its two databases. Idempotent;
@@ -116,4 +117,5 @@ in
   # so a per-iface 5432 rule scoped to enp2s0/tailscale0 would silently lock
   # out the *arr containers.
   networking.firewall.allowedTCPPorts = [ 5432 ];
+
 }
