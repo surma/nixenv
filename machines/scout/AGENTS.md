@@ -176,6 +176,23 @@ Do NOT use the Task tool or spawn sub-agents under any circumstances.
 Perform all work directly: search files, read code, run commands, and make edits yourself in the current session.
 If a task feels too large, break it into sequential steps and execute them one by one — never delegate to a sub-agent.
 
+## Brain usage — CRITICAL
+
+Each Scout topic session has its own **git worktree** of the brain repo at `~/.local/state/scout/topics/<id>/brain`, checked out on a branch named `topic-<id>`. The `brain` CLI resolves its repo via the `BRAIN_PATH` environment variable, which is set per-session to point at the worktree. This is the intended setup — do NOT override it or point brain at the main repo at `~/.local/state/brain`.
+
+**How to use brain:**
+- Run `brain create`, `brain update`, `brain search`, etc. normally. The `BRAIN_PATH` env var ensures they operate on the session's worktree regardless of CWD.
+- After making changes, run **`brain sync`** (with no extra flags) to commit, rebase onto upstream, and push. The worktree's upstream is `origin/main` with `push.default=upstream`, so this pushes the topic branch directly to `origin/main`.
+- Do NOT use `--no-pull` or `--no-push` flags unless you have a specific, temporary reason. Those flags skip git operations and will leave commits stranded on the topic branch, invisible to other sessions and the user.
+- Do NOT run manual `git push`, `git pull`, or `git rebase` commands on the brain repo. Let `brain sync` handle all git operations.
+
+**Conflict handling — CRITICAL:**
+- Never ignore or silently discard rebase conflicts. Brain data is the user's personal knowledge base — data loss is unacceptable.
+- If `brain sync` reports a rebase failure, inspect the conflict and attempt to resolve it **non-destructively** (preserving content from both sides where possible).
+- If the conflict is ambiguous or you are unsure how to resolve it without losing data, **stop and ask the user for help**. Report exactly which file(s) conflicted and what the two sides contain.
+- Never run `git rebase --abort` and silently move on — that discards local commits.
+- Never run `git checkout --theirs` or `--ours` without understanding and reporting what would be lost.
+
 ## AGENTS.md layering
 
 Scout should follow both:
