@@ -14,6 +14,19 @@ in
       services.lidarr.dataDir = "/dump/state/lidarr";
       services.lidarr.settings.server.port = 8080;
       services.lidarr.settings.auth.method = "External";
+
+      systemd.services.lidarr-sqlite-wal = {
+        description = "Enable WAL mode for Lidarr SQLite databases";
+        wantedBy = [ "lidarr.service" ];
+        before = [ "lidarr.service" ];
+        serviceConfig.Type = "oneshot";
+        path = [ pkgs.sqlite ];
+        script = ''
+          for db in /dump/state/lidarr/*.db; do
+            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
+          done
+        '';
+      };
     };
 
     bindMounts = {
