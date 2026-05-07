@@ -3,6 +3,11 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
+  services.surmhosting.services.prowlarr.containerService = {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" "postgresql.service" ];
+  };
+
   services.surmhosting.services.prowlarr.expose.port = 8080;
   services.surmhosting.services.prowlarr.container = {
     config = {
@@ -10,27 +15,34 @@ in
 
       services.prowlarr.enable = true;
       services.prowlarr.package = pkgs-unstable.prowlarr;
-      services.prowlarr.settings.server.port = 8080;
-      services.prowlarr.settings.auth.method = "External";
-
-      systemd.services.prowlarr-sqlite-wal = {
-        description = "Enable WAL mode for Prowlarr SQLite databases";
-        wantedBy = [ "prowlarr.service" ];
-        before = [ "prowlarr.service" ];
-        serviceConfig.Type = "oneshot";
-        path = [ pkgs.sqlite ];
-        script = ''
-          for db in /var/lib/private/prowlarr/*.db; do
-            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
-          done
-        '';
+      services.prowlarr.settings = {
+        server.port = 8080;
+        auth.method = "External";
+        # Connection details; the PASSWORD comes from environmentFiles below
+        # so it is not baked into the world-readable Nix store.
+        postgres = {
+          host = "10.201.12.1"; # surmhosting host-side veth address
+          port = 5432;
+          user = "prowlarr";
+          maindb = "prowlarr-main";
+          logdb = "prowlarr-log";
+        };
       };
+      services.prowlarr.environmentFiles = [
+        "/var/lib/credentials/prowlarr/env"
+      ];
     };
 
     bindMounts.state = {
       mountPoint = "/var/lib/private/prowlarr";
       hostPath = "/dump/state/prowlarr";
       isReadOnly = false;
+    };
+
+    bindMounts.creds = {
+      mountPoint = "/var/lib/credentials/prowlarr";
+      hostPath = "/var/lib/postgres-arr/prowlarr";
+      isReadOnly = true;
     };
   };
 }
