@@ -14,6 +14,19 @@ in
       services.sonarr.dataDir = "/dump/state/sonarr";
       services.sonarr.settings.server.port = 8080;
       services.sonarr.settings.auth.method = "External";
+
+      systemd.services.sonarr-sqlite-wal = {
+        description = "Enable WAL mode for Sonarr SQLite databases";
+        wantedBy = [ "sonarr.service" ];
+        before = [ "sonarr.service" ];
+        serviceConfig.Type = "oneshot";
+        path = [ pkgs.sqlite ];
+        script = ''
+          for db in /dump/state/sonarr/*.db; do
+            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
+          done
+        '';
+      };
     };
 
     bindMounts = {

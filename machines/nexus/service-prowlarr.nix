@@ -12,6 +12,19 @@ in
       services.prowlarr.package = pkgs-unstable.prowlarr;
       services.prowlarr.settings.server.port = 8080;
       services.prowlarr.settings.auth.method = "External";
+
+      systemd.services.prowlarr-sqlite-wal = {
+        description = "Enable WAL mode for Prowlarr SQLite databases";
+        wantedBy = [ "prowlarr.service" ];
+        before = [ "prowlarr.service" ];
+        serviceConfig.Type = "oneshot";
+        path = [ pkgs.sqlite ];
+        script = ''
+          for db in /var/lib/private/prowlarr/*.db; do
+            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
+          done
+        '';
+      };
     };
 
     bindMounts.state = {

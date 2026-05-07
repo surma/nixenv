@@ -14,6 +14,19 @@ in
       services.radarr.dataDir = "/dump/state/radarr";
       services.radarr.settings.server.port = 8080;
       services.radarr.settings.auth.method = "External";
+
+      systemd.services.radarr-sqlite-wal = {
+        description = "Enable WAL mode for Radarr SQLite databases";
+        wantedBy = [ "radarr.service" ];
+        before = [ "radarr.service" ];
+        serviceConfig.Type = "oneshot";
+        path = [ pkgs.sqlite ];
+        script = ''
+          for db in /dump/state/radarr/*.db; do
+            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
+          done
+        '';
+      };
     };
 
     bindMounts = {
