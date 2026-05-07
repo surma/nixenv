@@ -21,6 +21,7 @@ That means:
 
 - **Approval is per-change, not per-session.** Each new proposed action requires its own confirmation. A previous "yes" or instruction does not carry forward to cover unrelated changes made later in the conversation.
 - **Destructive or production-impacting actions always need explicit approval.** This includes: deploying, deleting files or directories on production systems (even caches), force-pushing, reverting commits on shared branches, and modifying infrastructure config. Always state what you intend to do and wait for a clear "yes" before executing.
+- **Never delete, remove, or overwrite user data without asking first.** This applies broadly — files, downloads, torrents, media, database entries, caches, backups. If an action cannot be trivially undone, state exactly what you intend to delete and wait for explicit confirmation. No exceptions, no matter how obvious the cleanup seems. "They probably don't need this anymore" is not a reason to skip asking.
 - **Proposing is not the same as getting approval.** If you describe a plan and the user does not respond with confirmation, do not proceed. Silence is not consent.
 - **Asking a question means waiting for the answer.** If you present the user with options or ask for their preference, you must stop and wait for their response before taking any action on that topic. Do not "work ahead" by picking an option yourself while waiting. The act of asking implies you do not have enough information to proceed.
 
