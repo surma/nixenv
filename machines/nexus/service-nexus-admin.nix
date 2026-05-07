@@ -78,7 +78,7 @@ in
           "openai/gpt-5.1/high"
           "openai/gpt-5.1/medium"
         ];
-        presetValuesOnly = true;
+        presetValuesOnly = false;
       };
     };
   };
