@@ -310,5 +310,33 @@
         "nexus"
       ];
     };
+    lidarr-postgres-env = {
+      contents = ../secrets/lidarr-postgres-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    sonarr-postgres-env = {
+      contents = ../secrets/sonarr-postgres-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    radarr-postgres-env = {
+      contents = ../secrets/radarr-postgres-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
+    prowlarr-postgres-env = {
+      contents = ../secrets/prowlarr-postgres-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
