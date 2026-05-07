@@ -16,6 +16,20 @@
 - When creating a commit, always pass `--no-gpg-sign`.
 - Without `--no-gpg-sign`, the commit may hang indefinitely waiting for GPG interaction.
 
+## Brain lookup discipline
+
+When using the `brain` CLI, choose the lookup mode based on what you already know.
+Do not perform ritual searches.
+
+- If you already know a document's docid or canonical slug-docid, use it directly:
+  `brain cat <docid>` and `brain meta --absolute-path --incoming --outgoing <docid>`.
+- If you know metadata constraints, use structured lookup first:
+  `brain ls --json --field type=project --field status=active`.
+- If you know exact words, identifiers, or error text, use full-text search:
+  `brain search --mode=fts "exact phrase"`.
+- Use semantic search only when you are actually discovering information and do
+  not already have a docid, metadata handle, or exact-text handle.
+
 # Behavioral Guidelines
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
