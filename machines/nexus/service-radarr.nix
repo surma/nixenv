@@ -3,6 +3,11 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
+  services.surmhosting.services.radarr.containerService = {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" "postgresql.service" ];
+  };
+
   services.surmhosting.services.radarr.expose.port = 8080;
   services.surmhosting.services.radarr.container = {
     config = {
@@ -12,21 +17,20 @@ in
       services.radarr.package = pkgs-unstable.radarr;
       services.radarr.user = "containeruser";
       services.radarr.dataDir = "/dump/state/radarr";
-      services.radarr.settings.server.port = 8080;
-      services.radarr.settings.auth.method = "External";
-
-      systemd.services.radarr-sqlite-wal = {
-        description = "Enable WAL mode for Radarr SQLite databases";
-        wantedBy = [ "radarr.service" ];
-        before = [ "radarr.service" ];
-        serviceConfig.Type = "oneshot";
-        path = [ pkgs.sqlite ];
-        script = ''
-          for db in /dump/state/radarr/*.db; do
-            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
-          done
-        '';
+      services.radarr.settings = {
+        server.port = 8080;
+        auth.method = "External";
+        postgres = {
+          host = "10.201.13.1"; # surmhosting host-side veth address (alpha-stable)
+          port = 5432;
+          user = "radarr";
+          maindb = "radarr-main";
+          logdb = "radarr-log";
+        };
       };
+      services.radarr.environmentFiles = [
+        "/var/lib/credentials/radarr/env"
+      ];
     };
 
     bindMounts = {
@@ -44,6 +48,11 @@ in
         mountPoint = "/dump/state/qbittorrent";
         hostPath = "/dump/state/qbittorrent";
         isReadOnly = false;
+      };
+      creds = {
+        mountPoint = "/var/lib/credentials/radarr";
+        hostPath = "/var/lib/postgres-arr/radarr";
+        isReadOnly = true;
       };
     };
   };

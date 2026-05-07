@@ -3,6 +3,11 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
+  services.surmhosting.services.sonarr.containerService = {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" "postgresql.service" ];
+  };
+
   services.surmhosting.services.sonarr.expose.port = 8080;
   services.surmhosting.services.sonarr.container = {
     config = {
@@ -12,21 +17,20 @@ in
       services.sonarr.package = pkgs-unstable.sonarr;
       services.sonarr.user = "containeruser";
       services.sonarr.dataDir = "/dump/state/sonarr";
-      services.sonarr.settings.server.port = 8080;
-      services.sonarr.settings.auth.method = "External";
-
-      systemd.services.sonarr-sqlite-wal = {
-        description = "Enable WAL mode for Sonarr SQLite databases";
-        wantedBy = [ "sonarr.service" ];
-        before = [ "sonarr.service" ];
-        serviceConfig.Type = "oneshot";
-        path = [ pkgs.sqlite ];
-        script = ''
-          for db in /dump/state/sonarr/*.db; do
-            [ -f "$db" ] && sqlite3 "$db" "PRAGMA journal_mode=WAL;" && echo "WAL enabled: $db"
-          done
-        '';
+      services.sonarr.settings = {
+        server.port = 8080;
+        auth.method = "External";
+        postgres = {
+          host = "10.201.17.1"; # surmhosting host-side veth address (alpha-stable)
+          port = 5432;
+          user = "sonarr";
+          maindb = "sonarr-main";
+          logdb = "sonarr-log";
+        };
       };
+      services.sonarr.environmentFiles = [
+        "/var/lib/credentials/sonarr/env"
+      ];
     };
 
     bindMounts = {
@@ -44,6 +48,11 @@ in
         mountPoint = "/dump/state/qbittorrent";
         hostPath = "/dump/state/qbittorrent";
         isReadOnly = false;
+      };
+      creds = {
+        mountPoint = "/var/lib/credentials/sonarr";
+        hostPath = "/var/lib/postgres-arr/sonarr";
+        isReadOnly = true;
       };
     };
   };
