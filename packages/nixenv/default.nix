@@ -1,34 +1,15 @@
 {
-  stdenv,
-  lib,
-  nushell,
-  makeWrapper,
+  callPackage,
+  writeShellApplication,
   ...
 }:
 let
-  script = ./nixenv;
+  nixenvupdate = callPackage ../../scripts/nixenvupdate { };
 in
-stdenv.mkDerivation {
+writeShellApplication {
   name = "nixenv";
-  buildInputs = [
-    nushell
-  ];
-  nativeBuildInputs = [
-    makeWrapper
-  ];
-  src = script;
-  dontUnpack = true;
-  buildPhase = ''
-    runHook preBuild
-
-    mkdir -p $out/bin
-    cp $src $out/bin/nixenv
-
-    patchShebangs $out/bin/nixenv
-
-    runHook postBuild
-  '';
-  postFixup = ''
-    wrapProgram $out/bin/nixenv
+  runtimeInputs = [ nixenvupdate ];
+  text = ''
+    exec nixenvupdate "$@"
   '';
 }

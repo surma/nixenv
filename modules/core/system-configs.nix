@@ -40,6 +40,7 @@ let
   # Home-manager-only feature/service modules.
   homeManagerFeatureModules = [
     ../home-manager/agent
+    ../home-manager/nixenv
     ../features/hyprland.nix
     ../features/screenshot.nix
     ../services/syncthing
@@ -47,6 +48,11 @@ let
 
   systemModules = sharedFeatureModules ++ systemFeatureModules ++ systemProgramModules;
   homeManagerModules = sharedFeatureModules ++ homeManagerFeatureModules ++ programModules;
+
+  mkNixenvContext = configKind: machineName: {
+    flakeRef = "github:surma/nixenv";
+    inherit machineName configKind;
+  };
 in
 {
   options = {
@@ -110,6 +116,9 @@ in
   config.flake = {
     nixosConfigurations = lib.mapAttrs (
       name: cfg:
+      let
+        nixenv = mkNixenvContext "nixos" name;
+      in
       inputs.nixpkgs.lib.nixosSystem {
         system = "x86_64-linux"; # Default, can be overridden in machine config
         modules = [
@@ -125,7 +134,7 @@ in
               home-manager = {
                 sharedModules = homeManagerModules;
                 extraSpecialArgs = {
-                  inherit inputs;
+                  inherit inputs nixenv;
                   systemManager = "home-manager";
                 };
               };
@@ -133,7 +142,7 @@ in
           )
         ];
         specialArgs = {
-          inherit inputs;
+          inherit inputs nixenv;
           system = "x86_64-linux";
           systemManager = "nixos";
         };
@@ -142,6 +151,9 @@ in
 
     darwinConfigurations = lib.mapAttrs (
       name: cfg:
+      let
+        nixenv = mkNixenvContext "darwin" name;
+      in
       inputs.nix-darwin.lib.darwinSystem {
         system = "aarch64-darwin"; # Default, can be overridden
         modules = [
@@ -160,7 +172,7 @@ in
               home-manager = {
                 sharedModules = homeManagerModules;
                 extraSpecialArgs = {
-                  inherit inputs;
+                  inherit inputs nixenv;
                   systemManager = "home-manager";
                 };
               };
@@ -168,7 +180,7 @@ in
           )
         ];
         specialArgs = {
-          inherit inputs;
+          inherit inputs nixenv;
           system = "aarch64-darwin";
           systemManager = "nix-darwin";
         };
@@ -178,6 +190,7 @@ in
     homeConfigurations = lib.mapAttrs (
       name: cfg:
       let
+        nixenv = mkNixenvContext "home-manager" name;
         system =
           config.homeConfigurationSystems.${name}
             or (throw "homeConfigurations.${name}: missing required homeConfigurationSystems.${name}");
@@ -186,7 +199,7 @@ in
         pkgs = inputs.nixpkgs.legacyPackages.${system};
         modules = homeManagerModules ++ [ cfg ];
         extraSpecialArgs = {
-          inherit inputs system;
+          inherit inputs nixenv system;
           systemManager = "home-manager";
         };
       }

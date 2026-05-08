@@ -26,8 +26,6 @@ in
   ];
 
   home.stateVersion = "24.05";
-
-  home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#surmbook";
   defaultConfigs.agents.enable = true;
 
   allowedUnfreeApps = [

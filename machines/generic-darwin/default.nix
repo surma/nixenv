@@ -18,7 +18,5 @@
     ];
 
     home.stateVersion = "25.11";
-
-    home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#generic-darwin";
   };
 }

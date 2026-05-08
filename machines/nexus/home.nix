@@ -24,8 +24,6 @@
     secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
 
     home.stateVersion = "25.05";
-
-    home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#nexus";
     defaultConfigs.agents.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;

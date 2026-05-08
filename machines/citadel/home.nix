@@ -24,8 +24,6 @@
 
     home.stateVersion = "25.05";
 
-    home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#citadel";
-
     defaultConfigs.agents.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;

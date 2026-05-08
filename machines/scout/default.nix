@@ -22,8 +22,6 @@
       package = lib.mkDefault pkgs.nix;
       settings.experimental-features = "nix-command flakes pipe-operators";
     };
-
-    home.sessionVariables.FLAKE_CONFIG_URI = "path:${config.home.homeDirectory}/src/github.com/surma/nixenv#scout";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
     home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
