@@ -1,10 +1,15 @@
 # Global Agent Rules
 
-## `tail` must always be paired with `tee`
+## Preserve full output when shortening command output
 
-- **NEVER** use `tail` without `tee`.
-- Truncating output with `tail -n 20` discards earlier lines, which often contain the actual error diagnostics. Re-running long commands to recover lost output is wasteful.
-- **Correct pattern:** `command | tee /tmp/some-file | tail -n 20` — keeps output short while preserving the full log in a file for inspection.
+- Do not discard newly generated command output just to keep tool output short.
+- If you intentionally shorten a command's generated output with `grep`, `head`, or `tail`, preserve the full stream first:
+  `command | tee /tmp/some-file | grep pattern`
+  `command | tee /tmp/some-file | tail -n 20`
+- This matters because earlier output or non-matching lines often contain the actual error diagnostics, and re-running long commands to recover lost output is wasteful.
+- Exception: when the current harness explicitly captures full unfiltered command output on truncation and reports a full-output log path, prefer running the natural command directly instead of adding `tee`, `grep`, `head`, `tail`, or redirection solely for output-size management.
+- The exception does **not** apply after you pipe through `grep`, `head`, or `tail`: the harness can only capture what the pipeline emits.
+- `grep`, `head`, or `tail` on an existing file/log is OK; the full file is already preserved.
 
 ## Avoid broad filesystem searches
 

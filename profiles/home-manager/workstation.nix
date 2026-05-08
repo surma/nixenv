@@ -45,8 +45,7 @@ with lib;
     }
 
     (mkIf config.defaultConfigs.agents.enable {
-      home.file."AGENTS.md".source =
-        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/src/github.com/surma/nixenv/assets/AGENTS.md";
+      home.file."AGENTS.md".source = ../../assets/AGENTS.md;
     })
   ];
 }

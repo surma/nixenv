@@ -101,6 +101,7 @@ with lib;
             text = builtins.toJSON settings;
             mutable = true;
           };
+          ".pi/agent/APPEND_SYSTEM.md".source = ../../../assets/pi/APPEND_SYSTEM.md;
         }
         // optionalAttrs (piCfg.mcpConfig != null) {
           ".pi/agent/mcp.json" = {
