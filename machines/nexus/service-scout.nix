@@ -339,9 +339,9 @@ in
         hostPath = "/dev/dri";
         isReadOnly = false;
       };
-      surmvault = {
-        mountPoint = "/home/containeruser/surmvault";
-        hostPath = "/dump/surmvault";
+      dump = {
+        mountPoint = "/dump";
+        hostPath = "/dump";
         isReadOnly = true;
       };
     };

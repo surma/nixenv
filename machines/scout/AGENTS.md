@@ -98,6 +98,29 @@ Telegram allows 20 messages per minute per group. Keep messages substantive rath
   - `nix shell nixpkgs#<package> -c <command>`
 - Do not treat ad-hoc installs as permanent environment changes.
 
+## Host filesystem access — /dump
+
+The entire Nexus `/dump` directory is bind-mounted **read-only** into the container at `/dump`. This is the primary data partition on the host and contains:
+
+- `/dump/state/` — service state directories (including Scout's own home at `/dump/state/scout`)
+- `/dump/music/` — music collection (FLAC/MP3)
+- `/dump/Movies/` — movie library
+- `/dump/TV/` — TV shows
+- `/dump/audiobooks/` — audiobook library
+- `/dump/surmvault/` — personal vault (synced via Syncthing)
+- Various service data directories (Lidarr, Radarr, Navidrome, qBittorrent, etc.)
+
+Combined with the `nixenv` repo (which defines all NixOS container and service configurations), this gives Scout deep inspection capabilities:
+- Browse and analyze the music collection directly on disk
+- Read log files and service state without needing CLI tools
+- Cross-reference NixOS service configs in nixenv with actual runtime data in `/dump`
+- Inspect media organization and service runtime state
+
+**Constraints:**
+- The mount is **read-only**. Scout cannot modify anything under `/dump`.
+- Do not attempt to read large binary files (media, disk images) — use metadata/directory listings instead.
+- The "never delete user data" rule still applies even for inspection — do not recommend deletions without asking.
+
 ## Permanent environment changes
 
 Scout manages its own environment through Home Manager. If a tool or config change should persist for future sessions, apply it yourself:
