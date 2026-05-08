@@ -20,7 +20,22 @@
       "claude-code"
     ];
 
-    secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
+    sops.validateSopsFiles = false;
+    sops.secrets.llm-proxy-client-key = {
+      sopsFile = ../../secrets/shared/llm-proxy-client-key.yaml;
+      path = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
+      mode = "0600";
+    };
+
+    defaultConfigs.pi.llmProxy.apiKeyFile = config.sops.secrets.llm-proxy-client-key.path;
+    defaultConfigs.opencode.llmProxy = {
+      manageSecret = false;
+      apiKeyFile = config.sops.secrets.llm-proxy-client-key.path;
+    };
+    defaultConfigs.web-search-cli.llmProxy = {
+      manageSecret = false;
+      authTokenFile = config.sops.secrets.llm-proxy-client-key.path;
+    };
 
     home.stateVersion = "25.05";
 

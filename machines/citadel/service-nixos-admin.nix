@@ -64,44 +64,40 @@ in
     sshConfigFile = "${stateDir}/.ssh/config";
   };
 
-  # Overlay: SSH key + config deployment for git+ssh:// flake inputs.
-  systemd.services.nixos-admin = {
-    wants = [ "secrets.service" ];
-    after = [ "secrets.service" ];
-    preStart = ''
-      mkdir -p ${stateDir}/.ssh
-      chmod 0700 ${stateDir}/.ssh
-      install -m 0600 ${sshConfig} ${stateDir}/.ssh/config
-      install -m 0644 ${knownHosts} ${stateDir}/.ssh/known_hosts
-    '';
+  sops.validateSopsFiles = false;
+
+  sops.secrets.scout-repo-ssh-key = {
+    sopsFile = ../../secrets/shared/scout-repo-ssh-key.yaml;
+    key = "scout-repo-ssh-key";
+    path = "${stateDir}/.ssh/id_repo_scout";
+    mode = "0600";
+    restartUnits = [ "nixos-admin.service" ];
   };
+
+  sops.secrets.nixos-admin-deploy-key = {
+    sopsFile = ../../secrets/shared/nixos-admin-deploy-key.yaml;
+    key = "nixos-admin-deploy-key";
+    path = "${stateDir}/.ssh/id_deploy";
+    mode = "0600";
+    restartUnits = [ "nixos-admin.service" ];
+  };
+
+  systemd.tmpfiles.rules = [
+    "d ${stateDir} 0750 root root -"
+    "d ${stateDir}/.ssh 0700 root root -"
+  ];
+
+  # Overlay: SSH config deployment for git+ssh:// flake inputs.
+  systemd.services.nixos-admin.preStart = ''
+    install -m 0600 ${sshConfig} ${stateDir}/.ssh/config
+    install -m 0644 ${knownHosts} ${stateDir}/.ssh/known_hosts
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} ${stateDir}/.ssh/id_repo_scout.pub
+    install -m 0644 ${../../assets/ssh-keys/id_deploy.pub} ${stateDir}/.ssh/id_deploy.pub
+  '';
 
   services.surmhosting.services.admin = {
     host = "localhost";
     expose.port = port;
   };
 
-  # Deploy the SSH key for git+ssh:// flake inputs used by nixos-rebuild.
-  secrets.items.scout-repo-ssh-key.command = ''
-    key="$(cat)"
-
-    mkdir -p ${stateDir}/.ssh
-    chmod 0700 ${stateDir}/.ssh
-
-    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} ${stateDir}/.ssh/id_repo_scout.pub
-    printf '%s\n' "$key" > ${stateDir}/.ssh/id_repo_scout
-    chmod 0600 ${stateDir}/.ssh/id_repo_scout
-  '';
-
-  # Deploy key for remote NixOS deploys (machine-to-machine SSH).
-  secrets.items.nixos-admin-deploy-key.command = ''
-    key="$(cat)"
-
-    mkdir -p ${stateDir}/.ssh
-    chmod 0700 ${stateDir}/.ssh
-
-    install -m 0644 ${../../assets/ssh-keys/id_deploy.pub} ${stateDir}/.ssh/id_deploy.pub
-    printf '%s\n' "$key" > ${stateDir}/.ssh/id_deploy
-    chmod 0600 ${stateDir}/.ssh/id_deploy
-  '';
 }

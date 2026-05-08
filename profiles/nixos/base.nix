@@ -51,7 +51,7 @@
   users.users.surma = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = with config.secrets.keys; [
+    openssh.authorizedKeys.keys = with config.sshPublicKeys; [
       surma
     ];
   };

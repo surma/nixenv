@@ -97,8 +97,8 @@
     chmod 700 "$HOME/.ssh"
     chmod 600 "$auth_file"
 
-    if ! grep -qxF '${config.secrets.keys.nexus}' "$auth_file"; then
-      printf '%s\n' '${config.secrets.keys.nexus}' >> "$auth_file"
+    if ! grep -qxF '${config.sshPublicKeys.nexus}' "$auth_file"; then
+      printf '%s\n' '${config.sshPublicKeys.nexus}' >> "$auth_file"
     fi
   '';
 

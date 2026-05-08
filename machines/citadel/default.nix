@@ -58,7 +58,7 @@
 
   services.openssh.enable = true;
 
-  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
+  users.users.root.openssh.authorizedKeys.keys = with config.sshPublicKeys; [
     surma
     (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];

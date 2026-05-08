@@ -11,6 +11,10 @@
       url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # amber-upstream = {
     #   url = "github:amber-lang/Amber/0.4.0-alpha";
     #   inputs.nixpkgs.follows = "nixpkgs";

@@ -29,6 +29,8 @@ let
   # Cross-cutting modules that are not really program modules.
   sharedFeatureModules = [
     ../features/secrets.nix
+    ../features/sops.nix
+    ../features/ssh-public-keys.nix
     ../features/unfree-apps.nix
   ];
 
@@ -48,6 +50,7 @@ let
 
   systemModules = sharedFeatureModules ++ systemFeatureModules ++ systemProgramModules;
   homeManagerModules = sharedFeatureModules ++ homeManagerFeatureModules ++ programModules;
+  homeManagerModulesWithSops = [ inputs.sops-nix.homeManagerModules.sops ] ++ homeManagerModules;
 
   mkNixenvContext = configKind: machineName: {
     flakeRef = "github:surma/nixenv";
@@ -124,6 +127,7 @@ in
         modules = [
           cfg
           inputs.home-manager.nixosModules.home-manager
+          inputs.sops-nix.nixosModules.sops
         ]
         ++ systemModules
         ++ [
@@ -132,7 +136,7 @@ in
             {
               system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or "dirty";
               home-manager = {
-                sharedModules = homeManagerModules;
+                sharedModules = homeManagerModulesWithSops;
                 extraSpecialArgs = {
                   inherit inputs nixenv;
                   systemManager = "home-manager";
@@ -159,6 +163,7 @@ in
         modules = [
           cfg
           inputs.home-manager.darwinModules.home-manager
+          inputs.sops-nix.darwinModules.sops
         ]
         ++ systemModules
         ++ [
@@ -170,7 +175,7 @@ in
                 home = "/Users/${config.system.primaryUser}";
               };
               home-manager = {
-                sharedModules = homeManagerModules;
+                sharedModules = homeManagerModulesWithSops;
                 extraSpecialArgs = {
                   inherit inputs nixenv;
                   systemManager = "home-manager";
@@ -197,7 +202,7 @@ in
       in
       inputs.home-manager.lib.homeManagerConfiguration {
         pkgs = inputs.nixpkgs.legacyPackages.${system};
-        modules = homeManagerModules ++ [ cfg ];
+        modules = homeManagerModulesWithSops ++ [ cfg ];
         extraSpecialArgs = {
           inherit inputs nixenv system;
           systemManager = "home-manager";

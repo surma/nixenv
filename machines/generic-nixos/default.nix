@@ -24,7 +24,7 @@
   networking.hostName = "generic-nixos";
   networking.networkmanager.enable = true;
 
-  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
+  users.users.root.openssh.authorizedKeys.keys = with config.sshPublicKeys; [
     surma
     surmbook
   ];

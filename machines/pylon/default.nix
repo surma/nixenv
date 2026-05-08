@@ -37,7 +37,7 @@
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
-  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
+  users.users.root.openssh.authorizedKeys.keys = with config.sshPublicKeys; [
     surma
     surmbook
     shopisurm

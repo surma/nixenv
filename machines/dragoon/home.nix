@@ -72,12 +72,22 @@ in
     "dump/config.json".text = builtins.toJSON { server = "http://10.0.0.2:8081"; };
   };
 
-  secrets.items.dragoon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
-  secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
+  sops.validateSopsFiles = false;
+
+  sops.secrets.dragoon-syncthing = {
+    sopsFile = ./secrets.yaml;
+    path = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
+    mode = "0600";
+  };
+  sops.secrets.syncthing-relay-token = {
+    sopsFile = ../../secrets/shared/syncthing-relay-token.yaml;
+    path = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
+    mode = "0600";
+  };
 
   services.syncthing.enable = true;
   services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
-  services.syncthing.key = config.secrets.items.dragoon-syncthing.target;
+  services.syncthing.key = config.sops.secrets.dragoon-syncthing.path;
   services.syncthing.settings.devices.arbiter = shared.devices.arbiter;
   services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault".devices = lib.mkForce [
     "nexus"
@@ -85,7 +95,7 @@ in
   ];
   defaultConfigs.syncthing.enable = true;
   defaultConfigs.syncthing.privateRelay.enable = true;
-  defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;
+  defaultConfigs.syncthing.privateRelay.tokenFile = config.sops.secrets.syncthing-relay-token.path;
   defaultConfigs.syncthing.knownFolders.scratch.enable = true;
   defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
   defaultConfigs.syncthing.knownFolders.surmvault.enable = true;
