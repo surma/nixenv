@@ -5,7 +5,7 @@
   ...
 }:
 let
-  zellijWebPort = 88123;
+  ports = import ./ports.nix;
   zellijWebTokenHash = "10534faf201c258c3644386a7957bee71694e7b420aaefa37707b0e8041d36f9";
   zellijWebTokenName = "surma";
   zellijWebTokenDb = "${config.xdg.dataHome}/zellij/tokens.db";
@@ -96,7 +96,7 @@ in
       Service = {
         Type = "simple";
         ExecStartPre = "${ensureZellijWebToken}";
-        ExecStart = "${config.programs.zellij.package}/bin/zellij web --start --ip 127.0.0.1 --port ${toString zellijWebPort}";
+        ExecStart = "${config.programs.zellij.package}/bin/zellij web --start --ip 127.0.0.1 --port ${toString ports.zellijWeb}";
         Restart = "on-failure";
         RestartSec = 5;
       };
