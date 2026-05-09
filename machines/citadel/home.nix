@@ -41,11 +41,10 @@ let
     $zellij web --revoke-token "$created_token_name" >/dev/null
 
     "$sqlite" "$db" <<'SQL'
-    DELETE FROM tokens
-      WHERE (name = '${zellijWebTokenName}' AND token_hash != '${zellijWebTokenHash}')
-        OR (token_hash = '${zellijWebTokenHash}' AND name != '${zellijWebTokenName}');
-    INSERT OR IGNORE INTO tokens (token_hash, name)
-      VALUES ('${zellijWebTokenHash}', '${zellijWebTokenName}');
+    INSERT INTO tokens (token_hash, name)
+      VALUES ('${zellijWebTokenHash}', '${zellijWebTokenName}')
+      ON CONFLICT(name) DO UPDATE SET
+        token_hash = excluded.token_hash;
     SQL
   '';
 in
