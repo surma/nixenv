@@ -8,10 +8,6 @@
 
   programs.agent-browser.enable = true;
 
-  # rtk binary on PATH; the matching pi extension lives in pi-config:
-  # https://github.com/surma/pi-config/blob/main/extensions/rtk.ts
-  programs.rtk.enable = true;
-
   defaultConfigs.pi.settings.enableSkillCommands = true;
 
   agent.skills = [
