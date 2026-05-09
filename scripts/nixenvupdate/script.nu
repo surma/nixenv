@@ -14,9 +14,10 @@ def command-path [name: string] {
   which $name | get 0.path
 }
 
-def build-target [target: string, out_link: string] {
+def build-target [target: string, out_link: string, refresh: bool] {
   print $"Building ($target)"
-  nix build $target --out-link $out_link
+  let refresh_args = if $refresh { [--refresh] } else { [] }
+  nix build ...$refresh_args $target --out-link $out_link
   readlink -f $out_link | str trim
 }
 
@@ -80,6 +81,7 @@ def activate-home-manager [generation_path: string] {
 def main [
   --flake: string # Flake ref to build. Defaults to $NIXENV_FLAKE_REF or github:surma/nixenv.
   --build-only # Build the target generation, but do not activate it.
+  --refresh # Ask Nix to refresh flakes and other cached remote inputs before building.
 ] {
   let flake_ref = if $flake == null {
     $env.NIXENV_FLAKE_REF? | default github:surma/nixenv
@@ -98,13 +100,13 @@ def main [
 
   let built_path = match $config_kind {
     nixos => {
-      build-target $"($flake_ref)#nixosConfigurations.($machine_name).config.system.build.toplevel" $out_link
+      build-target $"($flake_ref)#nixosConfigurations.($machine_name).config.system.build.toplevel" $out_link $refresh
     }
     darwin | nix-darwin | macos => {
-      build-target $"($flake_ref)#darwinConfigurations.($machine_name).system" $out_link
+      build-target $"($flake_ref)#darwinConfigurations.($machine_name).system" $out_link $refresh
     }
     home-manager | home => {
-      build-target $"($flake_ref)#homeConfigurations.($machine_name).activationPackage" $out_link
+      build-target $"($flake_ref)#homeConfigurations.($machine_name).activationPackage" $out_link $refresh
     }
     _ => {
       error make { msg: $"nixenvupdate: unsupported NIXENV_CONFIG_KIND: ($config_kind)" }
