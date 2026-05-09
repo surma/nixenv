@@ -12,10 +12,14 @@
   # https://github.com/surma/pi-config/blob/main/extensions/rtk.ts
   programs.rtk.enable = true;
 
+  defaultConfigs.pi.settings.enableSkillCommands = true;
+
   agent.skills = [
     ../../assets/skills/brainstorming
     ../../assets/skills/planning
     ../../assets/skills/debugging
+    ../../assets/skills/review
+    ../../assets/skills/selfreview
     ../../assets/skills/surma-writer
     ../../assets/skills/triple-helix
   ];

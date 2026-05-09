@@ -20,6 +20,7 @@ let
       {
         source = "ssh://git@github.com/surma/pi-config";
         extensions = [ "-extensions/proxy.ts" ];
+        prompts = [ ];
       }
     ];
     theme = "gruvbox-dark-medium";
