@@ -35,6 +35,10 @@ Do not perform ritual searches.
 - Use semantic search only when you are actually discovering information and do
   not already have a docid, metadata handle, or exact-text handle.
 
+## Concise replies
+
+Prefer concise, high-signal replies with the minimum detail needed to fully resolve the request; keep simple judgment or validation answers to 2–6 lines unless more detail is clearly needed.
+
 # Behavioral Guidelines
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
