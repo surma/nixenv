@@ -89,6 +89,31 @@ web-search search "I am asking about the JavaScript bundler called Vite. What ch
 web-search search "For the Rust web framework Axum, how are nested routers and state handled in current docs?"
 ```
 
+## Search models
+
+The `--model` flag controls which Perplexity model handles the search. Each model trades off speed, depth, and cost differently.
+
+```bash
+web-search search "query"                                # sonar-pro (default)
+web-search search --model sonar "query"                  # lightweight
+web-search search --model sonar-reasoning-pro "query"    # reasoning with CoT
+web-search search --model sonar-deep-research "query"    # exhaustive research
+```
+
+### Model comparison
+
+- **`sonar`** — Lightweight and fast. Good for simple factual lookups where speed matters more than depth. Fewest citations.
+- **`sonar-pro`** (default) — Advanced search with grounding. The right choice for most queries: quick factual questions, topic summaries, comparisons, current events. ~10s response time, ~10 citations.
+- **`sonar-reasoning-pro`** — Adds Chain of Thought reasoning. Use when the query requires multi-step analysis, logical problem-solving, or synthesis across sources. Similar speed to sonar-pro (~12s) but better at complex questions. ~10 citations. Not worth it for simple lookups.
+- **`sonar-deep-research`** — Exhaustive multi-round research. Conducts multiple searches internally and generates comprehensive reports. ~2 minutes response time, ~50 citations. Use sparingly — only when you need thorough investigation across many sources, such as mapping out an unfamiliar topic, comparing multiple tools/approaches, or building a research brief. Overkill for quick fact checks.
+
+### When to escalate
+
+1. Start with the default (`sonar-pro`) for any new query.
+2. If the answer is shallow, missing key details, or the cited sources don't cover the topic well, retry with `sonar-reasoning-pro`.
+3. If you need comprehensive coverage across many sources — or the user explicitly asks to "dig deeper" or "do thorough research" — use `sonar-deep-research`.
+4. Do not jump straight to `sonar-deep-research` for routine queries. The 2-minute wait and verbose output are not justified for simple lookups.
+
 ## Fetch
 
 Use `fetch` to read the contents of a specific source page:
