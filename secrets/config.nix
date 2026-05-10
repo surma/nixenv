@@ -282,6 +282,13 @@
         "nexus"
       ];
     };
+    scout-cloudflare-api-token = {
+      contents = ../secrets/scout-cloudflare-api-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     firefly-app-key = {
       contents = ../secrets/firefly-app-key.age;
       keys = [

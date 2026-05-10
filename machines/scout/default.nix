@@ -92,6 +92,7 @@
     programs.brain.enable = true;
 
     agent.skills = [
+      ../../assets/skills/cloudflare
       ../../assets/skills/gws
       ../../assets/skills/homeassistant
       ../../assets/skills/nexus-admin

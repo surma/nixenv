@@ -147,6 +147,13 @@ in
     chmod 0600 /var/lib/scout/spotify-client-token.json
   '';
 
+  secrets.items.scout-cloudflare-api-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/cloudflare-api-token
+    chown surma:users /var/lib/scout/cloudflare-api-token
+    chmod 0600 /var/lib/scout/cloudflare-api-token
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
