@@ -103,6 +103,7 @@
       ../../assets/skills/planning
       ../../assets/skills/debugging
       ../../assets/skills/music
+      ../../assets/skills/tts
     ];
 
     defaultConfigs.opencode = {
