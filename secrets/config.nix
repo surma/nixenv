@@ -223,7 +223,10 @@
       contents = ../secrets/scout-gws-credentials.age;
       keys = [
         "surma"
+        "shopisurm"
+        "dragoon"
         "nexus"
+        "citadel"
       ];
     };
     scout-hassio-token = {
