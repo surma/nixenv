@@ -2,6 +2,7 @@
   options,
   config,
   pkgs,
+  lib,
   ...
 }:
 let
@@ -18,6 +19,11 @@ in
   ];
 
   system.stateVersion = 5;
+
+  security.pam.services.sudo_local.text = lib.mkForce ''
+    auth       optional       ${pkgs.pam-reattach}/lib/pam/pam_reattach.so ignore_ssh
+    auth       sufficient     pam_tid.so
+  '';
 
   programs.obs.enable = true;
 
