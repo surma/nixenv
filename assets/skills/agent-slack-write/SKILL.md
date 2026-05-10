@@ -181,3 +181,66 @@ $SLACK message get surma-river "$TS"
 - **Ampersands and angle brackets in user text get HTML-escaped on the wire** (`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`). Slack renders them correctly; don't double-escape.
 - **No idempotency.** Re-running `send` posts the message again. If a previous run looked like it failed, check Slack first before retrying.
 - **The `surma-river` rule is absolute** — even for "I just want to see what the JSON looks like." That's what `--json` (with no value) is for: it prints the available fields without sending. Use that *first* whenever you can.
+- **`message get` silently strips `files`, `attachments`, and `blocks`.** Even with `--json` and no projection, the listed available fields are only `ts, channel, user, text, threadTs, replyCount, reactions, permalink`. There is no flag to expose attachments. So you cannot use this CLI to confirm whether a message has a file uploaded — it will look empty even when Slack shows a video/image/file inline. To check attachments, drop to the direct Slack API (see below).
+
+## Escape hatch: direct Slack API
+
+When the CLI is missing a capability (channel create, member invite, message attachments, search beyond the wrapper, etc.), the credentials are right there on disk and you can hit `https://shopify.slack.com/api/<method>` directly.
+
+### Where the credentials live
+
+```bash
+~/.config/agent-tools/agent-slack/credentials.json
+```
+
+Two fields:
+- `token`  — `xoxc-...` browser session token.
+- `cookie` — the URL-encoded `d` cookie (`xoxd-...`). xoxc tokens require this cookie to authenticate; using the token alone returns `not_authed`.
+
+### Curl pattern
+
+```bash
+TOKEN=$(jq -r .token  ~/.config/agent-tools/agent-slack/credentials.json)
+COOKIE=$(jq -r .cookie ~/.config/agent-tools/agent-slack/credentials.json)
+
+curl -s "https://shopify.slack.com/api/conversations.history?channel=C0...&latest=1778149540.935289&inclusive=true&limit=1" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Cookie: d=$COOKIE" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  | python3 -m json.tool
+```
+
+For POST methods, send form-encoded body:
+
+```bash
+curl -s "https://shopify.slack.com/api/conversations.create" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Cookie: d=$COOKIE" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "name=tmp-river-video-heads-up" \
+  --data-urlencode "is_private=true"
+```
+
+Use the workspace host (`shopify.slack.com/api/...`), not the generic `slack.com/api/...`. The xoxc/xoxd pair is workspace-bound.
+
+### What this unlocks
+
+Things the CLI cannot do but the API can, with this token:
+
+- **Read full message metadata** — `conversations.history` / `conversations.replies` return `files`, `attachments`, `blocks`. Use this to verify a message actually has the attachment the author claims, before you tag 50 people who'll click a broken-looking post.
+- **Create channels** — `conversations.create` (`is_private=true` for private).
+- **Invite people to a channel** — `conversations.invite` with a comma-separated `users=` list (works in batches of ≤ ~1000 user IDs per call; for huge lists, chunk it).
+- **Open a multi-person DM (mpim)** — `conversations.open` with a comma-separated `users=` list. **Slack hard-caps mpims at 9 members total (you + 8 others)** — this is a product limit, not an API one. Anything larger has to be a private channel.
+- **Upload files** — `files.getUploadURLExternal` + PUT + `files.completeUploadExternal`. Three-step flow; use only when the user explicitly asks.
+- **Edit / delete messages** — `chat.update` / `chat.delete`. Same safety rules apply: a delete is recovery from your own mistake, not a routine tool.
+
+### Safety rules carry over
+
+The direct API does **not** unlock looser behavior. The mandatory safety rules at the top of this skill apply equally to anything you do with curl:
+
+- Test only in `#surma-river`.
+- Confirm destination before every real send / channel create / invite.
+- Get it right the first time — each curl call is a real action against the real workspace.
+- Don't probe "what happens if I call X" against real channels or DMs.
+
+A sent message via curl is just as un-deletable (without `chat.delete`, which is itself a real action) as one sent via the CLI. Treat the API access as a capability extension, not a safety bypass.
