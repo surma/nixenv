@@ -104,6 +104,7 @@
       ../../assets/skills/debugging
       ../../assets/skills/music
       ../../assets/skills/tts
+      ../../assets/skills/triple-helix
     ];
 
     defaultConfigs.opencode = {
