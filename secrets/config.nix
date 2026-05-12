@@ -13,6 +13,7 @@
     nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW";
     forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILrXa3Rnz2M+BtpydthCXDsQfeZbmu4cDtxxCtMpxvG6";
     scout = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ/0OJdh2REKlxM7Ybfl+5a9XlqWuvkDowwnvpHfBd4W";
+    assimilator = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPYElOQMt7QR0/rP/Q4xgxiIaQ//78GEnvmcxUHGn1x";
   };
   secrets = {
     ssh-keys = {
@@ -26,6 +27,7 @@
         "shopisurm"
         "surmframework"
         "forge"
+        "assimilator"
       ];
     };
     gpg-keys = {
@@ -39,6 +41,7 @@
         "shopisurm"
         "surmframework"
         "forge"
+        "assimilator"
       ];
     };
     writing-prompt = {
@@ -120,6 +123,7 @@
         "forge"
         "scout"
         "citadel"
+        "assimilator"
       ];
     };
     scout-telegram-bot-token = {
