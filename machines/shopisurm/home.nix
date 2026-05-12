@@ -26,6 +26,7 @@
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
 
   home.stateVersion = "24.05";
+  home.sessionVariables.SHOPIFY_AI_RTK = "0";
   nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
   defaultConfigs.agents.enable = true;
 
