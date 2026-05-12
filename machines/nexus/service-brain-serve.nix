@@ -87,14 +87,27 @@ in
   };
 
   services.surmhosting.services.brain-serve.expose.ports = [
-    { port = 8080; hostname = "brain-serve"; }
-    { port = 8081; hostname = "public-brain"; rule = "HostRegexp(`^public-brain\\.`) || Host(`public-brain.surma.technology`)"; }
+    {
+      port = 8080;
+      hostname = "brain-serve";
+    }
+    {
+      port = 8081;
+      hostname = "public-brain";
+      rule = "HostRegexp(`^public-brain\\.`) || Host(`public-brain.surma.technology`)";
+    }
   ];
   services.surmhosting.services.brain-serve.container = {
     # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
     allowedDevices = [
-      { modifier = "rw"; node = "/dev/dri/renderD128"; }
-      { modifier = "rw"; node = "/dev/dri/card1"; }
+      {
+        modifier = "rw";
+        node = "/dev/dri/renderD128";
+      }
+      {
+        modifier = "rw";
+        node = "/dev/dri/card1";
+      }
     ];
     bindMounts.dri = {
       mountPoint = "/dev/dri";
@@ -117,7 +130,10 @@ in
       # time out during switch-to-configuration.
       systemd.services.brain-serve = {
         description = "Brain knowledge base web server";
-        wants = [ "network-online.target" "brain-serve-public.service" ];
+        wants = [
+          "network-online.target"
+          "brain-serve-public.service"
+        ];
         after = [ "network-online.target" ];
         path = [
           brainPkg
@@ -163,8 +179,6 @@ in
           RestartSec = 10;
         };
       };
-
-
 
       # Start brain-serve 10s after boot, giving the container network
       # time to come up without blocking the boot sequence.

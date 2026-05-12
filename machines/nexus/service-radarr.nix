@@ -5,7 +5,10 @@ in
 {
   services.surmhosting.services.radarr.containerService = {
     wants = [ "secrets.service" ];
-    after = [ "secrets.service" "postgresql.service" ];
+    after = [
+      "secrets.service"
+      "postgresql.service"
+    ];
   };
 
   services.surmhosting.services.radarr.expose.port = 8080;

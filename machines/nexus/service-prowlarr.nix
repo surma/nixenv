@@ -5,7 +5,10 @@ in
 {
   services.surmhosting.services.prowlarr.containerService = {
     wants = [ "secrets.service" ];
-    after = [ "secrets.service" "postgresql.service" ];
+    after = [
+      "secrets.service"
+      "postgresql.service"
+    ];
   };
 
   services.surmhosting.services.prowlarr.expose.port = 8080;

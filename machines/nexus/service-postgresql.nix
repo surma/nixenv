@@ -8,7 +8,10 @@ let
   ];
 
   # Each app gets two databases. The role name matches the app.
-  dbs = lib.concatMap (app: [ "${app}-main" "${app}-log" ]) apps;
+  dbs = lib.concatMap (app: [
+    "${app}-main"
+    "${app}-log"
+  ]) apps;
 in
 {
   # Decrypt one env file per app onto the host. Each file is exactly:

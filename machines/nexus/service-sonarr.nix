@@ -5,7 +5,10 @@ in
 {
   services.surmhosting.services.sonarr.containerService = {
     wants = [ "secrets.service" ];
-    after = [ "secrets.service" "postgresql.service" ];
+    after = [
+      "secrets.service"
+      "postgresql.service"
+    ];
   };
 
   services.surmhosting.services.sonarr.expose.port = 8080;

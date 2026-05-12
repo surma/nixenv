@@ -42,8 +42,14 @@ rustPlatform.buildRustPackage {
     openssl
   ];
 
-  cargoBuildFlags = [ "-p" "presage-cli" ];
-  cargoTestFlags = [ "-p" "presage-cli" ];
+  cargoBuildFlags = [
+    "-p"
+    "presage-cli"
+  ];
+  cargoTestFlags = [
+    "-p"
+    "presage-cli"
+  ];
 
   meta = {
     description = "Signal Messenger CLI built on presage, a Rust library for Signal";

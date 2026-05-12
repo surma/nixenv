@@ -76,23 +76,21 @@ with lib;
   };
 
   config = mkMerge [
-    (
-      {
-        defaultConfigs.surma-noti.enable = mkIf isEnabled true;
-        programs.opencode.enable = mkIf isEnabled true;
-        programs.opencode = {
-          plugins = {
-            "notification.js" = builtins.readFile ./plugin/notification.js;
-            "shopify-proxy.js" = builtins.readFile ./plugin/shopify-proxy.js;
-            "context-tracker.js" = builtins.readFile ./plugin/context-tracker.js;
-          };
-          extraConfig = {
-            model = "anthropic/claude-sonnet-4-5";
-            plugin = [ "file://${config.home.homeDirectory}/.config/opencode/plugin/shopify-proxy.js" ];
-          };
+    ({
+      defaultConfigs.surma-noti.enable = mkIf isEnabled true;
+      programs.opencode.enable = mkIf isEnabled true;
+      programs.opencode = {
+        plugins = {
+          "notification.js" = builtins.readFile ./plugin/notification.js;
+          "shopify-proxy.js" = builtins.readFile ./plugin/shopify-proxy.js;
+          "context-tracker.js" = builtins.readFile ./plugin/context-tracker.js;
         };
-      }
-    )
+        extraConfig = {
+          model = "anthropic/claude-sonnet-4-5";
+          plugin = [ "file://${config.home.homeDirectory}/.config/opencode/plugin/shopify-proxy.js" ];
+        };
+      };
+    })
 
     (mkIf (isEnabled && cfg.manageSecret) {
       secrets.items.llm-proxy-client-key.target = mkDefault defaultApiKeyPath;

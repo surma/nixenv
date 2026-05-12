@@ -9,8 +9,7 @@ with lib;
 let
   cfg = config.programs.surma-noti;
   notiPackage = pkgs.callPackage ../../../packages/noti {
-    defaultMobileDevice =
-      if cfg.defaultMobileDevice != null then cfg.defaultMobileDevice else null;
+    defaultMobileDevice = if cfg.defaultMobileDevice != null then cfg.defaultMobileDevice else null;
   };
 in
 {

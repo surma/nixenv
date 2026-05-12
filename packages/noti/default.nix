@@ -28,7 +28,9 @@ stdenv.mkDerivation {
     patchShebangs $out/bin/noti
     wrapProgram $out/bin/noti \
       ${lib.optionalString stdenv.isLinux "--prefix PATH : ${lib.makeBinPath [ pkgs.libnotify ]}"} \
-      ${lib.optionalString (defaultMobileDevice != null) "--set NOTI_MOBILE_DEVICE ${lib.escapeShellArg defaultMobileDevice}"}
+      ${lib.optionalString (
+        defaultMobileDevice != null
+      ) "--set NOTI_MOBILE_DEVICE ${lib.escapeShellArg defaultMobileDevice}"}
 
     runHook postFixup
   '';

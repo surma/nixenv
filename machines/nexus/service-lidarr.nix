@@ -5,7 +5,10 @@ in
 {
   services.surmhosting.services.lidarr.containerService = {
     wants = [ "secrets.service" ];
-    after = [ "secrets.service" "postgresql.service" ];
+    after = [
+      "secrets.service"
+      "postgresql.service"
+    ];
   };
 
   services.surmhosting.services.lidarr.expose.port = 8080;

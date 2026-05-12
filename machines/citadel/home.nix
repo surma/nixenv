@@ -25,7 +25,8 @@
     secrets.items.scout-gws-credentials.target = "${config.home.homeDirectory}/.local/state/gws-credentials";
 
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
-    home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = config.secrets.items.scout-gws-credentials.target;
+    home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE =
+      config.secrets.items.scout-gws-credentials.target;
 
     home.stateVersion = "25.05";
 
