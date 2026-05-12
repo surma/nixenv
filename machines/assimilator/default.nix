@@ -7,10 +7,7 @@
 {
   imports = [
     ../../profiles/home-manager/base.nix
-    ../../profiles/home-manager/ai.nix
     ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/dev.nix
   ];
 
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
@@ -32,9 +29,4 @@
     fi
   '';
 
-  programs.pi.enable = true;
-  defaultConfigs.pi.enable = true;
-  defaultConfigs.pi.extensions.proxy.enable = true;
-
-  programs.brain.enable = true;
 }
