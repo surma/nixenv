@@ -17,6 +17,7 @@ These are not optional. Slack messages are **not deletable** with this CLI — t
 3. **Confirm the destination before every real send.** When the user asks to message a person or channel, restate the target in the response and send only after confirmation, *unless* the user has already specified the exact destination in the current request.
 4. **Send once, get it right.** Do not iterate by sending → reading → resending in the real target. Iterate in `#surma-river`, then send the final version once.
 5. **Never DM `Slackbot` / yourself / random user IDs you find** to "see what happens". Use `#surma-river`.
+6. **A non-zero exit from `send` / `reply` does NOT mean the message wasn't sent.** The CLI executes the side-effecting Slack API call *before* it validates flags like `--json <fields>`. A successful send followed by a bad field projection (e.g. `--json permalink` — there is no `permalink` field) exits 1 with a stderr error, but the message is already in Slack. **If a write subcommand exits non-zero, your next action is to read the channel — not retry.** See §"Recovery when a send looks failed" below for the exact steps. Retrying without checking is how you produce duplicate messages, and that's an unfixable mistake.
 
 If you violate these rules you have made a real, unfixable mistake. Apologize, stop, and tell the user what was sent and to whom.
 
@@ -135,7 +136,15 @@ EOF
 
 All write subcommands support `--json [fields]` for projection. With no fields, prints the full JSON. With fields, projects to the listed keys, e.g. `--json ok,ts`. Useful for keeping the chat log clean and capturing only what you need to thread/react later.
 
-Run any subcommand with `--json` (no fields) once to discover available keys.
+**Field validation happens AFTER the side-effecting API call.** A bad field name (`--json permalink` when only `ok, channel, ts, message` are available) exits non-zero with `Unknown field(s): … / Available: …` *and the message has already been posted*. This bit hard once already and produced a duplicate.
+
+Rules of thumb that make this trap unreachable:
+
+- **Never invent field names.** The available fields for `send`/`reply` are exactly `ok, channel, ts, message`. Nothing else. (Notably: there is no `permalink` — construct one yourself from `channel` + `ts` if you need it: `https://shopify.slack.com/archives/<channel>/p<ts-with-dot-stripped>`.)
+- **If you don't actually need projection, omit `--json` entirely** on real sends. The default human-readable output is fine and removes the trap surface.
+- **Discover field names BEFORE the real send**, not on it: run `--json` (no field list) once against `#surma-river` to see the full shape. Then on the real send, project only fields you've personally seen in that output.
+
+The sanctioned `--json` projection for a real `send`/`reply` you might thread/react against later is `--json ok,ts` (or `--json ts --jq '.ts'` if you only want the bare timestamp). Anything beyond `ok, channel, ts, message` is invented and will trip the post-send error.
 
 ## What this CLI cannot do
 
@@ -173,13 +182,26 @@ Read back what was sent (uses the read-side, fine on real channels):
 $SLACK message get surma-river "$TS"
 ```
 
+## Recovery when a send looks failed
+
+If `send` or `reply` exits non-zero, **stop**. Do not retry. The most common reason for a non-zero exit is a post-send error (e.g. `--json` field name typo, jq filter failure) where the message *did* go through. Steps:
+
+1. Read the destination channel's most recent messages and look for your text:
+   ```bash
+   devx agent-tools slack message list <channel> --limit 5 --json ts,user,text
+   ```
+   (Use the read-only CLI here — it's safe and fast.)
+2. If your message is present: the send succeeded. Tell the user, do not retry. If you needed the `ts` for a follow-up reply/react, take it from the listing.
+3. If your message is genuinely absent: now you can retry. Inspect the original stderr to figure out what actually broke (auth? channel resolution? rate limit?) and fix that before re-running.
+4. If you discover you produced a duplicate (you retried before checking, or two sends genuinely landed): tell the user immediately, name both timestamps, and offer to delete one via `chat.delete` (see §"Escape hatch: direct Slack API"). The CLI cannot delete; the API can. Deleting one of your own duplicates is the legitimate use case for `chat.delete`.
+
 ## Pitfalls
 
 - **`tec run` is slow on cold caches.** First invocation in a session spends seconds in nix evaluation. Resolve the binary path once via `tec build` and reuse.
 - **Stderr is loud.** Always redirect (`2>/dev/null`). Don't paste evaluator noise into chat or commit logs.
 - **`reply`'s `ts` must be the thread root**, not a prior reply. If unsure, use `message get` and check the `thread_ts` field; that's the root.
 - **Ampersands and angle brackets in user text get HTML-escaped on the wire** (`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`). Slack renders them correctly; don't double-escape.
-- **No idempotency.** Re-running `send` posts the message again. If a previous run looked like it failed, check Slack first before retrying.
+- **No idempotency.** Re-running `send` posts the message again. If a previous run looked like it failed, **read the channel first** — see §"Recovery when a send looks failed". A non-zero exit from `send`/`reply` is overwhelmingly likely to be a post-send projection error, not a real send failure.
 - **The `surma-river` rule is absolute** — even for "I just want to see what the JSON looks like." That's what `--json` (with no value) is for: it prints the available fields without sending. Use that *first* whenever you can.
 - **`message get` silently strips `files`, `attachments`, and `blocks`.** Even with `--json` and no projection, the listed available fields are only `ts, channel, user, text, threadTs, replyCount, reactions, permalink`. There is no flag to expose attachments. So you cannot use this CLI to confirm whether a message has a file uploaded — it will look empty even when Slack shows a video/image/file inline. To check attachments, drop to the direct Slack API (see below).
 
