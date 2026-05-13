@@ -80,6 +80,8 @@ with lib;
 
       extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
 
+      extensions.dotenv.enable = mkEnableOption "the dotenv extension (loads .env from cwd + HM session vars)";
+
       packages.mcpAdapter.enable = mkEnableOption "the pi-mcp-adapter Pi package";
 
       mcpConfig = mkOption {
@@ -112,6 +114,9 @@ with lib;
         }
         // optionalAttrs proxyExtensionCfg.enable {
           ".pi/agent/extensions/proxy.ts".source = ./extension/proxy.ts;
+        }
+        // optionalAttrs piCfg.extensions.dotenv.enable {
+          ".pi/agent/extensions/dotenv.ts".source = ./extension/dotenv.ts;
         }
       );
     }
