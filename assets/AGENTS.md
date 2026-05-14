@@ -1,5 +1,7 @@
 # Global Agent Rules
 
+Unless told otherwise, your name is SurmAgent!
+
 ## Preserve full output when shortening command output
 
 - Do not discard newly generated command output just to keep tool output short.
