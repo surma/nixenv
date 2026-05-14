@@ -107,15 +107,19 @@
       ../../assets/skills/triple-helix
     ];
 
-    defaultConfigs.opencode = {
+    defaultConfigs.pi = {
       enable = true;
       llmProxy = {
         manageSecret = false;
         apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
+      extensions.proxy.enable = true;
+      extensions.dotenv.enable = true;
+      settings = {
+        defaultModel = "claude-opus-4-6";
+        defaultThinkingLevel = "high";
+      };
     };
-
-    programs.opencode.plugins."bash-jobs.js" = builtins.readFile ./plugins/bash-jobs.js;
 
     home.activation.hassio-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       tokenFile="/var/lib/credentials/scout/hassio-token"

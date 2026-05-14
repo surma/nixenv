@@ -170,19 +170,14 @@ in
         inputs.home-manager.nixosModules.home-manager
         # Module that wires the scout systemd service, with access to the
         # container's evaluated config (needed to reference the wrapped
-        # opencode package produced by home-manager).
+        # pi package produced by home-manager).
         (
           { config, ... }:
           {
-            # Register the dotenv plugin for opencode — needed so that
-            # BRAIN_PATH from the topic .env file reaches brain commands.
-            home-manager.users.containeruser.programs.opencode.plugins = {
-              "dotenv.js" = builtins.readFile ../../packages/opencode-dotenv-plugin/dotenv.js;
-            };
-
             systemd.services.scout =
               let
-                opencode = config.home-manager.users.containeruser.programs.opencode.package;
+                pi = config.home-manager.users.containeruser.programs.pi.package;
+                piAcp = inputs.pi-acp.packages.${system}.default;
               in
               {
                 description = "Scout Telegram bridge";
@@ -205,13 +200,14 @@ in
                   pkgs.sqlite
                 ];
                 environment = {
-                  SCOUT_ACP_COMMAND = "${opencode}/bin/opencode acp";
+                  SCOUT_ACP_COMMAND = "${piAcp}/bin/pi-acp";
+                  PI_ACP_PI_COMMAND = "${pi}/bin/pi";
                   SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
                   SCOUT_MCP_PORT = toString scoutMcpPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
                   SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-6/high";
-                  RUST_LOG = "scout=debug";
+                  SCOUT_LOG = "scout=debug";
                 };
                 serviceConfig = {
                   EnvironmentFile = [
@@ -308,6 +304,7 @@ in
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
           ../../modules/programs/opencode
+          ../../modules/programs/pi
           ../../modules/programs/surma-noti
         ];
         extraSpecialArgs = {

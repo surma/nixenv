@@ -1125,6 +1125,30 @@
         "type": "github"
       }
     },
+    "pi-acp": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778704172,
+        "narHash": "sha256-Oj5vIZ43gIm8nzf5TB7JRPsGPy0N7FAjVuN5+JmJqgE=",
+        "ref": "main",
+        "rev": "4eebbd59ede86fb19bd94c0746491924529e1452",
+        "revCount": 3,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -1196,6 +1220,7 @@
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opencode": "opencode",
+        "pi-acp": "pi-acp",
         "scout": "scout",
         "sl2": "sl2",
         "system-manager": "system-manager",
