@@ -123,6 +123,7 @@ web-search fetch https://example.com/article
 web-search fetch --mode static https://example.com/article
 web-search fetch --mode browser-dom https://example.com/article
 web-search fetch --mode browser-a11y https://example.com/article
+web-search fetch -o asset.png https://example.com/asset.png
 ```
 
 Use this when:
@@ -130,6 +131,22 @@ Use this when:
 - a search result looks promising and you need the actual details
 - you want to inspect the original wording of documentation or an announcement
 - you need examples, tables, caveats, or exact API details omitted by search summaries
+
+### Fetch content types
+
+`fetch` checks the HTTP `Content-Type` after the response headers arrive:
+
+- Markdown and plain-text responses are printed directly as fetched text. This is the right tool for raw `.md`, `.txt`, and similar source URLs.
+- HTML responses go through the selected fetch mode and are converted to Markdown.
+- Other content types, such as images, PDFs, archives, or arbitrary binary assets, are refused by default so binary data is not dumped to stdout.
+- To intentionally download a non-text response, pass `-o/--output <file>`:
+
+```bash
+web-search fetch -o paper.pdf https://example.com/paper.pdf
+web-search fetch -o logo.png https://example.com/logo.png
+```
+
+Do not work around the refusal by dumping binary content to the terminal. Download it to a file first, then inspect it with an appropriate tool.
 
 ### Fetch modes
 
@@ -152,23 +169,22 @@ If `fetch` is weak, retry with an explicit mode before giving up.
 
 ## Handling weak or lossy pages
 
-`web-search fetch` works from HTML converted to markdown. Some sites are dynamic, app-like, or PDF-based and may convert poorly.
+For HTML, `web-search fetch` converts page content to Markdown. Some sites are dynamic, app-like, or hard to extract cleanly. Markdown and plain-text URLs are emitted directly, while non-text assets must be downloaded with `-o/--output`.
 
-If a fetched page is incomplete, misleading, missing key content, or comes back as obvious garbage, use this playbook:
+If a fetched HTML page is incomplete, misleading, missing key content, or comes back as obvious garbage, use this playbook:
 
 1. Retry with an explicit mode:
    - `web-search fetch --mode static <url>`
    - `web-search fetch --mode browser-dom <url>`
    - `web-search fetch --mode browser-a11y <url>`
 2. If browser-based fetching fails because of environment issues, profile locks, or browser startup problems, retry with `--mode static`.
-3. If the source is a PDF and the extracted output is garbled or low-confidence, do not trust it blindly.
-4. Fall back to grabbing the raw content directly:
+3. If the source is a PDF, image, archive, or other binary asset, download it explicitly instead of printing it:
 
 ```bash
-curl -L <url>
+web-search fetch -o source.pdf <url>
 ```
 
-Prefer the least lossy source you can get, and be explicit when a fetch result looks unreliable.
+Then inspect the downloaded file with an appropriate tool. Prefer the least lossy source you can get, and be explicit when a fetch result looks unreliable.
 
 ## Reporting findings
 
