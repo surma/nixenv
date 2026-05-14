@@ -110,7 +110,6 @@
     defaultConfigs.pi = {
       enable = true;
       llmProxy = {
-        manageSecret = false;
         apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
       extensions.proxy.enable = true;
