@@ -189,6 +189,14 @@
         "nexus"
       ];
     };
+    gitea-cli-pat = {
+      contents = ../secrets/gitea-cli-pat.age;
+      keys = [
+        "shopisurm"
+        "citadel"
+        "dragoon"
+      ];
+    };
     nexus-upsmon-password = {
       contents = ../machines/nexus/ups/upsmon.password.age;
       keys = [

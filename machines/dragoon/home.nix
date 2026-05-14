@@ -27,6 +27,7 @@ in
 
   home.stateVersion = "24.05";
   defaultConfigs.agents.enable = true;
+  programs.gitea-cli.enable = true;
 
   allowedUnfreeApps = [
     "claude-code"

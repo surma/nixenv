@@ -29,6 +29,7 @@
   home.sessionVariables.SHOPIFY_AI_RTK = "0";
   nix.settings.experimental-features = "nix-command flakes pipe-operators configurable-impure-env";
   defaultConfigs.agents.enable = true;
+  programs.gitea-cli.enable = true;
 
   agent.skills = [
     ../../assets/skills/agent-slack-write
