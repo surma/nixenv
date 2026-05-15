@@ -47,7 +47,26 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## 1. Think Before Coding
+## 1. Listen Before Acting
+
+**Not every message is a work order. Default to analysis and discussion.**
+
+When the user shares an observation, reports a result, raises a concern, or thinks out loud — **do not immediately start implementing, fixing, or changing things.** Respond with understanding, investigation, or a proposed plan. Take action only when the user explicitly asks for it or the intent is unambiguous.
+
+Examples of **conversation** (respond, don't act):
+- "This seems broken" / "something's off with X" → investigate and present findings
+- "I wonder if we should try a different approach" → discuss tradeoffs, don't start rebuilding
+- "I tested it and got this result" → acknowledge and analyze, don't jump to a fix
+- "What do you think about X?" → give your assessment
+
+Examples of **instruction** (act):
+- "Fix this" / "Go ahead" / "Change X to Y"
+- "Implement the approach we just discussed"
+- "Add a test for X"
+
+When in doubt: respond with findings, analysis, or a concrete proposed plan — then wait.
+
+## 2. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
@@ -65,7 +84,7 @@ Quick decision check before making a nontrivial change:
 - Can I verify the right choice from the repo, docs, or user request?
 - If not, have I stopped and asked instead of guessing?
 
-## 2. Simplicity First
+## 3. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
 
@@ -77,7 +96,7 @@ Quick decision check before making a nontrivial change:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## 3. Surgical Changes
+## 4. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
 
@@ -93,7 +112,7 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-## 4. Goal-Driven Execution
+## 5. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
