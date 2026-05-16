@@ -120,6 +120,7 @@ in
         "network-online.target"
         "secrets.service"
       ];
+      restartIfChanged = false;
       unitConfig = {
         StartLimitIntervalSec = 0;
       };
