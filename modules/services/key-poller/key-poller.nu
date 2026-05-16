@@ -55,7 +55,7 @@ def main [] {
     $"^($remote_gcloud_bin) auth print-identity-token --format json"
     "| from json"
     "| get id_token"
-    '| http post --headers [Authorization $"Bearer ($in)"] https://openai-proxy.shopify.io/hmac/personal'
+    '| http post --headers [Authorization $"Bearer ($in)"] https://proxy.shopify.io/hmac/personal'
     "| get key"
   ] | str join "\n")
   let remote_command = $"($remote_nu_bin) -c '($remote_script)'"
