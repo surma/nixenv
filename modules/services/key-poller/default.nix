@@ -120,12 +120,14 @@ in
         "network-online.target"
         "secrets.service"
       ];
+      unitConfig = {
+        StartLimitIntervalSec = 0;
+      };
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${keyPoller}/bin/key-poller";
         Restart = "on-failure";
         RestartSec = cfg.retryInterval;
-        StartLimitIntervalSec = 0;
       };
     };
 
