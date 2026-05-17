@@ -17,6 +17,7 @@
     ../../assets/skills/review
     ../../assets/skills/selfreview
     ../../assets/skills/surma-writer
+    ../../assets/skills/rust
     ../../assets/skills/triple-helix
   ];
 }
