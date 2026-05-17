@@ -11,4 +11,7 @@
     wl-clipboard
   ];
   services.ssh-agent.enable = true;
+
+  programs.ssh.matchBlocks."gitea.surma.technology".extraOptions.IdentityAgent =
+    "/run/user/%i/ssh-agent";
 }

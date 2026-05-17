@@ -147,10 +147,11 @@ in
         addKeysToAgent = "yes";
         forwardAgent = true;
         identityFile = [
-          "${config.home.homeDirectory}/.ssh/id_machine"
           "${config.home.homeDirectory}/.ssh/id_surma"
+          "${config.home.homeDirectory}/.ssh/id_machine"
         ];
       };
+      "gitea.surma.technology".extraOptions.IdentityAgent = "/run/user/%i/ssh-agent";
     };
   };
 }
