@@ -64,13 +64,18 @@
     (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
 
+  hardware.graphics.enable = true;
+
   environment.systemPackages = with pkgs; [
     pciutils
     usbutils
+    vulkan-tools
   ];
 
   users.users.surma.extraGroups = [
     "wheel"
+    "render"
+    "video"
   ];
 
   services.udisks2.enable = true;
