@@ -82,6 +82,8 @@ with lib;
 
       extensions.dotenv.enable = mkEnableOption "the dotenv extension (loads .env from cwd + HM session vars)";
 
+      extensions.contextUsage.enable = mkEnableOption "the context-usage awareness extension (injects usage warnings into prompts)";
+
       packages.mcpAdapter.enable = mkEnableOption "the pi-mcp-adapter Pi package";
 
       mcpConfig = mkOption {
@@ -117,6 +119,9 @@ with lib;
         }
         // optionalAttrs piCfg.extensions.dotenv.enable {
           ".pi/agent/extensions/dotenv.ts".source = ./extension/dotenv.ts;
+        }
+        // optionalAttrs piCfg.extensions.contextUsage.enable {
+          ".pi/agent/extensions/context-usage.ts".source = ./extension/context-usage.ts;
         }
       );
     }
