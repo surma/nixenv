@@ -6,6 +6,13 @@
 }:
 let
   shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
+  ollama = pkgs.ollama.overrideAttrs (old: {
+    postPatch =
+      builtins.replaceStrings
+        [ "rm model/models/nemotronh/model_omni_test.go" ]
+        [ "rm -f model/models/nemotronh/model_omni_test.go" ]
+        old.postPatch;
+  });
 in
 {
   imports = [
