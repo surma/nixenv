@@ -114,6 +114,7 @@
       };
       extensions.proxy.enable = true;
       extensions.dotenv.enable = true;
+      extensions.contextUsage.enable = true;
       settings = {
         defaultModel = "claude-opus-4-6";
         defaultThinkingLevel = "high";
