@@ -19,5 +19,6 @@
     ../../assets/skills/surma-writer
     ../../assets/skills/rust
     ../../assets/skills/triple-helix
+    ../../assets/skills/preact-signals
   ];
 }

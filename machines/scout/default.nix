@@ -105,6 +105,7 @@
       ../../assets/skills/music
       ../../assets/skills/tts
       ../../assets/skills/triple-helix
+      ../../assets/skills/preact-signals
     ];
 
     defaultConfigs.pi = {
