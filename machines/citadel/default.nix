@@ -27,6 +27,10 @@
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
+  # 500M ESP fits ~6 generations (~75M each) with headroom for the
+  # copy-then-prune install. Without this cap /boot fills up and the bootloader
+  # install fails with ENOSPC. See Brain: TBD (2026-05-19 incident).
+  boot.loader.generic-extlinux-compatible.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = false;
   hardware.deviceTree.name = "rockchip/rk3588-rock-5b.dtb";
 
