@@ -9,7 +9,7 @@
 }:
 
 let
-  version = "2.1.118";
+  version = "2.1.138";
 
   # Base URL for all downloads
   baseUrl = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases";
@@ -18,7 +18,7 @@ let
   sources = {
     aarch64-darwin = {
       url = "${baseUrl}/${version}/darwin-arm64/claude";
-      sha256 = "sha256-VOXT9lEJuJxgRvR0QJRNUpBsZi0eUXSPYgpDDSatNmU=";
+      sha256 = "sha256-dZ0jzmJhk8ibyLNcXGyoqeM7nC5QTuFD5M0RmYh3QJc=";
     };
     x86_64-darwin = {
       url = "${baseUrl}/${version}/darwin-x64/claude";

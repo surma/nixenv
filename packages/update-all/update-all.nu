@@ -78,7 +78,6 @@ def main [] {
     { name: "agent-browser" }
     { name: "homeassistant-cli" }
     { name: "pi-acp" }
-    { name: "rtk" }
   ]
 
   for pkg in $packages {

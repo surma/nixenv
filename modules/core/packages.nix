@@ -13,7 +13,9 @@
     in
     {
       packages =
-        lib.filterAttrs (n: v: v == "directory") packageDirs
+        lib.filterAttrs (
+          name: type: type == "directory" && builtins.pathExists (packagesDir + "/${name}/default.nix")
+        ) packageDirs
         |> lib.mapAttrs (name: _: pkgs.callPackage (packagesDir + "/${name}") { inherit inputs; });
     };
 }
