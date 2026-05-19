@@ -20,5 +20,6 @@
     ../../assets/skills/rust
     ../../assets/skills/triple-helix
     ../../assets/skills/preact-signals
+    ../../assets/skills/web-development
   ];
 }
