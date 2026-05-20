@@ -142,7 +142,7 @@ in
     enableDefaultConfig = false;
     enable = true;
     matchBlocks = {
-      "*" = {
+      "* !gitea.surma.technology !gitea-brain" = {
         addKeysToAgent = "yes";
         forwardAgent = true;
         identityFile = [
