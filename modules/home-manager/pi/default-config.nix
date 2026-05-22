@@ -13,9 +13,10 @@ let
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
   defaultSettings = {
-    defaultProvider = "anthropic";
-    defaultModel = "claude-opus-4-7";
-    defaultThinkingLevel = "high";
+    defaultProvider = "openai";
+    defaultModel = "gpt-5.5";
+    defaultThinkingLevel = "xhigh";
+    steeringMode = "all";
     packages = [
       {
         source = "ssh://git@github.com/surma/pi-config";
