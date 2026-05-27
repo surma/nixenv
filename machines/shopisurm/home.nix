@@ -27,7 +27,7 @@
 
   home.stateVersion = "24.05";
   home.sessionVariables.SHOPIFY_AI_RTK = "0";
-  nix.settings.experimental-features = "configurable-impure-env";
+  nix.settings.extra-experimental-features = "configurable-impure-env";
   defaultConfigs.agents.enable = true;
   programs.gitea-cli.enable = true;
 
