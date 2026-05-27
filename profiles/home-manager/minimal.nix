@@ -30,7 +30,7 @@ in
 
   nix = {
     package = lib.mkDefault pkgs.nix;
-    settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
+    settings.extra-experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
   };
 
   home.packages = with pkgs; [
