@@ -15,7 +15,7 @@
     inputs.nix-darwin.packages.${system}.default
   ];
 
-  nix.settings.experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
+  nix.settings.extra-experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
 
   fonts.packages = with pkgs; [ fira-code ];
 
