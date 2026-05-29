@@ -118,8 +118,8 @@
       extensions.dotenv.enable = true;
       extensions.contextUsage.enable = true;
       settings = {
-        defaultModel = "claude-opus-4-6";
-        defaultThinkingLevel = "high";
+        defaultModel = "claude-opus-4-8";
+        defaultThinkingLevel = "xhigh";
       };
     };
 
