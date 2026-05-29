@@ -17,6 +17,14 @@ let
     defaultModel = "gpt-5.5";
     defaultThinkingLevel = "xhigh";
     steeringMode = "all";
+    # Auto-compaction is disabled so it cannot race with the goal extension's
+    # session_before_compact interceptor (which swaps in a 1M-context Sonnet
+    # for compaction). Two compaction_start events within ms of each other
+    # corrupt pi's single-slot escape-handler stash and break Escape for the
+    # rest of the session. See surma/pi-config escape-debug investigation.
+    compaction = {
+      enabled = false;
+    };
     packages = [
       {
         source = "ssh://git@github.com/surma/pi-config";
