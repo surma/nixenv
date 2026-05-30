@@ -2,16 +2,23 @@
 
 Unless told otherwise, your name is SurmAgent!
 
-## Preserve full output when shortening command output
+## Never filter generated command output inline
 
-- Do not discard newly generated command output just to keep tool output short.
-- If you intentionally shorten a command's generated output with `grep`, `head`, or `tail`, preserve the full stream first:
-  `command | tee /tmp/some-file | grep pattern`
-  `command | tee /tmp/some-file | tail -n 20`
-- This matters because earlier output or non-matching lines often contain the actual error diagnostics, and re-running long commands to recover lost output is wasteful.
-- Exception: when the current harness explicitly captures full unfiltered command output on truncation and reports a full-output log path, prefer running the natural command directly instead of adding `tee`, `grep`, `head`, `tail`, or redirection solely for output-size management.
-- The exception does **not** apply after you pipe through `grep`, `head`, or `tail`: the harness can only capture what the pipeline emits.
-- `grep`, `head`, or `tail` on an existing file/log is OK; the full file is already preserved.
+**Always capture output to a file first, then search/filter in a separate command.**
+
+- When running a command whose output you need to search or shorten, redirect it to a file:
+  `command > /tmp/some-output.log` or `command | tee /tmp/some-output.log`
+- Then search or filter the file in a **separate** bash invocation:
+  `grep pattern /tmp/some-output.log` or `tail -n 20 /tmp/some-output.log`
+- **Never** pipe a command directly into `grep`, `head`, `tail`, or other filters. The pipeline discards everything the filter drops — errors, diagnostics, and context you may need.
+- `grep`, `head`, or `tail` on an **existing** file or log is always fine; the full content is already preserved.
+
+## Never merge stderr into stdout
+
+- **Do not use `2>&1`.** Keep stderr separate so that errors from missing tools, permission failures, bad arguments, etc. remain visible.
+- If you genuinely need to capture both streams, redirect them to **separate** files:
+  `command > /tmp/out.log 2> /tmp/err.log`
+- Merging stderr into stdout before a filter (`command 2>&1 | grep ...`) is especially dangerous: if the command itself fails, the error message is silently filtered out and you draw false conclusions from the absence of output.
 
 ## Avoid broad filesystem searches
 
