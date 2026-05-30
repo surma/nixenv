@@ -31,6 +31,11 @@
   defaultConfigs.agents.enable = true;
   programs.gitea-cli.enable = true;
 
+  # Shopify Tool Gateway Pi extension (shopisurm only); pi-config stays the base everywhere.
+  defaultConfigs.pi.extraPackages = [
+    { source = "https://github.com/shopify-playground/pi-tool-gateway-extension"; }
+  ];
+
   agent.skills = [
     ../../assets/skills/agent-slack-write
     ../../assets/skills/commitsit

@@ -38,10 +38,13 @@ let
   settings =
     let
       mergedSettings = lib.recursiveUpdate defaultSettings piCfg.settings;
+      extraPackages =
+        lib.optional mcpAdapterCfg.enable "npm:pi-mcp-adapter"
+        ++ piCfg.extraPackages;
     in
     mergedSettings
-    // lib.optionalAttrs mcpAdapterCfg.enable {
-      packages = (mergedSettings.packages or [ ]) ++ [ "npm:pi-mcp-adapter" ];
+    // lib.optionalAttrs (extraPackages != [ ]) {
+      packages = (mergedSettings.packages or [ ]) ++ extraPackages;
     };
 
   wrapper = pkgs.writeShellScriptBin "pi" ''
@@ -71,6 +74,12 @@ with lib;
         type = types.attrsOf types.anything;
         default = { };
         description = "Additional Pi settings merged into ~/.pi/agent/settings.json";
+      };
+
+      extraPackages = mkOption {
+        type = types.listOf (types.either types.str (types.attrsOf types.anything));
+        default = [ ];
+        description = "Extra Pi packages concatenated into settings.json packages. Merges across modules.";
       };
 
       llmProxy = {
