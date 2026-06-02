@@ -87,6 +87,7 @@ in
             # `Username = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";`.
             whitelist = {
               SurmBob = "39473849-d69a-4a6b-8f9b-18679572254a";
+              ExploB0b = "5acde26f-a399-4130-8525-584d23021d80";
             };
           };
 
