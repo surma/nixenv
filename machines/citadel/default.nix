@@ -12,6 +12,7 @@
     ../../modules/services/surmhosting
     ./service-nixos-admin.nix
     ./service-zellij-web.nix
+    ./service-minecraft.nix
   ];
 
   networking.hostName = "citadel";
