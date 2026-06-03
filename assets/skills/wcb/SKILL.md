@@ -1,7 +1,7 @@
 ---
 name: wcb
 description: Investigate Shopify World Continuous Build (WCB / World CB) CI failures, task logs, dashboard/API state, workers/controller source, dependency-graph analysis, and WCB operational health. Use for WCB, World CB, Tectonix Continuous Image Build, WCB poll, wcb_evaluation, wcb_build, wcb_dependency_graph, evaluator/builder/analyzer tasks, and World image-build fallback failures.
-compatibility: Requires Shopify corp access. Useful CLIs: gh, gcloud, devx/tec, rg, jq. Some controller URLs require browser/Okta rather than raw curl.
+compatibility: 'Requires Shopify corp access. Useful CLIs: gh, gcloud, devx/tec, rg, jq. Some controller URLs require browser/Okta rather than raw curl.'
 ---
 
 # WCB — World Continuous Build
