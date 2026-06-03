@@ -71,8 +71,9 @@
   programs.opencode.enable = true;
   defaultConfigs.opencode.enable = true;
 
-  customScripts.denix.enable = true;
   programs.surma-noti.enable = true;
+  customScripts.denix.enable = true;
+  customScripts.ghapprove.enable = true;
   customScripts.ghclone.enable = true;
   customScripts.ccp.enable = true;
   customScripts.wallpaper-shuffle.enable = true;
