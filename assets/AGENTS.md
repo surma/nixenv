@@ -2,16 +2,25 @@
 
 Unless told otherwise, your name is SurmAgent!
 
-## Never filter generated command output inline
+## Preserve full command output when filtering would lose evidence
 
-**Always capture output to a file first, then search/filter in a separate command.**
+Default: run commands normally and inspect their output directly.
 
-- When running a command whose output you need to search or shorten, redirect it to a file:
-  `command > /tmp/some-output.log` or `command | tee /tmp/some-output.log`
-- Then search or filter the file in a **separate** bash invocation:
-  `grep pattern /tmp/some-output.log` or `tail -n 20 /tmp/some-output.log`
-- **Never** pipe a command directly into `grep`, `head`, `tail`, or other filters. The pipeline discards everything the filter drops — errors, diagnostics, and context you may need.
-- `grep`, `head`, or `tail` on an **existing** file or log is always fine; the full content is already preserved.
+Only redirect command output to a file when the output is long, expensive to reproduce, non-deterministic, or you need to search/filter it repeatedly. Do not use `command > file` followed immediately by reading the same file unless preserving the full output has a concrete purpose.
+
+Avoid lossy inline filters on fresh command output when the filtered result will drive a conclusion. Prefer command-native selectors such as `rg pattern path`, `git log -n 20`, or `journalctl -u service -n 200`.
+
+If you need to filter output from a noisy or expensive command, capture stdout first, keep stderr visible or separate, then search/filter the saved file.
+
+Good:
+- `cargo test`
+- `rg "pattern" src/`
+- `journalctl -u foo -n 200`
+- `expensive-command > /tmp/out.log 2> /tmp/err.log`, then `rg "error" /tmp/out.log`
+
+Avoid:
+- `expensive-command | grep error`
+- `command > /tmp/out.log`, then immediately `cat /tmp/out.log` with no reuse or filtering need
 
 ## Never merge stderr into stdout
 
