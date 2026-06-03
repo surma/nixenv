@@ -39,6 +39,7 @@
   agent.skills = [
     ../../assets/skills/agent-slack-write
     ../../assets/skills/commitsit
+    ../../assets/skills/wcb
   ];
 
   programs.starship.settings.custom.cwd.command = lib.mkForce "worldpath";
