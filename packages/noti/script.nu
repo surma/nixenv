@@ -1,5 +1,58 @@
 #!/usr/bin/env nu
 
+def current-zellij-pane [] {
+  let pane_id = ($env.ZELLIJ_PANE_ID? | default "")
+  if ($pane_id | is-empty) {
+    return null
+  }
+
+  let pane_id_num = try {
+    $pane_id | str replace --regex '^(terminal_|plugin_)' '' | into int
+  } catch {
+    return null
+  }
+
+  let result = try {
+    ^zellij action list-panes --all --json | complete
+  } catch {
+    return null
+  }
+
+  if $result.exit_code != 0 {
+    return null
+  }
+
+  let panes = try {
+    $result.stdout | from json
+  } catch {
+    return null
+  }
+
+  $panes | where id == $pane_id_num | first
+}
+
+def zellij-tab-name [] {
+  let pane = (current-zellij-pane)
+  if $pane == null {
+    return ""
+  }
+
+  $pane.tab_name? | default ""
+}
+
+def alert-zellij-tab [] {
+  if (($env.ZELLIJ? | is-empty) and ($env.ZELLIJ_PANE_ID? | is-empty)) {
+    return
+  }
+
+  # Prefer the controlling TTY so the BEL still reaches Zellij when stdout is captured.
+  try {
+    (char bel) | save --raw --force /dev/tty
+  } catch {
+    print -n (char bel)
+  }
+}
+
 def "main local" [
   msg: string
   --name: string  # Optional session/context name
@@ -16,12 +69,21 @@ def "main local" [
     "unknown session"
   }
 
+  let tab_name = (zellij-tab-name)
+  let notification_title = if ($tab_name | is-not-empty) {
+    $"($session_name) · ($tab_name)"
+  } else {
+    $session_name
+  }
+
+  alert-zellij-tab
+
   if $os == "Darwin" {
     let sound_param = if $chime { " sound name \"Glass\"" } else { "" }
-    ^/usr/bin/osascript -e $"display notification ($msg | to json) with title ($session_name | to json)($sound_param)" | complete | ignore
+    ^/usr/bin/osascript -e $"display notification ($msg | to json) with title ($notification_title | to json)($sound_param)" | complete | ignore
   } else {
     let urgency_flag = if $chime { ["-u" "critical"] } else { [] }
-    ^notify-send ...$urgency_flag $session_name $msg | complete | ignore
+    ^notify-send ...$urgency_flag $notification_title $msg | complete | ignore
   }
 }
 
