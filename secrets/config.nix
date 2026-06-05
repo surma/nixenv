@@ -246,6 +246,7 @@
       keys = [
         "surma"
         "nexus"
+        "shopisurm"
       ];
     };
     scout-lidarr-api-key = {

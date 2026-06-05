@@ -3,8 +3,14 @@
   lib,
   stdenv,
   defaultMobileDevice ? null,
+  homeassistantCli ? pkgs.callPackage ../homeassistant-cli { },
   ...
 }:
+let
+  runtimePath =
+    [ homeassistantCli ]
+    ++ lib.optional stdenv.isLinux pkgs.libnotify;
+in
 stdenv.mkDerivation {
   name = "noti";
   src = ./script.nu;
@@ -27,7 +33,7 @@ stdenv.mkDerivation {
 
     patchShebangs $out/bin/noti
     wrapProgram $out/bin/noti \
-      ${lib.optionalString stdenv.isLinux "--prefix PATH : ${lib.makeBinPath [ pkgs.libnotify ]}"} \
+      --prefix PATH : ${lib.makeBinPath runtimePath} \
       ${lib.optionalString (
         defaultMobileDevice != null
       ) "--set NOTI_MOBILE_DEVICE ${lib.escapeShellArg defaultMobileDevice}"}

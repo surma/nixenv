@@ -111,7 +111,16 @@ def "main mobile" [
   }
 
   let payload = { message: $msg, title: $session_name } | to json
-  ^hassio call-service notify $"mobile_app_($target_device)" -d $payload | complete | ignore
+  let result = ^hassio call-service notify $"mobile_app_($target_device)" -d $payload | complete
+  if $result.exit_code != 0 {
+    let details = ($result.stderr | str trim)
+    let error_msg = if ($details | is-empty) {
+      $"hassio notification failed with exit code ($result.exit_code)"
+    } else {
+      $"hassio notification failed with exit code ($result.exit_code): ($details)"
+    }
+    error make { msg: $error_msg }
+  }
 }
 
 def main [] {
