@@ -57,6 +57,10 @@
     };
 
     defaultConfigs.npm.enable = true;
+    defaultConfigs.agents = {
+      enable = true;
+      extraFiles = [ ./AGENTS.md ];
+    };
 
     programs.ssh = {
       enable = true;
@@ -146,7 +150,6 @@
     '';
 
     home.file = {
-      "AGENTS.md".source = ../../assets/AGENTS.md;
       ".local/state/scout/AGENTS.md".source = ./AGENTS.md;
     };
 

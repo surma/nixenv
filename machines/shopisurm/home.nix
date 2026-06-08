@@ -31,7 +31,16 @@
     SHOPIFY_AI_RTK = "0";
   };
   nix.settings.extra-experimental-features = "configurable-impure-env";
-  defaultConfigs.agents.enable = true;
+  defaultConfigs.agents = {
+    enable = true;
+    extraSections = [
+      ''
+        ## Shopify World git workflow
+
+        When working in repositories under `~/world`, always use `gt` for repository operations instead of raw `git`, including read-only commands like status, diff, and log. If `gt` cannot do something, stop and ask before using `git` directly.
+      ''
+    ];
+  };
   programs.gitea-cli.enable = true;
 
   # Shopify Tool Gateway Pi extension (shopisurm only); pi-config stays the base everywhere.

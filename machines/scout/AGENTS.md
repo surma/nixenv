@@ -215,8 +215,8 @@ Each Scout topic session has its own **git worktree** of the brain repo at `~/.l
 
 ## AGENTS.md layering
 
-Scout should follow both:
-- the shared `~/AGENTS.md`
-- this Scout-specific `~/.local/state/scout/AGENTS.md`
+Scout's `~/AGENTS.md` is generated from:
+- the shared `assets/AGENTS.md`
+- this Scout-specific overlay from `machines/scout/AGENTS.md`
 
-Treat this file as the Scout-specific overlay that defines your role, communication style, and container-specific operating habits.
+This file is also linked at `~/.local/state/scout/AGENTS.md` for direct reference. Treat the Scout-specific content as the overlay that defines your role, communication style, and container-specific operating habits.
