@@ -40,6 +40,25 @@ def zellij-tab-name [] {
   $pane.tab_name? | default ""
 }
 
+def notification-title [name] {
+  # Get session name from flag, environment, or default to "unknown session"
+  let provided_name = ($name | default "")
+  let session_name = if ($provided_name | is-not-empty) {
+    $provided_name
+  } else if ($env.ZELLIJ_SESSION_NAME? | is-not-empty) {
+    $env.ZELLIJ_SESSION_NAME
+  } else {
+    "unknown session"
+  }
+
+  let tab_name = (zellij-tab-name)
+  if ($tab_name | is-not-empty) {
+    $"($session_name) · ($tab_name)"
+  } else {
+    $session_name
+  }
+}
+
 def alert-zellij-tab [] {
   if (($env.ZELLIJ? | is-empty) and ($env.ZELLIJ_PANE_ID? | is-empty)) {
     return
@@ -60,21 +79,7 @@ def "main local" [
 ] {
   let os = (sys host | get name)
 
-  # Get session name from flag, environment, or default to "unknown session"
-  let session_name = if ($name | is-not-empty) {
-    $name
-  } else if ($env.ZELLIJ_SESSION_NAME? | is-not-empty) {
-    $env.ZELLIJ_SESSION_NAME
-  } else {
-    "unknown session"
-  }
-
-  let tab_name = (zellij-tab-name)
-  let notification_title = if ($tab_name | is-not-empty) {
-    $"($session_name) · ($tab_name)"
-  } else {
-    $session_name
-  }
+  let notification_title = (notification-title $name)
 
   alert-zellij-tab
 
@@ -92,13 +97,7 @@ def "main mobile" [
   --name: string    # Optional session/context name
   --device: string  # HA mobile device name (default: $env.NOTI_MOBILE_DEVICE)
 ] {
-  let session_name = if ($name | is-not-empty) {
-    $name
-  } else if ($env.ZELLIJ_SESSION_NAME? | is-not-empty) {
-    $env.ZELLIJ_SESSION_NAME
-  } else {
-    "unknown session"
-  }
+  let notification_title = (notification-title $name)
 
   let target_device = if ($device | is-not-empty) {
     $device
@@ -110,7 +109,7 @@ def "main mobile" [
     error make { msg: "No device specified. Use --device or set NOTI_MOBILE_DEVICE." }
   }
 
-  let payload = { message: $msg, title: $session_name } | to json
+  let payload = { message: $msg, title: $notification_title } | to json
   let result = ^hassio call-service notify $"mobile_app_($target_device)" -d $payload | complete
   if $result.exit_code != 0 {
     let details = ($result.stderr | str trim)
