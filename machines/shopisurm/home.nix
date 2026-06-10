@@ -37,8 +37,13 @@
       ''
         ## Shopify World git workflow
 
-        When working in repositories under `~/world`, always use `gt` for repository operations instead of raw `git`, including read-only commands like status, diff, and log. If `gt` cannot do something, stop and ask before using `git` directly.
-        Some `gt` subcommands, such as `gt push`, are only thin wrappers around raw Git operations. Do not use them as a workaround for the “use `gt` instead of `git`” rule. For Graphite/stack workflows, use Graphite-native commands such as `gt create`, `gt submit`, `gt reorder`, and `gt restack`. If the right Graphite command is unclear, stop and ask instead of falling back to Git or Git-like passthrough commands.
+        Do not use Graphite: never run `gt` or open the Graphite web UI (app.graphite.dev).
+        Use plain `git` for all repository operations.
+
+        The monorepo worktrees under `~/world` are enormous and the repo has extremely high commit activity. Keep operations bounded:
+        - Bound history: use `git log -n 20` (or a path/range), never an unbounded full log.
+        - Scope searches: always restrict `rg`/`find`/`grep` to a specific subdirectory, never the worktree root.
+        - Prefer `git`-native selectors (`git log -- <path>`, `git diff <range>`) over walking the tree yourself.
       ''
     ];
   };
