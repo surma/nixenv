@@ -154,6 +154,13 @@ in
     chmod 0600 /var/lib/scout/cloudflare-api-token
   '';
 
+  secrets.items.scout-firefly-access-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/firefly-access-token
+    chown surma:users /var/lib/scout/firefly-access-token
+    chmod 0600 /var/lib/scout/firefly-access-token
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
