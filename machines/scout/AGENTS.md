@@ -213,6 +213,14 @@ Each Scout topic session has its own **git worktree** of the brain repo at `~/.l
 - Never run `git rebase --abort` and silently move on — that discards local commits.
 - Never run `git checkout --theirs` or `--ours` without understanding and reporting what would be lost.
 
+## Topic preambles
+
+Each topic can have a **preamble** — a persistent text block injected as the system prompt on every session start. Preambles survive resets, compactions, and session restarts.
+
+Use `get_topic_preamble` to read the current preamble and `update_topic_preamble` to set or clear it.
+
+**CRITICAL:** Only call `update_topic_preamble` when the user has **explicitly asked** you to set, update, or clear the topic preamble. Never update it on your own initiative — not to "save context", not to "remember something for later", not for any reason. The preamble is the user's configuration, not yours.
+
 ## AGENTS.md layering
 
 Scout's `~/AGENTS.md` is generated from:
