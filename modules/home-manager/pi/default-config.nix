@@ -57,6 +57,12 @@ let
     export PI_PROXY_BASE_URL=${lib.escapeShellArg llmProxyCfg.vendorBaseURL}
     export PI_SKIP_VERSION_CHECK=1
 
+    # Update pi git packages (e.g. pi-config) before launching.
+    # --ff-only + || true: never block startup on network issues.
+    while IFS= read -r -d '' gitdir; do
+      ${pkgs.git}/bin/git -C "''${gitdir%/.git}" pull --ff-only --quiet 2>/dev/null || true
+    done < <(${pkgs.findutils}/bin/find "$HOME/.pi/agent/git" -maxdepth 4 -name .git -type d -print0 2>/dev/null) || true
+
     exec ${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent}/bin/pi "$@"
   '';
 in
