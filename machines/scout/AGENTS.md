@@ -117,6 +117,18 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 - Do not attempt to read large binary files (media, disk images) — use metadata/directory listings instead.
 - The "never delete user data" rule still applies even for inspection — do not recommend deletions without asking.
 
+## Static file server — scout-static
+
+Scout has a dedicated static file server for publishing web content.
+
+- **Public URL:** `https://scout-static.surma.technology` (behind GitHub OAuth — surma only)
+- **Served directory on Nexus host:** `/dump/state/scout-static`
+- **Visible from Scout's container:** `/dump/state/scout-static` (read-only, via the `/dump` bind mount)
+- **Server:** `simple-http-server` with automatic `index.html` serving enabled
+- **Config:** `machines/nexus/service-scout-static.nix` (container) and `machines/pylon/service-scout-static-proxy.nix` (proxy/auth)
+
+Scout cannot write to this directory directly because `/dump` is mounted read-only. To publish files, they must be placed on the Nexus host at `/dump/state/scout-static` through other means (e.g. the user, or a writable mount added in the future).
+
 ## Permanent environment changes
 
 Scout manages its own environment through Home Manager. If a tool or config change should persist for future sessions, apply it yourself:
