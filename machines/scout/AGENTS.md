@@ -122,12 +122,16 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 Scout has a dedicated static file server for publishing web content.
 
 - **Public URL:** `https://scout-static.surma.technology` (behind GitHub OAuth — surma only)
-- **Served directory on Nexus host:** `/dump/state/scout-static`
-- **Visible from Scout's container:** `/dump/state/scout-static` (read-only, via the `/dump` bind mount)
+- **Local writable path:** `~/scout-static`
 - **Server:** `simple-http-server` with automatic `index.html` serving enabled
 - **Config:** `machines/nexus/service-scout-static.nix` (container) and `machines/pylon/service-scout-static-proxy.nix` (proxy/auth)
 
-Scout cannot write to this directory directly because `/dump` is mounted read-only. To publish files, they must be placed on the Nexus host at `/dump/state/scout-static` through other means (e.g. the user, or a writable mount added in the future).
+### Rules — CRITICAL
+
+- **Each session must create its own subfolder** inside `~/scout-static` and work exclusively within it. Do not write files directly into the root of `~/scout-static`.
+- **Only work in subfolders you created.** Do not read, modify, or delete files in subfolders created by other sessions or the user without explicit approval.
+- **Deletion requires explicit user approval.** Never remove existing subfolders or their contents without asking first — even if they look stale or unused.
+- **Scope all commands to the specific subfolder.** When running shell commands (builds, file operations, cleanup), always target the individual subfolder path, not the `~/scout-static` root. Avoid glob patterns or recursive operations that could affect sibling folders.
 
 ## Permanent environment changes
 
