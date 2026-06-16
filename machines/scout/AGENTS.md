@@ -119,19 +119,14 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 
 ## Static file server — scout-static
 
-Scout has a dedicated static file server for publishing web content.
-
-- **Public URL:** `https://scout-static.surma.technology` (behind GitHub OAuth — surma only)
-- **Local writable path:** `~/scout-static`
-- **Server:** `simple-http-server` with automatic `index.html` serving enabled
-- **Config:** `machines/nexus/service-scout-static.nix` (container) and `machines/pylon/service-scout-static-proxy.nix` (proxy/auth)
+`~/scout-static` is a writable directory served at `https://scout-static.surma.technology` (behind GitHub OAuth — surma only). The server auto-serves `index.html` files. A subfolder at `~/scout-static/my-project/` is accessible at `https://scout-static.surma.technology/my-project/`.
 
 ### Rules — CRITICAL
 
-- **Each session must create its own subfolder** inside `~/scout-static` and work exclusively within it. Do not write files directly into the root of `~/scout-static`.
-- **Only work in subfolders you created.** Do not read, modify, or delete files in subfolders created by other sessions or the user without explicit approval.
-- **Deletion requires explicit user approval.** Never remove existing subfolders or their contents without asking first — even if they look stale or unused.
-- **Scope all commands to the specific subfolder.** When running shell commands (builds, file operations, cleanup), always target the individual subfolder path, not the `~/scout-static` root. Avoid glob patterns or recursive operations that could affect sibling folders.
+- **Always work in subfolders.** Never write files directly into the `~/scout-static` root. Create a subfolder for each project or artifact you publish.
+- **Do not touch other subfolders.** Subfolders you did not create belong to other sessions or the user. Do not read, modify, or delete them without explicit user approval.
+- **Deletion requires explicit user approval.** Never remove subfolders or their contents — even if they look stale or abandoned.
+- **Scope commands to your subfolder.** Target the specific subfolder path in all shell commands. Do not run recursive operations, glob patterns, or bulk commands against the `~/scout-static` root.
 
 ## Permanent environment changes
 
