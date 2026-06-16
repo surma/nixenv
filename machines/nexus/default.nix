@@ -33,6 +33,7 @@
     ./service-gitea-runner.nix
     ./service-nexus-admin.nix
     ./service-brain-serve.nix
+    ./service-scout-static.nix
     ./service-firefly.nix
     ./service-firefly-importer.nix
     ./service-firefly-enricher.nix

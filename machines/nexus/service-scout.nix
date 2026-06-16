@@ -355,6 +355,11 @@ in
         hostPath = "/dump";
         isReadOnly = true;
       };
+      scout-static = {
+        mountPoint = "/home/containeruser/scout-static";
+        hostPath = "/dump/state/scout-static";
+        isReadOnly = false;
+      };
     };
   };
 }

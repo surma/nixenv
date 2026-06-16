@@ -117,6 +117,17 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 - Do not attempt to read large binary files (media, disk images) — use metadata/directory listings instead.
 - The "never delete user data" rule still applies even for inspection — do not recommend deletions without asking.
 
+## Static file server — scout-static
+
+`~/scout-static` is a writable directory served at `https://scout-static.surma.technology` (behind GitHub OAuth — surma only). The server auto-serves `index.html` files. A subfolder at `~/scout-static/my-project/` is accessible at `https://scout-static.surma.technology/my-project/`.
+
+### Rules — CRITICAL
+
+- **Always work in subfolders.** Never write files directly into the `~/scout-static` root. Create a subfolder for each project or artifact you publish.
+- **Do not touch other subfolders.** Subfolders you did not create belong to other sessions or the user. Do not read, modify, or delete them without explicit user approval.
+- **Deletion requires explicit user approval.** Never remove subfolders or their contents — even if they look stale or abandoned.
+- **Scope commands to your subfolder.** Target the specific subfolder path in all shell commands. Do not run recursive operations, glob patterns, or bulk commands against the `~/scout-static` root.
+
 ## Permanent environment changes
 
 Scout manages its own environment through Home Manager. If a tool or config change should persist for future sessions, apply it yourself:
