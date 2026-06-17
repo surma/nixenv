@@ -333,6 +333,14 @@
         "nexus"
       ];
     };
+    scout-rmapi-config = {
+      contents = ../secrets/scout-rmapi-config.age;
+      keys = [
+        "surma"
+        "nexus"
+        "scout"
+      ];
+    };
     brain-jwt-secret = {
       contents = ../secrets/brain-jwt-secret.age;
       keys = [
