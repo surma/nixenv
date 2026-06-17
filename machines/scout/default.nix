@@ -25,7 +25,7 @@
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
     home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
-    home.sessionVariables.RMAPI_CONFIG = "/var/lib/credentials/scout/rmapi/rmapi.conf";
+    home.sessionVariables.RMAPI_CONFIG = "${config.home.homeDirectory}/.config/rmapi/rmapi.conf";
 
     home.packages = with pkgs; [
       jq
@@ -129,6 +129,16 @@
         defaultThinkingLevel = "xhigh";
       };
     };
+
+    home.activation.rmapi-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      srcFile="/var/lib/credentials/scout/rmapi/rmapi.conf"
+      destDir="${config.home.homeDirectory}/.config/rmapi"
+      if [ -f "$srcFile" ]; then
+        mkdir -p "$destDir"
+        cp "$srcFile" "$destDir/rmapi.conf"
+        chmod 0600 "$destDir/rmapi.conf"
+      fi
+    '';
 
     home.activation.hassio-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       tokenFile="/var/lib/credentials/scout/hassio-token"
