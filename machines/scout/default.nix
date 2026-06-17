@@ -39,7 +39,7 @@
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.whatsapp-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.presage-cli
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.homeassistant-cli
-      rmapi
+      inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.rmapi
       spotify-player
       (python3.withPackages (ps: [
         ps.pip
