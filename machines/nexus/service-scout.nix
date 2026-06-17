@@ -161,6 +161,14 @@ in
     chmod 0600 /var/lib/scout/firefly-access-token
   '';
 
+  secrets.items.scout-rmapi-config.command = ''
+    mkdir -p /var/lib/scout/rmapi
+    cat > /var/lib/scout/rmapi/rmapi.conf
+    chown surma:users /var/lib/scout/rmapi /var/lib/scout/rmapi/rmapi.conf
+    chmod 0700 /var/lib/scout/rmapi
+    chmod 0600 /var/lib/scout/rmapi/rmapi.conf
+  '';
+
   systemd.tmpfiles.rules = [
     "d /dump/state/scout 0755 surma users - -"
   ];
