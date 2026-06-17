@@ -109,6 +109,7 @@
       ../../assets/skills/planning
       ../../assets/skills/debugging
       ../../assets/skills/music
+      ../../assets/skills/remarkable
       ../../assets/skills/tts
       ../../assets/skills/triple-helix
       ../../assets/skills/preact-signals
