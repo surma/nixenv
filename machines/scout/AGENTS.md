@@ -102,8 +102,6 @@ The entire Nexus `/dump` directory is bind-mounted **read-only** into the contai
 - `/dump/music/` — music collection (FLAC/MP3)
 - `/dump/Movies/` — movie library
 - `/dump/TV/` — TV shows
-- `/dump/audiobooks/` — audiobook library
-- `/dump/surmvault/` — personal vault (synced via Syncthing)
 - Various service data directories (Lidarr, Radarr, Navidrome, qBittorrent, etc.)
 
 Combined with the `nixenv` repo (which defines all NixOS container and service configurations), this gives Scout deep inspection capabilities:
@@ -113,9 +111,25 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 - Inspect media organization and service runtime state
 
 **Constraints:**
-- The mount is **read-only**. Scout cannot modify anything under `/dump`.
+- The mount is **read-only** by default. Scout cannot modify anything under `/dump` except for the Syncthing shared folders listed below.
 - Do not attempt to read large binary files (media, disk images) — use metadata/directory listings instead.
 - The "never delete user data" rule still applies even for inspection — do not recommend deletions without asking.
+
+## Syncthing shared folders — read-write
+
+The following Syncthing-managed directories are bind-mounted **read-write** into the container, overlaying the read-only `/dump` mount at their respective paths. Scout can create, modify, move, and delete files in these directories.
+
+- `/dump/audiobooks/` — audiobook library (synced to multiple devices)
+- `/dump/ebooks/` — eBook collection (synced to multiple devices)
+- `/dump/scratch/` — general-purpose scratch/transfer space
+- `/dump/surmvault/` — personal vault (Markdown notes, synced via Syncthing)
+
+**Constraints:**
+- Changes here propagate to all synced devices via Syncthing. Treat writes as production changes.
+- **Never delete, rename, or overwrite files without explicit user approval.** These folders sync to phones, tablets, and other machines — accidental data loss is hard to undo.
+- Avoid writing temporary or working files here. Use the CWD or `/tmp` for scratch work.
+- Do not read large binary files (audiobooks, EPUBs) into context — use metadata, directory listings, or `file` commands instead.
+- When managing eBooks or audiobooks, prefer organizing into subdirectories by author or topic, consistent with the existing structure.
 
 ## Static file server — scout-static
 
