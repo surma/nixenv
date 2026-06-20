@@ -148,7 +148,10 @@ with lib;
           };
         }
         // optionalAttrs proxyExtensionCfg.enable {
-          ".pi/agent/extensions/proxy.ts".source = ./extension/proxy.ts;
+          ".pi/agent/extensions/proxy.ts" = {
+            source = ./extension/proxy.ts;
+            force = true;
+          };
         }
         // optionalAttrs piCfg.extensions.dotenv.enable {
           ".pi/agent/extensions/dotenv.ts".source = ./extension/dotenv.ts;
