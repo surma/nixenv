@@ -54,7 +54,6 @@ in
     ]
   );
 
-  defaultConfigs.pi.extensions.proxy.enable = true;
   defaultConfigs.helix.enableSlSyntax = true;
   programs.ghostty.enable = true;
   defaultConfigs.ghostty.enable = true;

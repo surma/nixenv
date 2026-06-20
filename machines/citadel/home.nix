@@ -49,7 +49,6 @@
 
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
-    defaultConfigs.pi.extensions.proxy.enable = true;
 
     defaultConfigs.helix.enableSlSyntax = true;
     programs.opencode.enable = true;

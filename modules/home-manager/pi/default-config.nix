@@ -10,7 +10,6 @@ let
   piCfg = config.defaultConfigs.pi;
   llmProxyCfg = piCfg.llmProxy;
   openRouterCfg = piCfg.openRouter;
-  proxyExtensionCfg = piCfg.extensions.proxy;
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
   defaultSettings = {
@@ -25,7 +24,6 @@ let
     packages = [
       {
         source = "ssh://git@github.com/surma/pi-config";
-        extensions = [ "-extensions/proxy.ts" ];
         prompts = [ ];
       }
     ];
@@ -111,8 +109,6 @@ with lib;
         description = "Path to file containing the OpenRouter API key";
       };
 
-      extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
-
       extensions.dotenv.enable = mkEnableOption "the dotenv extension (loads .env from cwd + HM session vars)";
 
       extensions.contextUsage.enable = mkEnableOption "the context-usage awareness extension (injects usage warnings into prompts)";
@@ -147,9 +143,6 @@ with lib;
             mutable = true;
           };
         }
-        // optionalAttrs proxyExtensionCfg.enable {
-          ".pi/agent/extensions/proxy.ts".source = ./extension/proxy.ts;
-        }
         // optionalAttrs piCfg.extensions.dotenv.enable {
           ".pi/agent/extensions/dotenv.ts".source = ./extension/dotenv.ts;
         }
@@ -159,7 +152,7 @@ with lib;
       );
     }
 
-    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null || proxyExtensionCfg.enable)) {
+    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null)) {
       programs.pi.package = wrapper;
     })
   ];
