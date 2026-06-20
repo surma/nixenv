@@ -9,6 +9,7 @@ let
   isEnabled = config.defaultConfigs.pi.enable;
   piCfg = config.defaultConfigs.pi;
   llmProxyCfg = piCfg.llmProxy;
+  openRouterCfg = piCfg.openRouter;
   proxyExtensionCfg = piCfg.extensions.proxy;
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
@@ -54,6 +55,12 @@ let
       fi
     ''}
 
+    ${lib.optionalString (openRouterCfg.keyFile != null) ''
+      if [ -f "${openRouterCfg.keyFile}" ]; then
+        export OPENROUTER_API_KEY="$(tr -d '\n' < "${openRouterCfg.keyFile}")"
+      fi
+    ''}
+
     export PI_PROXY_BASE_URL=${lib.escapeShellArg llmProxyCfg.vendorBaseURL}
     export PI_SKIP_VERSION_CHECK=1
 
@@ -96,6 +103,12 @@ with lib;
           default = lib.attrByPath [ "secrets" "items" "llm-proxy-client-key" "target" ] null config;
           description = "Path to file containing the API key for the LLM proxy";
         };
+      };
+
+      openRouter.keyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing the OpenRouter API key";
       };
 
       extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
@@ -146,7 +159,7 @@ with lib;
       );
     }
 
-    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || proxyExtensionCfg.enable)) {
+    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null || proxyExtensionCfg.enable)) {
       programs.pi.package = wrapper;
     })
   ];

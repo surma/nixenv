@@ -154,6 +154,13 @@ in
     chmod 0600 /var/lib/scout/cloudflare-api-token
   '';
 
+  secrets.items.openrouter-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/openrouter-api-key
+    chown surma:users /var/lib/scout/openrouter-api-key
+    chmod 0600 /var/lib/scout/openrouter-api-key
+  '';
+
   secrets.items.scout-firefly-access-token.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/firefly-access-token
