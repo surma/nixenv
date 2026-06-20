@@ -22,34 +22,34 @@ export default function (pi: ExtensionAPI) {
 
     pi.registerProvider("anthropic", {
       baseUrl: `${PROXY_BASE_URL}/apis/anthropic`,
-      apiKey: "PI_PROXY_API_KEY",
+      apiKey: "$PI_PROXY_API_KEY",
       headers,
     });
 
     pi.registerProvider("openai", {
       baseUrl: `${PROXY_BASE_URL}/v1`,
-      apiKey: "PI_PROXY_API_KEY",
+      apiKey: "$PI_PROXY_API_KEY",
       headers,
     });
 
     pi.registerProvider("google", {
       baseUrl: `${PROXY_BASE_URL}/googlevertexai-global/v1beta1/projects/shopify-ml-production/locations/global/publishers/google`,
-      apiKey: "PI_PROXY_API_KEY",
+      apiKey: "$PI_PROXY_API_KEY",
       headers: {
         ...headers,
-        Authorization: "PI_PROXY_AUTH_HEADER",
+        Authorization: "$PI_PROXY_AUTH_HEADER",
       },
     });
 
     pi.registerProvider("groq", {
       baseUrl: `${PROXY_BASE_URL}/groq/openai/v1`,
-      apiKey: "PI_PROXY_API_KEY",
+      apiKey: "$PI_PROXY_API_KEY",
       headers,
     });
 
     pi.registerProvider("xai", {
       baseUrl: `${PROXY_BASE_URL}/xai/v1`,
-      apiKey: "PI_PROXY_API_KEY",
+      apiKey: "$PI_PROXY_API_KEY",
       headers,
     });
   }
