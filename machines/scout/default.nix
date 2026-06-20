@@ -121,6 +121,7 @@
       llmProxy = {
         apiKeyFile = "/var/lib/credentials/scout/llm-proxy-client-key";
       };
+      openRouter.keyFile = "/var/lib/credentials/scout/openrouter-api-key";
       extensions.proxy.enable = true;
       extensions.dotenv.enable = true;
       extensions.contextUsage.enable = true;
