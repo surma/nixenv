@@ -397,6 +397,11 @@ in
         hostPath = "/dump/surmvault";
         isReadOnly = false;
       };
+      qbittorrent-downloads = {
+        mountPoint = "/dump/state/qbittorrent/qBittorrent/downloads";
+        hostPath = "/dump/state/qbittorrent/qBittorrent/downloads";
+        isReadOnly = false;
+      };
     };
   };
 }
