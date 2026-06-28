@@ -1135,11 +1135,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782028327,
-        "narHash": "sha256-PeqFijTH3VSQ9k2xcXsf5I18fMEtAuZO48VzQlHqgAk=",
+        "lastModified": 1782656211,
+        "narHash": "sha256-lfGsO02CMEgkzFFS1PWNAgpUfc0rVsM/5RHS3OHPvsg=",
         "ref": "main",
-        "rev": "0ff635f8891a308dd6cf788c9ccde920ac070e6a",
-        "revCount": 12,
+        "rev": "f720e6a5726238eb844092b15490a9fc768d3786",
+        "revCount": 14,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
       },
