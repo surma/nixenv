@@ -31,6 +31,7 @@
       jq
       nodejs_24
       openssh
+      percollate
       ripgrep
       sqlite
       tmux
@@ -110,6 +111,7 @@
       ../../assets/skills/debugging
       ../../assets/skills/music
       ../../assets/skills/remarkable
+      ../../assets/skills/web-to-epub
       ../../assets/skills/tts
       ../../assets/skills/triple-helix
       ../../assets/skills/preact-signals
