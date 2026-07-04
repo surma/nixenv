@@ -142,6 +142,50 @@ web-search fetch -o /tmp/paper.pdf "https://arxiv.org/pdf/2406.18665.pdf"
 rmapi put /tmp/paper.pdf "/ML/Papers"
 ```
 
+## Converting EPUB to PDF for the reMarkable
+
+The reMarkable's EPUB renderer has significant limitations: it ignores CSS `font-family` on code/pre elements (no monospace), does not render MathML, and largely ignores CSS image sizing. For EPUBs with code blocks, math formulas, or complex formatting, **convert to PDF first** using Calibre's `ebook-convert`.
+
+### Device: reMarkable Paper Pro Move
+
+- **Screen**: 7.3", 1696 × 954 px, 264 PPI, 16:9
+- **Portrait dimensions**: 954 × 1696 px → 3.61" × 6.42"
+
+### Conversion command
+
+```bash
+nix shell nixpkgs#calibre --command ebook-convert \
+  input.epub output.pdf \
+  --custom-size=3.61x6.42 \
+  --unit=inch \
+  --pdf-page-margin-left=22 \
+  --pdf-page-margin-right=22 \
+  --pdf-page-margin-top=22 \
+  --pdf-page-margin-bottom=22 \
+  --pdf-default-font-size=12 \
+  --pdf-mono-font-size=10 \
+  --pdf-mono-family="DejaVu Sans Mono" \
+  --pdf-page-numbers
+```
+
+### What this does
+
+- **Page size**: Matches the Paper Pro Move screen exactly (3.61" × 6.42" portrait)
+- **Margins**: 0.3" (22pt) all sides — tight but readable on the narrow screen
+- **Fonts**: 12px body, 10px monospace (DejaVu Sans Mono)
+- **MathML**: Calibre's PDF renderer handles MathML natively — formulas render correctly
+- **Code**: Properly monospace with syntax highlighting (colors render as grayscale on e-ink, but bold/italic variants are preserved)
+- **Page numbers**: Added at the bottom of each page
+
+### When to use
+
+- EPUBs with **code blocks** (monospace won't render in EPUB on reMarkable)
+- EPUBs with **MathML formulas** (completely broken in EPUB on reMarkable)
+- EPUBs with **complex CSS** or embedded fonts that the reMarkable mangles
+- When the user reports formatting issues with an EPUB on the device
+
+For simple prose EPUBs without code or math, EPUB format is fine — it allows font size adjustment and reflow.
+
 ## Folder conventions
 
 Check the user's existing folder structure with `rmapi ls /` before uploading. Place files in an appropriate existing folder rather than creating new top-level folders without asking.
