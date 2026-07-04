@@ -26,6 +26,23 @@ If `ls` fails with an auth error, the device token may have expired or the `RMAP
 - Supported upload formats: **PDF** and **EPUB**. Other formats must be converted first.
 - The reMarkable cloud syncs to the tablet automatically — uploads appear on the device within seconds to minutes.
 
+## Choosing between EPUB and PDF — IMPORTANT
+
+The reMarkable's EPUB renderer has significant limitations. **Default to PDF** for anything with complex formatting. Only use EPUB for simple prose.
+
+**Use PDF when the content has any of:**
+- **Code blocks** — the reMarkable ignores CSS `font-family` on `<code>`/`<pre>` elements entirely and renders code in the global proportional reading font. There is no CSS workaround; this is a firmware limitation.
+- **Math formulas (MathML/LaTeX)** — the reMarkable cannot render MathML. It dumps the raw text content of `<math>` elements as inline gibberish. It also ignores the `altimg` fallback attribute.
+- **Embedded fonts** — `@font-face` with OTF/TTF files in the EPUB is not reliably supported. The reader may partially load the font and fail silently, preventing fallback to system fonts.
+- **CSS image sizing** — the reMarkable largely ignores CSS `width`/`height` on `<img>` tags and HTML `width`/`height` attributes. Images display at unpredictable sizes.
+- **Complex CSS in general** — the renderer is limited and produces poor results with anything beyond basic styling.
+
+**EPUB is fine when:**
+- The content is **simple prose** (novels, articles, essays) with no code or math
+- The user specifically wants **reflowable text** with adjustable font size
+
+**When converting web articles/blog posts:** Check for `<pre>`, `<code>`, or `<math>` elements. If present, convert to PDF. Technical blog posts almost always need PDF.
+
 ## Uploading files
 
 Upload a single file to the root:
