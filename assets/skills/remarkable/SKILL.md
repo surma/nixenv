@@ -203,6 +203,77 @@ nix shell nixpkgs#calibre --command ebook-convert \
 
 For simple prose EPUBs without code or math, EPUB format is fine — it allows font size adjustment and reflow.
 
+## Converting web pages to PDF for the reMarkable
+
+Web pages with math (MathJax/KaTeX) or code blocks need to be printed from a live browser so that JavaScript-rendered content (formulas, syntax highlighting) is captured correctly. Using `percollate` or other Readability-based extractors strips out the JS, leaving raw LaTeX source in the output.
+
+### Puppeteer print-to-PDF script
+
+Save this as a `.cjs` file and run with Node.js + system Chromium:
+
+```javascript
+const puppeteer = require('puppeteer-core');
+
+(async () => {
+  const url = process.argv[2];
+  const output = process.argv[3];
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: process.env.CHROMIUM_PATH || 'chromium',
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+
+  // Wait for MathJax/KaTeX rendering
+  await new Promise(r => setTimeout(r, 3000));
+
+  // Fit code blocks to narrow screen
+  await page.addStyleTag({ content: `
+    body { font-size: 14px !important; }
+    pre, code { font-size: 11px !important; white-space: pre-wrap !important;
+      word-wrap: break-word !important; overflow-wrap: break-word !important; }
+    img { max-width: 100% !important; height: auto !important; }
+  `});
+
+  // Paper Pro Move: 3.61" x 6.42"
+  await page.pdf({
+    path: output,
+    width: '3.61in',
+    height: '6.42in',
+    margin: { top: '0.3in', right: '0.3in', bottom: '0.3in', left: '0.3in' },
+    printBackground: true,
+    displayHeaderFooter: false,
+  });
+
+  await browser.close();
+})();
+```
+
+### Dependencies
+
+```bash
+npm install puppeteer-core  # in a temp working dir
+```
+
+### Usage
+
+```bash
+nix shell nixpkgs#chromium --command bash -c '
+export CHROMIUM_PATH=$(which chromium)
+node /path/to/print-to-pdf.cjs "https://example.com/blog-post" "/tmp/output.pdf"
+'
+```
+
+### When to use this instead of calibre EPUB→PDF
+
+- The source is a **web page** (not an EPUB file)
+- The page uses **MathJax or KaTeX** for math rendering (LaTeX in `\(…\)` or `$…$` delimiters)
+- The page has **JS-rendered content** that Readability extraction would strip
+
+For EPUB files with MathML, use the calibre conversion above instead — calibre renders MathML natively.
+
 ## Folder conventions
 
 Check the user's existing folder structure with `rmapi ls /` before uploading. Place files in an appropriate existing folder rather than creating new top-level folders without asking.
