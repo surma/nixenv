@@ -97,10 +97,6 @@
   virtualisation.oci-containers.backend = "podman";
 
   services.tailscale.enable = true;
-  services.tailscale.useRoutingFeatures = "server";
-  services.tailscale.extraUpFlags = [
-    "--advertise-exit-node"
-  ];
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
