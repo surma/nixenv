@@ -173,23 +173,23 @@ The reMarkable's EPUB renderer has significant limitations: it ignores CSS `font
 ```bash
 nix shell nixpkgs#calibre --command ebook-convert \
   input.epub output.pdf \
-  --custom-size=3.61x6.42 \
+  --custom-size=5.05x8.99 \
   --unit=inch \
   --pdf-page-margin-left=22 \
   --pdf-page-margin-right=22 \
   --pdf-page-margin-top=22 \
   --pdf-page-margin-bottom=22 \
-  --pdf-default-font-size=12 \
-  --pdf-mono-font-size=10 \
+  --pdf-default-font-size=14 \
+  --pdf-mono-font-size=12 \
   --pdf-mono-family="DejaVu Sans Mono" \
   --pdf-page-numbers
 ```
 
 ### What this does
 
-- **Page size**: Matches the Paper Pro Move screen exactly (3.61" × 6.42" portrait)
-- **Margins**: 0.3" (22pt) all sides — tight but readable on the narrow screen
-- **Fonts**: 12px body, 10px monospace (DejaVu Sans Mono)
+- **Page size**: 1.4× the Paper Pro Move screen at the same 16:9 ratio (5.05" × 8.99"). The reMarkable scales PDFs to fit, so a larger page gives more content per page with comfortable text density.
+- **Margins**: 0.3" (22pt) all sides
+- **Fonts**: 14px body, 12px monospace (DejaVu Sans Mono)
 - **MathML**: Calibre's PDF renderer handles MathML natively — formulas render correctly
 - **Code**: Properly monospace with syntax highlighting (colors render as grayscale on e-ink, but bold/italic variants are preserved)
 - **Page numbers**: Added at the bottom of each page
@@ -206,6 +206,10 @@ For simple prose EPUBs without code or math, EPUB format is fine — it allows f
 ## Converting web pages to PDF for the reMarkable
 
 Web pages with math (MathJax/KaTeX) or code blocks need to be printed from a live browser so that JavaScript-rendered content (formulas, syntax highlighting) is captured correctly. Using `percollate` or other Readability-based extractors strips out the JS, leaving raw LaTeX source in the output.
+
+### Page sizing strategy
+
+The PDF page is intentionally **larger** than the physical screen (1.4× at the same 16:9 aspect ratio). The reMarkable scales PDFs to fit the screen, so a larger page means more content per page with smaller effective text — matching the density of a typical book rather than a large-print edition. Do **not** use the exact screen dimensions (3.61" × 6.42") as the page size; that produces text that is too large.
 
 ### Puppeteer print-to-PDF script
 
@@ -224,24 +228,30 @@ const puppeteer = require('puppeteer-core');
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
   const page = await browser.newPage();
+  await page.setViewport({ width: 900, height: 1400 });
   await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
 
   // Wait for MathJax/KaTeX rendering
   await new Promise(r => setTimeout(r, 3000));
 
-  // Fit code blocks to narrow screen
+  // Only inject minimal CSS: wrap long code lines, constrain images
+  // Do NOT override font-size or font-family — let the page's own styles work
+  // (requires standard web fonts to be installed in the container)
   await page.addStyleTag({ content: `
-    body { font-size: 14px !important; }
-    pre, code { font-size: 11px !important; white-space: pre-wrap !important;
-      word-wrap: break-word !important; overflow-wrap: break-word !important; }
+    pre, code {
+      white-space: pre-wrap !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
     img { max-width: 100% !important; height: auto !important; }
   `});
 
-  // Paper Pro Move: 3.61" x 6.42"
+  // Paper Pro Move: 16:9 aspect ratio, 1.4x screen size
+  // (5.05" × 8.99" — reMarkable scales to fit 3.61" × 6.42" screen)
   await page.pdf({
     path: output,
-    width: '3.61in',
-    height: '6.42in',
+    width: '5.05in',
+    height: '8.99in',
     margin: { top: '0.3in', right: '0.3in', bottom: '0.3in', left: '0.3in' },
     printBackground: true,
     displayHeaderFooter: false,
@@ -250,6 +260,10 @@ const puppeteer = require('puppeteer-core');
   await browser.close();
 })();
 ```
+
+### Font requirements
+
+The Scout container has Liberation, DejaVu, and Noto font families installed. These provide metrically-compatible substitutes for standard web fonts (Arial/Helvetica → Liberation Sans, Times New Roman → Liberation Serif, Courier New → Liberation Mono) with proper bold/italic variants. This means Chromium renders pages as the author intended — no CSS font overrides needed.
 
 ### Dependencies
 

@@ -27,7 +27,12 @@
     home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
     home.sessionVariables.RMAPI_CONFIG = "${config.home.homeDirectory}/.config/rmapi/rmapi.conf";
 
+    fonts.fontconfig.enable = true;
+
     home.packages = with pkgs; [
+      dejavu_fonts
+      liberation_ttf
+      noto-fonts
       jq
       nodejs_24
       openssh
