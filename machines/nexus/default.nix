@@ -99,6 +99,17 @@
 
   services.tailscale.enable = true;
 
+  # nexus's Traefik sits behind pylon's public Traefik (reached over Tailscale).
+  # Trust pylon's X-Forwarded-* headers so the real request scheme survives the
+  # inner hop. Without this, nexus rewrites X-Forwarded-Proto to "http", and
+  # backends that gate on HTTPS break -- notably HedgeDoc, whose session cookie
+  # is Secure-only (protocolUseSSL) and whose socket.io auth then rejects the
+  # connection ("Cookie is invalid"), leaving the editor stuck OFFLINE.
+  # Scoped to pylon's Tailscale IP.
+  services.traefik.staticConfigOptions.entryPoints.web.forwardedHeaders.trustedIPs = [
+    "100.64.107.114/32"
+  ];
+
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
