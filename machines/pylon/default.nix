@@ -15,6 +15,7 @@
     ./service-music-proxy.nix
     ./service-ha-proxy.nix
     ./service-gitea-proxy.nix
+    ./service-hedgedoc-proxy.nix
     ./service-dump-proxy.nix
     ./service-brain-proxy.nix
     ./service-public-brain-proxy.nix

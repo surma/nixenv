@@ -11,6 +11,7 @@
     ./service-mosquitto.nix
     ./service-scout.nix
     ./service-gitea.nix
+    ./service-hedgedoc.nix
     ./service-lidarr.nix
     ./service-radarr.nix
     ./service-sonarr.nix
@@ -101,7 +102,7 @@
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
-  services.surmhosting.externalInterface = "enp2s0";
+  services.surmhosting.externalInterface = "enp1s0";
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 
