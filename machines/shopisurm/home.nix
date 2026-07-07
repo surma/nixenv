@@ -106,9 +106,11 @@
   customScripts.llm-proxy.enable = true;
   customScripts.oc.enable = true;
   customScripts.ocq.enable = true;
+  customScripts.transcribe.enable = true;
 
   programs.go.enable = true;
 
+  secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.shopisurm-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
   secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
 

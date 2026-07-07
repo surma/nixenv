@@ -74,11 +74,13 @@ in
   customScripts.wallpaper-shuffle.asDesktopItem = true;
   customScripts.oc.enable = true;
   customScripts.ocq.enable = true;
+  customScripts.transcribe.enable = true;
 
   xdg.configFile = {
     "dump/config.json".text = builtins.toJSON { server = "http://10.0.0.2:8081"; };
   };
 
+  secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.dragoon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
   secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
 

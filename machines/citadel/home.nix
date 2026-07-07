@@ -23,6 +23,7 @@
 
     secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
     secrets.items.scout-gws-credentials.target = "${config.home.homeDirectory}/.local/state/gws-credentials";
+    secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
 
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE =
@@ -36,6 +37,7 @@
     customScripts.flacsplit.enable = true;
     customScripts.oc.enable = true;
     customScripts.ocq.enable = true;
+    customScripts.transcribe.enable = true;
 
     home.packages = (
       with pkgs;

@@ -147,6 +147,16 @@
         "nexus"
       ];
     };
+    huggingface-token = {
+      contents = ../secrets/huggingface-token.age;
+      keys = [
+        "surma"
+        "shopisurm"
+        "nexus"
+        "dragoon"
+        "citadel"
+      ];
+    };
     surm-auth-github-client-id = {
       contents = ../secrets/surm-auth-github-client-id.age;
       keys = [
