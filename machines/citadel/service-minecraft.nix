@@ -88,7 +88,7 @@ in
             whitelist = {
               SurmBob = "39473849-d69a-4a6b-8f9b-18679572254a";
               ExploB0b = "5acde26f-a399-4130-8525-584d23021d80";
-              sonnenstraehne = "60f75629-f0d4-47a2-bd91-b2852000df1f";
+              Sonnenstrahne = "3e973423-99ee-4e4c-98f5-8cae035e7771";
             };
           };
 
