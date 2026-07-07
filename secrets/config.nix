@@ -348,6 +348,13 @@
         "nexus"
       ];
     };
+    hedgedoc-github-env = {
+      contents = ../secrets/hedgedoc-github-env.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     lidarr-postgres-env = {
       contents = ../secrets/lidarr-postgres-env.age;
       keys = [

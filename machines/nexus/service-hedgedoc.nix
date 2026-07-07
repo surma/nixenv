@@ -4,6 +4,19 @@
     "d /dump/state/hedgedoc 0755 root root - -"
   ];
 
+  # GitHub OAuth client id/secret for HedgeDoc's own login, provisioned by the
+  # host secrets service as a systemd EnvironmentFile (CMD_GITHUB_CLIENTID /
+  # CMD_GITHUB_CLIENTSECRET) and bind-mounted read-only into the container.
+  secrets.items.hedgedoc-github-env = {
+    target = "/var/lib/hedgedoc-secrets/env";
+    mode = "0444";
+  };
+
+  services.surmhosting.services.hedgedoc.containerService = {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+  };
+
   services.surmhosting.services.hedgedoc.expose.port = 3000;
   services.surmhosting.services.hedgedoc.container = {
     config = {
@@ -11,6 +24,11 @@
 
       services.hedgedoc = {
         enable = true;
+        # CMD_GITHUB_CLIENTID / CMD_GITHUB_CLIENTSECRET live here; HedgeDoc
+        # auto-enables GitHub login when both are set. surm-auth still gates
+        # who can reach the app; GitHub login just establishes per-user
+        # identity (history, note ownership) on top.
+        environmentFile = "/var/lib/hedgedoc-secrets/env";
         settings = {
           # Listen on the container veth so the host Traefik can reach it
           # (the module default of "localhost" is loopback-only).
@@ -21,8 +39,10 @@
           protocolUseSSL = true;
 
           # Access is gated at the edge by surm-auth (GitHub allowlist on
-          # pylon), so inside the perimeter HedgeDoc runs fully anonymous —
-          # no HedgeDoc accounts, no login UI, shared workspace.
+          # pylon). Anonymous use is still allowed, but signing in with GitHub
+          # (see environmentFile above) gives per-user identity: synced
+          # server-side history and note ownership. Local email accounts stay
+          # disabled — GitHub is the only login method.
           allowAnonymous = true;
           allowAnonymousEdits = true;
           allowFreeURL = true;
@@ -39,6 +59,12 @@
       mountPoint = "/var/lib/hedgedoc";
       hostPath = "/dump/state/hedgedoc";
       isReadOnly = false;
+    };
+
+    bindMounts.github-secret = {
+      mountPoint = "/var/lib/hedgedoc-secrets";
+      hostPath = "/var/lib/hedgedoc-secrets";
+      isReadOnly = true;
     };
   };
 }
