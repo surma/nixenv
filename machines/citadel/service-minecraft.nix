@@ -46,14 +46,14 @@ in
       config =
         { pkgs, lib, ... }:
         let
-          # nixpkgs only ships 1.21.x; Mojang's current release is 26.1.2
+          # nixpkgs only ships 1.21.x; Mojang's current release is 26.2
           # (calendar versioning). Build the official server jar with
-          # upstream's own wrapper derivation. 26.1.2 requires Java 25 per
+          # upstream's own wrapper derivation. 26.2 requires Java 25 per
           # Mojang's version manifest (javaVersion.majorVersion = 25).
-          minecraftServer = pkgs.callPackage (pkgs.path + "/pkgs/games/minecraft-servers/derivation.nix") {
-            version = "26.1.2";
-            url = "https://piston-data.mojang.com/v1/objects/97ccd4c0ed3f81bbb7bfacddd1090b0c56f9bc51/server.jar";
-            sha1 = "97ccd4c0ed3f81bbb7bfacddd1090b0c56f9bc51";
+          minecraftServer = pkgs.callPackage (pkgs.path + "/pkgs/by-name/mi/minecraft-server/derivation.nix") {
+            version = "26.2";
+            url = "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar";
+            sha1 = "823e2250d24b3ddac457a60c92a6a941943fcd6a";
             jre_headless = pkgs.jdk25_headless;
           };
         in
