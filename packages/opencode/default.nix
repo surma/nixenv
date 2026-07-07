@@ -8,7 +8,9 @@ let
   unstableBun = inputs.nixpkgs-unstable.legacyPackages.${stdenv.hostPlatform.system}.bun;
 in
 inputs.opencode.packages.${stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-  patches = (old.patches or [ ]) ++ [ ./relax-bun-version-check.patch ];
+  # Upstream opencode now relaxes the bun version check itself (postPatch), so
+  # our previous relax-bun-version-check.patch is redundant and would make
+  # upstream's --replace-fail substitution miss its target.
   nativeBuildInputs = [
     unstableBun
   ]

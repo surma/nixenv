@@ -1,9 +1,4 @@
-{
-  lib,
-  enableSlSyntax ? false,
-  slTreeSitter ? null,
-  ...
-}:
+{ ... }:
 {
   enable = true;
   defaultEditor = true;
@@ -94,17 +89,6 @@
         name = "markdown";
         text-width = 80;
       }
-    ]
-    ++ lib.optionals enableSlSyntax [
-      {
-        name = "sl";
-        scope = "source.sl";
-        injection-regex = "^sl$";
-        file-types = [ "sl" ];
-        comment-token = "//";
-        roots = [ ];
-        grammar = "sl";
-      }
     ];
 
     grammar = [
@@ -114,14 +98,6 @@
           git = "https://github.com/wasm-lsp/tree-sitter-wasm";
           rev = "d9cb9aa9437172403203c242f08b8d4d95e0e61d";
           subpath = "wat";
-        };
-      }
-    ]
-    ++ lib.optionals enableSlSyntax [
-      {
-        name = "sl";
-        source = {
-          path = "${slTreeSitter}";
         };
       }
     ];

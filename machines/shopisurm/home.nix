@@ -82,7 +82,6 @@
   );
 
   defaultConfigs.claude-code.enable = true;
-  defaultConfigs.helix.enableSlSyntax = true;
 
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;

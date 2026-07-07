@@ -1,14 +1,14 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-darwin = {
-      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # amber-upstream = {
@@ -32,7 +32,7 @@
       url = "github:soupglasses/nix-system-graphics";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-hardware.url = "github:NixOS/nixos-hardware/98236410ea0fe204d0447149537a924fb71a6d4f";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     flake-utils.url = "github:numtide/flake-utils";
     copyparty = {
       url = "github:9001/copyparty";
@@ -50,13 +50,8 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     opencode = {
-      url = "github:anomalyco/opencode?ref=v1.14.33";
+      url = "github:anomalyco/opencode?ref=v1.17.14";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    sl2 = {
-      url = "git+ssh://git@github.com/surma/sl";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
     };
     web-search-cli = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/web-search-cli?ref=main";

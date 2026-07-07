@@ -25,7 +25,7 @@ in
     lazygit
     git-lfs
     tig
-    nodejs_24.pkgs.typescript-language-server
+    typescript-language-server
     dprint
     just
     nodejs_24

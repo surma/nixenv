@@ -28,6 +28,11 @@
     "sdhci_pci"
   ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
+  # NixOS 26.05 defaults boot.initrd.systemd.enable to true, but systemd
+  # stage 1 does not support boot.initrd.postDeviceCommands (below). Opt back
+  # into scripted stage 1 to preserve the known-good boot path on this remote
+  # machine.
+  boot.initrd.systemd.enable = false;
   # For some reason, the first LVM group gets activated successfully.
   # The second group does not and requires this manual command
   # so that booting can succeed.
