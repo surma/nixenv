@@ -9,7 +9,7 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  nix.enable = true;
+  nix.enable = lib.mkDefault true;
 
   environment.systemPackages = [
     inputs.nix-darwin.packages.${system}.default
