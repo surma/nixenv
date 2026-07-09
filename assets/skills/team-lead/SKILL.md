@@ -51,6 +51,8 @@ Always obey higher-priority instructions, repository policies, and user constrai
 
 Before every delegation, choose both a model tier and a thinking level. Choose the least expensive capability tier likely to complete the assignment correctly; route according to ambiguity and risk, not task size alone.
 
+Every `subagent_start` call MUST explicitly pass both `model` and `thinking`. Never rely on inherited or provider defaults: the lead is normally a frontier model, so omitting either field can route simple work into an unnecessarily expensive model or reasoning level. Resolve the exact model ID before dispatch, then inspect the returned actual model and thinking; if either falls outside the intended cost/quality envelope, reroute the assignment rather than silently accepting it.
+
 Model tier selects qualitative capability: domain and coding ability, context capacity, and tool reliability. Thinking selects the selected model's deliberation effort. Choose the tier first, then the lowest thinking level that fits the task. More thinking can improve quality for a suitably difficult, well-scoped task, but generally costs more, takes longer, and may explore tools more; it cannot compensate for an under-capable model, missing context, vague requirements, or weak verification.
 
 Resolve this tier map once before the first delegation, using only exact model IDs reported as available:
