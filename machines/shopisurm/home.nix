@@ -57,6 +57,7 @@
   agent.skills = [
     ../../assets/skills/agent-slack-write
     ../../assets/skills/commitsit
+    ../../assets/skills/team-lead
     ../../assets/skills/wcb
   ];
 

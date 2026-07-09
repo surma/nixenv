@@ -34,6 +34,7 @@ in
 
   home.stateVersion = "24.05";
   defaultConfigs.agents.enable = true;
+  agent.skills = [ ../../assets/skills/team-lead ];
   programs.gitea-cli.enable = true;
 
   allowedUnfreeApps = [
