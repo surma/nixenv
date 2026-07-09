@@ -47,9 +47,11 @@ Always obey higher-priority instructions, repository policies, and user constrai
 7. Stop when the requested outcome and acceptance criteria are satisfied.
 8. Do not add speculative improvements outside the user's request.
 
-## Model selection
+## Model and thinking selection
 
-Choose the least expensive capability tier likely to complete the assignment correctly. Route according to ambiguity and risk, not task size alone.
+Before every delegation, choose both a model tier and a thinking level. Choose the least expensive capability tier likely to complete the assignment correctly; route according to ambiguity and risk, not task size alone.
+
+Model tier selects qualitative capability: domain and coding ability, context capacity, and tool reliability. Thinking selects the selected model's deliberation effort. Choose the tier first, then the lowest thinking level that fits the task. More thinking can improve quality for a suitably difficult, well-scoped task, but generally costs more, takes longer, and may explore tools more; it cannot compensate for an under-capable model, missing context, vague requirements, or weak verification.
 
 Resolve this tier map once before the first delegation, using only exact model IDs reported as available:
 
@@ -60,6 +62,19 @@ Resolve this tier map once before the first delegation, using only exact model I
 | **Fast** | `beta-openai/gpt-5.6-luna` | newest available Claude Haiku |
 
 Use targeted `list_models` searches when an exact ID or availability is uncertain; never invent a model ID. Prefer one model family for the whole run when all required tiers are available. Mixing families is acceptable for availability or a clear capability advantage, but do not mix them merely for variety. If a required tier is unavailable, move up to a stronger tier rather than silently downgrading risky work. Do not repeatedly rediscover models for every assignment.
+
+The orchestration API accepts `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`. Their availability and exact semantics are model- and provider-specific. `list_models` confirms exact model IDs, availability, and reasoning capability; it does not reveal per-model thinking-level support. Request the task-appropriate level, then inspect the `actualThinking` returned by `subagent_start`; it is authoritative because unsupported requests may be normalized or clamped. If it differs from the intended cost/quality envelope, record the result and use an observed compatible model/level for later work, or avoid that request when cost or latency is strict. Do not assume that equal labels have equal provider behavior.
+
+| Thinking | Use for | Do not use for |
+| --- | --- | --- |
+| `off` | Deterministic, mechanically checked execution: run a named command, extract named fields, or make an exact format change. | Ambiguity, decisions, investigation, planning, or multi-step tools. |
+| `minimal` | Almost-trivial, explicit, single-decision work such as narrow classification or routing. | Reconciling sources or any task with several decisions. |
+| `low` | Bounded, well-specified reconnaissance, tool use, mechanical changes, and targeted checks where speed matters. | Material ambiguity, nontrivial planning, or consequential errors. |
+| `medium` | **Normal default** for substantive delegation: normal implementation, bounded debugging, research synthesis, review, and tests. | Use `low` instead when work is genuinely bounded and validation shows equivalent results. |
+| `high` | Difficult diagnosis, complex planning, cross-cutting or high-risk changes, and evidence-heavy review. | A stronger model, clearer task, missing context, or better tools are the real need. |
+| `xhigh` | Exceptional long-horizon, high-value work where comparable evaluations or prior runs show a material gain over `high`. | A prestige default, short fixed tasks, or unbounded exploration without stopping conditions. |
+
+For normal substantive engineering work, default to the appropriate tier at `medium`. Common exceptions are Fast + `low` for bounded work and Frontier + `high` for genuinely difficult work. Escalate thinking one level at a time only when acceptance evidence shows that reasoning depth is the blocker; escalate model tier when capability, context, or tool reliability is the blocker. De-escalate repeated task shapes after lower-effort runs meet the same checks. For `high` or `xhigh`, provide explicit success criteria, evidence requirements, tool boundaries, and stopping conditions: extra effort can otherwise overthink, over-search, or regress quality.
 
 ### Fast
 
@@ -104,10 +119,11 @@ Before delegating:
 1. Restate the concrete outcome.
 2. Define observable acceptance criteria.
 3. Identify dependencies and which tasks are genuinely independent.
-4. Choose the smallest useful team.
-5. Record a compact task ledger containing:
+4. Choose a model tier and intended thinking level for each assignment; use `medium` unless the task signals justify another level.
+5. Choose the smallest useful team.
+6. Record a compact task ledger containing:
    - assignment
-   - owner/model
+   - owner/model/requested and actual thinking
    - scope
    - dependencies
    - status
