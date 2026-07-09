@@ -123,6 +123,7 @@ in
   programs.gpg.enable = true;
   programs.yazi.enable = true;
   programs.yazi.enableNushellIntegration = true;
+  programs.yazi.shellWrapperName = "y";
 
   programs.nushell.enable = true;
   programs.nushell.package = pkgs-unstable.nushell;
@@ -141,11 +142,11 @@ in
   programs.ssh = {
     enableDefaultConfig = false;
     enable = true;
-    matchBlocks = {
+    settings = {
       "* !gitea.surma.technology !gitea-brain" = {
-        addKeysToAgent = "yes";
-        forwardAgent = true;
-        identityFile = [
+        AddKeysToAgent = "yes";
+        ForwardAgent = true;
+        IdentityFile = [
           "${config.home.homeDirectory}/.ssh/id_surma"
           "${config.home.homeDirectory}/.ssh/id_machine"
         ];

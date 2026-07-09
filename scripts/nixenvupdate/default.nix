@@ -2,7 +2,6 @@
   coreutils,
   lib,
   makeWrapper,
-  nix,
   nushell,
   stdenv,
 }:
@@ -30,12 +29,7 @@ stdenv.mkDerivation {
 
     patchShebangs $out/bin/nixenvupdate
     wrapProgram $out/bin/nixenvupdate \
-      --prefix PATH : ${
-        lib.makeBinPath [
-          coreutils
-          nix
-        ]
-      }
+      --prefix PATH : ${lib.makeBinPath [ coreutils ]}
 
     runHook postFixup
   '';

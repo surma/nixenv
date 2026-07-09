@@ -6,7 +6,7 @@
 }:
 {
   home.packages = with pkgs; [
-    nixfmt-rfc-style
+    nixfmt
     nixd
   ];
 }
