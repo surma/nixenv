@@ -1,7 +1,7 @@
 { ... }:
 {
   systemd.tmpfiles.rules = [
-    "d /dump/state/hedgedoc 0755 root root - -"
+    "d /dump/state/hedgedoc 0750 999 999 - -"
   ];
 
   # GitHub OAuth client id/secret for HedgeDoc's own login, provisioned by the
