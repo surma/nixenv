@@ -59,9 +59,9 @@ Resolve this tier map once before the first delegation, using only exact model I
 
 | Tier | Preferred model | Fallback models |
 | --- | --- | --- |
-| **Frontier** | `beta-openai/gpt-5.6-sol` | newest available Claude Fable, then newest available Claude Opus |
-| **Balanced** | `beta-openai/gpt-5.6-terra` | newest available Claude Sonnet |
-| **Fast** | `beta-openai/gpt-5.6-luna` | newest available Claude Haiku |
+| **Frontier** | `gpt-5.6-sol` | newest available Claude Fable, then newest available Claude Opus |
+| **Balanced** | `gpt-5.6-terra` | newest available Claude Sonnet |
+| **Fast** | `gpt-5.6-luna` | newest available Claude Haiku |
 
 Use the harness's documented model-discovery capability when an exact ID or availability is uncertain; never invent a model ID. Prefer one model family for the whole run when all required tiers are available. Mixing families is acceptable for availability or a clear capability advantage, but do not mix them merely for variety. If a required tier is unavailable, move up to a stronger tier rather than silently downgrading risky work. Do not repeatedly rediscover models for every assignment.
 
