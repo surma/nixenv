@@ -10,9 +10,9 @@ Review the code, files, or context supplied by the user. When invoked as a slash
 Use the subagent tool with the `tasks` parameter to run exactly one independent review swarm in parallel.
 
 Before spawning subagents, if model overrides require exact ids, use `subagent_models` to resolve the closest exact available ids for these requested models. Resolve the ids once up front and note any substitutions you had to make:
-- Anthropic: Claude Opus 4.7
-- OpenAI: GPT 5.5
-- Google: Gemini 3.1 Pro
+- Anthropic: Newest Claude Opus
+- OpenAI: Newest GPT Sol
+- Google: Newest Gemini Pro
 
 Launch review subagents with the same review brief but different models. Prefer the built-in `reviewer` agent with per-call `model` overrides if available; otherwise launch ad hoc read-only review subagents.
 
