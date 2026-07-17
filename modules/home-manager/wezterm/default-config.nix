@@ -48,6 +48,11 @@ with lib;
 
           local config = wezterm.config_builder()
           config.front_end = "${wezterm.frontend}"
+          config.default_cursor_style = 'SteadyBlock'
+          config.animation_fps = 1
+          config.max_fps = 30
+          config.window_background_opacity = 1.0
+          config.macos_window_background_blur = 0
           config.send_composed_key_when_left_alt_is_pressed = true
           config.enable_tab_bar = false
           config.window_padding = {
