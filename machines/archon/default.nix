@@ -15,8 +15,6 @@
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
 
-    ../../modules/nixos/obs-virtual-camera-fix
-
     ../../modules/nixos/framework/suspend-fix.nix
     ../../modules/nixos/framework/wifi-fix.nix
 
@@ -88,8 +86,10 @@
   programs._1password.enable = true;
   programs._1password-gui.enable = true;
   programs._1password-gui.polkitPolicyOwners = [ "surma" ];
-  programs.obs.enable = true;
-  programs.obs.virtualCameraFix = true;
+  programs.obs-studio = {
+    enable = true;
+    enableVirtualCamera = true;
+  };
   programs.firefox.enable = true;
   programs.signal.enable = true;
 
