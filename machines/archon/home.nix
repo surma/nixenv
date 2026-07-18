@@ -118,8 +118,9 @@
 
     services.blueman-applet.enable = true;
     services.dunst.enable = true;
+    services.hyprpolkitagent.enable = true;
 
-    # Workaround: hyprpolkitagent 0.1.2 crashes on this AMD iGPU because Qt6
+    # Workaround: hyprpolkitagent has crashed on this AMD iGPU because Qt6
     # cannot create an EGL context for the auth window ("qt.qpa.wayland: EGL
     # not available" -> SIGABRT in QSGRenderLoop). When polkit invokes the
     # agent (e.g. for 1Password SSH-key unlock via fingerprint), it dies
