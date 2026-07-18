@@ -116,11 +116,11 @@ with lib;
         }
         {
           key = "$meh, period";
-          action.text = "movecurrentworkspacetomonitor, d";
+          action.text = "movecurrentworkspacetomonitor, +1";
         }
         {
           key = "$meh, comma";
-          action.text = "movecurrentworkspacetomonitor, u";
+          action.text = "movecurrentworkspacetomonitor, -1";
         }
         {
           key = ",XF86AudioRaiseVolume";
