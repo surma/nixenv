@@ -86,10 +86,17 @@
   programs._1password.enable = true;
   programs._1password-gui.enable = true;
   programs._1password-gui.polkitPolicyOwners = [ "surma" ];
-  programs.obs-studio = {
-    enable = true;
-    enableVirtualCamera = true;
-  };
+  programs.obs-studio.enable = true;
+
+  # Firefox picks the first capture-capable V4L2 device. Reserve video0 for
+  # OBS Cam: it is hidden while inactive (exclusive_caps) and becomes the
+  # default camera while OBS is streaming to it.
+  boot.kernelModules = [ "v4l2loopback" ];
+  boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
+  boot.extraModprobeConfig = ''
+    options v4l2loopback devices=1 video_nr=0 card_label="OBS Cam" exclusive_caps=1
+  '';
+
   programs.firefox.enable = true;
   programs.signal.enable = true;
 
