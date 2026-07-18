@@ -191,6 +191,7 @@ in
   # This feature module only handles the home-manager parts
   config = mkIf (systemManager == "home-manager") {
     wayland.windowManager.hyprland = {
+      configType = "hyprlang";
       extraConfig =
         let
           bindings =

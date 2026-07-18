@@ -20,9 +20,7 @@ in
   home-manager.users.surma =
     { config, ... }:
     {
-      programs.ssh.matchBlocks."*".extraOptions = {
-        "IdentityAgent" = ''"${config.home.homeDirectory}/.1password/agent.sock"'';
-      };
+      programs.ssh.settings."*".IdentityAgent = ''"${config.home.homeDirectory}/.1password/agent.sock"'';
 
       # Autostart 1Password (patched) on Hyprland login. --silent keeps it
       # in the tray instead of popping a window on every login.

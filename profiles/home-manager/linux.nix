@@ -12,23 +12,23 @@
   ];
   services.ssh-agent.enable = true;
 
-  programs.ssh.matchBlocks = {
+  programs.ssh.settings = {
     "gitea.surma.technology" = {
-      hostname = "gitea.surma.technology";
-      port = 2222;
-      user = "containeruser";
-      identitiesOnly = true;
-      identityFile = "${config.home.homeDirectory}/.ssh/id_surma";
-      extraOptions.IdentityAgent = "/run/user/%i/ssh-agent";
+      HostName = "gitea.surma.technology";
+      Port = 2222;
+      User = "containeruser";
+      IdentitiesOnly = true;
+      IdentityFile = "${config.home.homeDirectory}/.ssh/id_surma";
+      IdentityAgent = "/run/user/%i/ssh-agent";
     };
 
     "gitea-brain" = {
-      hostname = "gitea.surma.technology";
-      port = 2222;
-      user = "containeruser";
-      identitiesOnly = true;
-      identityFile = "${config.home.homeDirectory}/.ssh/id_machine";
-      extraOptions.IdentityAgent = "none";
+      HostName = "gitea.surma.technology";
+      Port = 2222;
+      User = "containeruser";
+      IdentitiesOnly = true;
+      IdentityFile = "${config.home.homeDirectory}/.ssh/id_machine";
+      IdentityAgent = "none";
     };
   };
 }

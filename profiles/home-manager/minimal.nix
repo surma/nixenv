@@ -142,16 +142,16 @@ in
   programs.ssh = {
     enableDefaultConfig = false;
     enable = true;
-    matchBlocks = {
+    settings = {
       "*" = {
-        addKeysToAgent = "yes";
-        forwardAgent = true;
-        identityFile = [
+        AddKeysToAgent = "yes";
+        ForwardAgent = true;
+        IdentityFile = [
           "${config.home.homeDirectory}/.ssh/id_surma"
           "${config.home.homeDirectory}/.ssh/id_machine"
         ];
       };
-      "gitea.surma.technology".extraOptions.IdentityAgent = "/run/user/%i/ssh-agent";
+      "gitea.surma.technology".IdentityAgent = "/run/user/%i/ssh-agent";
     };
   };
 }
