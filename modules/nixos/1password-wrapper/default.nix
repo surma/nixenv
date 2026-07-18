@@ -25,7 +25,9 @@ in
       # Autostart 1Password (patched) on Hyprland login. --silent keeps it
       # in the tray instead of popping a window on every login.
       wayland.windowManager.hyprland.extraConfig = ''
-        exec-once = ${onepasswordCommand} --silent
+        hl.on("hyprland.start", function()
+          hl.exec_cmd("${onepasswordCommand} --silent")
+        end)
       '';
     };
 }

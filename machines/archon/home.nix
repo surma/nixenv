@@ -96,20 +96,12 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
-    wayland.windowManager.hyprland.bindings = [
-      {
-        key = "SHIFT,XF86MonBrightnessUp";
-        action.exec = "brightnessctl -d framework_laptop::kbd_backlight set 5%+";
-        flags.e = true;
-        flags.l = true;
-      }
-      {
-        key = "SHIFT,XF86MonBrightnessDown";
-        action.exec = "brightnessctl -d framework_laptop::kbd_backlight set 5%-";
-        flags.e = true;
-        flags.l = true;
-      }
-    ];
+    # Framework-laptop-specific keyboard backlight controls (the
+    # `framework_laptop::kbd_backlight` device only exists on this machine).
+    wayland.windowManager.hyprland.extraConfig = ''
+      hl.bind("SHIFT + XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%+"), { locked = true, repeating = true })
+      hl.bind("SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), { locked = true, repeating = true })
+    '';
     programs.waybar.enable = true;
     defaultConfigs.waybar.enable = true;
     programs.hyprsunset.enable = true;
