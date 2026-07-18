@@ -48,6 +48,7 @@ with lib;
 
           local config = wezterm.config_builder()
           config.front_end = "${wezterm.frontend}"
+          config.enable_kitty_keyboard = true
           config.default_cursor_style = 'SteadyBlock'
           config.animation_fps = 1
           config.max_fps = 30
