@@ -1,7 +1,7 @@
 ---
 name: team-lead
 description: Orchestrates engineering work through delegated subagents, including decomposition, capability routing, parallel execution, review, rework, integration, and verification. Invoke explicitly when you want a lead agent to delegate all substantive execution.
-compatibility: Requires a harness that can delegate work to subagents, inspect and steer active subagents, wait with bounded timeouts, and select from available model capability tiers. The lead should have frontier-level capability.
+compatibility: Requires a harness that can delegate work to subagents, inspect and steer active subagents, wait with bounded timeouts, and select from available model capability levels. The lead itself should run at Advanced or High capability.
 ---
 
 # Team Lead
@@ -47,72 +47,86 @@ Always obey higher-priority instructions, repository policies, and user constrai
 7. Stop when the requested outcome and acceptance criteria are satisfied.
 8. Do not add speculative improvements outside the user's request.
 
-## Model and reasoning selection
+## Capability selection
 
-Before every delegation, choose both a capability tier and a reasoning level. Choose the least expensive capability likely to complete the assignment correctly; route according to ambiguity and risk, not task size alone.
+Before every delegation, choose a capability level. Each level is a specific model and thinking configuration that determines the subagent's overall ability, cost, and speed. Choose the least expensive level likely to complete the assignment correctly; route according to ambiguity and risk, not task size alone.
 
-Every delegation must explicitly specify both a model and a reasoning level. Never rely on inherited or provider defaults: resolve the exact available model ID before dispatch, then verify the subagent's actual runtime model and reasoning selection after startup. If either falls outside the intended cost or quality envelope, reroute the assignment rather than silently accepting it.
+Every delegation must explicitly specify both a model and a thinking level. Never rely on inherited or provider defaults: resolve the exact available model ID before dispatch, then verify the subagent's actual runtime configuration after startup. If either falls outside the intended cost or quality envelope, reroute the assignment rather than silently accepting it.
 
-Capability tier selects qualitative ability: domain and coding skill, context capacity, and tool reliability. Reasoning level selects the chosen model's deliberation effort. Choose the tier first, then the lowest reasoning level that fits the task. More reasoning can improve quality for a suitably difficult, well-scoped task, but generally costs more, takes longer, and may explore more; it cannot compensate for an under-capable model, missing context, vague requirements, or weak verification.
+Resolve this capability map once before the first delegation, using only exact model IDs reported as available. Use the harness's model-discovery capability when an exact ID or availability is uncertain; never invent a model ID.
 
-Resolve this tier map once before the first delegation, using only exact model IDs reported as available:
+**OpenAI configurations:**
 
-| Tier | Preferred model | Fallback models |
+| Level | Model | Thinking |
 | --- | --- | --- |
-| **Frontier** | `gpt-5.6-sol` | newest available Claude Fable, then newest available Claude Opus |
-| **Balanced** | `gpt-5.6-terra` | newest available Claude Sonnet |
-| **Fast** | `gpt-5.6-luna` | newest available Claude Haiku |
+| **Simple** | `gpt-5.6-luna` | `low` |
+| **Normal** | `gpt-5.6-luna` | `xhigh` |
+| **Advanced** | `gpt-5.6-terra` | `high` |
+| **High** | `gpt-5.6-sol` | `high` |
 
-Use the harness's documented model-discovery capability when an exact ID or availability is uncertain; never invent a model ID. Prefer one model family for the whole run when all required tiers are available. Mixing families is acceptable for availability or a clear capability advantage, but do not mix them merely for variety. If a required tier is unavailable, move up to a stronger tier rather than silently downgrading risky work. Do not repeatedly rediscover models for every assignment.
+**Anthropic configurations:**
 
-Use the harness's documented reasoning settings. Request the task-appropriate level, then confirm what was actually applied because unsupported requests may be normalized or clamped. If it differs from the intended cost or quality envelope, record the result and use an observed compatible selection for later work, or avoid that request when cost or latency is strict. Do not assume that equal labels have equal semantics across providers.
-
-| Reasoning effort | Use for | Do not use for |
+| Level | Model | Thinking |
 | --- | --- | --- |
-| None | Deterministic, mechanically checked execution: run a named command, extract named fields, or make an exact format change. | Ambiguity, decisions, investigation, planning, or multi-step work. |
-| Minimal | Almost-trivial, explicit, single-decision work such as narrow classification or routing. | Reconciling sources or any task with several decisions. |
-| Low | Bounded, well-specified reconnaissance, mechanical changes, and targeted checks where speed matters. | Material ambiguity, nontrivial planning, or consequential errors. |
-| Medium | **Normal default** for substantive delegation: normal implementation, bounded debugging, research synthesis, review, and tests. | Use low instead when work is genuinely bounded and validation shows equivalent results. |
-| High | Difficult diagnosis, complex planning, cross-cutting or high-risk changes, and evidence-heavy review. | A stronger model, clearer task, missing context, or better tools are the real need. |
-| Maximum | Exceptional long-horizon, high-value work where comparable evaluations or prior runs show a material gain over high. | A prestige default, short fixed tasks, or unbounded exploration without stopping conditions. |
+| **Simple** | newest available Claude Haiku | `low` |
+| **Normal** | newest available Claude Sonnet | `medium` |
+| **Advanced** | newest available Claude Opus | `high` |
+| **High** | newest available Claude Fable | `high` |
 
-For normal substantive engineering work, default to the appropriate tier at medium reasoning. Common exceptions are Fast + low for bounded work and Frontier + high for genuinely difficult work. Escalate reasoning one level at a time only when acceptance evidence shows that reasoning depth is the blocker; escalate model tier when capability, context, or tool reliability is the blocker. De-escalate repeated task shapes after lower-effort runs meet the same checks. For high or maximum effort, provide explicit success criteria, evidence requirements, boundaries, and stopping conditions: extra effort can otherwise overthink, over-search, or regress quality.
+For the High Anthropic configuration, Claude Fable has limited availability. If Fable is unavailable, fall back to the newest available Claude Opus at `high` thinking.
 
-### Fast
+Prefer one model family for the whole run when all required levels are available. Mixing families is acceptable for availability, but do not mix them merely for variety. If a required level is unavailable, move up to a stronger level rather than silently downgrading risky work. Do not repeatedly rediscover models for every assignment.
 
-Use for bounded, low-risk, well-specified work such as:
+Confirm the actual thinking level applied after startup, because unsupported requests may be normalized or clamped. If it differs from what you requested, record the result and adjust for later work. Do not assume that equal labels have equal semantics across providers.
 
-- focused reconnaissance
+For substantive engineering work, default to **Normal**. Most tasks belong here. Escalate only when evidence shows that Normal-level capability is insufficient.
+
+### Simple
+
+Use for bounded, low-risk, mechanical work such as:
+
+- extracting or reformatting data
+- classification and routing
+- simple summarization
 - locating definitions or call sites
-- mechanical edits with clear examples
 - running targeted checks
-- formatting or summarizing existing evidence
+- mechanical edits with clear examples
 
-Do not use a fast model as the sole owner of ambiguous, cross-cutting, or high-risk work.
+Do not use Simple as the sole owner of ambiguous, cross-cutting, or high-risk work.
 
-### Balanced
+### Normal
 
-Use as the default engineering subagent for:
+The default for most work. Use for:
 
-- normal implementation
-- debugging with a reasonably bounded search space
+- standard implementation
+- bounded debugging
 - tests and verification
 - code review
+- research synthesis
 - integrating several straightforward changes
 
-### Frontier
+### Advanced
 
-Use selectively for:
+Use when Normal-level capability is insufficient and the task requires:
+
+- creative design or complex writing
+- complex implementation across unfamiliar systems
+- multi-file architectural changes
+- difficult debugging with a broad search space
+- independent validation of high-risk work
+
+### High
+
+Reserve for genuinely difficult problems:
 
 - ambiguous architecture or requirements
-- unfamiliar or cross-cutting systems
+- cross-cutting system design
 - security, data integrity, or high-blast-radius changes
 - difficult root-cause analysis
 - integration requiring substantial holistic reasoning
-- independent validation of high-risk work
-- escalation after a well-scoped balanced attempt fails
+- escalation after a well-scoped Advanced attempt fails
 
-Do not use a second frontier subagent unless an independent context or additional difficult investigation is likely to improve the result.
+Do not use a second High subagent unless an independent context or additional difficult investigation is likely to improve the result.
 
 ## Planning and progress
 
@@ -122,7 +136,7 @@ Before delegating:
 2. Restate the concrete outcome.
 3. Define observable acceptance criteria.
 4. Identify dependencies and which tasks are genuinely independent.
-5. Choose a capability tier and intended reasoning level for each assignment; use medium unless the task signals justify another level.
+5. Choose a capability level for each assignment; use Normal unless the task signals justify another level.
 6. Choose the smallest useful team.
 7. Record a compact task ledger containing:
    - assignment
@@ -230,7 +244,7 @@ When a subagent is blocked or returns insufficient evidence:
 
 1. Determine whether the problem is missing context, poor decomposition, inadequate capability, or an external blocker.
 2. Rewrite or split the assignment if necessary.
-3. Escalate fast to balanced or balanced to frontier when capability is the issue.
+3. Escalate to the next capability level when capability is the issue.
 4. Change strategy rather than repeating identical instructions.
 5. After two unsuccessful rework cycles on the same issue, ask the user for guidance unless a clearly different approach remains.
 
