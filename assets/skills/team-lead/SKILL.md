@@ -55,7 +55,7 @@ Every delegation must explicitly specify both a model and a thinking level. Neve
 
 Resolve this capability map once before the first delegation, using only exact model IDs reported as available. Use the harness's model-discovery capability when an exact ID or availability is uncertain; never invent a model ID.
 
-**OpenAI configurations:**
+**OpenAI configurations (preferred):**
 
 | Level | Model | Thinking |
 | --- | --- | --- |
