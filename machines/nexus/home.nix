@@ -26,7 +26,6 @@
 
     home.stateVersion = "25.05";
     defaultConfigs.agents.enable = true;
-    agent.skills = [ ../../assets/skills/team-lead ];
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;
     customScripts.oc.enable = true;

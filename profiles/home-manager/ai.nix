@@ -19,6 +19,7 @@
     ../../assets/skills/surma-writer
     ../../assets/skills/rust
     ../../assets/skills/triple-helix
+    ../../assets/skills/team-lead
     ../../assets/skills/preact-signals
     ../../assets/skills/web-development
   ];
