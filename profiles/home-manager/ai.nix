@@ -22,5 +22,6 @@
     ../../assets/skills/team-lead
     ../../assets/skills/preact-signals
     ../../assets/skills/web-development
+    ../../assets/skills/bro
   ];
 }
