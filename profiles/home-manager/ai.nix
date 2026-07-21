@@ -23,5 +23,6 @@
     ../../assets/skills/preact-signals
     ../../assets/skills/web-development
     ../../assets/skills/bro
+    ../../assets/skills/i-have-adhd
   ];
 }
