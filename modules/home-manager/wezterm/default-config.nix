@@ -119,6 +119,11 @@ with lib;
               action = wezterm.action.SpawnWindow,
             },
             {
+              key = 'c',
+              mods = 'CMD',
+              action = wezterm.action.CopyTo 'Clipboard',
+            },
+            {
               key = 'v',
               mods = 'CMD',
               action = wezterm.action.PasteFrom 'Clipboard',

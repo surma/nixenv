@@ -160,10 +160,10 @@ end
 
 local digitKeys = "123456789"
 for i = 1, #digitKeys do
-    bindWorkspace(digitKeys:sub(i, i), i - 1)
+    bindWorkspace(digitKeys:sub(i, i), i)
 end
 
-local disabledLetterKeys = { Q = true, W = true, F = true }
+local disabledLetterKeys = { Q = true, W = true }
 local letterKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 for i = 1, #letterKeys do
     local key = letterKeys:sub(i, i)

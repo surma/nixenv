@@ -52,11 +52,8 @@
     keyboards."internal" = {
       ids = [ "0001:0001" ];
       settings = {
-        global = {
-          overload_tap_timeout = 100;
-        };
         main = {
-          capslock = "timeout(escape, 100, overload(meh, escape))";
+          capslock = "overload(meh, escape)";
           leftalt = "leftmeta";
           leftmeta = "leftalt";
         };
