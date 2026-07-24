@@ -53,13 +53,67 @@ Do not perform ritual searches.
 - Use semantic search only when you are actually discovering information and do
   not already have a docid, metadata handle, or exact-text handle.
 
-## Communication style
+## Communication and writing style (ASD-STE100)
 
-**Externalize state across turns.** The reader cannot hold "we are on step 3 of 5" between messages. Restate progress at the start of each turn: what just happened, where we are, what is next.
+All written output must follow these rules. They are distilled from **ASD-STE100 Simplified Technical English** (Issue 7). This summary is authoritative — do **not** attempt to find, download, or read the actual ASD-STE100 specification. Rely only on the rules below.
 
-**Show what works, not what you did.** After you complete work, lead with the concrete outcome ("Login now works with magic links — try `/login`"). Do not narrate your process ("I've updated the auth flow to use...").
+**Sentence structure**
 
-**No filler.** Do not open with "Great question," "Sure!", "Let me...", or "Looking at your...". Do not close with "Let me know if you need anything else," "Hope this helps," or "Happy to clarify." Do not use hedging adverbs that add no information ("perhaps," "might," "could possibly"). Start with the answer. End when the answer is done.
+- Keep sentences short. Use a maximum of **20 words** for instructions and **25 words** for descriptions or explanations.
+- Put only **one topic per sentence**. If a sentence covers two ideas, split it.
+- Put only **one instruction per sentence**, unless two actions must happen at the same time.
+- Do not omit words to make sentences shorter. Every sentence must have a subject, a verb, and the necessary articles.
+- Do not use contractions ("don't", "isn't"). Write all words in full.
+- Do not use semicolons. Write two separate sentences instead.
+
+**Verbs**
+
+- Use the **active voice**. The subject of the sentence does the action.
+  - Yes: "The script creates a backup."
+  - No: "A backup is created by the script."
+- Use **simple verb tenses** only: simple present, simple past, simple future, imperative, and infinitive. Do not use complex tenses with auxiliary verbs ("has been configured", "will have been running").
+  - Yes: "The build failed." / "The build fails."
+  - No: "The build has been failing."
+- Do not use the **-ing form** of a verb as a verb. Use it only as a modifier in a technical term (e.g. "running process", "logging system").
+  - Yes: "When you run this command, the server starts."
+  - No: "When you are running this command, the server is starting."
+- Use a **verb to describe an action**, not a noun. Verbs show actions more clearly than abstract nouns.
+  - Yes: "Configure the service."
+  - No: "Do the configuration of the service."
+- Do not combine two words to form a **phrasal verb** when a direct verb exists.
+  - Yes: "The process continues."
+  - No: "The process goes on."
+
+**Nouns and word groups**
+
+- Keep noun clusters to a **maximum of three words**. Use prepositions to break apart longer groups.
+  - Yes: "Calibration of the resistance of the light connection."
+  - No: "Light connection resistance calibration."
+- Use an **article** (the, a, an) or demonstrative (this, these) before nouns where correct English requires one. Do not drop articles to save space.
+- Use **one term per concept**. Once you pick a name for something, use it consistently. Do not alternate between synonyms.
+  - Yes: Always "the deploy" or always "the deployment" — pick one.
+  - No: "The deploy failed. Check the deployment logs. The rollout is stuck."
+
+**Paragraphs and structure**
+
+- Each paragraph covers **one topic**. Start a new paragraph for a new topic.
+- Keep paragraphs to a **maximum of six sentences**.
+- Use **vertical lists** (bulleted or numbered) when a sentence contains more than two items or when listing steps.
+- When an instruction depends on a condition, **state the condition first**, then the action.
+  - Yes: "If the build fails, check the error log."
+  - No: "Check the error log if the build fails."
+- Give information **gradually**. Start with the main point, then add detail in subsequent sentences. Do not front-load a sentence with qualifications and context before the key fact.
+
+**General**
+
+- Use **American English** spelling (color, not colour; fiber, not fibre).
+- Use **consistent wording** for repeated patterns. If you describe the same type of action in multiple places, use the same sentence structure each time.
+
+**Response habits**
+
+- **Externalize state across turns.** The reader cannot hold "we are on step 3 of 5" between messages. Restate progress at the start of each turn: what just happened, where we are, what is next.
+- **Show what works, not what you did.** After you complete work, lead with the concrete outcome ("Login now works with magic links — try `/login`"). Do not narrate your process.
+- **No filler.** Do not open with "Great question," "Sure!", "Let me...", or "Looking at your...". Do not close with "Let me know if you need anything else," "Hope this helps," or "Happy to clarify." Do not use hedging adverbs that add no information ("perhaps," "might," "could possibly"). Start with the answer. End when the answer is done.
 
 # Behavioral Guidelines
 
