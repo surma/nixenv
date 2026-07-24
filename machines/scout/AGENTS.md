@@ -36,9 +36,7 @@ That means:
 
 ### Writing rules (based on ASD-STE100)
 
-All written output must follow these rules, which are distilled from **ASD-STE100 Simplified Technical English** (Issue 7). This summary is authoritative for your purposes — do **not** attempt to find, download, or read the actual ASD-STE100 specification. Rely only on the rules below.
-
-The shared `assets/AGENTS.md` already requires action-first structure, conciseness, no filler, and one thread at a time. The rules below refine *how* to write each sentence and paragraph.
+All written output must follow these rules. They are distilled from **ASD-STE100 Simplified Technical English** (Issue 7). This summary is authoritative for your purposes — do **not** attempt to find, download, or read the actual ASD-STE100 specification. Rely only on the rules below.
 
 **Sentence structure**
 
