@@ -45,6 +45,8 @@ let
     };
 
   wrapper = pkgs.writeShellScriptBin "pi" ''
+    export PI_SUBAGENT_PI_BIN="$0"
+
     ${lib.optionalString (llmProxyCfg.apiKeyFile != null) ''
       if [ -f "${llmProxyCfg.apiKeyFile}" ]; then
         export PI_PROXY_API_KEY="$(tr -d '\n' < "${llmProxyCfg.apiKeyFile}")"
