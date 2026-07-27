@@ -1,7 +1,10 @@
-{ ... }:
+{ config, ... }:
 {
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
+  secrets.items.openrouter-api-key.target =
+    "${config.home.homeDirectory}/.local/state/openrouter-api-key";
+  defaultConfigs.pi.openRouter.keyFile = config.secrets.items.openrouter-api-key.target;
 
   programs.web-search-cli.enable = true;
   defaultConfigs.web-search-cli.enable = true;

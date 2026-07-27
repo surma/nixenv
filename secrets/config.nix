@@ -144,7 +144,12 @@
       contents = ../secrets/openrouter-api-key.age;
       keys = [
         "surma"
+        "dragoon"
+        "shopisurm"
+        "archon"
+        "citadel"
         "nexus"
+        "forge"
       ];
     };
     huggingface-token = {
