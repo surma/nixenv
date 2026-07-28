@@ -2,17 +2,14 @@
 {
   lib,
   buildNpmPackage,
+  cacert,
   fetchFromGitHub,
-  nodejs_20,
   nix-update-script,
   ...
 }:
 
-buildNpmPackage rec {
-  pname = "pi-coding-agent";
+let
   version = "0.82.1";
-
-  # nodejs = nodejs_20;
 
   src = fetchFromGitHub {
     owner = "badlogic";
@@ -23,14 +20,59 @@ buildNpmPackage rec {
 
   npmDepsHash = "sha256-5pHRwxpKg95/phOcYHeWdvPJNtSOhiw7PRoVxsuh0RM=";
 
+  modelData = buildNpmPackage {
+    pname = "pi-coding-agent-model-data";
+    inherit version src npmDepsHash;
+
+    npmWorkspace = "packages/ai";
+    npmRebuildFlags = [ "--ignore-scripts" ];
+    NODE_EXTRA_CA_CERTS = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+
+    # Upstream writes the current time, which cannot vary in a fixed-output derivation.
+    postPatch = ''
+      substituteInPlace packages/ai/scripts/generate-models.ts \
+        --replace-fail \
+          'const generatedAt = new Date().toISOString();' \
+          'const generatedAt = "1970-01-01T00:00:00.000Z";'
+    '';
+
+    dontNpmBuild = true;
+    buildPhase = ''
+      runHook preBuild
+
+      npm run --workspace=packages/ai hydrate-model-data
+      npm run --workspace=packages/ai check:model-data
+
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out"
+      cp -R packages/ai/src/providers/data/. "$out/"
+      runHook postInstall
+    '';
+
+    outputHashMode = "recursive";
+    outputHash = "sha256-68cthreBIgwJAwjPd1Ma/EaoueLMdrb80402IGI8l48=";
+  };
+in
+buildNpmPackage rec {
+  pname = "pi-coding-agent";
+  inherit version src npmDepsHash;
+
   npmWorkspace = "packages/coding-agent";
 
   npmRebuildFlags = [ "--ignore-scripts" ];
 
+  postPatch = ''
+    cp -R ${modelData}/. packages/ai/src/providers/data/
+  '';
+
   buildPhase = ''
     runHook preBuild
 
-    ./node_modules/.bin/tsgo -p packages/ai/tsconfig.build.json
+    npm run --workspace=packages/ai build:offline
     npm run --workspace=packages/agent build
     npm run --workspace=packages/tui build
     npm run --workspace=packages/coding-agent build
