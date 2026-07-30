@@ -1,6 +1,6 @@
 ---
 name: bro
-description: Restate the last message in plain human language, with no jargon.
+description: Use when the user just says "bro"
 disable-model-invocation: true
 ---
 
