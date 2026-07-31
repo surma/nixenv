@@ -2,8 +2,8 @@
 {
   lib,
   buildNpmPackage,
-  cacert,
   fetchFromGitHub,
+  fetchzip,
   nix-update-script,
   ...
 }:
@@ -20,41 +20,9 @@ let
 
   npmDepsHash = "sha256-5pHRwxpKg95/phOcYHeWdvPJNtSOhiw7PRoVxsuh0RM=";
 
-  modelData = buildNpmPackage {
-    pname = "pi-coding-agent-model-data";
-    inherit version src npmDepsHash;
-
-    npmWorkspace = "packages/ai";
-    npmRebuildFlags = [ "--ignore-scripts" ];
-    NODE_EXTRA_CA_CERTS = "${cacert}/etc/ssl/certs/ca-bundle.crt";
-
-    # Upstream writes the current time, which cannot vary in a fixed-output derivation.
-    postPatch = ''
-      substituteInPlace packages/ai/scripts/generate-models.ts \
-        --replace-fail \
-          'const generatedAt = new Date().toISOString();' \
-          'const generatedAt = "1970-01-01T00:00:00.000Z";'
-    '';
-
-    dontNpmBuild = true;
-    buildPhase = ''
-      runHook preBuild
-
-      npm run --workspace=packages/ai hydrate-model-data
-      npm run --workspace=packages/ai check:model-data
-
-      runHook postBuild
-    '';
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p "$out"
-      cp -R packages/ai/src/providers/data/. "$out/"
-      runHook postInstall
-    '';
-
-    outputHashMode = "recursive";
-    outputHash = "sha256-68cthreBIgwJAwjPd1Ma/EaoueLMdrb80402IGI8l48=";
+  modelData = fetchzip {
+    url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
+    hash = "sha256-ToWghBcWOUT3dNC37vaYzAmmhXpVb6tD+vCshjLfTxo=";
   };
 in
 buildNpmPackage rec {
@@ -66,7 +34,8 @@ buildNpmPackage rec {
   npmRebuildFlags = [ "--ignore-scripts" ];
 
   postPatch = ''
-    cp -R ${modelData}/. packages/ai/src/providers/data/
+    mkdir -p packages/ai/src/providers/data
+    cp -R ${modelData}/dist/providers/data/. packages/ai/src/providers/data/
   '';
 
   buildPhase = ''

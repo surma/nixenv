@@ -1,0 +1,228 @@
+diff --git a/cmake/compile_definitions/macos.cmake b/cmake/compile_definitions/macos.cmake
+index d9853a9..614105e 100644
+--- a/cmake/compile_definitions/macos.cmake
++++ b/cmake/compile_definitions/macos.cmake
+@@ -2,17 +2,6 @@
+
+ add_compile_definitions(SUNSHINE_PLATFORM="macos")
+
+-set(MACOS_LINK_DIRECTORIES
+-        /opt/homebrew/lib
+-        /opt/local/lib
+-        /usr/local/lib)
+-
+-foreach(dir ${MACOS_LINK_DIRECTORIES})
+-    if(EXISTS ${dir})
+-        link_directories(${dir})
+-    endif()
+-endforeach()
+-
+ if(NOT BOOST_USE_STATIC AND NOT FETCH_CONTENT_BOOST_USED)
+     ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+ endif()
+@@ -20,9 +9,6 @@ endif()
+ # ScreenCaptureKit for system audio capture (macOS 12.3+)
+ FIND_LIBRARY(SCREEN_CAPTURE_KIT_LIBRARY ScreenCaptureKit)
+
+-# IOKit for virtual HID gamepad (IOHIDUserDevice)
+-FIND_LIBRARY(IOKIT_LIBRARY IOKit)
+-
+ list(APPEND SUNSHINE_EXTERNAL_LIBRARIES
+         ${APP_KIT_LIBRARY}
+         ${APP_SERVICES_LIBRARY}
+@@ -31,8 +17,7 @@ list(APPEND SUNSHINE_EXTERNAL_LIBRARIES
+         ${CORE_VIDEO_LIBRARY}
+         ${FOUNDATION_LIBRARY}
+         ${VIDEO_TOOLBOX_LIBRARY}
+-        ${SCREEN_CAPTURE_KIT_LIBRARY}
+-        ${IOKIT_LIBRARY})
++        ${SCREEN_CAPTURE_KIT_LIBRARY})
+
+ set(APPLE_PLIST_FILE "${SUNSHINE_SOURCE_ASSETS_DIR}/macos/assets/Info.plist")
+
+@@ -48,8 +33,6 @@ set(PLATFORM_TARGET_FILES
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/sc_audio.m"
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/gamepad.h"
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/gamepad.m"
+-        "${CMAKE_SOURCE_DIR}/src/platform/macos/hid_gamepad.h"
+-        "${CMAKE_SOURCE_DIR}/src/platform/macos/hid_gamepad.m"
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/virtual_display.h"
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/virtual_display.m"
+         "${CMAKE_SOURCE_DIR}/src/platform/macos/display.mm"
+@@ -85,7 +68,7 @@ target_link_libraries(vd_helper PRIVATE
+         "-framework Foundation"
+         "-framework AppKit"
+         "-framework CoreGraphics"
+-        "-F/System/Library/PrivateFrameworks"
++        "-F${CMAKE_OSX_SYSROOT}/System/Library/PrivateFrameworks"
+         "-framework SkyLight")
+ # Place vd_helper next to the sunshine binary
+ set_target_properties(vd_helper PROPERTIES
+diff --git a/src/platform/macos/input.mm b/src/platform/macos/input.mm
+index 715b4b8..cdae4fd 100644
+--- a/src/platform/macos/input.mm
++++ b/src/platform/macos/input.mm
+@@ -20,7 +20,6 @@
+ #include "src/platform/common.h"
+ #include "src/utility.h"
+ #include "src/platform/macos/gamepad.h"
+-#include "src/platform/macos/hid_gamepad.h"
+
+ // Maximum number of gamepads supported
+ #define MAX_GAMEPADS 4
+@@ -34,7 +33,7 @@ constexpr std::chrono::milliseconds MULTICLICK_DELAY_MS(500);
+ namespace platf {
+   using namespace std::literals;
+
+-  enum class gamepad_mode_e { NONE, HID, EMULATION };
++  enum class gamepad_mode_e { NONE, EMULATION };
+
+   struct macos_input_t {
+   public:
+@@ -51,10 +50,8 @@ namespace platf {
+     bool mouse_down[3] {};  // mouse button status
+     std::chrono::steady_clock::steady_clock::time_point last_mouse_event[3][2];  // timestamp of last mouse events
+
+-    // gamepad support: HID mode (virtual HID device) with emulation fallback
+-    bool hid_available {};
++    // Safe keyboard and mouse gamepad emulation.
+     gamepad_mode_e gamepad_modes[MAX_GAMEPADS] {};
+-    HIDGamepad *hid_gamepads[MAX_GAMEPADS] {};
+     MacOSGamepad *emulation_gamepads[MAX_GAMEPADS] {};
+   };
+
+@@ -320,20 +317,7 @@ const KeyCodeMap kKeyCodesMap[] = {
+         continue;
+       }
+
+-      // Try HID mode first if available
+-      if (macos_input->hid_available) {
+-        HIDGamepad *hid = [[HIDGamepad alloc] initWithIndex:i];
+-        if ([hid createDevice]) {
+-          macos_input->hid_gamepads[i] = hid;
+-          macos_input->gamepad_modes[i] = gamepad_mode_e::HID;
+-          BOOST_LOG(info) << "Gamepad "sv << i << " allocated (HID virtual device mode)"sv;
+-          return i;
+-        }
+-        [hid release];
+-        BOOST_LOG(warning) << "Gamepad "sv << i << ": HID creation failed, falling back to emulation"sv;
+-      }
+-
+-      // Fallback to keyboard/mouse emulation
++      // Use keyboard and mouse emulation without restricted entitlements.
+       macos_input->emulation_gamepads[i] = [[MacOSGamepad alloc] initWithIndex:i];
+       macos_input->gamepad_modes[i] = gamepad_mode_e::EMULATION;
+       BOOST_LOG(info) << "Gamepad "sv << i << " allocated (keyboard/mouse emulation mode)"sv;
+@@ -352,13 +336,6 @@ const KeyCodeMap kKeyCodesMap[] = {
+     }
+
+     switch (macos_input->gamepad_modes[nr]) {
+-      case gamepad_mode_e::HID:
+-        if (macos_input->hid_gamepads[nr]) {
+-          [macos_input->hid_gamepads[nr] disconnect];
+-          [macos_input->hid_gamepads[nr] release];
+-          macos_input->hid_gamepads[nr] = nil;
+-        }
+-        break;
+       case gamepad_mode_e::EMULATION:
+         if (macos_input->emulation_gamepads[nr]) {
+           [macos_input->emulation_gamepads[nr] disconnect];
+@@ -382,15 +359,6 @@ const KeyCodeMap kKeyCodesMap[] = {
+     }
+
+     switch (macos_input->gamepad_modes[nr]) {
+-      case gamepad_mode_e::HID:
+-        [macos_input->hid_gamepads[nr] updateState:gamepad_state.buttonFlags
+-                                        leftStickX:gamepad_state.lsX
+-                                        leftStickY:gamepad_state.lsY
+-                                       rightStickX:gamepad_state.rsX
+-                                       rightStickY:gamepad_state.rsY
+-                                       leftTrigger:gamepad_state.lt
+-                                      rightTrigger:gamepad_state.rt];
+-        break;
+       case gamepad_mode_e::EMULATION:
+         [macos_input->emulation_gamepads[nr] updateState:gamepad_state.buttonFlags
+                                               leftStickX:gamepad_state.lsX
+@@ -663,18 +631,9 @@ const KeyCodeMap kKeyCodesMap[] = {
+     macos_input->mouse_down[1] = false;
+     macos_input->mouse_down[2] = false;
+
+-    // Probe HID virtual gamepad support (requires SIP disabled)
+-    macos_input->hid_available = [HIDGamepad isAvailable];
+-    if (macos_input->hid_available) {
+-      BOOST_LOG(info) << "IOHIDUserDevice virtual gamepad support is available"sv;
+-    } else {
+-      BOOST_LOG(info) << "IOHIDUserDevice virtual gamepad not available (SIP enabled?), using keyboard/mouse emulation fallback"sv;
+-    }
+-
+-    // Initialize gamepad slots
++    // Initialize gamepad slots.
+     for (int i = 0; i < MAX_GAMEPADS; i++) {
+       macos_input->gamepad_modes[i] = gamepad_mode_e::NONE;
+-      macos_input->hid_gamepads[i] = nil;
+       macos_input->emulation_gamepads[i] = nil;
+     }
+
+@@ -686,13 +645,8 @@ const KeyCodeMap kKeyCodesMap[] = {
+   void freeInput(void *p) {
+     auto *input = static_cast<macos_input_t *>(p);
+
+-    // Clean up gamepads (both HID and emulation)
++    // Clean up gamepad emulation.
+     for (int i = 0; i < MAX_GAMEPADS; i++) {
+-      if (input->hid_gamepads[i] != nil) {
+-        [input->hid_gamepads[i] disconnect];
+-        [input->hid_gamepads[i] release];
+-        input->hid_gamepads[i] = nil;
+-      }
+       if (input->emulation_gamepads[i] != nil) {
+         [input->emulation_gamepads[i] disconnect];
+         [input->emulation_gamepads[i] release];
+@@ -713,8 +667,7 @@ const KeyCodeMap kKeyCodesMap[] = {
+     static std::vector<supported_gamepad_t> gamepads;
+
+     if (!initialized) {
+-      bool hid_ok = [HIDGamepad isAvailable];
+-      gamepads.push_back({"auto", true, hid_ok ? "gamepads.macos_hid" : "gamepads.macos_emulation"});
++      gamepads.push_back({"auto", true, "gamepads.macos_emulation"});
+       initialized = true;
+     }
+
+diff --git a/src/platform/macos/virtual_display.m b/src/platform/macos/virtual_display.m
+index 88f59f4..2bdf752 100644
+--- a/src/platform/macos/virtual_display.m
++++ b/src/platform/macos/virtual_display.m
+@@ -10,6 +10,7 @@
+  */
+ #import <Foundation/Foundation.h>
+ #import <CoreGraphics/CoreGraphics.h>
++#include <mach-o/dyld.h>
+ #include <pthread.h>
+ #include <signal.h>
+ #include <spawn.h>
+diff --git a/vite.config.js b/vite.config.js
+index c430a43..738f13f 100644
+--- a/vite.config.js
++++ b/vite.config.js
+@@ -3,7 +3,6 @@ import fs from 'fs';
+ import { resolve } from 'path'
+ import { defineConfig } from 'vite'
+ import { ViteEjsPlugin } from "vite-plugin-ejs";
+-import { codecovVitePlugin } from "@codecov/vite-plugin";
+ import vue from '@vitejs/plugin-vue'
+ import process from 'process'
+
+@@ -53,13 +52,6 @@ export default defineConfig({
+     plugins: [
+         vue(),
+         ViteEjsPlugin({ header }),
+-        // The Codecov vite plugin should be after all other plugins
+-        codecovVitePlugin({
+-            enableBundleAnalysis: true,
+-            bundleName: "sunshine",
+-            uploadToken: process.env.CODECOV_TOKEN,
+-            gitService: "github",
+-        }),
+     ],
+     root: resolve(assetsSrcPath),
+     build: {

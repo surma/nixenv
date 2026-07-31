@@ -24,6 +24,8 @@ in
     ];
     home.packages =
       (with pkgs; [
+        inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.lumen
+        inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.macpow
       ])
       ++ (with pkgs-unstable; [
         # raycast
