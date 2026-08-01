@@ -241,6 +241,12 @@ in
                   WorkingDirectory = "/home/containeruser";
                   Restart = "always";
                   RestartSec = 5;
+                  ExecStartPre = pkgs.writeShellScript "update-pi-config" ''
+                    PI_CONFIG_DIR="$HOME/.pi/agent/git/github.com/surma/pi-config"
+                    if [ -d "$PI_CONFIG_DIR/.git" ]; then
+                      ${pkgs.git}/bin/git -C "$PI_CONFIG_DIR" pull --ff-only || true
+                    fi
+                  '';
                   ExecStart = "${inputs.scout.packages.${system}.scout}/bin/scout";
                 };
               };
