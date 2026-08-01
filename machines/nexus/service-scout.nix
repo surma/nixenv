@@ -220,6 +220,7 @@ in
                   pkgs.openssh
                   pkgs.procps
                   pkgs.sqlite
+                  pkgs.zellij
                 ];
                 environment = {
                   SCOUT_ACP_COMMAND = "${piAcp}/bin/pi-acp";
