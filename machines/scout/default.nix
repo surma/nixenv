@@ -122,6 +122,7 @@
       ../../assets/skills/triple-helix
       ../../assets/skills/preact-signals
       ../../assets/skills/web-development
+      ../../assets/skills/team-lead
     ];
 
     defaultConfigs.pi = {
