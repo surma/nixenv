@@ -11,6 +11,7 @@
     ../../modules/home-manager/mutable-files
     ../../modules/defaultConfigs/npm
     ../../modules/home-manager/brain
+    ../../profiles/home-manager/ai.nix
   ];
 
   config = {
@@ -101,28 +102,24 @@
       };
     };
 
-    programs.agent-browser.enable = true;
+    # programs.agent-browser is enabled by the AI profile.
     programs.brain.enable = true;
 
+    # Skills from the AI profile (brainstorming, planning, debugging,
+    # surma-writer, triple-helix, preact-signals, web-development,
+    # team-lead, bro, review, selfreview, rust) are inherited via the
+    # import above.  Only Scout-specific skills are listed here.
     agent.skills = [
       ../../assets/skills/cloudflare
       ../../assets/skills/gws
       ../../assets/skills/homeassistant
-      ../../assets/skills/nexus-admin
-      ../../assets/skills/surma-writer
-      ../../assets/skills/whatsapp
-      ../../assets/skills/signal
-      ../../assets/skills/brainstorming
-      ../../assets/skills/planning
-      ../../assets/skills/debugging
       ../../assets/skills/music
+      ../../assets/skills/nexus-admin
       ../../assets/skills/remarkable
-      ../../assets/skills/web-to-epub
+      ../../assets/skills/signal
       ../../assets/skills/tts
-      ../../assets/skills/triple-helix
-      ../../assets/skills/preact-signals
-      ../../assets/skills/web-development
-      ../../assets/skills/team-lead
+      ../../assets/skills/web-to-epub
+      ../../assets/skills/whatsapp
     ];
 
     defaultConfigs.pi = {
