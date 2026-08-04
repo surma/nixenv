@@ -24,7 +24,7 @@ in
       gd = "git diff -- . ':(exclude)*-lock.json' ':(exclude)*.lock'";
       gdc = "git diff --cached -- . ':(exclude)package-lock.json'";
       gcb = "git branch --show-current";
-      gs = "git status";
+      gss = "git status";
       gidiot = "git commit --amend --no-edit";
       gfo = "git fetch origin";
       gra = "git reset --hard origin/main";
