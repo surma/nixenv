@@ -1226,11 +1226,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1785748178,
-        "narHash": "sha256-lCIpHOAIPM4+JR3hMxjL6sa+GFg+p24rohFbVxqOjt4=",
+        "lastModified": 1785831364,
+        "narHash": "sha256-Edmhwip/TUa0kgKmN2i7+7Y0zVxZz76LNabmOfWGy8A=",
         "ref": "main",
-        "rev": "82b1814f091c381081844e12f0d7a4a05ef63a18",
-        "revCount": 89,
+        "rev": "eb5ca2de97c47154f8d9c544f064c59b0bd26da3",
+        "revCount": 91,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
       },
