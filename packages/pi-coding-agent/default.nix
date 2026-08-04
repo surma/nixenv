@@ -22,7 +22,7 @@ let
 
   modelData = fetchzip {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-ToWghBcWOUT3dNC37vaYzAmmhXpVb6tD+vCshjLfTxo=";
+    hash = "sha256-OpiG7u0hptGZRnwhSlB6jbA1iNHd71zBXrDEERrpQTg=";
   };
 in
 buildNpmPackage rec {
