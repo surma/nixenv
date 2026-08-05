@@ -132,8 +132,9 @@
       extensions.dotenv.enable = true;
       extensions.contextUsage.enable = true;
       settings = {
-        defaultModel = "claude-opus-4-8";
-        defaultThinkingLevel = "xhigh";
+        defaultProvider = "openai";
+        defaultModel = "gpt-5.6-luna";
+        defaultThinkingLevel = "max";
       };
     };
 
