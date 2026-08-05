@@ -229,7 +229,8 @@ in
                   SCOUT_MCP_PORT = toString scoutMcpPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
-                  SCOUT_DEFAULT_MODEL = "anthropic/claude-opus-4-8/high";
+                  SCOUT_DEFAULT_MODEL = "openai/gpt-5.6-luna";
+                  SCOUT_DEFAULT_REASONING_LEVEL = "max";
                   SCOUT_LOG = "scout=debug";
                 };
                 serviceConfig = {
