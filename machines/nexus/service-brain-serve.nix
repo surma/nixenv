@@ -27,6 +27,44 @@ let
   llmApiKeyFile = "/var/lib/credentials/llm-proxy-client-key";
   llmEndpoint = "https://proxy.llm.surma.technology/v1";
   llmModel = "shopify:anthropic:claude-haiku-4-5";
+  publicUrl = "https://public-brain.surma.technology";
+
+  shareRuntimeDir = "/run/brain-serve";
+  shareKeyDir = "${shareRuntimeDir}/jwt";
+  sharePrivateKeyFile = "${shareKeyDir}/private.pem";
+  sharePublicKeyFile = "${shareKeyDir}/public.pem";
+
+  generateShareKeys = pkgs.writeShellScript "brain-serve-generate-share-keys" ''
+    set -euo pipefail
+    umask 077
+
+    if [ -s "${sharePrivateKeyFile}" ] && [ -s "${sharePublicKeyFile}" ]; then
+      exit 0
+    fi
+    if [ -e "${shareKeyDir}" ]; then
+      echo "Share-key directory exists but does not contain a complete key pair" >&2
+      exit 1
+    fi
+
+    tmpDir="$(${pkgs.coreutils}/bin/mktemp -d "${shareKeyDir}.tmp.XXXXXX")"
+    trap '${pkgs.coreutils}/bin/rm -rf "$tmpDir"' EXIT
+    ${pkgs.openssl}/bin/openssl genpkey -algorithm Ed25519 -out "$tmpDir/private.pem"
+    ${pkgs.openssl}/bin/openssl pkey -in "$tmpDir/private.pem" -pubout -out "$tmpDir/public.pem"
+    ${pkgs.coreutils}/bin/mv "$tmpDir" "${shareKeyDir}"
+    trap - EXIT
+  '';
+
+  waitForShareKeys = pkgs.writeShellScript "brain-serve-wait-for-share-keys" ''
+    set -euo pipefail
+    for attempt in $(${pkgs.coreutils}/bin/seq 1 30); do
+      if [ -r "${sharePrivateKeyFile}" ] && [ -r "${sharePublicKeyFile}" ]; then
+        exit 0
+      fi
+      ${pkgs.coreutils}/bin/sleep 1
+    done
+    echo "Timed out waiting for Brain share keys" >&2
+    exit 1
+  '';
 
   brainSync = pkgs.writeShellScript "brain-serve-sync" ''
     set -euo pipefail
@@ -58,20 +96,20 @@ let
       LLM_KEY="$(cat "${llmApiKeyFile}")"
       LLM_FLAGS="--llm-endpoint ${llmEndpoint} --llm-api-key $LLM_KEY --llm-model ${llmModel}"
     fi
-    exec ${brainPkg}/bin/brain serve --port 8080 $LLM_FLAGS
+    exec ${brainPkg}/bin/brain serve \
+      --port 8080 \
+      --jwt-private-key-file "${sharePrivateKeyFile}" \
+      --public-url "${publicUrl}" \
+      $LLM_FLAGS
   '';
-
-  jwtSecretFile = "/var/lib/credentials/brain-jwt-secret";
 
   brainServePublicStart = pkgs.writeShellScript "brain-serve-public-start" ''
     set -euo pipefail
     export NO_COLOR=1
-    JWT_FLAGS=""
-    if [ -r "${jwtSecretFile}" ]; then
-      JWT_SECRET="$(cat "${jwtSecretFile}")"
-      JWT_FLAGS="--jwt-secret $JWT_SECRET"
-    fi
-    exec ${brainPkg}/bin/brain serve --port 8081 --public $JWT_FLAGS
+    exec ${brainPkg}/bin/brain serve \
+      --port 8081 \
+      --public \
+      --jwt-public-key-file "${sharePublicKeyFile}"
   '';
 in
 {
@@ -139,6 +177,8 @@ in
           brainPkg
           pkgs.git
           pkgs.openssh
+          pkgs.coreutils
+          pkgs.openssl
         ];
         environment = {
           BRAIN_PATH = brainPath;
@@ -150,8 +190,14 @@ in
           GIT_COMMITTER_EMAIL = "surma@surma.dev";
         };
         serviceConfig = {
-          ExecStartPre = "${brainSync}";
+          ExecStartPre = [
+            "${brainSync}"
+            "${generateShareKeys}"
+          ];
           ExecStart = "${brainServeStart}";
+          RuntimeDirectory = "brain-serve";
+          RuntimeDirectoryMode = "0700";
+          RuntimeDirectoryPreserve = "no";
           User = "containeruser";
           Restart = "always";
           RestartSec = 30;
@@ -167,12 +213,16 @@ in
         description = "Brain public web server";
         bindsTo = [ "brain-serve.service" ];
         after = [ "brain-serve.service" ];
-        path = [ brainPkg ];
+        path = [
+          brainPkg
+          pkgs.coreutils
+        ];
         environment = {
           BRAIN_PATH = brainPath;
           HOME = "/var/lib/brain-serve";
         };
         serviceConfig = {
+          ExecStartPre = "${waitForShareKeys}";
           ExecStart = "${brainServePublicStart}";
           User = "containeruser";
           Restart = "always";
