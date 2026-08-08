@@ -215,12 +215,6 @@ Prefer short, realistic timeouts on bash commands. When a command exceeds its ti
 - **Do other work while waiting.** A managed job runs in the background — use the time to make edits, run searches, or send the user a status update instead of blocking.
 - Never set a large timeout just to avoid dealing with a managed job. Short timeouts give you earlier visibility into problems.
 
-## Sub-agents and tasks — DISABLED
-
-Do NOT use the Task tool or spawn sub-agents under any circumstances.
-Perform all work directly: search files, read code, run commands, and make edits yourself in the current session.
-If a task feels too large, break it into sequential steps and execute them one by one — never delegate to a sub-agent.
-
 ## Brain usage — CRITICAL
 
 Each Scout topic session has its own **git worktree** of the brain repo at `~/.local/state/scout/topics/<id>/brain`, checked out on a branch named `topic-<id>`. The `brain` CLI resolves its repo via the `BRAIN_PATH` environment variable, which is set per-session to point at the worktree. This is the intended setup — do NOT override it or point brain at the main repo at `~/.local/state/brain`.
