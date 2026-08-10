@@ -1,4 +1,4 @@
-# To update: nix-update --file default.nix pi-coding-agent
+# To update: nix run nixpkgs#nix-update -- --flake --custom-dep modelData pi-coding-agent
 {
   lib,
   buildNpmPackage,
@@ -18,11 +18,11 @@ let
     hash = "sha256-lg+I4S/aAjazjhGZU567ow+rksoNiqOqjHl//TjAMes=";
   };
 
-  npmDepsHash = "sha256-vz5+zzzXMrIgO43oluJwA2kTGLmyKjyda06oYryOfAM=";
+  npmDepsHash = "sha256-tufyZQRPAUeDtiq0UQodbKA/Y9xUAvNT8K+NWFjkeME=";
 
   modelData = fetchzip {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-OpiG7u0hptGZRnwhSlB6jbA1iNHd71zBXrDEERrpQTg=";
+    hash = "sha256-vz5+zzzXMrIgO43oluJwA2kTGLmyKjyda06oYryOfAM=";
   };
 in
 buildNpmPackage rec {
@@ -41,9 +41,14 @@ buildNpmPackage rec {
   buildPhase = ''
     runHook preBuild
 
+    npm run --workspace=packages/tui build
+    npm run --workspace=packages/telemetry build
     npm run --workspace=packages/ai build:offline
     npm run --workspace=packages/agent build
-    npm run --workspace=packages/tui build
+    npm run --workspace=packages/session-backends/sqlite-node build
+    npm run --workspace=packages/protocol build
+    npm run --workspace=packages/client build
+    npm run --workspace=packages/server build
     npm run --workspace=packages/coding-agent build
 
     runHook postBuild
@@ -56,7 +61,16 @@ buildNpmPackage rec {
     cp -R packages/. "$workspace_out"
   '';
 
-  passthru.updateScript = nix-update-script { };
+  passthru = {
+    inherit modelData;
+    updateScript = nix-update-script {
+      extraArgs = [
+        "--flake"
+        "--custom-dep"
+        "modelData"
+      ];
+    };
+  };
 
   meta = {
     description = "Coding agent CLI with read, bash, edit, write tools and session management";
