@@ -61,6 +61,11 @@ with lib;
               MoveTab = "Right";
             };
           };
+          "shared_except \"move\" \"locked\"" = {
+            unbind = [
+              "Ctrl h"
+            ];
+          };
           locked = {
             unbind = [
               "Ctrl g"
