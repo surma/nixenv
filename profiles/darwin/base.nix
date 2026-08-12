@@ -15,7 +15,8 @@
     inputs.nix-darwin.packages.${system}.default
   ];
 
-  nix.settings.extra-experimental-features = lib.mkDefault "nix-command flakes pipe-operators";
+  nix.settings.extra-experimental-features = lib.mkDefault "nix-command flakes pipe-operators local-overlay-store";
+  nix.settings.ignore-gc-delete-failure = true;
 
   fonts.packages = with pkgs; [ fira-code ];
 
