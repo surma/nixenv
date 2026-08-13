@@ -89,6 +89,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    shopify-framework.url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git?ref=main";
   };
 
   outputs =
