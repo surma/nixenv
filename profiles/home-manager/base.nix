@@ -10,6 +10,9 @@ let
 
   not = x: !x;
 
+  forwardedAgentMatch =
+    ''Match host *,!gitea.surma.technology,!gitea-brain exec "test -n \"$SSH_CONNECTION\" && test -S \"$SSH_AUTH_SOCK\""'';
+
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
   # Wrapper for pinentry-curses that fixes $TERM for Ghostty
@@ -143,6 +146,10 @@ in
     enableDefaultConfig = false;
     enable = true;
     settings = {
+      "${forwardedAgentMatch}" = lib.hm.dag.entryBefore [ "*" ] {
+        IdentityAgent = "SSH_AUTH_SOCK";
+      };
+
       "* !gitea.surma.technology !gitea-brain" = {
         AddKeysToAgent = "yes";
         ForwardAgent = true;
