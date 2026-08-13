@@ -18,8 +18,14 @@
     ../../modules/nixos/framework/suspend-fix.nix
     ../../modules/nixos/framework/wifi-fix.nix
 
-    ../../modules/nixos/shopify-cloudflare-warp
     ../../modules/nixos/1password-wrapper
+
+    inputs.shopify-framework.nixosModules.warp
+    inputs.shopify-framework.nixosModules.chrome-enrollment
+    inputs.shopify-framework.nixosModules.nix-ld
+    inputs.shopify-framework.nixosModules.fleet
+    inputs.shopify-framework.nixosModules.packages
+    inputs.shopify-framework.nixosModules.dev-nginx
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -63,9 +69,13 @@
   };
 
   networking.hostName = "archon"; # Define your hostname.
+  shopify.user = "surma";
   allowedUnfreeApps = [
     "1password"
     "1password-cli"
+    "cloudflare-warp"
+    "google-chrome"
+    "slack"
   ];
   environment.systemPackages = with pkgs; [
     hyprpolkitagent
