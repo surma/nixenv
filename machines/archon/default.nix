@@ -11,6 +11,7 @@
     inputs.home-manager.nixosModules.home-manager
 
     ./hardware.nix
+    ./minerva.nix
 
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
