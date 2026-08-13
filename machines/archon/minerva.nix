@@ -108,6 +108,24 @@ in
     "d /usr/lib 0755 root root -"
     "L+ /usr/lib/libtpm2_pkcs11.so - - - - /run/current-system/sw/lib/libtpm2_pkcs11.so"
 
+    # /usr/lib64 must ALSO exist, even though nothing is ever placed in it,
+    # because of a false-negative bug in Minerva's *installer* script (not
+    # the dependency worker, which does this correctly). The installer runs
+    # (under `set -o pipefail`):
+    #   find /usr/lib /usr/lib64 -name 'libtpm2_pkcs11.so*' 2>/dev/null | grep -q .
+    # `find` with multiple start points still exits 1 if ANY of them is
+    # missing, even though it already printed the match it found in
+    # /usr/lib. `grep -q` sees that match and exits 0, but pipefail makes
+    # the pipeline's status the *last non-zero* exit code in the pipe (1),
+    # so the subsequent `!` inverts a 1 into "library not found" while the
+    # library is right there. Verified live: this deterministically aborted
+    # every Fleet attempt. An empty real directory (not a symlink, to avoid
+    # any risk of double-counting in the script's later
+    # `sort -V | tail -n1` module-version selection) is enough to satisfy
+    # `find` and make the check pass. Do NOT remove this as "pointless" —
+    # see SHOPIFY.md for the full writeup and the upstream report.
+    "d /usr/lib64 0755 root root -"
+
     # `/usr/local` is untouched by NixOS itself (FHS reserves it for local
     # administration, and the Nix store is where NixOS puts everything it
     # manages instead), so on this host it simply did not exist: `/usr`
