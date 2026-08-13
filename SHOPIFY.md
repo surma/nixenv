@@ -236,13 +236,16 @@ Two side effects worth knowing about, both from imported modules:
 
 ## Open items
 
-- The Fleet enroll secret is currently **manual, undeclared state** —
-  written by hand to `/etc/orbit/enroll-secret` and not tracked anywhere. A
-  fresh install of archon would need this whole procedure redone. Candidate
-  fix: move it into this repo's existing age-encrypted secrets mechanism
-  (`secrets/*.age`, see root `README.md`) once it's clear that doesn't
-  conflict with the module's expectations about that path being
-  root-managed outside of `environment.etc`.
+- ~~The Fleet enroll secret is currently manual, undeclared state~~ — **done**.
+  It is now delivered declaratively via this repo's age-encrypted secrets
+  mechanism: `secrets/fleet-enroll-secret.age`, registered in
+  `secrets/config.nix`, and materialised to `/etc/orbit/enroll-secret`
+  (mode `0600`) by `secrets.items.fleet-enroll-secret` in
+  `machines/archon/default.nix`. See "Delivering the enroll secret
+  declaratively" below for how it works and how to rotate it. A fresh
+  install of archon no longer needs the manual extraction-from-.deb step for
+  this artefact — only restoring `~/.ssh/id_machine` (see "The age identity
+  is the real bootstrap dependency" below).
 - Upstream issues worth raising against `shopify-framework` (i.e. against
   the corp repo, via whoever refreshes the mirror):
   - Missing `scripts/git-credential-shopify` breaks `shopify-cache` eval.
@@ -301,9 +304,20 @@ to run it from a systemd unit. Two things go wrong on NixOS:
   openssl, gnupg, nss.tools, shadow (`usermod`), `tpm2-pkcs11` (bin output),
   glibc's `getent` output, `/run/wrappers` (for a *setuid* `sudo` —
   `pkgs.sudo` is not setuid and is useless here), and the apt-get shim.
-- Writes the resulting PATH to **`/etc/minerva/script-path`** so a manual run
-  can reproduce orbit's environment byte-for-byte instead of approximating
-  it, plus a short `/etc/minerva/README`.
+- Writes the resulting PATH to **`/etc/minerva-nixos/script-path`** so a manual
+  run can reproduce orbit's environment byte-for-byte instead of
+  approximating it, plus a short `/etc/minerva-nixos/README`. This lives
+  under `/etc/minerva-nixos`, not `/etc/minerva`: the real Minerva agent
+  (`/usr/local/bin/minerva-agent`, once Fleet's installer can place it — see
+  below) is expected to write its own `certificate.pem` under `/etc/minerva`
+  and should own that directory outright.
+- **`systemd.tmpfiles` rules for `/usr/local` and `/usr/local/bin`**, created
+  as real directories. `/usr/local` did not exist at all on this host (`/usr`
+  contained only `bin` and `lib`), which is the leading hypothesis for why
+  Fleet's ~30s-interval installer script has been failing with exit 1: it
+  almost certainly tries to place `/usr/local/bin/minerva-agent` there. This
+  is not a NixOS-managed path — FHS reserves `/usr/local` for local
+  administration — so creating it is legitimate, not a workaround-lie.
 
 ### The `apt-get` shim, and why it isn't a lie
 
@@ -429,14 +443,14 @@ nixos-rebuild build --flake .#archon
 sudo ./result/bin/switch-to-configuration switch
 
 # 2. Sanity-check the environment before touching the worker.
-cat /etc/minerva/script-path
-sudo env -i PATH="$(cat /etc/minerva/script-path)" apt-get install -y \
+cat /etc/minerva-nixos/script-path
+sudo env -i PATH="$(cat /etc/minerva-nixos/script-path)" apt-get install -y \
   libtpm2-pkcs11-tools libtpm2-pkcs11-1 libnss3-tools gnupg curl jq \
   coreutils openssl                  # expect: VERDICT=PASS, exit 0
 
 # 3. Run the worker with orbit's exact PATH.
 sudo env -i \
-  PATH="$(cat /etc/minerva/script-path)" \
+  PATH="$(cat /etc/minerva-nixos/script-path)" \
   HOME=/root \
   bash /var/lib/fleet/minerva-agent/install-tpm-nss-deps-worker.sh
 
@@ -511,15 +525,15 @@ must do it, with the reason why.
 | 4 | WARP *registration* | **[manual]** — browser SSO |
 | 5 | Obtain the `fleet-osquery_*.deb` | **[manual]** — per-user tokenised URL behind corp SSO |
 | 6 | Orbit binary at `/opt/orbit/bin/orbit/linux/stable/orbit` | **[manual today]**, could be **[nix]** — see below |
-| 7 | `/etc/orbit/enroll-secret` | **[manual today]**, can be **[nix]** — see below |
+| 7 | `/etc/orbit/enroll-secret` | **[nix]** — age secret, see below |
 | 8 | `orbit.service` running & enrolled | **[nix]** (`fleet.nix`), once 6 + 7 exist |
 | 9 | TPM/PKCS#11 + NSS tooling, FHS shims, orbit PATH | **[nix]** (`minerva.nix`) |
 | 10 | Minerva dependency worker runs to `state=success` | **[nix]** (`minerva-tpm-nss-deps.path`) |
 | 11 | Chrome enterprise enrollment | **[nix]** token (`chrome-enrollment`), but sign-in is **[manual]** |
 | 12 | Okta, corp cache creds, tec/dev tooling | **[manual]** — browser SSO |
 
-Steps 9 and 10 are the ones this repo newly automates. 6 and 7 are the two
-that are *worth* automating and currently are not; the rest are genuinely
+Steps 7, 9 and 10 are the ones this repo automates. 6 is the remaining one
+that is *worth* automating and currently is not; the rest are genuinely
 human.
 
 ### The age identity is the real bootstrap dependency
@@ -535,76 +549,60 @@ mechanism does not eliminate a manual step, it *merges* it into one you
 already have. You go from "recover the machine key **and** re-fetch the Fleet
 secret out of a .deb" to just "recover the machine key".
 
-### 7. Delivering the enroll secret declaratively (recommended, not implemented)
+### 7. Delivering the enroll secret declaratively (implemented)
 
-`/etc/orbit/enroll-secret` is currently hand-written, undeclared state and is
-lost on reformat. The repo's existing age mechanism can deliver it: on NixOS,
+`/etc/orbit/enroll-secret` used to be hand-written, undeclared state, lost on
+reformat. It is now delivered by the repo's existing age mechanism: on NixOS,
 `modules/features/secrets.nix` installs a `secrets.service` (oneshot,
 `RemainAfterExit`, `wantedBy = multi-user.target`) that decrypts each
-`secrets.items.<name>` to a target path with a mode. That is exactly the shape
-needed here.
+`secrets.items.<name>` to a target path with a mode. The ciphertext lives at
+`secrets/fleet-enroll-secret.age`, registered in `secrets/config.nix` for
+recipients `surma` and `archon`, and `machines/archon/default.nix` sets:
 
-**This is deliberately not implemented in the repo, because implementing it
-requires the plaintext secret, which must never pass through an agent or a
-commit. Here is precisely what to add.**
+```nix
+# The NixOS-level secrets service runs as root, and the default identity
+# `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
+# real key explicitly.
+secrets.identity = "/home/surma/.ssh/id_machine";
+secrets.items.fleet-enroll-secret = {
+  target = "/etc/orbit/enroll-secret";
+  mode = "0600";
+};
+```
 
-1. Put the secret in a file and encrypt it. **No trailing newline** — orbit is
-   picky about whitespace in that file:
+`minerva.nix` adds `After=secrets.service` to `orbit.service`, but only once
+`secrets.items.fleet-enroll-secret` actually exists — so orbit does not race
+the decryption.
+
+#### Rotating the secret
+
+If Fleet ever reissues the enroll secret, update it like any other secret in
+this repo:
+
+1. Get the new value (same source as before: the `ORBIT_ENROLL_SECRET=` line
+   inside `extracted/etc/default/orbit` in a fresh Fleet `.deb`, or wherever
+   Fleet surfaces it going forward).
+2. Edit the encrypted file in place, then re-encrypt for all recipients:
 
    ```sh
    cd ~/src/github.com/surma/nixenv
-   umask 077
-   printf '%s' 'THE_SECRET_VALUE' > /tmp/fleet-enroll-secret
-   nix run .#secrets -- encrypt --target secrets/fleet-enroll-secret.age /tmp/fleet-enroll-secret
-   # ('encrypt' deletes the plaintext unless you pass --keep-original)
-   ```
-
-   (The value is the `ORBIT_ENROLL_SECRET=` line inside
-   `extracted/etc/default/orbit` in the Fleet `.deb`.)
-
-2. Register it in `secrets/config.nix`, in the `secrets` attrset:
-
-   ```nix
-   fleet-enroll-secret = {
-     contents = ../secrets/fleet-enroll-secret.age;
-     keys = [
-       "surma"
-       "archon"
-     ];
-   };
-   ```
-
-3. Re-encrypt for both recipients (step 1 only encrypted it for the local
-   machine key):
-
-   ```sh
+   nix run .#secrets -- edit secrets/fleet-enroll-secret.age
+   # replace the contents with the new value, no trailing newline, save & quit
    nix run .#secrets -- recrypt fleet-enroll-secret
    ```
 
-4. Add to `machines/archon/default.nix`:
-
-   ```nix
-   # The NixOS-level secrets service runs as root, and the default identity
-   # `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
-   # real key explicitly.
-   secrets.identity = "/home/surma/.ssh/id_machine";
-   secrets.items.fleet-enroll-secret = {
-     target = "/etc/orbit/enroll-secret";
-     mode = "0600";
-   };
-   ```
-
-`minerva.nix` already adds `After=secrets.service` to `orbit.service`, but
-only once `secrets.items.fleet-enroll-secret` actually exists — so orbit will
-not race the decryption. Until then it is a no-op.
+3. `nixos-rebuild switch --flake .#archon` (or wait for the next boot) to
+   have `secrets.service` write the new value to `/etc/orbit/enroll-secret`.
 
 Caveats, stated plainly:
 
 - The `.age` file is committed to a **public** repo. That is the same posture
   as every other secret in `secrets/`, and age with ed25519 recipients is the
   intended use, but it does mean the ciphertext is world-readable forever.
-  If the Fleet enroll secret is considered too sensitive for that, keep it
-  manual and say so here.
+  This was a deliberate choice for this secret, matching how every other
+  secret in this repo is handled — if it is ever considered too sensitive for
+  that, revert to the manual procedure and remove the `.age` file and its
+  `secrets/config.nix`/`machines/archon/default.nix` entries.
 - `secrets.service` decrypts at boot; the file will be recreated on every
   boot, which also means a hand-edit of `/etc/orbit/enroll-secret` would be
   silently reverted. That's the point, but worth knowing.

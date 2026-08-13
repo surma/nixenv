@@ -71,6 +71,15 @@
 
   networking.hostName = "archon"; # Define your hostname.
   shopify.user = "surma";
+
+  # The NixOS-level secrets service runs as root, and the default identity
+  # `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
+  # real key explicitly.
+  secrets.identity = "/home/surma/.ssh/id_machine";
+  secrets.items.fleet-enroll-secret = {
+    target = "/etc/orbit/enroll-secret";
+    mode = "0600";
+  };
   allowedUnfreeApps = [
     "1password"
     "1password-cli"
