@@ -153,6 +153,10 @@ in
       "* !gitea.surma.technology !gitea-brain" = {
         AddKeysToAgent = "yes";
         ForwardAgent = true;
+        SendEnv = [
+          "COLORTERM"
+          "TERM_PROGRAM"
+        ];
         IdentityFile = [
           "${config.home.homeDirectory}/.ssh/id_surma"
           "${config.home.homeDirectory}/.ssh/id_machine"

@@ -46,6 +46,10 @@
   programs.git.enable = true;
   programs.zsh.enable = true;
   services.openssh.enable = true;
+  services.openssh.settings.AcceptEnv = [
+    "COLORTERM"
+    "TERM_PROGRAM"
+  ];
 
   users.defaultUserShell = pkgs.zsh;
   users.users.surma = {
