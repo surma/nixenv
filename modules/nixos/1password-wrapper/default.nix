@@ -18,8 +18,17 @@ in
   ];
 
   home-manager.users.surma =
-    { config, ... }:
+    { config, lib, ... }:
+    let
+      forwardedAgentMatch =
+        ''Match host *,!gitea.surma.technology,!gitea-brain exec "test -n \"$SSH_CONNECTION\" && test -S \"$SSH_AUTH_SOCK\""'';
+    in
     {
+      programs.ssh.settings."${forwardedAgentMatch}" =
+        lib.hm.dag.entryBefore [ "*" ] {
+          IdentityAgent = "SSH_AUTH_SOCK";
+        };
+
       programs.ssh.settings."*".IdentityAgent = ''"${config.home.homeDirectory}/.1password/agent.sock"'';
 
       # Autostart 1Password (patched) on Hyprland login. --silent keeps it
