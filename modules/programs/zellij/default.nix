@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   lib,
   inputs,
@@ -7,16 +6,11 @@
   ...
 }:
 let
-  inherit (pkgs) wl-clipboard;
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 with lib;
 {
   # Zellij is home-manager only, no system-level config needed
-  options = {
-    programs.zellij.wl-clipboard.enable = mkEnableOption "Use wl-clipboard";
-  };
-
   config = mkIf (systemManager == "home-manager") {
     programs.zellij = {
       enable = true;
@@ -27,7 +21,6 @@ with lib;
         show_startup_tips = false;
         default_shell = "${pkgs-unstable.nushell}/bin/nu";
 
-        copy_command = mkIf config.programs.zellij.wl-clipboard.enable "${wl-clipboard}/bin/wl-copy -p";
         theme = "gruvbox";
         themes = {
           gruvbox = {

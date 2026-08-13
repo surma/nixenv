@@ -76,8 +76,6 @@
     programs.wezterm.window-decorations = null;
     defaultConfigs.wezterm.enable = true;
 
-    programs.zellij.wl-clipboard.enable = true;
-
     secrets.items.archon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
 
     services.syncthing.enable = true;
