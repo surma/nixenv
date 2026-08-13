@@ -1281,6 +1281,7 @@
         "opencode": "opencode",
         "pi-acp": "pi-acp",
         "scout": "scout",
+        "shopify-framework": "shopify-framework",
         "system-manager": "system-manager",
         "voice-memos": "voice-memos",
         "web-search-cli": "web-search-cli"
@@ -1376,6 +1377,22 @@
         "owner": "andreymatin",
         "repo": "scss-reset",
         "type": "github"
+      }
+    },
+    "shopify-framework": {
+      "locked": {
+        "lastModified": 1775073337,
+        "narHash": "sha256-fE/zVY2pauPOqLFhjzEwiGmyO89HKQq0DUsrXEjAwN0=",
+        "ref": "main",
+        "rev": "0dc41742622dc7f6c6aefaacd9abbcfe2e17fc46",
+        "revCount": 20,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
       }
     },
     "system-manager": {
