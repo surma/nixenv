@@ -198,7 +198,7 @@ main() {
     -o* | --option=* | --target-release=*)
       ;;
     --version)
-      printf '%s: not apt. A verifying shim. See /etc/minerva/README or SHOPIFY.md.\n' "$SHIM_NAME"
+      printf '%s: not apt. A verifying shim. See /etc/minerva-nixos/README or SHOPIFY.md.\n' "$SHIM_NAME"
       pass "reported identity for --version"
       ;;
     --)
