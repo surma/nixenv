@@ -11,7 +11,6 @@
     inputs.home-manager.nixosModules.home-manager
 
     ./hardware.nix
-    ./minerva.nix
 
     ../../profiles/nixos/base.nix
     ../../modules/nixos/hyprland
@@ -21,12 +20,12 @@
 
     ../../modules/nixos/1password-wrapper
 
-    inputs.shopify-framework.nixosModules.warp
-    inputs.shopify-framework.nixosModules.chrome-enrollment
-    inputs.shopify-framework.nixosModules.nix-ld
-    inputs.shopify-framework.nixosModules.fleet
-    inputs.shopify-framework.nixosModules.packages
-    inputs.shopify-framework.nixosModules.dev-nginx
+    # Everything Shopify — WARP, Fleet/orbit, Chrome CBCM, Minerva TPM device
+    # trust, Endpoint Verification, the FHS shims and the apt-get shim — now
+    # lives in one self-contained module. What used to be
+    # machines/archon/minerva*.{nix,sh}, machines/archon/endpoint-verification.nix
+    # and six cherry-picked shopify-framework modules is the block below.
+    inputs.shopify-framework.nixosModules.default
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -70,7 +69,28 @@
   };
 
   networking.hostName = "archon"; # Define your hostname.
-  shopify.user = "surma";
+
+  ####################################################################
+  # Shopify developer laptop
+  ####################################################################
+  # Everything else — endpoints, CA common names, TPM handles, PKCS#11
+  # labels, the orbit PATH, the FHS shims — has correct defaults in the
+  # module. See `inputs.shopify-framework`'s README for the full option
+  # table.
+  shopify-framework = {
+    enable = true;
+    user = "surma";
+    idpUsername = "surma@shopify.com";
+
+    # PATHS, never values. The module reads these at activation time as
+    # root; nothing about them reaches the world-readable Nix store. Both
+    # are produced by the `secrets.items` entries below.
+    chrome.enrollmentTokenFile = "/run/shopify-framework/chrome-enrollment-token";
+    chrome.enrollmentTokenUnits = [ "secrets.service" ];
+
+    fleet.enrollSecretFile = "/etc/orbit/enroll-secret";
+    fleet.enrollSecretUnits = [ "secrets.service" ];
+  };
 
   # The NixOS-level secrets service runs as root, and the default identity
   # `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
@@ -80,12 +100,47 @@
     target = "/etc/orbit/enroll-secret";
     mode = "0600";
   };
+
+  # TODO(surma): the Chrome CBCM enrolment token.
+  #
+  # Until this exists, `shopify-chrome-enrollment-token.service` finds no
+  # source file, says so, and exits 0 — so the build and the boot are fine,
+  # the browser simply is not enrolled.
+  #
+  # It cannot be added from here: the token has to be encrypted with your
+  # age key, and it also needs ROTATING first — the previous value was
+  # committed to the shopify-framework repository as an option default and
+  # was rendered into a world-readable /nix/store path on this machine, so
+  # treat it as disclosed.
+  #
+  # Once you have a fresh token from the CBCM admin console:
+  #
+  #   printf %s '<new-token>' \
+  #     | nix run nixpkgs#age -- --encrypt \
+  #         -r "$(cat secrets/config.nix | grep -A0 'surma =' ...)" ... \
+  #     > secrets/chrome-enrollment-token.age
+  #
+  # (in practice: use the same recipe as the other entries in
+  # secrets/config.nix, recipients `surma` and `archon`), add
+  #
+  #   chrome-enrollment-token = {
+  #     contents = ../secrets/chrome-enrollment-token.age;
+  #     keys = [ "surma" "archon" ];
+  #   };
+  #
+  # to `secrets.secrets` in secrets/config.nix, and uncomment:
+  #
+  # secrets.items.chrome-enrollment-token = {
+  #   target = "/run/shopify-framework/chrome-enrollment-token";
+  #   mode = "0600";
+  # };
   allowedUnfreeApps = [
     "1password"
     "1password-cli"
     "cloudflare-warp"
     "google-chrome"
     "slack"
+    "endpoint-verification"
   ];
   environment.systemPackages = with pkgs; [
     hyprpolkitagent
