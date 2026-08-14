@@ -1004,6 +1004,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1783148766,
+        "narHash": "sha256-uslt2pqShTIXDdAHRHv2QkYLsVdY8Oqwz0EA48/RSM8=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "a50de1b7d8a586adc18d2395c19de7d6058e6030",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nmd": {
       "flake": false,
       "locked": {
@@ -1258,12 +1274,15 @@
       }
     },
     "shopify-framework": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
+      },
       "locked": {
-        "lastModified": 1775073337,
-        "narHash": "sha256-fE/zVY2pauPOqLFhjzEwiGmyO89HKQq0DUsrXEjAwN0=",
+        "lastModified": 1786715886,
+        "narHash": "sha256-xQaa8UCEBY/GDkxJvpZxLq5wAC5JwCibJUA/abuqYCY=",
         "ref": "main",
-        "rev": "0dc41742622dc7f6c6aefaacd9abbcfe2e17fc46",
-        "revCount": 20,
+        "rev": "b35aec5a0d73d736565f8f751697e5783d45aa4e",
+        "revCount": 21,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
       },

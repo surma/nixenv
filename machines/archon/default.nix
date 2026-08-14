@@ -88,6 +88,18 @@
     chrome.enrollmentTokenFile = "/run/shopify-framework/chrome-enrollment-token";
     chrome.enrollmentTokenUnits = [ "secrets.service" ];
 
+    # The Nix option renders the Chrome policy key
+    # `CloudManagementEnrollmentOptions`, which is NOT a valid managed-policy
+    # key on Linux: `chrome://policy` reports it as Status Error, while the
+    # sibling token key reports OK. The Windows equivalent
+    # (`CloudManagementEnrollmentMandatory`) is a registry value; on Linux
+    # Chrome documents the equivalent as a *file* at
+    # `/etc/opt/chrome/policies/enrollment/CloudManagementEnrollmentOptions`
+    # containing the text `Mandatory`, not a JSON policy key. Setting this
+    # false just removes a key Chrome rejects here — nothing is lost, since
+    # it never did anything on this platform.
+    chrome.enrollmentMandatory = false;
+
     fleet.enrollSecretFile = "/etc/orbit/enroll-secret";
     fleet.enrollSecretUnits = [ "secrets.service" ];
   };
