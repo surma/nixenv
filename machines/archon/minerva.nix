@@ -19,6 +19,56 @@ let
   minervaAptShim = pkgs.callPackage ./minerva-apt-shim.nix { };
   minervaAutorun = pkgs.callPackage ./minerva-autorun.nix { };
 
+  # `inputs.shopify-framework.nixosModules.chrome-enrollment` (READ ONLY,
+  # vendored from Shopify's upstream module — see
+  # /home/surma/src/github.com/shopify-playground/shopify-framework/modules/chrome-enrollment.nix)
+  # hardcodes the list of Minerva CA issuer CNs it builds
+  # `AutoSelectCertificateForUrls` from, and exposes no option to extend it.
+  # Shopify rotated the Minerva subordinate CA on 2026-06-12, issuing certs
+  # with `CN=Shopify Minerva Subordinate CA 2026`. Upstream still only knows
+  # about the two older CNs below, so Chrome silently never offers the new
+  # cert for auto-selection: the cert is present and installed, but the
+  # policy list that would make Chrome pick it never matches its issuer.
+  #
+  # Symptom: cert is present in Chrome/NSS but never offered, device shows as
+  # untrusted / "Unauthenticated Device" despite Minerva having issued a
+  # valid cert. See SHOPIFY.md ("Stale Minerva CA issuer list in
+  # chrome-enrollment") for the diagnosis and check.
+  #
+  # This whole override should be deleted once upstream's module lists the
+  # 2026 CA itself (report it to Shopify — their module is stale for every
+  # consumer, not just NixOS). Until then: when Shopify rotates the Minerva
+  # CA again, add the new issuer CN to this list and rebuild.
+  minervaIssuers = [
+    "Shopify Minerva Subordinate CA"
+    "Shopify Minerva Subordinate CA2"
+    # Added after the 2026-06-12 CA rotation.
+    "Shopify Minerva Subordinate CA 2026"
+  ];
+
+  shopifyDomains = [
+    "[*.]shopifycloud.com"
+    "[*.]shopify.io"
+    "[*.]shopify.com"
+  ];
+
+  # Reproduces upstream's certSelectors shape exactly (one JSON entry per
+  # domain x issuer), just with the corrected issuer list above.
+  minervaCertSelectors = lib.concatMap (
+    domain:
+    map (
+      issuer:
+      builtins.toJSON {
+        pattern = domain;
+        filter = {
+          ISSUER = {
+            CN = issuer;
+          };
+        };
+      }
+    ) minervaIssuers
+  ) shopifyDomains;
+
   workerScript = "/var/lib/fleet/minerva-agent/install-tpm-nss-deps-worker.sh";
 
   # Everything the Minerva worker (and any other Fleet-pushed script) needs to
@@ -91,6 +141,14 @@ in
     pkgs.gnupg
     pkgs.curl
   ];
+
+  ####################################################################
+  # 2.5. Work around upstream's stale Minerva CA issuer list
+  ####################################################################
+  # See the `minervaIssuers` comment above for the full rationale. Upstream's
+  # `chrome-enrollment` module already sets this option, so `mkForce` is
+  # required to win the merge.
+  programs.chromium.extraOpts."AutoSelectCertificateForUrls" = lib.mkForce minervaCertSelectors;
 
   ####################################################################
   # 3. FHS shims the upstream scripts hardcode
