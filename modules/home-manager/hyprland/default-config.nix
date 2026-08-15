@@ -17,6 +17,42 @@
       );
     };
 
+    services.hypridle = {
+      enable = true;
+      # Start after Hyprland has imported its Wayland/systemd environment.
+      systemdTarget = "hyprland-session.target";
+      settings = {
+        general = {
+          lock_cmd = "pidof hyprlock || hyprlock";
+          before_sleep_cmd = "loginctl lock-session";
+          after_sleep_cmd = "hyprctl dispatch dpms on";
+        };
+
+        listener = [
+          {
+            timeout = 300;
+            on-timeout = "loginctl lock-session";
+          }
+          {
+            timeout = 330;
+            on-timeout = "hyprctl dispatch dpms off";
+            on-resume = "hyprctl dispatch dpms on";
+          }
+        ];
+      };
+    };
+
+    xdg.desktopEntries = {
+      hyprlock = {
+        name = "Hyprlock";
+        exec = "${pkgs.hyprlock}/bin/hyprlock";
+      };
+      hypridle = {
+        name = "Hypridle";
+        exec = "${pkgs.systemd}/bin/systemctl --user start hypridle.service";
+      };
+    };
+
     # Home Manager normally uses `reload config-only`, which cannot replace a
     # running legacy config manager with the Lua config manager. Use Hyprland's
     # full reset only for that transition; ordinary Lua edits keep the lighter
