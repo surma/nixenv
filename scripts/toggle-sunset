@@ -1,6 +1,5 @@
 #!/usr/bin/env nu
 
-let cur_temp = (hyprctl hyprsunset temperature | into int)
 let day = {
   temp: 6000,
   gamma: 100
@@ -9,11 +8,62 @@ let night = {
   temp: 4000,
   gamma: 70
 }
-let isNight = $cur_temp < $day.temp
-if $isNight {
-  hyprctl hyprsunset temperature $day.temp
-  hyprctl hyprsunset gamma $day.gamma
-} else {
-  hyprctl hyprsunset temperature $night.temp
-  hyprctl hyprsunset gamma 70
+
+let start = (do { ^systemctl --user start hyprsunset.service } | complete)
+if $start.exit_code != 0 {
+  let detail = ($start.stderr | str trim)
+  let detail = if ($detail | is-empty) { $start.stdout | str trim } else { $detail }
+  error make {
+    msg: $"systemctl --user start hyprsunset.service failed: status=($start.exit_code), ($detail)"
+  }
+}
+
+mut cur_temp = null
+mut query_error = ""
+for _ in 1..20 {
+  let result = (do { ^hyprctl hyprsunset temperature } | complete)
+  if $result.exit_code == 0 {
+    let output = ($result.stdout | str trim)
+    let parsed = (try { $output | into int } catch { null })
+    if $parsed == null {
+      $query_error = $"invalid temperature output: ($output)"
+    } else {
+      $cur_temp = $parsed
+      break
+    }
+  } else {
+    let detail = ($result.stderr | str trim)
+    let detail = if ($detail | is-empty) { $result.stdout | str trim } else { $detail }
+    $query_error =
+      $"hyprctl hyprsunset temperature failed: status=($result.exit_code), ($detail)"
+  }
+  sleep 100ms
+}
+
+if $cur_temp == null {
+  error make {
+    msg: $"Could not read hyprsunset temperature after starting its service: ($query_error)"
+  }
+}
+
+let target = if $cur_temp < $day.temp { $day } else { $night }
+
+let temperature = (
+  do { ^hyprctl hyprsunset temperature $target.temp } | complete
+)
+if $temperature.exit_code != 0 {
+  let detail = ($temperature.stderr | str trim)
+  let detail = if ($detail | is-empty) { $temperature.stdout | str trim } else { $detail }
+  error make {
+    msg: $"hyprctl hyprsunset temperature ($target.temp) failed: status=($temperature.exit_code), ($detail)"
+  }
+}
+
+let gamma = (do { ^hyprctl hyprsunset gamma $target.gamma } | complete)
+if $gamma.exit_code != 0 {
+  let detail = ($gamma.stderr | str trim)
+  let detail = if ($detail | is-empty) { $gamma.stdout | str trim } else { $detail }
+  error make {
+    msg: $"hyprctl hyprsunset gamma ($target.gamma) failed: status=($gamma.exit_code), ($detail)"
+  }
 }
