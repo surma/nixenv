@@ -77,12 +77,13 @@
     "on-scroll-down": "hyprctl dispatch workspace e-1",
     "on-scroll-up": "hyprctl dispatch workspace e+1"
   },
-  "idle_inhibitor": {
+  "inhibitor": {
     "format": "{icon}",
     "format-icons": {
       "activated": "",
       "deactivated": ""
-    }
+    },
+    "what": "handle-lid-switch"
   },
   "memory": {
     "format": "{}% "
@@ -94,7 +95,7 @@
     "hyprland/workspaces"
   ],
   "modules-right": [
-    "idle_inhibitor",
+    "inhibitor",
     "custom/sunset",
     "pulseaudio",
     "power-profiles-daemon",
