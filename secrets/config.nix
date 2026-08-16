@@ -398,5 +398,12 @@
         "nexus"
       ];
     };
+    hetzner-cloud-api-token = {
+      contents = ../secrets/hetzner-cloud-api-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }
