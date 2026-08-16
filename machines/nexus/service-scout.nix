@@ -175,6 +175,13 @@ in
     chmod 0600 /var/lib/scout/firefly-access-token
   '';
 
+  secrets.items.scout-netlify-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/netlify-token
+    chown surma:users /var/lib/scout/netlify-token
+    chmod 0600 /var/lib/scout/netlify-token
+  '';
+
   secrets.items.scout-rmapi-config.command = ''
     mkdir -p /var/lib/scout/rmapi
     cat > /var/lib/scout/rmapi/rmapi.conf
