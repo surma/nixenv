@@ -34,8 +34,7 @@ for _ in 1..20 {
   } else {
     let detail = ($result.stderr | str trim)
     let detail = if ($detail | is-empty) { $result.stdout | str trim } else { $detail }
-    $query_error =
-      $"hyprctl hyprsunset temperature failed: status=($result.exit_code), ($detail)"
+    $query_error = $"hyprctl hyprsunset temperature failed: status=($result.exit_code), ($detail)"
   }
   sleep 100ms
 }
