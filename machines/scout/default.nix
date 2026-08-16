@@ -112,6 +112,7 @@
     agent.skills = [
       ../../assets/skills/cloudflare
       ../../assets/skills/gws
+      ../../assets/skills/hetzner
       ../../assets/skills/homeassistant
       ../../assets/skills/music
       ../../assets/skills/nexus-admin

@@ -154,6 +154,13 @@ in
     chmod 0600 /var/lib/scout/cloudflare-api-token
   '';
 
+  secrets.items.hetzner-cloud-api-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/hetzner-cloud-api-token
+    chown surma:users /var/lib/scout/hetzner-cloud-api-token
+    chmod 0600 /var/lib/scout/hetzner-cloud-api-token
+  '';
+
   secrets.items.openrouter-api-key.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/openrouter-api-key
