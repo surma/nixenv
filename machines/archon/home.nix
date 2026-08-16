@@ -94,6 +94,12 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
+    programs.hyprlock = {
+      enable = true;
+      settings = {
+        auth.fingerprint.enabled = true;
+      };
+    };
     # Framework-laptop-specific keyboard backlight controls (the
     # `framework_laptop::kbd_backlight` device only exists on this machine).
     wayland.windowManager.hyprland.extraConfig = ''
