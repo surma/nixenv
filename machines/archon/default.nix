@@ -185,7 +185,9 @@
   programs.signal.enable = true;
 
   security.polkit.enable = true;
-  security.pam.services.hyprlock = { };
+  security.pam.services.hyprlock = {
+    fprintAuth = false;
+  };
 
   users.users.surma = {
     isNormalUser = true;
