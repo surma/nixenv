@@ -50,11 +50,16 @@
 
     gtk = {
       enable = true;
+      colorScheme = "dark";
       iconTheme = {
         name = "Papirus-Dark";
         package = pkgs.papirus-icon-theme;
       };
     };
+
+    xdg.portal.extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+    ];
 
     home.stateVersion = "24.05";
 
