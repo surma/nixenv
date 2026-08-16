@@ -405,5 +405,12 @@
         "nexus"
       ];
     };
+    scout-netlify-token = {
+      contents = ../secrets/scout-netlify-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
   };
 }

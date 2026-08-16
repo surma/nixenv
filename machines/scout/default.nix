@@ -27,6 +27,7 @@
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
     home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
     home.sessionVariables.RMAPI_CONFIG = "${config.home.homeDirectory}/.config/rmapi/rmapi.conf";
+    home.sessionVariables.NETLIFY_AUTH_TOKEN_FILE = "/var/lib/credentials/scout/netlify-token";
 
     fonts.fontconfig.enable = true;
 
@@ -115,6 +116,7 @@
       ../../assets/skills/hetzner
       ../../assets/skills/homeassistant
       ../../assets/skills/music
+      ../../assets/skills/netlify
       ../../assets/skills/nexus-admin
       ../../assets/skills/remarkable
       ../../assets/skills/signal
