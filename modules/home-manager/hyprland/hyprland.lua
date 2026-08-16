@@ -11,13 +11,13 @@ hl.monitor({
 hl.monitor({
     output = "desc:Visitech AS VITURE Beast",
     mode = "3840x1080@60",
-    position = "-2840x1380",
+    position = "-2840x-1080",
     scale = 1,
 })
 hl.monitor({
     output = "desc:Samsung Electric Company Display",
     mode = "3840x2160@60",
-    position = "-920x1380",
+    position = "-920x-1080",
     scale = 2,
 })
 hl.monitor({
