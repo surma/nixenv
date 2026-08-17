@@ -149,6 +149,7 @@
         "citadel"
         "nexus"
         "forge"
+        "pylon"
       ];
     };
     huggingface-token = {
