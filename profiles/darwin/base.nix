@@ -17,15 +17,6 @@
 
   nix.settings.extra-experimental-features = lib.mkDefault "nix-command flakes pipe-operators local-overlay-store";
 
-  nix.gc = {
-    automatic = true;
-    interval = {
-      Weekday = 0;
-      Hour = 3;
-      Minute = 0;
-    };
-    options = "--delete-older-than 14d";
-  };
   nix.settings.ignore-gc-delete-failure = true;
 
   fonts.packages = with pkgs; [ fira-code ];
