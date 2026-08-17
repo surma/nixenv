@@ -12,12 +12,13 @@ This skill grants **write access** to Slack: posting messages, replying in threa
 
 These are not optional. Slack messages are **not deletable** with this CLI — there is no `delete` or `edit` subcommand. Once a message is sent, it's permanent.
 
-1. **Never test in real channels or real DMs.** No "test", "ping", "ignore me", "checking formatting" messages to anyone other than the user. Every test message lands in someone's notification feed.
-2. **The only sanctioned test target is `#surma-river`** (id `C0AF5U16WG5`) — a channel only the user is in. Use it for any formatting check, dry-run, output-shape exploration, or "does this CLI option work" probe.
+1. **Never test a message in real channels or real DMs.** No "test", "ping", "ignore me", "checking formatting" messages to anyone other than the user. Every test message lands in someone's notification feed.
+2. **The only sanctioned channel for test messages is `#surma-river`** (id `C0AF5U16WG5`) — a channel only the user is in. Use it for any formatting check, dry-run, output-shape exploration, or "does this CLI option work" probe. Note that this is about testing slack itself. Testing other work is fine. 
 3. **Confirm the destination before every real send.** When the user asks to message a person or channel, restate the target in the response and send only after confirmation, *unless* the user has already specified the exact destination in the current request.
 4. **Send once, get it right.** Do not iterate by sending → reading → resending in the real target. Iterate in `#surma-river`, then send the final version once.
 5. **Never DM `Slackbot` / yourself / random user IDs you find** to "see what happens". Use `#surma-river`.
 6. **A non-zero exit from `send` / `reply` does NOT mean the message wasn't sent.** The CLI executes the side-effecting Slack API call *before* it validates flags like `--json <fields>`. A successful send followed by a bad field projection (e.g. `--json permalink` — there is no `permalink` field) exits 1 with a stderr error, but the message is already in Slack. **If a write subcommand exits non-zero, your next action is to read the channel — not retry.** See §"Recovery when a send looks failed" below for the exact steps. Retrying without checking is how you produce duplicate messages, and that's an unfixable mistake.
+7. If you are sending outside of `#surma-river`, you need explicit user approval. "Do it" or "ok" is not enough. The user must say the channel name it wants you to send to for the approval to be valid.
 
 If you violate these rules you have made a real, unfixable mistake. Apologize, stop, and tell the user what was sent and to whom.
 

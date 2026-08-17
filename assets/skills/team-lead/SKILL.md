@@ -1,11 +1,9 @@
 ---
 name: team-lead
-description: Orchestrates engineering work through delegated subagents, including decomposition, capability routing, parallel execution, review, rework, integration, and verification. Invoke explicitly when you want a lead agent to delegate all substantive execution.
+description: Orchestrates engineering work through delegated subagents, including decomposition, task routing, parallel execution, review, rework, integration, and verification. Invoke explicitly when you want a lead agent to delegate all substantive execution.
 compatibility: >-
   Requires a harness that can start and control persistent subagents.
   The harness must support bounded waits, run cursors, follow-up turns, and child resume.
-  It must also select explicit model and thinking levels.
-  The lead should run at Advanced or High capability.
 ---
 
 # Team Lead
@@ -34,7 +32,7 @@ You may and must:
 - update the objective when the requested outcome changes
 - mark the objective complete only when the work is actually complete
 - decompose work and identify dependencies
-- choose subagents and model capabilities
+- choose subagents for each assignment
 - inspect relevant files, diffs, artifacts, workspace state, and exact subagent results
 - run narrow, non-authoring checks that help you judge acceptance
 - perform limited research that helps you validate a result or formulate a correction
@@ -62,87 +60,6 @@ Always obey higher-priority instructions, repository policies, and user constrai
 12. Stop when the requested outcome and acceptance criteria are satisfied.
 13. Do not add speculative improvements outside the user's request.
 
-## Capability selection
-
-Before every delegation, choose a capability level. Each level is a specific model and thinking configuration that determines the subagent's overall ability, cost, and speed. Choose the least expensive level likely to complete the assignment correctly; route according to ambiguity and risk, not task size alone.
-
-Every delegation must explicitly specify both a model and a thinking level. Never rely on inherited or provider defaults: resolve the exact available model ID before dispatch, then verify the subagent's actual runtime configuration after startup. If either falls outside the intended cost or quality envelope, reroute the assignment rather than silently accepting it.
-
-Resolve this capability map once before the first delegation, using only exact model IDs reported as available. Use the harness's model-discovery capability when an exact ID or availability is uncertain; never invent a model ID.
-
-**OpenAI configurations (preferred):**
-
-| Level | Model | Thinking |
-| --- | --- | --- |
-| **Simple** | `gpt-5.6-luna` | `low` |
-| **Normal** | `gpt-5.6-luna` | `xhigh` |
-| **Advanced** | `gpt-5.6-terra` | `high` |
-| **High** | `gpt-5.6-sol` | `high` |
-
-**Anthropic configurations:**
-
-| Level | Model | Thinking |
-| --- | --- | --- |
-| **Simple** | newest available Claude Haiku | `low` |
-| **Normal** | newest available Claude Sonnet | `medium` |
-| **Advanced** | newest available Claude Opus | `high` |
-| **High** | newest available Claude Fable | `high` |
-
-For the High Anthropic configuration, Claude Fable has limited availability. If Fable is unavailable, fall back to the newest available Claude Opus at `high` thinking.
-
-Prefer one model family for the whole run when all required levels are available. Mixing families is acceptable for availability, but do not mix them merely for variety. If a required level is unavailable, move up to a stronger level rather than silently downgrading risky work. Do not repeatedly rediscover models for every assignment.
-
-Confirm the actual thinking level applied after startup, because unsupported requests may be normalized or clamped. If it differs from what you requested, record the result and adjust for later work. Do not assume that equal labels have equal semantics across providers.
-
-For substantive engineering work, default to **Normal**. Most tasks belong here. Escalate only when evidence shows that Normal-level capability is insufficient.
-
-### Simple
-
-Use for bounded, low-risk, mechanical work such as:
-
-- extracting or reformatting data
-- classification and routing
-- simple summarization
-- locating definitions or call sites
-- running targeted checks
-- mechanical edits with clear examples
-
-Do not use Simple as the sole owner of ambiguous, cross-cutting, or high-risk work.
-
-### Normal
-
-The default for most work. Use for:
-
-- standard implementation
-- bounded debugging
-- tests and verification
-- code review
-- research synthesis
-- integrating several straightforward changes
-
-### Advanced
-
-Use when Normal-level capability is insufficient and the task requires:
-
-- creative design or complex writing
-- complex implementation across unfamiliar systems
-- multi-file architectural changes
-- difficult debugging with a broad search space
-- independent validation of high-risk work
-
-### High
-
-Reserve for genuinely difficult problems:
-
-- ambiguous architecture or requirements
-- cross-cutting system design
-- security, data integrity, or high-blast-radius changes
-- difficult root-cause analysis
-- integration requiring substantial holistic reasoning
-- escalation after a well-scoped Advanced attempt fails
-
-Do not use a second High subagent unless an independent context or additional difficult investigation is likely to improve the result.
-
 ## Planning and progress
 
 Before delegating:
@@ -151,11 +68,10 @@ Before delegating:
 2. Restate the concrete outcome.
 3. Define observable acceptance criteria.
 4. Identify dependencies and which tasks are genuinely independent.
-5. Choose a capability level for each assignment; use Normal unless the task signals justify another level.
-6. Choose the smallest useful team.
-7. Record a compact task ledger containing:
+5. Choose the smallest useful team.
+6. Record a compact task ledger containing:
    - assignment
-   - owner, persistent child ID, requested capability, and actual configuration
+   - owner and persistent child ID
    - scope
    - dependencies
    - latest run and settlement cursors
@@ -213,7 +129,7 @@ Give subagents sufficient context, but do not dump unrelated conversation histor
 
 ## Supervision and persistent child lifecycle
 
-Record each persistent child ID after startup. Verify its actual model and thinking level.
+Record each persistent child ID after startup.
 
 Keep a child alive while its work awaits review, correction, or integration. A settled run ends one attempt, not the child session.
 
@@ -249,7 +165,7 @@ Use the available control that fits the situation:
 - Use `subagent_resume` when a stopped child has useful saved context.
 - Use `subagent_kill` only after acceptance, abandonment, or the end of integration value.
 
-Prefer a follow-up to the same child for correction. Start a replacement child only when capability, ownership, or context caused the failure.
+Prefer a follow-up to the same child for correction. Start a replacement child only when ownership or context caused the failure.
 
 ## Parallel work and worktrees
 
@@ -327,18 +243,17 @@ Record the prior settlement cursor. Send `subagent_follow_up`, then wait for a l
 
 Apply the full acceptance gate again after the correction. Do not accept the correction from its summary alone.
 
-## Stalls and escalation
+## Stalls and recovery
 
 Do not blindly repeat a failed assignment.
 
 When a subagent is blocked or returns insufficient evidence:
 
-1. Determine whether the problem is missing context, poor decomposition, inadequate capability, or an external blocker.
+1. Determine whether the problem is missing context, poor decomposition, incorrect ownership, or an external blocker.
 2. Use the same child first when retained context helps the correction.
-3. Rewrite or split the assignment if necessary.
-4. Escalate to the next capability level when capability is the issue.
-5. Change strategy rather than repeating identical instructions.
-6. After two unsuccessful rework cycles on the same issue, ask the user for guidance unless a clearly different approach remains.
+3. Rewrite, split, or reassign the assignment if necessary.
+4. Change strategy rather than repeating identical instructions.
+5. After two unsuccessful rework cycles on the same issue, ask the user for guidance unless a clearly different approach remains.
 
 ## Integration
 
