@@ -35,6 +35,7 @@
     ./service-nexus-admin.nix
     ./service-brain-serve.nix
     ./service-scout-static.nix
+    ./service-jazzy-poisonous-plant-parlour.nix
     ./service-firefly.nix
     ./service-firefly-importer.nix
     ./service-firefly-enricher.nix
