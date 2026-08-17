@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }:
 {
@@ -21,6 +22,7 @@
   ];
 
   config = {
+    programs.brain.enable = lib.mkForce false;
     allowedUnfreeApps = [
       "spotify"
       "slack"
