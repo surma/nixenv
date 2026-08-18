@@ -8,13 +8,26 @@ compatibility: Requires access to HedgeDoc 2 and a token at /var/lib/credentials
 
 Use the internal API for Surma's HedgeDoc 2 instance.
 
+## Command prelude
+
+Start every HedgeDoc shell command with this block. Append the relevant command fragment below to the same shell call.
+
+Shell state does not persist between tool calls.
+
 ```bash
+set -euo pipefail
+
 HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
 HD_TOKEN_FILE="/var/lib/credentials/scout/hedgedoc-token"
 HD_TOKEN=$(cat "$HD_TOKEN_FILE")
-```
 
-Set these variables in each shell command. Shell state does not persist between tool calls.
+hd_curl() {
+  nix run nixpkgs#curl -- \
+    --silent --show-error --fail-with-body \
+    --header "Authorization: Bearer $HD_TOKEN" \
+    "$@"
+}
+```
 
 ## Safety
 
@@ -33,13 +46,8 @@ Set these variables in each shell command. Shell state does not persist between 
 Use the token to fetch the account identity.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
-
 me_json=$(
-  nix run nixpkgs#curl -- \
-    --silent --show-error --fail-with-body \
-    --header "Authorization: Bearer $HD_TOKEN" \
+  hd_curl \
     --header "Accept: application/json" \
     "$HD_BASE_URL/api/v2/me"
 )
@@ -50,32 +58,22 @@ A `401` response means that the token is absent, invalid, or revoked.
 
 ## Find a note
 
-The account endpoint returns metadata for all notes that Surma owns.
+The account endpoint returns metadata for all notes that Surma owns. Match the title exactly and count the results.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
-
+TITLE="exact note title"
 notes_json=$(
-  nix run nixpkgs#curl -- \
-    --silent --show-error --fail-with-body \
-    --header "Authorization: Bearer $HD_TOKEN" \
+  hd_curl \
     --header "Accept: application/json" \
     "$HD_BASE_URL/api/v2/me/notes"
 )
-printf '%s\n' "$notes_json" | jq '.'
+matches_json=$(jq --arg title "$TITLE" '[.[] | select(.title == $title)]' <<<"$notes_json")
+match_count=$(jq 'length' <<<"$matches_json")
+printf '%s\n' "$matches_json" | jq '.'
+printf 'match_count=%s\n' "$match_count"
 ```
 
 Each result contains a title and a `primaryAlias`. Use the alias for later requests.
-
-Match a title exactly and count the results.
-
-```bash
-TITLE="TODO"
-matches_json=$(jq --arg title "$TITLE" '[.[] | select(.title == $title)]' <<<"$notes_json")
-printf '%s\n' "$matches_json" | jq '.'
-match_count=$(jq 'length' <<<"$matches_json")
-```
 
 If the count is not one, stop and ask for a note URL or alias. Do not choose between duplicate titles.
 
@@ -86,14 +84,9 @@ The account endpoint does not list notes that another user owns. For such notes,
 Fetch metadata when you need ownership, permissions, aliases, or version information.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
 ALIAS="replace-with-primary-alias"
-
 metadata_json=$(
-  nix run nixpkgs#curl -- \
-    --silent --show-error --fail-with-body \
-    --header "Authorization: Bearer $HD_TOKEN" \
+  hd_curl \
     --header "Accept: application/json" \
     "$HD_BASE_URL/api/v2/notes/$ALIAS/metadata"
 )
@@ -103,13 +96,8 @@ printf '%s\n' "$metadata_json" | jq '.'
 Fetch the raw Markdown when you need the note content.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
 ALIAS="replace-with-primary-alias"
-
-nix run nixpkgs#curl -- \
-  --silent --show-error --fail-with-body \
-  --header "Authorization: Bearer $HD_TOKEN" \
+hd_curl \
   --header "Accept: text/markdown" \
   "$HD_BASE_URL/api/v2/notes/$ALIAS/content"
 ```
@@ -119,15 +107,11 @@ nix run nixpkgs#curl -- \
 First, fetch the latest Markdown into a new file inside the current working directory. Check that the path does not exist.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
 ALIAS="replace-with-primary-alias"
 NOTE_FILE="$PWD/hedgedoc-$ALIAS.md"
 
 test ! -e "$NOTE_FILE"
-nix run nixpkgs#curl -- \
-  --silent --show-error --fail-with-body \
-  --header "Authorization: Bearer $HD_TOKEN" \
+hd_curl \
   --header "Accept: text/markdown" \
   --output "$NOTE_FILE" \
   "$HD_BASE_URL/api/v2/notes/$ALIAS/content"
@@ -138,16 +122,12 @@ Read the file before you edit it. Change only the text that the user requested.
 Send the complete updated Markdown with `PUT`.
 
 ```bash
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
-HD_TOKEN=$(cat /var/lib/credentials/scout/hedgedoc-token)
 ALIAS="replace-with-primary-alias"
 NOTE_FILE="$PWD/hedgedoc-$ALIAS.md"
 
 update_json=$(
-  nix run nixpkgs#curl -- \
-    --silent --show-error --fail-with-body \
+  hd_curl \
     --request PUT \
-    --header "Authorization: Bearer $HD_TOKEN" \
     --header "Content-Type: text/markdown" \
     --header "Accept: application/json" \
     --data-binary "@$NOTE_FILE" \
