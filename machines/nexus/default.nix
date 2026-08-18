@@ -12,6 +12,7 @@
     ./service-scout.nix
     ./service-gitea.nix
     ./service-hedgedoc.nix
+    ./service-hedgedoc2.nix
     ./service-lidarr.nix
     ./service-radarr.nix
     ./service-sonarr.nix
