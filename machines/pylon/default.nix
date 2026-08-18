@@ -20,6 +20,7 @@
     ./service-brain-proxy.nix
     ./service-public-brain-proxy.nix
     ./service-scout-static-proxy.nix
+    ./service-jazzy-poisonous-plant-parlour-proxy.nix
     ./service-minecraft-proxy.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
