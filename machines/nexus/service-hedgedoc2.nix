@@ -6,7 +6,7 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   package = inputs.self.packages.${system}.hedgedoc2;
-  baseUrl = "http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io";
+  baseUrl = "https://hedgedoc.surma.technology";
   stateDirectory = "/var/lib/hedgedoc2";
   sessionSecretFile = "${stateDirectory}/session-secret";
 

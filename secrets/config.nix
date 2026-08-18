@@ -139,6 +139,13 @@
         "nexus"
       ];
     };
+    scout-hedgedoc-token = {
+      contents = ../secrets/scout-hedgedoc-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     openrouter-api-key = {
       contents = ../secrets/openrouter-api-key.age;
       keys = [
@@ -358,13 +365,6 @@
     };
     brain-jwt-secret = {
       contents = ../secrets/brain-jwt-secret.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
-    hedgedoc-github-env = {
-      contents = ../secrets/hedgedoc-github-env.age;
       keys = [
         "surma"
         "nexus"

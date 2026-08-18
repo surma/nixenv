@@ -98,6 +98,13 @@ in
     chmod 0600 /var/lib/scout/hassio-token
   '';
 
+  secrets.items.scout-hedgedoc-token.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/hedgedoc-token
+    chown surma:users /var/lib/scout/hedgedoc-token
+    chmod 0600 /var/lib/scout/hedgedoc-token
+  '';
+
   secrets.items.scout-lidarr-api-key.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/lidarr-api-key
