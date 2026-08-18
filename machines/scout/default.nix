@@ -76,6 +76,9 @@
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;
+      matchBlocks."*" = {
+        identityFile = "~/.ssh/id_repo_scout";
+      };
       matchBlocks."github.com" = {
         hostname = "github.com";
         user = "git";
