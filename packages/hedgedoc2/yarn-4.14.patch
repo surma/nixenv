@@ -1,0 +1,17 @@
+diff --git a/.yarnrc.yml b/.yarnrc.yml
+index c11733f..f99b16b 100644
+--- a/.yarnrc.yml
++++ b/.yarnrc.yml
+@@ -3 +3,4 @@ nodeLinker: node-modules
+-yarnPath: .yarn/releases/yarn-4.12.0.cjs
++approvedGitRepositories:
++  - "**"
++
++enableScripts: true
+diff --git a/yarn.lock b/yarn.lock
+index 4ac040a..584282d 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -5 +5 @@ __metadata:
+-  version: 8
++  version: 9
