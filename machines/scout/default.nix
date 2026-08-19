@@ -110,8 +110,8 @@
     programs.brain.enable = true;
 
     # Skills from the AI profile (brainstorming, planning, debugging,
-    # surma-writer, triple-helix, preact-signals, web-development,
-    # team-lead, bro, rust) are inherited via the
+    # google-developer-style, surma-writer, triple-helix, preact-signals,
+    # web-development, team-lead, bro, rust) are inherited via the
     # import above.  Only Scout-specific skills are listed here.
     agent.skills = [
       ../../assets/skills/cloudflare
