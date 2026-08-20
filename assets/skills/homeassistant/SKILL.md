@@ -1,6 +1,6 @@
 ---
 name: homeassistant
-description: Control Home Assistant devices and manage lists via the `hassio` CLI (unbraind/homeassistant-cli). Use when the user asks to control lights, switches, climate, fans, locks, covers, or other smart home devices, check sensor states, inspect automations, view calendars, or perform any Home Assistant operation. Also use when the user asks about shopping lists, to-do lists, or task lists — these are managed as Home Assistant `todo` entities (e.g. adding/removing items from a shopping list, checking what's on a to-do list).
+description: Control Home Assistant devices through the `hassio` CLI. Use for device control, sensor states, automations, calendars, and other Home Assistant operations. Do not use for to-do or shopping lists. Both lists live in HedgeDoc 2.
 compatibility: Requires `hassio` CLI to be installed and configured with a valid Home Assistant URL and long-lived access token.
 ---
 
@@ -35,7 +35,6 @@ hassio summary
 # List all entities in a domain
 hassio entities -d light
 hassio entities -d sensor
-hassio entities -d todo
 
 # Filter by state
 hassio entities -d light -s on
@@ -98,45 +97,6 @@ hassio batch -d light -s turn_off -e light.living_room,light.kitchen,light.bedro
 
 # Set brightness on multiple lights
 hassio batch -d light -s turn_on -e light.living_room,light.kitchen --data '{"brightness":200}'
-```
-
-## Shopping lists and to-do lists
-
-Home Assistant exposes shopping lists and to-do lists as `todo` domain entities.
-
-### List all to-do lists
-
-```bash
-hassio entities -d todo
-```
-
-### View items in a to-do list
-
-To read items from a to-do list, use the `todo.get_items` service. The response includes item summaries and statuses:
-
-```bash
-hassio call-service todo get_items -e todo.shopping_list
-hassio call-service todo get_items -e todo.todo_list
-```
-
-### Add an item
-
-```bash
-hassio call-service todo add_item -e todo.shopping_list -d '{"item":"Milk"}'
-hassio call-service todo add_item -e todo.todo_list -d '{"item":"Fix the leaky faucet"}'
-```
-
-### Update an item (mark complete, rename)
-
-```bash
-hassio call-service todo update_item -e todo.shopping_list -d '{"item":"Milk","rename":"Oat Milk"}'
-hassio call-service todo update_item -e todo.shopping_list -d '{"item":"Milk","status":"completed"}'
-```
-
-### Remove an item
-
-```bash
-hassio call-service todo remove_item -e todo.shopping_list -d '{"item":"Milk"}'
 ```
 
 ## Sensors and history
@@ -210,5 +170,4 @@ hassio --read-only states
 - **Always discover before acting**: Use `hassio entities -d <domain>` to find entity IDs before calling services.
 - **Check state after commands**: After turning something on/off, the response includes the new state.
 - **Use batch for multiple devices**: `hassio batch` is more efficient than multiple `call-service` calls.
-- **Shopping list items are case-sensitive**: Use exact item names when updating or removing.
 - **TOON format** is the most token-efficient output — prefer it for agent workflows unless the user asks for a specific format.

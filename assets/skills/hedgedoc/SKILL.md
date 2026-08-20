@@ -1,12 +1,26 @@
 ---
 name: hedgedoc
-description: Find, read, and update Surma's HedgeDoc 2 notes through the authenticated API. Use when the user asks about HedgeDoc notes or requests note changes.
+description: Find, read, and update Surma's HedgeDoc 2 notes through the authenticated API. Use for HedgeDoc notes, Surma's to-do list, and the shopping list.
 compatibility: Requires access to HedgeDoc 2 and a token at /var/lib/credentials/scout/hedgedoc-token.
 ---
 
 # HedgeDoc 2 Notes
 
 Use the internal API for Surma's HedgeDoc 2 instance.
+
+## To-do document
+
+Surma's to-do list and shopping list live in the note titled `TODO`. Use that exact title to find the note for each request.
+
+Organize items under Markdown headings. Use the `## Shopping` section for shopping items.
+
+Use an existing relevant section when possible. Create a clearly named level-two section (`## Name`) when no relevant section exists.
+
+Write each item as an unchecked Markdown checkbox: `- [ ] Item`. Never add a plain bullet as a to-do item.
+
+To complete an item, change its checkbox to `- [x]`. Preserve unrelated content and the existing Markdown structure.
+
+Do not use Home Assistant for to-do items or shopping items.
 
 ## Command prelude
 
