@@ -1,12 +1,20 @@
 ---
 name: hedgedoc
-description: Find, read, and update Surma's HedgeDoc 2 notes through the authenticated API. Use when the user asks about HedgeDoc notes or requests note changes.
+description: Find, read, and update Surma's HedgeDoc 2 notes through the authenticated API. Use for HedgeDoc notes and Surma's personal to-do list.
 compatibility: Requires access to HedgeDoc 2 and a token at /var/lib/credentials/scout/hedgedoc-token.
 ---
 
 # HedgeDoc 2 Notes
 
 Use the internal API for Surma's HedgeDoc 2 instance.
+
+## Personal to-do list
+
+Surma's personal to-do list is the note titled `TODO`. Use that exact title to find the note for each request.
+
+Do not use Home Assistant for the personal to-do list. Home Assistant still contains Surma's shopping list.
+
+Treat requests to add, complete, change, or remove to-do items as note updates. Preserve unrelated content and the existing Markdown structure.
 
 ## Command prelude
 
