@@ -33,6 +33,7 @@ in
       u = "cd ..";
       lg = "lazygit";
       dp = "dprint fmt";
+      ai = lib.mkDefault "pi --offline";
     }
     // uuuCommands;
     initContent = ''

@@ -48,6 +48,7 @@
     ];
   };
   programs.gitea-cli.enable = true;
+  programs.zsh.shellAliases.ai = "devx pi --offline";
 
   # Shopify Tool Gateway Pi extension (shopisurm only); pi-config stays the base everywhere.
   defaultConfigs.pi.extraPackages = [
