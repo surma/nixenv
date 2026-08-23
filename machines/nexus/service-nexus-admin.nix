@@ -71,12 +71,11 @@ in
       variables.SCOUT_DEFAULT_MODEL = {
         label = "Default model";
         description = "Default model used by Scout for new conversations/topics.";
-        defaultValue = "anthropic/claude-opus-4-6/high";
+        defaultValue = "openai/gpt-5.6-luna";
         presetValues = [
-          "anthropic/claude-opus-4-6/high"
-          "anthropic/claude-sonnet-4-5/high"
-          "openai/gpt-5.1/high"
-          "openai/gpt-5.1/medium"
+          "openai/gpt-5.6-luna"
+          "anthropic/claude-sonnet-4-20250514"
+          "anthropic/claude-opus-4-20250901"
         ];
         presetValuesOnly = false;
       };
