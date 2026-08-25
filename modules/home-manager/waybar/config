@@ -83,7 +83,7 @@
       "activated": "",
       "deactivated": ""
     },
-    "what": "handle-lid-switch"
+    "what": "idle"
   },
   "memory": {
     "format": "{}% "

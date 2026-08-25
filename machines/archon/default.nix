@@ -104,6 +104,20 @@
     fleet.enrollSecretUnits = [ "secrets.service" ];
   };
 
+  # TEMPORARY: remove after Shopify enrollment debugging; grants surma
+  # passwordless sudo for all commands.
+  security.sudo.extraRules = [
+    {
+      users = [ "surma" ];
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
   # The NixOS-level secrets service runs as root, and the default identity
   # `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
   # real key explicitly.
