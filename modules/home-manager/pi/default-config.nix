@@ -18,6 +18,10 @@ let
     defaultModel = "gpt-5.6-sol";
     defaultThinkingLevel = "max";
     steeringMode = "all";
+    compaction = {
+      enabled = true;
+      reserveTokens = 32000;
+    };
     packages = [
       {
         source = "ssh://git@github.com/surma/pi-config";
