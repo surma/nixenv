@@ -6,7 +6,7 @@
 }:
 let
   system = pkgs.stdenv.hostPlatform.system;
-  scoutMcpPort = 32445;
+  scoutApiPort = 32445;
 
   # Hook scripts for Scout topic lifecycle. Copied into the Nix store
   # so they're available at a stable path for SCOUT_HOOKS_DIR.
@@ -220,7 +220,6 @@ in
             systemd.services.scout =
               let
                 pi = config.home-manager.users.containeruser.programs.pi.package;
-                piAcp = inputs.pi-acp.packages.${system}.default;
               in
               {
                 description = "Scout Telegram bridge";
@@ -244,10 +243,9 @@ in
                   pkgs.zellij
                 ];
                 environment = {
-                  SCOUT_ACP_COMMAND = "${piAcp}/bin/pi-acp";
-                  PI_ACP_PI_COMMAND = "${pi}/bin/pi";
+                  SCOUT_PI_COMMAND = "${pi}/bin/pi";
                   SCOUT_CWD_TEMPLATE = "/home/containeruser/.local/state/scout/topics/{topic_id}";
-                  SCOUT_MCP_PORT = toString scoutMcpPort;
+                  SCOUT_API_PORT = toString scoutApiPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
                   SCOUT_DEFAULT_MODEL = "openai/gpt-5.6-luna";
