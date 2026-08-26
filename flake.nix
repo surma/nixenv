@@ -79,6 +79,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    bandsnatch.url = "github:ovyerus/bandsnatch";
     gws = {
       url = "github:googleworkspace/cli";
       inputs.nixpkgs.follows = "nixpkgs";
