@@ -429,6 +429,11 @@ in
         hostPath = "/dump/state/qbittorrent/qBittorrent/downloads";
         isReadOnly = false;
       };
+      lidarr-state = {
+        mountPoint = "/dump/state/lidarr";
+        hostPath = "/dump/state/lidarr";
+        isReadOnly = false;
+      };
     };
   };
 }
