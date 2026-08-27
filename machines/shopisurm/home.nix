@@ -48,7 +48,18 @@
     ];
   };
   programs.gitea-cli.enable = true;
-  programs.zsh.shellAliases.ai = "devx pi --offline";
+  customScripts.ai.package = pkgs.writeTextFile {
+    name = "ai";
+    destination = "/bin/ai";
+    executable = true;
+    text = ''
+      #!${pkgs.nushell}/bin/nu
+
+      def --wrapped main [...rest] {
+        devx pi --offline ...$rest
+      }
+    '';
+  };
 
   # Shopify Tool Gateway Pi extension (shopisurm only); pi-config stays the base everywhere.
   defaultConfigs.pi.extraPackages = [
