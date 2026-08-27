@@ -50,6 +50,19 @@
     pulse.enable = true;
   };
 
+  services.sunshine = {
+    enable = true;
+    # The NixOS module's generic graphical-session.target also runs in the
+    # GDM greeter's user manager. Start Sunshine from the Hyprland-only target
+    # in machines/archon/home.nix instead.
+    autoStart = false;
+    openFirewall = true;
+    settings = {
+      capture = "wlr";
+      origin_web_ui_allowed = "wan";
+    };
+  };
+
   services.seatd.enable = true;
 
   services.keyd = {
@@ -103,20 +116,6 @@
     fleet.enrollSecretFile = "/etc/orbit/enroll-secret";
     fleet.enrollSecretUnits = [ "secrets.service" ];
   };
-
-  # TEMPORARY: remove after Shopify enrollment debugging; grants surma
-  # passwordless sudo for all commands.
-  security.sudo.extraRules = [
-    {
-      users = [ "surma" ];
-      commands = [
-        {
-          command = "ALL";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
 
   # The NixOS-level secrets service runs as root, and the default identity
   # `~/.ssh/id_machine` would expand to /root/.ssh/... — point it at the
@@ -213,6 +212,7 @@
       "video"
       "audio"
       "seat"
+      "uinput"
     ];
     shell = pkgs.zsh;
   };
