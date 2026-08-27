@@ -28,8 +28,8 @@ hl.monitor({
 })
 
 -- Environment
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XCURSOR_THEME", "@cursor-theme@")
+hl.env("XCURSOR_SIZE", "@cursor-size@")
 
 -- Prefer native Wayland backends over XWayland.
 hl.env("QT_QPA_PLATFORM", "wayland")
