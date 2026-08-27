@@ -61,6 +61,21 @@ in
   customScripts.ghclone.enable = true;
   customScripts.git-show-commit.enable = true;
   customScripts.timeout.enable = true;
+  customScripts.ai.enable = true;
+  customScripts.dp.enable = true;
+  customScripts.ga.enable = true;
+  customScripts.gc.enable = true;
+  customScripts.gca.enable = true;
+  customScripts.gcb.enable = true;
+  customScripts.gd.enable = true;
+  customScripts.gdc.enable = true;
+  customScripts.gfo.enable = true;
+  customScripts.gidiot.enable = true;
+  customScripts.gom.enable = true;
+  customScripts.gra.enable = true;
+  customScripts.gss.enable = true;
+  customScripts.lg.enable = true;
+  customScripts.ltt.enable = true;
 
   programs.home-manager.enable = true;
   programs.bat.enable = true;

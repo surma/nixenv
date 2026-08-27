@@ -18,22 +18,7 @@ in
     shellAliases = {
       ".." = "cd ..";
       cd = "z";
-      ga = "git add";
-      gc = "git commit -v";
-      gca = "git commit -av";
-      gd = "git diff -- . ':(exclude)*-lock.json' ':(exclude)*.lock'";
-      gdc = "git diff --cached -- . ':(exclude)package-lock.json'";
-      gcb = "git branch --show-current";
-      gss = "git status";
-      gidiot = "git commit --amend --no-edit";
-      gfo = "git fetch origin";
-      gra = "git reset --hard origin/main";
-      gom = "git checkout -B main origin/main";
-      ltt = "eza --tree --git-ignore";
       u = "cd ..";
-      lg = "lazygit";
-      dp = "dprint fmt";
-      ai = lib.mkDefault "pi --offline";
     }
     // uuuCommands;
     initContent = ''
