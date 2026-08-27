@@ -141,8 +141,7 @@
     },
     "format-muted": " {format_source}",
     "format-source": "{volume}% ",
-    "format-source-muted": "",
-    "on-click": "pavucontrol"
+    "format-source-muted": ""
   },
   "spacing": 4,
   "temperature": {
