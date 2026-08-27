@@ -1065,16 +1065,16 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1783187857,
-        "narHash": "sha256-CoKGv2FwkvFwzsVLB/N89eFjr40puk/p51IMvIp+ddo=",
-        "owner": "NixOS",
+        "lastModified": 1783148766,
+        "narHash": "sha256-uslt2pqShTIXDdAHRHv2QkYLsVdY8Oqwz0EA48/RSM8=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "19a8a1e6d8b7315b6fd84e5a51977ce6f69d5a5b",
+        "rev": "a50de1b7d8a586adc18d2395c19de7d6058e6030",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
+        "owner": "nixos",
+        "ref": "nixos-26.05",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -1108,7 +1108,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_7": {
       "locked": {
         "lastModified": 1783148766,
         "narHash": "sha256-uslt2pqShTIXDdAHRHv2QkYLsVdY8Oqwz0EA48/RSM8=",
@@ -1397,14 +1397,14 @@
     },
     "shopify-framework": {
       "inputs": {
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_7"
       },
       "locked": {
-        "lastModified": 1787815505,
-        "narHash": "sha256-zd1kjqq8+FOfRIOWtrS0w2XYq4gzu2tufbymOaLFS/s=",
+        "lastModified": 1787843936,
+        "narHash": "sha256-Q/FRhGB8ot9GLbZZeDGBIRQ6uZcBte6OJ6zJkXh4kRQ=",
         "ref": "main",
-        "rev": "2f63639e9aea011535ba60272eff7b2d280d80bc",
-        "revCount": 32,
+        "rev": "c6ce64edeef563260bce79725f8e49dafc17d672",
+        "revCount": 35,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
       },

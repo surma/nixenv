@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  osConfig,
   ...
 }:
 {
@@ -64,6 +65,54 @@
     ];
 
     home.stateVersion = "24.05";
+
+    # Consume externally installed Shopify tooling only when its NixOS
+    # preparation layer is enabled; these guards never install or create it.
+    programs.zsh.initContent =
+      lib.mkIf (osConfig.shopify-framework.enable && osConfig.shopify-framework.developerTools.enable)
+        (
+          lib.mkAfter ''
+            if [[ -r "/opt/dev/dev.sh" ]]; then
+              source "/opt/dev/dev.sh"
+            fi
+
+            # Load chruby on first use. Remove this wrapper before sourcing
+            # mutable external code so malformed sources cannot recurse.
+            if [[ -r "/opt/dev/sh/chruby/chruby.sh" ]] && ! type chruby >/dev/null 2>&1; then
+              chruby() {
+                local -a saved_args
+                saved_args=("$@")
+                unfunction chruby 2>/dev/null || {
+                  print -u2 -- "chruby initialization wrapper could not remove itself"
+                  return 1
+                }
+
+                if [[ ! -r "/opt/dev/sh/chruby/chruby.sh" ]]; then
+                  print -u2 -- "chruby initialization source is unreadable"
+                  return 1
+                fi
+                if ! source "/opt/dev/sh/chruby/chruby.sh"; then
+                  unfunction chruby 2>/dev/null || :
+                  unalias chruby 2>/dev/null || :
+                  print -u2 -- "chruby initialization failed"
+                  return 1
+                fi
+                if ! (( $+functions[chruby] )); then
+                  unfunction chruby 2>/dev/null || :
+                  unalias chruby 2>/dev/null || :
+                  print -u2 -- "chruby initialization did not define a replacement"
+                  return 1
+                fi
+
+                chruby "''${saved_args[@]}"
+              }
+            fi
+
+            if [[ -x "$HOME/.local/state/tec/profiles/base/current/global/init" ]]; then
+              eval "$("$HOME/.local/state/tec/profiles/base/current/global/init" zsh)"
+            fi
+          ''
+        );
 
     programs.spotify.enable = true;
     # programs.spotify.platform = "wayland";
