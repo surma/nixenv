@@ -1400,11 +1400,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1787670563,
-        "narHash": "sha256-tE4ys1HF2+j6hTPVy3kR9/RPPa+/qFgarUvaPmc6SP8=",
+        "lastModified": 1787815505,
+        "narHash": "sha256-zd1kjqq8+FOfRIOWtrS0w2XYq4gzu2tufbymOaLFS/s=",
         "ref": "main",
-        "rev": "3a90b153a7369ea6492267cb5f215feb320abde3",
-        "revCount": 30,
+        "rev": "2f63639e9aea011535ba60272eff7b2d280d80bc",
+        "revCount": 32,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
       },

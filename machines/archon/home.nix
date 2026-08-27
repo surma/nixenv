@@ -101,6 +101,14 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
+
+    # Sunshine must follow the actual Hyprland session, not the generic
+    # graphical-session.target that GDM also exposes to its greeter user.
+    # The NixOS Sunshine unit remains the single service definition; this
+    # target dependency supplies the Hyprland-only autostart edge.
+    systemd.user.targets."hyprland-session".Unit.Wants = [
+      "sunshine.service"
+    ];
     programs.hyprlock = {
       enable = true;
       settings = {
