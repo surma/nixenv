@@ -66,13 +66,16 @@
 
     home.stateVersion = "24.05";
 
-    # Consume externally installed Shopify tooling only when its NixOS
-    # preparation layer is enabled; these guards never install or create it.
+    # Prefer Shopify's canonical managed toolchain, retain /opt/dev only as a
+    # migration fallback, and expose the pinned bootstrap tec while Janitor is
+    # still converging the managed base profile.
     programs.zsh.initContent =
       lib.mkIf (osConfig.shopify-framework.enable && osConfig.shopify-framework.developerTools.enable)
         (
           lib.mkAfter ''
-            if [[ -r "/opt/dev/dev.sh" ]]; then
+            if [[ -x "$HOME/.local/state/tec/profiles/base/current/global/init" ]]; then
+              eval "$("$HOME/.local/state/tec/profiles/base/current/global/init" zsh)"
+            elif [[ -r "/opt/dev/dev.sh" ]]; then
               source "/opt/dev/dev.sh"
             fi
 
@@ -108,8 +111,8 @@
               }
             fi
 
-            if [[ -x "$HOME/.local/state/tec/profiles/base/current/global/init" ]]; then
-              eval "$("$HOME/.local/state/tec/profiles/base/current/global/init" zsh)"
+            if [[ -d "$HOME/.local/state/tec/toolchain/base_profile/bin" ]]; then
+              path=("$HOME/.local/state/tec/toolchain/base_profile/bin" $path)
             fi
           ''
         );

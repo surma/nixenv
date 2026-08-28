@@ -169,14 +169,20 @@
 
   programs.zsh = {
     initContent = ''
-      [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
+      if [[ -x "$HOME/.local/state/tec/profiles/base/current/global/init" ]]; then
+        eval "$("$HOME/.local/state/tec/profiles/base/current/global/init" zsh)"
+      elif [[ -r /opt/dev/dev.sh ]]; then
+        source /opt/dev/dev.sh
+      fi
       [[ -f /opt/dev/sh/chruby/chruby.sh ]] && { type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; } }
       [[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
 
       export NIX_PATH=world=$HOME/world/trees/root/src/.meta/substrate/nix
       export PATH=$HOME/.local/state/nix/profiles/wb/bin:$PATH
 
-      [[ -x $HOME/.local/state/tec/profiles/base/current/global/init ]] && eval "$($HOME/.local/state/tec/profiles/base/current/global/init zsh)"
+      if [[ -d "$HOME/.local/state/tec/toolchain/base_profile/bin" ]]; then
+        path=("$HOME/.local/state/tec/toolchain/base_profile/bin" $path)
+      fi
     '';
   };
   programs.ssh = {
