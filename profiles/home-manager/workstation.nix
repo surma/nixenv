@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -27,7 +28,9 @@
         cmake
         simple-http-server
         jwt-cli
-        graphviz
+        # Graphviz ships its own `gc`, which collides with the `gc` git-commit
+        # wrapper from `customScripts`. Let the wrapper win.
+        (lib.lowPrio graphviz)
         hyperfine
         uv
         mprocs
