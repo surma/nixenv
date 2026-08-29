@@ -32,9 +32,22 @@ type homeAssistantState struct {
 }
 
 type pageData struct {
-	Answer      string
-	AnswerClass string
-	Status      string
+	Answer       string
+	AnswerClass  string
+	PageClass    string
+	ShowConfetti bool
+	Status       string
+}
+
+func pageClassForAnswer(answer string) string {
+	switch answer {
+	case "YES":
+		return "page--bad"
+	case "NO":
+		return "page--good"
+	default:
+		return "page--unknown"
+	}
 }
 
 var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
@@ -53,19 +66,31 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
       box-sizing: border-box;
     }
 
+    html {
+      min-height: 100%;
+      background: #111;
+    }
+
     body {
+      position: relative;
+      isolation: isolate;
+      overflow-x: hidden;
       margin: 0;
       min-height: 100vh;
+      min-height: 100svh;
       background: #111;
       color: #f5f5f5;
     }
 
     main {
+      position: relative;
+      z-index: 1;
       display: grid;
       min-height: 100vh;
+      min-height: 100svh;
       place-content: center;
-      gap: 2rem;
-      padding: 2rem;
+      gap: clamp(1.5rem, 5vw, 2rem);
+      padding: clamp(1.25rem, 6vw, 2rem);
       text-align: center;
     }
 
@@ -101,9 +126,108 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.9rem;
     }
+
+    body.page--bad::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      border: clamp(0.4rem, 2.3vw, 1.1rem) solid #ff1744;
+      box-shadow: inset 0 0 1.5rem rgba(255, 23, 68, 0.8), 0 0 1.5rem rgba(255, 23, 68, 0.8);
+      animation: alarm-siren 0.72s ease-in-out infinite;
+    }
+
+    .confetti {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -2rem;
+      right: -1rem;
+      width: 0.65rem;
+      height: 1.4rem;
+      border-radius: 0.15rem;
+      background: var(--confetti-color);
+      opacity: 0;
+      animation: confetti-flight var(--confetti-duration) cubic-bezier(0.2, 0.8, 0.3, 1) var(--confetti-delay) both;
+    }
+
+    .confetti-piece:nth-child(1) { --confetti-color: #ff4d6d; --confetti-duration: 1.8s; --confetti-delay: 0s; --confetti-x: -28vw; --confetti-y: 58vh; --confetti-rotation: 460deg; }
+    .confetti-piece:nth-child(2) { --confetti-color: #ffd166; --confetti-duration: 2.2s; --confetti-delay: 0.08s; --confetti-x: -52vw; --confetti-y: 76vh; --confetti-rotation: -620deg; }
+    .confetti-piece:nth-child(3) { --confetti-color: #06d6a0; --confetti-duration: 2s; --confetti-delay: 0.16s; --confetti-x: -73vw; --confetti-y: 42vh; --confetti-rotation: 780deg; }
+    .confetti-piece:nth-child(4) { --confetti-color: #4cc9f0; --confetti-duration: 2.5s; --confetti-delay: 0.22s; --confetti-x: -91vw; --confetti-y: 88vh; --confetti-rotation: -900deg; }
+    .confetti-piece:nth-child(5) { --confetti-color: #c77dff; --confetti-duration: 1.7s; --confetti-delay: 0.3s; --confetti-x: -42vw; --confetti-y: 32vh; --confetti-rotation: 320deg; }
+    .confetti-piece:nth-child(6) { --confetti-color: #f72585; --confetti-duration: 2.4s; --confetti-delay: 0.38s; --confetti-x: -66vw; --confetti-y: 96vh; --confetti-rotation: -740deg; }
+    .confetti-piece:nth-child(7) { --confetti-color: #90be6d; --confetti-duration: 2.1s; --confetti-delay: 0.44s; --confetti-x: -15vw; --confetti-y: 78vh; --confetti-rotation: 570deg; }
+    .confetti-piece:nth-child(8) { --confetti-color: #f8961e; --confetti-duration: 2.6s; --confetti-delay: 0.52s; --confetti-x: -82vw; --confetti-y: 68vh; --confetti-rotation: -1040deg; }
+    .confetti-piece:nth-child(9) { --confetti-color: #00b4d8; --confetti-duration: 1.9s; --confetti-delay: 0.6s; --confetti-x: -36vw; --confetti-y: 104vh; --confetti-rotation: 860deg; }
+    .confetti-piece:nth-child(10) { --confetti-color: #fee440; --confetti-duration: 2.3s; --confetti-delay: 0.68s; --confetti-x: -60vw; --confetti-y: 52vh; --confetti-rotation: -510deg; }
+    .confetti-piece:nth-child(11) { --confetti-color: #ff7096; --confetti-duration: 2s; --confetti-delay: 0.76s; --confetti-x: -97vw; --confetti-y: 82vh; --confetti-rotation: 680deg; }
+    .confetti-piece:nth-child(12) { --confetti-color: #80ed99; --confetti-duration: 2.7s; --confetti-delay: 0.84s; --confetti-x: -48vw; --confetti-y: 112vh; --confetti-rotation: -880deg; }
+    .confetti-piece:nth-child(3n) { width: 0.4rem; height: 1.8rem; border-radius: 50%; }
+
+    @keyframes alarm-siren {
+      0%, 100% {
+        opacity: 0.55;
+        box-shadow: inset 0 0 1rem rgba(255, 23, 68, 0.65), 0 0 1rem rgba(255, 23, 68, 0.65);
+      }
+      50% {
+        opacity: 1;
+        box-shadow: inset 0 0 2.6rem rgba(255, 23, 68, 1), 0 0 2.6rem rgba(255, 23, 68, 1);
+      }
+    }
+
+    @keyframes confetti-flight {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -5vh, 0) rotate(0deg);
+      }
+      12% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--confetti-x), var(--confetti-y), 0) rotate(var(--confetti-rotation));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.page--bad::before {
+        animation: none;
+        opacity: 0.85;
+      }
+
+      .confetti-piece {
+        animation: none;
+        opacity: 0.9;
+        transform: translate3d(var(--confetti-x), 28vh, 0) rotate(var(--confetti-rotation));
+      }
+    }
   </style>
 </head>
-<body>
+<body class="{{.PageClass}}">
+  {{if .ShowConfetti}}
+  <div class="confetti" aria-hidden="true">
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+    <span class="confetti-piece"></span>
+  </div>
+  {{end}}
   <main>
     <h1>Can Jazz poison himself?</h1>
     <div class="answer {{.AnswerClass}}">{{.Answer}}</div>
@@ -178,15 +302,18 @@ func (a *application) pageData(ctx context.Context) pageData {
 		return pageData{
 			Answer:      "UNKNOWN",
 			AnswerClass: "answer-unknown",
+			PageClass:   "page--unknown",
 			Status:      "Home Assistant is unavailable. Refresh to try again.",
 		}
 	}
 
 	answer := answerForState(state)
 	return pageData{
-		Answer:      answer,
-		AnswerClass: "answer-" + strings.ToLower(answer),
-		Status:      "Refresh to check again.",
+		Answer:       answer,
+		AnswerClass:  "answer-" + strings.ToLower(answer),
+		PageClass:    pageClassForAnswer(answer),
+		ShowConfetti: answer == "NO",
+		Status:       "Refresh to check again.",
 	}
 }
 

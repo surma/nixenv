@@ -25,6 +25,22 @@ func TestAnswerForState(t *testing.T) {
 	}
 }
 
+func TestPageClassForAnswer(t *testing.T) {
+	tests := map[string]string{
+		"YES":   "page--bad",
+		"NO":    "page--good",
+		"OTHER": "page--unknown",
+	}
+
+	for answer, want := range tests {
+		t.Run(answer, func(t *testing.T) {
+			if got := pageClassForAnswer(answer); got != want {
+				t.Fatalf("pageClassForAnswer(%q) = %q, want %q", answer, got, want)
+			}
+		})
+	}
+}
+
 func TestServeHTTPUsesHomeAssistantState(t *testing.T) {
 	var authorization string
 	homeAssistant := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +70,48 @@ func TestServeHTTPUsesHomeAssistantState(t *testing.T) {
 	if authorization != "Bearer test-token" {
 		t.Fatalf("authorization = %q, want bearer token", authorization)
 	}
-	if !strings.Contains(response.Body.String(), ">YES<") {
-		t.Fatalf("response does not contain YES:\n%s", response.Body.String())
+	body := response.Body.String()
+	if !strings.Contains(body, ">YES<") {
+		t.Fatalf("response does not contain YES:\n%s", body)
+	}
+	if !strings.Contains(body, `body class="page--bad"`) {
+		t.Fatalf("response does not contain the bad page class:\n%s", body)
+	}
+	if strings.Contains(body, `class="confetti"`) {
+		t.Fatalf("bad response contains confetti:\n%s", body)
+	}
+}
+
+func TestServeHTTPShowsConfettiForNo(t *testing.T) {
+	homeAssistant := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"state":"off"}`)
+	}))
+	defer homeAssistant.Close()
+
+	app := &application{
+		homeAssistantURL: homeAssistant.URL,
+		entityID:         "binary_sensor.bean_office_door",
+		token:            "test-token",
+		httpClient:       homeAssistant.Client(),
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	response := httptest.NewRecorder()
+	app.serveHTTP(response, request)
+
+	body := response.Body.String()
+	if !strings.Contains(body, ">NO<") {
+		t.Fatalf("response does not contain NO:\n%s", body)
+	}
+	if !strings.Contains(body, `body class="page--good"`) {
+		t.Fatalf("response does not contain the good page class:\n%s", body)
+	}
+	if !strings.Contains(body, `<div class="confetti" aria-hidden="true">`) {
+		t.Fatalf("response does not contain the confetti layer:\n%s", body)
+	}
+	if got := strings.Count(body, `class="confetti-piece"`); got != 12 {
+		t.Fatalf("confetti piece count = %d, want 12", got)
 	}
 }
 
@@ -79,7 +135,14 @@ func TestServeHTTPShowsUnknownWhenHomeAssistantFails(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("response status = %d, want %d", response.Code, http.StatusOK)
 	}
-	if !strings.Contains(response.Body.String(), ">UNKNOWN<") {
-		t.Fatalf("response does not contain UNKNOWN:\n%s", response.Body.String())
+	body := response.Body.String()
+	if !strings.Contains(body, ">UNKNOWN<") {
+		t.Fatalf("response does not contain UNKNOWN:\n%s", body)
+	}
+	if !strings.Contains(body, `body class="page--unknown"`) {
+		t.Fatalf("response does not contain the unknown page class:\n%s", body)
+	}
+	if strings.Contains(body, `class="confetti"`) {
+		t.Fatalf("unknown response contains confetti:\n%s", body)
 	}
 }
