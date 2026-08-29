@@ -110,11 +110,14 @@ func TestServeHTTPShowsConfettiForNo(t *testing.T) {
 	if !strings.Contains(body, `<div class="confetti" aria-hidden="true">`) {
 		t.Fatalf("response does not contain the confetti layer:\n%s", body)
 	}
-	if got := strings.Count(body, `class="confetti-piece confetti-piece--right"`); got != 6 {
-		t.Fatalf("right confetti piece count = %d, want 6", got)
+	if got := strings.Count(body, `class="confetti-piece confetti-piece--right confetti-piece--burst-`); got != 300 {
+		t.Fatalf("right confetti piece count = %d, want 300", got)
 	}
-	if got := strings.Count(body, `class="confetti-piece confetti-piece--left"`); got != 6 {
-		t.Fatalf("left confetti piece count = %d, want 6", got)
+	if got := strings.Count(body, `class="confetti-piece confetti-piece--left confetti-piece--burst-`); got != 300 {
+		t.Fatalf("left confetti piece count = %d, want 300", got)
+	}
+	if got := strings.Count(body, `class="glitter-piece glitter-piece--`); got != 120 {
+		t.Fatalf("glitter piece count = %d, want 120", got)
 	}
 }
 
