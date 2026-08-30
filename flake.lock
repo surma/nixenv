@@ -1348,11 +1348,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787933018,
-        "narHash": "sha256-J0gcMrToozK2KKtuqgOO+S8Wz4RXIXDCJ7F/cxH+84U=",
-        "ref": "main",
-        "rev": "0c0b607196b31f3bbffeb1d60386517cb95edfc0",
-        "revCount": 118,
+        "lastModified": 1788096853,
+        "narHash": "sha256-0u3wZW7NyEvmkv90p3OZzdx9GUbSYxJ2iEwHCz0SYTY=",
+        "ref": "feat/duration-based-voice-transcription",
+        "rev": "395f4d1f0d427bfd93c033ab015152bed8630079",
+        "revCount": 119,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
       },
