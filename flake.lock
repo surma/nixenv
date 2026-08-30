@@ -1350,7 +1350,7 @@
       "locked": {
         "lastModified": 1788096853,
         "narHash": "sha256-0u3wZW7NyEvmkv90p3OZzdx9GUbSYxJ2iEwHCz0SYTY=",
-        "ref": "feat/duration-based-voice-transcription",
+        "ref": "main",
         "rev": "395f4d1f0d427bfd93c033ab015152bed8630079",
         "revCount": 119,
         "type": "git",
