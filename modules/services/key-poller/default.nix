@@ -28,6 +28,9 @@ let
         --set-default KEY_POLLER_SSH_USER ${escapeShellArg cfg.sshUser} \
         --set-default KEY_POLLER_SSH_IDENTITY_FILE ${escapeShellArg (toString cfg.sshIdentityFile)} \
         --set-default KEY_POLLER_KNOWN_HOSTS_FILE ${escapeShellArg "${cfg.stateDir}/known_hosts"} \
+        --set-default KEY_POLLER_STATE_DIR ${escapeShellArg (toString cfg.stateDir)} \
+        --set-default KEY_POLLER_SUCCESS_INTERVAL ${escapeShellArg cfg.successInterval} \
+        --set-default KEY_POLLER_MAX_STALENESS ${escapeShellArg cfg.maxStaleness} \
         --set-default KEY_POLLER_SSH_HOSTS_JSON ${escapeShellArg (builtins.toJSON cfg.sshHosts)} \
         --set-default KEY_POLLER_RECEIVER_URL ${escapeShellArg cfg.receiverUrl} \
         --set-default KEY_POLLER_SECRET_FILE ${escapeShellArg (toString cfg.secretFile)} \
@@ -43,7 +46,7 @@ in
     stateDir = mkOption {
       type = types.path;
       default = "/var/lib/key-poller";
-      description = "Directory for key-poller state such as known_hosts";
+      description = "Directory for key-poller state such as known_hosts and last-success";
     };
 
     sshUser = mkOption {
@@ -81,13 +84,19 @@ in
     successInterval = mkOption {
       type = types.str;
       default = "8h";
-      description = "Timer interval after a successful poll";
+      description = "Time for which a successfully polled key stays fresh";
     };
 
-    retryInterval = mkOption {
+    tickInterval = mkOption {
       type = types.str;
-      default = "60s";
-      description = "Systemd restart interval after a failed poll";
+      default = "5min";
+      description = "Interval between key-poller timer ticks";
+    };
+
+    maxStaleness = mkOption {
+      type = types.str;
+      default = "24h";
+      description = "Maximum key age before a failed poll exits non-zero";
     };
 
     remoteNuBin = mkOption {
@@ -127,17 +136,15 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${keyPoller}/bin/key-poller";
-        Restart = "on-failure";
-        RestartSec = cfg.retryInterval;
       };
     };
 
     systemd.timers.key-poller = {
-      description = "Run key-poller every 8 hours after success";
+      description = "Check key-poller periodically";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnBootSec = "1min";
-        OnUnitInactiveSec = cfg.successInterval;
+        OnBootSec = cfg.tickInterval;
+        OnUnitActiveSec = cfg.tickInterval;
         Unit = "key-poller.service";
         Persistent = true;
       };
