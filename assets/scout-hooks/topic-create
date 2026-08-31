@@ -5,24 +5,40 @@ BRAIN_MAIN="$HOME/.local/state/brain"
 BRAIN_WORKTREE="$TOPIC_DIR/brain"
 BRANCH="topic-$TOPIC_ID"
 
-# Create worktree
-cd "$BRAIN_MAIN"
-git worktree add -b "$BRANCH" "$BRAIN_WORKTREE" 2>/dev/null || \
-  git worktree add "$BRAIN_WORKTREE" "$BRANCH"
+# Every step below is idempotent. Scout can run this hook again over an
+# existing workspace, and a second run must not fail. A failing hook blocks
+# the session start, which wedges the topic for every later message.
 
-# Configure upstream to track origin/main
+# Create the worktree only when it is missing. Do not suppress git stderr:
+# a hidden error here is very hard to diagnose later.
+if [ ! -e "$BRAIN_WORKTREE" ]; then
+  cd "$BRAIN_MAIN"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git worktree add "$BRAIN_WORKTREE" "$BRANCH"
+  else
+    git worktree add -b "$BRANCH" "$BRAIN_WORKTREE"
+  fi
+fi
+
+# Configure upstream to track origin/main. git config overwrites its key, so
+# repeated runs are safe.
 cd "$BRAIN_WORKTREE"
 git config "branch.$BRANCH.remote" origin
 git config "branch.$BRANCH.merge" refs/heads/main
 git config push.default upstream
 
-# Copy SQLite DB from main clone (avoids re-embedding).
+# Copy the SQLite DB from the main clone (avoids re-embedding).
 # Use sqlite3 .backup for a safe hot copy — plain cp of WAL-mode files
 # risks copying inconsistent wal/shm state if brain or the sync timer
 # is writing concurrently.
-if [ -f "$BRAIN_MAIN/.brain.db" ]; then
+#
+# Copy only when the worktree has no database yet. A second run must never
+# overwrite the database that the topic already uses.
+if [ ! -f "$BRAIN_WORKTREE/.brain.db" ] && [ -f "$BRAIN_MAIN/.brain.db" ]; then
   sqlite3 "$BRAIN_MAIN/.brain.db" ".backup '$BRAIN_WORKTREE/.brain.db'"
 fi
 
-# Write BRAIN_PATH to .env for the dotenv plugin
-echo "BRAIN_PATH=$BRAIN_WORKTREE" >> "$TOPIC_DIR/.env"
+# Write BRAIN_PATH to .env for the dotenv plugin, exactly once.
+if ! grep -qs "^BRAIN_PATH=" "$TOPIC_DIR/.env"; then
+  echo "BRAIN_PATH=$BRAIN_WORKTREE" >> "$TOPIC_DIR/.env"
+fi
