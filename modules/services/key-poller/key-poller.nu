@@ -43,13 +43,47 @@ def main [] {
   let ssh_user = ($env.KEY_POLLER_SSH_USER? | default "surma")
   let ssh_identity_file = ($env.KEY_POLLER_SSH_IDENTITY_FILE? | default "/home/surma/.ssh/id_machine")
   let known_hosts_file = ($env.KEY_POLLER_KNOWN_HOSTS_FILE? | default "/var/lib/key-poller/known_hosts")
+  let state_dir = ($env.KEY_POLLER_STATE_DIR? | default "/var/lib/key-poller")
+  let success_file = ($state_dir | path join "last-success")
+  let success_interval = (
+    $env.KEY_POLLER_SUCCESS_INTERVAL?
+    | default "8h"
+    | str replace --regex "h$" "hr"
+    | into duration
+  )
+  let max_staleness = (
+    $env.KEY_POLLER_MAX_STALENESS?
+    | default "24h"
+    | str replace --regex "h$" "hr"
+    | into duration
+  )
   let receiver_url = ($env.KEY_POLLER_RECEIVER_URL? | default "https://key.llm.surma.technology")
   let secret_file = ($env.KEY_POLLER_SECRET_FILE? | default "/var/lib/key-poller/receiver-secret")
   let remote_nu_bin = ($env.KEY_POLLER_REMOTE_NU_BIN? | default "/etc/profiles/per-user/surma/bin/nu")
   let remote_gcloud_bin = ($env.KEY_POLLER_REMOTE_GCLOUD_BIN? | default "/etc/profiles/per-user/surma/bin/gcloud")
   let ssh_hosts = ($env.KEY_POLLER_SSH_HOSTS_JSON? | default '["10.0.0.20","100.79.232.5"]' | from json)
+  let now = (date now)
+  let last_success = if ($success_file | path exists) {
+    try {
+      open $success_file | str trim | into datetime
+    } catch {|err|
+      log $"Failed to read last successful poll timestamp: ($err.msg)"
+      null
+    }
+  } else {
+    null
+  }
 
-  mkdir ($known_hosts_file | path dirname)
+  if $last_success != null {
+    let age = ($now - $last_success)
+    if $age < $success_interval {
+      log $"Shopify key is fresh, last successful poll was ($age) ago"
+      return
+    }
+    log $"Shopify key is stale, last successful poll was ($age) ago"
+  } else {
+    log "No successful poll timestamp found, attempting initial poll"
+  }
 
   let remote_script = ([
     $"^($remote_gcloud_bin) auth print-identity-token --format json"
@@ -60,44 +94,70 @@ def main [] {
   ] | str join "\n")
   let remote_command = $"($remote_nu_bin) -c '($remote_script)'"
 
-  mut fetched = null
-  for host in $ssh_hosts {
-    let attempt = (fetch_key_from_host $host $ssh_bin $ssh_user $ssh_identity_file $known_hosts_file $remote_command)
-    if $attempt != null {
-      $fetched = $attempt
-      break
+  let poll_succeeded = (try {
+    mkdir ($known_hosts_file | path dirname)
+
+    mut fetched: any = null
+    for host in $ssh_hosts {
+      let attempt = (fetch_key_from_host $host $ssh_bin $ssh_user $ssh_identity_file $known_hosts_file $remote_command)
+      if $attempt != null {
+        $fetched = $attempt
+        break
+      }
     }
+
+    if $fetched == null {
+      error make { msg: "Failed to fetch Shopify key from all configured hosts" }
+    }
+
+    let fetched = $fetched
+    log $"Fetched Shopify key from ($fetched.host)"
+
+    let jwt_result = (
+      do {
+        ^$jwt_bin encode -S $"@($secret_file)" '-e=+5 minutes' '{}'
+      } | complete
+    )
+    if $jwt_result.exit_code != 0 {
+      let stderr = ($jwt_result.stderr | str trim)
+      error make { msg: $"Failed to generate JWT: ($stderr)" }
+    }
+
+    let jwt = ($jwt_result.stdout | str trim)
+    if $jwt == "" {
+      error make { msg: "Generated empty JWT" }
+    }
+
+    let post_result = (
+      do { ^$curl_bin -fsS -X POST -H $"Authorization: Bearer ($jwt)" --data-binary $fetched.key $"($receiver_url)/update" } | complete
+    )
+    if $post_result.exit_code != 0 {
+      let stderr = ($post_result.stderr | str trim)
+      error make { msg: $"Failed to post key to receiver: ($stderr)" }
+    }
+
+    log $"Forwarded Shopify key to ($receiver_url)/update"
+    let success_timestamp = (date now | format date "%+")
+    $success_timestamp | save --force $success_file
+    log $"Recorded successful poll timestamp in ($success_file)"
+    true
+  } catch {|err|
+    log $"Error: ($err.msg)"
+    false
+  })
+
+  if $poll_succeeded {
+    return
   }
 
-  if $fetched == null {
-    error make { msg: "Failed to fetch Shopify key from all configured hosts" }
+  if $last_success != null {
+    let age = ((date now) - $last_success)
+    if $age >= $max_staleness {
+      log $"Last successful poll was ($age) ago, beyond the ($max_staleness) staleness threshold"
+      exit 1
+    }
+    log $"Last successful poll was ($age) ago, within the ($max_staleness) staleness threshold"
+  } else {
+    log "Initial poll failed, so this failure is not fatal"
   }
-
-  let fetched = $fetched
-  log $"Fetched Shopify key from ($fetched.host)"
-
-  let jwt_result = (
-    do {
-      ^$jwt_bin encode -S $"@($secret_file)" '-e=+5 minutes' '{}'
-    } | complete
-  )
-  if $jwt_result.exit_code != 0 {
-    let stderr = ($jwt_result.stderr | str trim)
-    error make { msg: $"Failed to generate JWT: ($stderr)" }
-  }
-
-  let jwt = ($jwt_result.stdout | str trim)
-  if $jwt == "" {
-    error make { msg: "Generated empty JWT" }
-  }
-
-  let post_result = (
-    do { ^$curl_bin -fsS -X POST -H $"Authorization: Bearer ($jwt)" --data-binary $fetched.key $"($receiver_url)/update" } | complete
-  )
-  if $post_result.exit_code != 0 {
-    let stderr = ($post_result.stderr | str trim)
-    error make { msg: $"Failed to post key to receiver: ($stderr)" }
-  }
-
-  log $"Forwarded Shopify key to ($receiver_url)/update"
 }
