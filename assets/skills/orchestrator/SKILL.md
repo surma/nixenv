@@ -77,8 +77,6 @@ Record the trust boundary only when the user states it. Never invent one, and ne
 
 Pick the worker model and reasoning level before you start any worker. Ask the user for the model when the request does not name one. Read the identifier from the harness instead of guessing it, and use the reasoning levels that the harness accepts.
 
-A request to write code authorizes edits in the workspace only. Commits, pushes, merges, deployments, and data changes stay separate decisions.
-
 ### 2. Preflight
 
 - read every applicable `AGENTS.md` and repository instruction file
@@ -284,11 +282,10 @@ For a checker or a reviewer, replace the ownership lines with "Change no files" 
 
 This skill grants no new authority. Repository instructions and user constraints outrank it.
 
-- Get explicit user approval before any commit, push, pull request, merge, deployment, release, or other external write.
-- Get explicit user approval before you delete or overwrite user data, and before a worker does.
-- Never discard uncommitted user changes to simplify the work.
+- Follow the repository's and the user's Git, review, and release workflow. This skill defines no workflow.
+- If a worker will delete or overwrite user data, obtain the approval the orchestrator would need for that action. Obtain it before the worker starts.
 - Ask the user when a required action lacks approval. Do not route that action through a worker.
-- Report what actually happened, including gaps, failures, and skipped checks.
+- Report what the orchestrator and its workers actually did, including gaps, failures, and skipped checks.
 
 ## Final report
 
