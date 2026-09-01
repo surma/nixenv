@@ -112,7 +112,7 @@
 
     # Skills from the AI profile (brainstorming, planning, debugging,
     # surma-writer, triple-helix, preact-signals, web-development,
-    # team-lead, orchestrator, bro, rust) are inherited via the
+    # orchestrator, bro, rust) are inherited via the
     # import above.  Only Scout-specific skills are listed here.
     agent.skills = [
       ../../assets/skills/cloudflare
