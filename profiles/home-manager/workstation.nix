@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 {
@@ -36,6 +37,7 @@
         mprocs
         dua
         wasmtime
+        inputs.m.packages.${pkgs.stdenv.hostPlatform.system}.default
       ]
     );
 

@@ -79,6 +79,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    m = {
+      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/m?ref=main";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
     bandsnatch.url = "github:ovyerus/bandsnatch";
     gws = {
       url = "github:googleworkspace/cli";

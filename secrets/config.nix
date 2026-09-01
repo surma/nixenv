@@ -306,6 +306,14 @@
         "nexus"
       ];
     };
+    m-config = {
+      contents = ../secrets/m-config.age;
+      keys = [
+        "shopisurm"
+        "dragoon"
+        "archon"
+      ];
+    };
     scout-spotify-credentials = {
       contents = ../secrets/spotify-credentials.age;
       keys = [
