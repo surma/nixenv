@@ -76,6 +76,7 @@
     programs.wezterm.window-decorations = null;
     defaultConfigs.wezterm.enable = true;
 
+    secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
     secrets.items.archon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
 
     services.syncthing.enable = true;

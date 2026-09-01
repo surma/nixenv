@@ -81,6 +81,7 @@ in
   };
 
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
+  secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
   secrets.items.dragoon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
   secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
 
