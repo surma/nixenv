@@ -1,5 +1,17 @@
 #!/usr/bin/env nu
 
+def nix-update-args [pkg] {
+  let name = $pkg.name
+  let version = ($pkg | get -o version)
+  let extra_args = ($pkg | get -o nix_update_args | default [])
+  let args = if $version == null {
+    [ "--flake" $name ]
+  } else {
+    [ "--flake" $name "--version" $version ]
+  }
+  $args | append $extra_args
+}
+
 def main [] {
   let root = (^git rev-parse --show-toplevel | str trim)
   if ($root | is-empty) {
@@ -71,12 +83,11 @@ def main [] {
   }
 
   let packages = [
-    { name: "pi-coding-agent" }
+    { name: "pi-coding-agent" nix_update_args: [ "--custom-dep" "modelData" ] }
     { name: "handy" }
     { name: "claude-code" version: $claude_version requires_version: true }
     { name: "surm-auth" version: $surm_auth_version requires_version: true }
     { name: "agent-browser" }
-    { name: "homeassistant-cli" }
     { name: "pi-acp" }
   ]
 
@@ -95,12 +106,9 @@ def main [] {
       continue
     }
 
+    let args = (nix-update-args $pkg)
     try {
-      if $version == null {
-        ^nix run nixpkgs#nix-update -- --flake $name
-      } else {
-        ^nix run nixpkgs#nix-update -- --flake $name --version $version
-      }
+      ^nix run nixpkgs#nix-update -- ...$args
     } catch { |err|
       let message = ($err.msg? | default "unknown error")
       print $"Warning: update for ($name) failed: ($message)"

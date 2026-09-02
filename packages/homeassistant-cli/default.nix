@@ -31,7 +31,7 @@ buildNpmPackage {
     "
   '';
 
-  npmDepsHash = "sha256-ZbJ7rbitFjgITr4PSn/9ElfqmsOcII6OqNooL2/1jRo=";
+  npmDepsHash = "sha256-b3sCitiuhR33GOcKrj01lcws4I1CNVYg8msoYi90pMA=";
   dontNpmBuild = true;
 
   meta = {

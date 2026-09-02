@@ -18,11 +18,11 @@ let
     hash = "sha256-7z8OXao1PzmBEepDkIqVqyfQBPHulBlKcGymDYsnMvc=";
   };
 
-  npmDepsHash = "sha256-5RUH1YbGFRRrPsljziBfmdRBX97XpBl9S4I1AehLaYM=";
+  npmDepsHash = "sha256-35GC3Q4Jf4URvqoEYHeM63x49tTmrth62//PvKm4I7Q=";
 
   modelData = fetchzip {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-vz5+zzzXMrIgO43oluJwA2kTGLmyKjyda06oYryOfAM=";
+    hash = "sha256-5RUH1YbGFRRrPsljziBfmdRBX97XpBl9S4I1AehLaYM=";
   };
 in
 buildNpmPackage rec {

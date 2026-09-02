@@ -29,7 +29,7 @@ stdenv.mkDerivation (finalAttrs: {
   version = "0.0.0-unstable-2026-02-16";
 
   src = fetchFromGitHub {
-    owner = "trollzem";
+    owner = "lumaaaaaa";
     repo = "Lumen";
     rev = revision;
     hash = "sha256-+vzWBYrXMompedxNKtAaf+KIEdWR+bo1x/ZAtlYmUDw=";
@@ -138,7 +138,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = {
     description = "Native macOS game streaming host based on Sunshine";
-    homepage = "https://github.com/trollzem/Lumen";
+    homepage = "https://github.com/lumaaaaaa/Lumen";
     license = lib.licenses.gpl3Only;
     mainProgram = "lumen";
     platforms = [ "aarch64-darwin" ];

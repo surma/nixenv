@@ -851,11 +851,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769799857,
-        "narHash": "sha256-88IFXZ7Sa1vxbz5pty0Io5qEaMQMMUPMonLa3Ls/ss4=",
+        "lastModified": 1780913623,
+        "narHash": "sha256-xOp+zJ1P/ze1RkS8Ha6ny1RptkPqTZzIYYiFcAaK+ns=",
         "owner": "nix-community",
         "repo": "naersk",
-        "rev": "9d4ed44d8b8cecdceb1d6fd76e74123d90ae6339",
+        "rev": "0e8c8c2ffdeea20eb8cc99f284d0672e2b6cbe22",
         "type": "github"
       },
       "original": {
@@ -1608,11 +1608,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778692362,
-        "narHash": "sha256-B1ShZEN/072ejNIGEISeZYfyWkTSdRMWGthW+zVZfgY=",
+        "lastModified": 1788360726,
+        "narHash": "sha256-4ETqlOzfkLqu4zOw+sYCVgddRgqFb8XctT/oSRSa0fc=",
         "ref": "main",
-        "rev": "f6f3cbb02e1532cbe421d399ca20a8aa231767ed",
-        "revCount": 17,
+        "rev": "fdb85ab5a2debbe3ba5b69f348174601c47c5d6a",
+        "revCount": 18,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/web-search-cli"
       },
