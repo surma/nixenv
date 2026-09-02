@@ -6,7 +6,7 @@
   ...
 }:
 let
-  version = "0.34.0";
+  version = "0.36.0";
 
   sources = {
     x86_64-linux = "bin/agent-browser-linux-x64";
@@ -25,7 +25,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/agent-browser/-/agent-browser-${version}.tgz";
-    hash = "sha256-pHRPsYnlmEZ6vPs6zd4HEY2eXLQ9w7MXJ/hpr0651Zg=";
+    hash = "sha256-hYp1N2ADTXPGvBfdiV+RFB7wPD/MqXg0izeOJtLWF+Q=";
   };
 
   sourceRoot = "package";

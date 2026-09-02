@@ -7,11 +7,11 @@
   ...
 }:
 let
-  version = "0.9.5";
+  version = "0.9.6";
   url = "https://github.com/cjpais/Handy/releases/download/v${version}/Handy_${version}_aarch64.dmg";
   dmgFile = fetchurl {
     inherit url;
-    hash = "sha256-O8Uu5KUBD5o8UONRnWUQxKpiC9a5jKowIuvT1jcmkLw=";
+    hash = "sha256-qWGzVyT2yGC83Ozh8dd8ITQ60hVlJfiADKlooarU2FQ=";
   };
 in
 stdenv.mkDerivation rec {

@@ -6,7 +6,7 @@
   ...
 }:
 let
-  version = "2026.3.6-2";
+  version = "2026.8.10";
 in
 buildNpmPackage {
   pname = "homeassistant-cli";
@@ -15,7 +15,7 @@ buildNpmPackage {
   # Use the pre-built npm registry tarball (includes dist/).
   src = fetchurl {
     url = "https://registry.npmjs.org/@unbrained/homeassistant-cli/-/homeassistant-cli-${version}.tgz";
-    hash = "sha256-DihQFftP5u3T8RaimRUxSL2CPxdOt0KUqNMV3Zu7mEQ=";
+    hash = "sha256-nwlhp3b0F0EBydeANKdkVNzi+chQt4bR0iLuKUfZx5w=";
   };
 
   sourceRoot = "package";

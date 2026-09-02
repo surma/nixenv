@@ -9,16 +9,16 @@
 }:
 
 let
-  version = "0.84.1";
+  version = "0.84.4";
 
   src = fetchFromGitHub {
     owner = "badlogic";
     repo = "pi-mono";
     tag = "v${version}";
-    hash = "sha256-lg+I4S/aAjazjhGZU567ow+rksoNiqOqjHl//TjAMes=";
+    hash = "sha256-7z8OXao1PzmBEepDkIqVqyfQBPHulBlKcGymDYsnMvc=";
   };
 
-  npmDepsHash = "sha256-tufyZQRPAUeDtiq0UQodbKA/Y9xUAvNT8K+NWFjkeME=";
+  npmDepsHash = "sha256-5RUH1YbGFRRrPsljziBfmdRBX97XpBl9S4I1AehLaYM=";
 
   modelData = fetchzip {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
