@@ -13,6 +13,12 @@
 
   defaultConfigs.pi.settings.enableSkillCommands = true;
 
+  # Compaction. Replaces the hand-off pipeline that used to live in pi-config:
+  # pi-vcc builds its summary by extraction rather than asking the model to
+  # write one, so it needs no output budget at the point where context is
+  # already full.
+  defaultConfigs.pi.extraPackages = [ "npm:@sting8k/pi-vcc" ];
+
   agent.skills = [
     ../../assets/skills/brainstorming
     ../../assets/skills/planning
