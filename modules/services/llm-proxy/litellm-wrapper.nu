@@ -34,6 +34,19 @@ def append_shopify_extra_models [
   }
 }
 
+# Fireworks model ids carry a long "accounts/fireworks/{models,routers}/" path.
+# Expose them under a short alias instead, e.g. "fireworks:glm-5p3".
+def shorten_fireworks_alias [
+  model: record
+] {
+  if ($model.id | str starts-with "fireworks:") {
+    let short = $model.id | str replace --regex '^fireworks:accounts/fireworks/(models|routers)/' 'fireworks:'
+    $model | upsert alias $short
+  } else {
+    $model
+  }
+}
+
 def get_exposed_model_id [
   model: record
 ] {
@@ -52,17 +65,16 @@ def extract_model_info [
 ] {
   try {
     if $provider == "shopify" {
-      # Shopify has nested structure: config.targets[0].targets[0].model_info
-      # Try to extract model_info from the first target's first target
-      let model_info = try {
-        $model | get config | get targets | first | get targets | first | get -o model_info
+      # Shopify reports limits via models_dev.limit.{context,output}
+      let limit = try {
+        $model | get models_dev | get -o limit
       } catch {
         null
       }
-      
-      if $model_info != null {
-        let context = $model_info | get -o context_window
-        let max_out = $model_info | get -o max_output_tokens
+
+      if $limit != null {
+        let context = $limit | get -o context
+        let max_out = $limit | get -o output
         
         if $context != null and $max_out != null {
           return {
@@ -128,7 +140,10 @@ def main [
     if ($key | str length) > 0 {
       print "Fetching models from Shopify proxy..."
       let response = http get --full --headers ["Authorization" $"Bearer ($key)"] https://proxy.shopify.ai/v1/models
-      let fetched_models = $response | get body.data | where id =~ '^(openai|anthropic|google):'
+      let fetched_models = $response
+        | get body.data
+        | where id =~ '^(openai|anthropic|google|fireworks):'
+        | each {|m| shorten_fireworks_alias $m }
       let models = append_shopify_extra_models $fetched_models
       print $"Found ($models | length) Shopify models"
       $providers = $providers | insert shopify {
