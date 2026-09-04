@@ -2,6 +2,7 @@ import type { ExtensionAPI, ExtensionContext, InputSource } from "@mariozechner/
 
 const PROXY_BASE_URL = process.env.PI_PROXY_BASE_URL ?? "https://vendors.llm.surma.technology";
 const USAGE_TAG_PREFIX = ["pi", "coding-agent"] as const;
+const FIREWORKS_ORIGIN = "https://api.fireworks.ai";
 
 export default function (pi: ExtensionAPI) {
   let currentInputSource: InputSource = "interactive";
@@ -10,7 +11,7 @@ export default function (pi: ExtensionAPI) {
     return JSON.stringify([...USAGE_TAG_PREFIX, currentInputSource, sessionId ?? ""]);
   }
 
-  function registerAllProviders(sessionId?: string) {
+  function registerAllProviders(sessionId?: string, ctx?: ExtensionContext) {
     const headers: Record<string, string> = {
       "Shopify-Usage-Tag": buildUsageTag(sessionId),
     };
@@ -52,6 +53,24 @@ export default function (pi: ExtensionAPI) {
       apiKey: "$PI_PROXY_API_KEY",
       headers,
     });
+
+    // Pi splits the Fireworks catalog across two APIs whose base URLs sit at
+    // different depths, so one provider-level baseUrl cannot serve both.
+    // Rewrite the origin on each model instead and keep the rest of the
+    // catalog. The rewrite is a no-op once a URL points at the proxy, so
+    // repeated registration stays correct.
+    const fireworksModels = ctx?.modelRegistry.getProvider("fireworks")?.getModels();
+
+    if (fireworksModels?.length) {
+      pi.registerProvider("fireworks", {
+        apiKey: "$PI_PROXY_API_KEY",
+        headers,
+        models: fireworksModels.map((model) => ({
+          ...model,
+          baseUrl: model.baseUrl.replace(FIREWORKS_ORIGIN, `${PROXY_BASE_URL}/fireworks`),
+        })),
+      });
+    }
   }
 
   async function refreshActiveModel(ctx: ExtensionContext) {
@@ -70,12 +89,12 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("input", async (event, ctx) => {
     currentInputSource = event.source;
-    registerAllProviders(ctx.sessionManager.getSessionId());
+    registerAllProviders(ctx.sessionManager.getSessionId(), ctx);
     await refreshActiveModel(ctx);
   });
 
   async function onSessionChange(_event: unknown, ctx: ExtensionContext) {
-    registerAllProviders(ctx.sessionManager.getSessionId());
+    registerAllProviders(ctx.sessionManager.getSessionId(), ctx);
     await refreshActiveModel(ctx);
   }
 
