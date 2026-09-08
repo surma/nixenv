@@ -132,6 +132,11 @@ let
       { name, value }:
       let
         hasContainer = value.container != null;
+        # Read from the raw container attrs rather than the evaluated config.
+        # Inspecting `options` from inside the container's own module set is
+        # circular, and defining `home-manager.*` on a container that never
+        # imported Home Manager is an eval error.
+        hasHomeManager = hasContainer && (value.container.config or { }) ? home-manager;
         isExposed = value.expose.enable;
         containerName =
           if value.containerName != null then value.containerName else "lc-${name |> lib.substring 0 10}";
@@ -231,6 +236,25 @@ let
             ephemeral = mkDefault true;
             autoStart = mkDefault true;
           }
+
+          # Keep Home Manager's packages out of reach of the host's garbage
+          # collector.
+          #
+          # Containers share the host's store and nix-daemon. Without this,
+          # Home Manager installs into a user profile and registers its GC root
+          # under the path the client sees (/home/<user>/...). That path does
+          # not exist in the host's namespace, so the host's nix-gc prunes the
+          # root as stale and then collects the profile, taking every user
+          # binary with it.
+          #
+          # useUserPackages routes packages through users.users.<name>.packages
+          # instead, which lands them in /etc/profiles/per-user/<name>. That is
+          # an environment.etc entry, so it belongs to the container's system
+          # closure, which the host's system closure references and roots.
+          (optionalAttrs hasHomeManager {
+            config.home-manager.useUserPackages = mkDefault true;
+          })
+
           value.container
         ]);
       }
