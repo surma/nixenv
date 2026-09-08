@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  config,
   ...
 }:
 with lib;
@@ -47,6 +48,7 @@ in
   programs.git = {
     enable = true;
     settings = {
+      include.path = "${config.home.homeDirectory}/.config/dev/gitconfig";
       user.name = "Surma";
       user.email = "surma@surma.dev";
       init = {
