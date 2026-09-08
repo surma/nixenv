@@ -39,6 +39,15 @@ Avoid:
 - When creating a commit, always pass `--no-gpg-sign`.
 - Without `--no-gpg-sign`, the commit may hang indefinitely waiting for GPG interaction.
 
+## OpenRouter models need explicit approval
+
+Ask the user before you use any model from the OpenRouter provider. Wait for a clear "yes".
+
+- This covers model ids with the `openrouter/` prefix in pi, and `openrouter:*` ids on the LLM proxy.
+- This covers every use: your own session model, a subagent model, and any direct API call.
+- Name the exact model id when you ask.
+- If no answer arrives, do not proceed. Silence is not consent.
+
 ## Brain lookup discipline
 
 When using the `brain` CLI, choose the lookup mode based on what you already know.
