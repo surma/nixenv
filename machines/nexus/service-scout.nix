@@ -231,7 +231,10 @@ in
                   "home-manager-containeruser.service"
                 ];
                 path = [
-                  "/home/containeruser/.nix-profile"
+                  # home-manager.useUserPackages puts the user environment here
+                  # rather than in ~/.nix-profile. See the comment in
+                  # modules/services/surmhosting.
+                  "/etc/profiles/per-user/containeruser"
                   pkgs.bash
                   pkgs.coreutils
                   pkgs.git
@@ -345,7 +348,7 @@ in
 
       home-manager = {
         useGlobalPkgs = true;
-        useUserPackages = false;
+        # useUserPackages defaults to true via modules/services/surmhosting.
         sharedModules = [
           ../../modules/features/secrets.nix
           ../../modules/home-manager/agent
