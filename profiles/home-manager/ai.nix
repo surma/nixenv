@@ -23,6 +23,7 @@
     ../../assets/skills/brainstorming
     ../../assets/skills/planning
     ../../assets/skills/debugging
+    ../../assets/skills/simplify
     ../../assets/skills/surma-writer
     ../../assets/skills/rust
     ../../assets/skills/triple-helix
