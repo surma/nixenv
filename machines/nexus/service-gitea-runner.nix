@@ -14,8 +14,8 @@
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     serviceConfig = {
-      MemoryMax = "8G";
-      MemorySwapMax = "8G";
+      MemoryMax = "16G";
+      MemorySwapMax = "0";
     };
   };
 
@@ -76,7 +76,8 @@
           zstd
         ];
         settings = {
-          runner.capacity = 1;
+          runner.capacity = 2;
+          runner.timeout = "30m";
         };
       };
 
