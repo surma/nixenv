@@ -46,6 +46,22 @@ with lib;
             end
           end)
 
+          local is_macos = wezterm.target_triple:find('darwin') ~= nil
+          local copy_to_clipboard = wezterm.action.CopyTo 'ClipboardAndPrimarySelection'
+          local paste_from_clipboard = wezterm.action.PasteFrom 'Clipboard'
+          local linux_ctrl_c = wezterm.action_callback(function(window, pane)
+            local selection = window:get_selection_text_for_pane(pane)
+            if selection ~= "" then
+              window:perform_action(copy_to_clipboard, pane)
+              window:perform_action(wezterm.action.ClearSelection, pane)
+            else
+              window:perform_action(
+                wezterm.action.SendKey { key = 'c', mods = 'CTRL' },
+                pane
+              )
+            end
+          end)
+
           local config = wezterm.config_builder()
           config.front_end = "${wezterm.frontend}"
           config.enable_kitty_keyboard = true
@@ -120,13 +136,13 @@ with lib;
             },
             {
               key = 'c',
-              mods = 'CMD',
-              action = wezterm.action.CopyTo 'Clipboard',
+              mods = is_macos and 'CMD' or 'CTRL',
+              action = is_macos and copy_to_clipboard or linux_ctrl_c,
             },
             {
               key = 'v',
-              mods = 'CMD',
-              action = wezterm.action.PasteFrom 'Clipboard',
+              mods = is_macos and 'CMD' or 'CTRL',
+              action = paste_from_clipboard,
             },
           }
 

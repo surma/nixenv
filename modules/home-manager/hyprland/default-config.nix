@@ -4,17 +4,66 @@
   lib,
   ...
 }:
+let
+  cursorTheme = "Bibata-Modern-Ice";
+  cursorSize = 32;
+in
 {
   options.defaultConfigs.hyprland.enable = lib.mkEnableOption "";
 
   config = lib.mkIf config.defaultConfigs.hyprland.enable {
+    home.pointerCursor = {
+      package = pkgs.bibata-cursors;
+      name = cursorTheme;
+      size = cursorSize;
+      gtk.enable = true;
+    };
+
     wayland.windowManager.hyprland = {
       configType = "lua";
-      # The Lua config keeps commands unpinned (resolved via PATH) except the
-      # launcher, which is pinned to the exact wofi store path via @wofi@.
-      extraConfig = builtins.replaceStrings [ "@wofi@" ] [ "${pkgs.wofi}/bin/wofi" ] (
-        lib.readFile ./hyprland.lua
-      );
+      # Keep general commands unpinned (resolved via PATH), while substituting
+      # values that must agree with Home Manager's generated configuration.
+      extraConfig =
+        builtins.replaceStrings
+          [ "@wofi@" "@cursor-theme@" "@cursor-size@" ]
+          [ "${pkgs.wofi}/bin/wofi" cursorTheme (toString cursorSize) ]
+          (lib.readFile ./hyprland.lua);
+    };
+
+    services.hypridle = {
+      enable = true;
+      # Start after Hyprland has imported its Wayland/systemd environment.
+      systemdTarget = "hyprland-session.target";
+      settings = {
+        general = {
+          lock_cmd = "pidof hyprlock || hyprlock";
+          before_sleep_cmd = "loginctl lock-session";
+          after_sleep_cmd = "hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })'";
+        };
+
+        listener = [
+          {
+            timeout = 300;
+            on-timeout = "loginctl lock-session";
+          }
+          {
+            timeout = 330;
+            on-timeout = "hyprctl dispatch 'hl.dsp.dpms({ action = \"off\" })'";
+            on-resume = "hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })'";
+          }
+        ];
+      };
+    };
+
+    xdg.desktopEntries = {
+      hyprlock = {
+        name = "Hyprlock";
+        exec = "${pkgs.hyprlock}/bin/hyprlock";
+      };
+      hypridle = {
+        name = "Hypridle";
+        exec = "${pkgs.systemd}/bin/systemctl --user start hypridle.service";
+      };
     };
 
     # Home Manager normally uses `reload config-only`, which cannot replace a

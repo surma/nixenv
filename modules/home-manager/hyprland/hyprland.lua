@@ -11,8 +11,14 @@ hl.monitor({
 hl.monitor({
     output = "desc:Visitech AS VITURE Beast",
     mode = "3840x1080@60",
-    position = "-200x360",
+    position = "-2840x-1080",
     scale = 1,
+})
+hl.monitor({
+    output = "desc:Samsung Electric Company Display",
+    mode = "3840x2160@60",
+    position = "-920x-1080",
+    scale = 2,
 })
 hl.monitor({
     output = "desc:BOE NE135A1M-NY1",
@@ -22,8 +28,8 @@ hl.monitor({
 })
 
 -- Environment
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XCURSOR_THEME", "@cursor-theme@")
+hl.env("XCURSOR_SIZE", "@cursor-size@")
 
 -- Prefer native Wayland backends over XWayland.
 hl.env("QT_QPA_PLATFORM", "wayland")

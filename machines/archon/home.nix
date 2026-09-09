@@ -1,6 +1,8 @@
 {
   config,
   pkgs,
+  lib,
+  osConfig,
   ...
 }:
 {
@@ -21,6 +23,7 @@
   ];
 
   config = {
+    programs.brain.enable = lib.mkForce false;
     allowedUnfreeApps = [
       "spotify"
       "slack"
@@ -50,13 +53,69 @@
 
     gtk = {
       enable = true;
+      colorScheme = "dark";
       iconTheme = {
         name = "Papirus-Dark";
         package = pkgs.papirus-icon-theme;
       };
     };
 
+    xdg.portal.extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+    ];
+
     home.stateVersion = "24.05";
+
+    # Prefer Shopify's canonical managed toolchain, retain /opt/dev only as a
+    # migration fallback, and expose the pinned bootstrap tec while Janitor is
+    # still converging the managed base profile.
+    programs.zsh.initContent =
+      lib.mkIf (osConfig.shopify-framework.enable && osConfig.shopify-framework.developerTools.enable)
+        (
+          lib.mkAfter ''
+            if [[ -x "$HOME/.local/state/tec/profiles/base/current/global/init" ]]; then
+              eval "$("$HOME/.local/state/tec/profiles/base/current/global/init" zsh)"
+            elif [[ -r "/opt/dev/dev.sh" ]]; then
+              source "/opt/dev/dev.sh"
+            fi
+
+            # Load chruby on first use. Remove this wrapper before sourcing
+            # mutable external code so malformed sources cannot recurse.
+            if [[ -r "/opt/dev/sh/chruby/chruby.sh" ]] && ! type chruby >/dev/null 2>&1; then
+              chruby() {
+                local -a saved_args
+                saved_args=("$@")
+                unfunction chruby 2>/dev/null || {
+                  print -u2 -- "chruby initialization wrapper could not remove itself"
+                  return 1
+                }
+
+                if [[ ! -r "/opt/dev/sh/chruby/chruby.sh" ]]; then
+                  print -u2 -- "chruby initialization source is unreadable"
+                  return 1
+                fi
+                if ! source "/opt/dev/sh/chruby/chruby.sh"; then
+                  unfunction chruby 2>/dev/null || :
+                  unalias chruby 2>/dev/null || :
+                  print -u2 -- "chruby initialization failed"
+                  return 1
+                fi
+                if ! (( $+functions[chruby] )); then
+                  unfunction chruby 2>/dev/null || :
+                  unalias chruby 2>/dev/null || :
+                  print -u2 -- "chruby initialization did not define a replacement"
+                  return 1
+                fi
+
+                chruby "''${saved_args[@]}"
+              }
+            fi
+
+            if [[ -d "$HOME/.local/state/tec/toolchain/base_profile/bin" ]]; then
+              path=("$HOME/.local/state/tec/toolchain/base_profile/bin" $path)
+            fi
+          ''
+        );
 
     programs.spotify.enable = true;
     # programs.spotify.platform = "wayland";
@@ -95,6 +154,20 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
+
+    # Sunshine must follow the actual Hyprland session, not the generic
+    # graphical-session.target that GDM also exposes to its greeter user.
+    # The NixOS Sunshine unit remains the single service definition; this
+    # target dependency supplies the Hyprland-only autostart edge.
+    systemd.user.targets."hyprland-session".Unit.Wants = [
+      "sunshine.service"
+    ];
+    programs.hyprlock = {
+      enable = true;
+      settings = {
+        auth.fingerprint.enabled = true;
+      };
+    };
     # Framework-laptop-specific keyboard backlight controls (the
     # `framework_laptop::kbd_backlight` device only exists on this machine).
     wayland.windowManager.hyprland.extraConfig = ''

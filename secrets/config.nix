@@ -427,5 +427,12 @@
         "nexus"
       ];
     };
+    fleet-enroll-secret = {
+      contents = ../secrets/fleet-enroll-secret.age;
+      keys = [
+        "surma"
+        "archon"
+      ];
+    };
   };
 }
