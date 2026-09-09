@@ -154,6 +154,15 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
+    # macOS-style Unicode hex input: hold Right Alt, type 1-6 hex digits (or
+    # an 8-digit UTF-16 surrogate pair), release Right Alt. Ships as an
+    # automatically loaded Fcitx5 module addon, so no input method needs to
+    # be selected manually.
+    i18n.inputMethod = {
+      enable = true;
+      type = "fcitx5";
+      fcitx5.addons = [ (pkgs.callPackage ../../packages/mac-unicode-hex { }) ];
+    };
 
     # Sunshine must follow the actual Hyprland session, not the generic
     # graphical-session.target that GDM also exposes to its greeter user.
