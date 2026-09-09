@@ -171,6 +171,12 @@
     # Framework-laptop-specific keyboard backlight controls (the
     # `framework_laptop::kbd_backlight` device only exists on this machine).
     wayland.windowManager.hyprland.extraConfig = ''
+      hl.config({
+          input = {
+              repeat_delay = 225,
+              repeat_rate = 25,
+          },
+      })
       hl.bind("SHIFT + XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%+"), { locked = true, repeating = true })
       hl.bind("SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), { locked = true, repeating = true })
     '';
