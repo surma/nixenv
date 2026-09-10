@@ -154,6 +154,33 @@
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
+    # macOS-style Unicode hex input: hold Right Alt, type 1-6 hex digits (or
+    # an 8-digit UTF-16 surrogate pair), release Right Alt. Ships as an
+    # automatically loaded Fcitx5 module addon, so no input method needs to
+    # be selected manually.
+    i18n.inputMethod = {
+      enable = true;
+      type = "fcitx5";
+      fcitx5 = {
+        waylandFrontend = true;
+        addons = [ (pkgs.callPackage ../../packages/mac-unicode-hex { }) ];
+        settings = {
+          inputMethod = {
+            GroupOrder."0" = "Default";
+            "Groups/0" = {
+              Name = "Default";
+              "Default Layout" = "us";
+              DefaultIM = "keyboard-us";
+            };
+            "Groups/0/Items/0".Name = "keyboard-us";
+          };
+          addons.wayland.globalSection."Allow Overriding System XKB Settings" = false;
+        };
+      };
+    };
+    # Keep Fcitx's runtime-generated caches alongside the declarative profile
+    # and Wayland settings instead of replacing the entire config directory.
+    xdg.configFile.fcitx5.recursive = true;
 
     # Sunshine must follow the actual Hyprland session, not the generic
     # graphical-session.target that GDM also exposes to its greeter user.
@@ -171,6 +198,12 @@
     # Framework-laptop-specific keyboard backlight controls (the
     # `framework_laptop::kbd_backlight` device only exists on this machine).
     wayland.windowManager.hyprland.extraConfig = ''
+      hl.config({
+          input = {
+              repeat_delay = 225,
+              repeat_rate = 25,
+          },
+      })
       hl.bind("SHIFT + XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%+"), { locked = true, repeating = true })
       hl.bind("SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), { locked = true, repeating = true })
     '';
