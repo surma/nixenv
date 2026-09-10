@@ -2,9 +2,9 @@
 //
 // While Right Alt is held, hex digits are buffered; when Right Alt is
 // released, the buffered sequence is committed as a single Unicode scalar.
-// Right Alt down/up always pass through untouched, so no modifiers or keys
-// are ever left stuck. As a Module-category addon it is loaded
-// automatically and requires no input method selection.
+// Right Alt is a dedicated trigger whose down/up events are both consumed, so
+// applications never observe a bare Alt sequence. As a Module-category addon
+// it is loaded automatically and requires no input method selection.
 #include <fcitx-utils/keysym.h>
 #include <fcitx-utils/utf8.h>
 #include <fcitx/addonfactory.h>
@@ -61,13 +61,16 @@ public:
         const bool isRelease = keyEvent.isRelease();
 
         if (unicodehex::isRightAltSym(sym)) {
-            // Right Alt down/up always pass through. If a valid sequence is
-            // buffered, commit the character on top of the release.
+            // Right Alt is reserved for this protocol. Swallow matched edges
+            // so applications such as Electron do not see a bare Alt tap.
             const unicodehex::Step step =
                 unicodehex::step(state->state_, isRelease, sym);
-            if (step.action == unicodehex::Action::Commit) {
-                inputContext->commitString(
-                    utf8::UCS4ToUTF8(step.codepoint));
+            if (step.action != unicodehex::Action::PassThrough) {
+                if (step.action == unicodehex::Action::Commit) {
+                    inputContext->commitString(
+                        utf8::UCS4ToUTF8(step.codepoint));
+                }
+                keyEvent.filterAndAccept();
             }
             return;
         }

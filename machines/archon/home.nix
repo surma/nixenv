@@ -155,9 +155,10 @@
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;
     # macOS-style Unicode hex input: hold Right Alt, type 1-6 hex digits (or
-    # an 8-digit UTF-16 surrogate pair), release Right Alt. Ships as an
-    # automatically loaded Fcitx5 module addon, so no input method needs to
-    # be selected manually.
+    # an 8-digit UTF-16 surrogate pair), release Right Alt. Right Alt is
+    # reserved for this protocol and consumed before applications see it.
+    # Ships as an automatically loaded Fcitx5 module addon, so no input method
+    # needs to be selected manually.
     i18n.inputMethod = {
       enable = true;
       type = "fcitx5";
