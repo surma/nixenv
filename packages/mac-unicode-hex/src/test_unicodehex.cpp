@@ -35,7 +35,7 @@ constexpr uint32_t SymUpperG = 'G';
 constexpr uint32_t SymKP1 = 0xffb1;
 
 std::optional<uint32_t> typeHex(State &state, const std::string &digits) {
-    step(state, false, SymAltR);
+    CHECK(step(state, false, SymAltR).action == Action::Consume);
     for (char c : digits) {
         step(state, false, static_cast<uint8_t>(c));
     }
@@ -85,8 +85,8 @@ void testParserDirect() {
 
 void testBasicSequence() {
     State state;
-    // Right Alt press passes through and is not consumed.
-    CHECK(step(state, false, SymAltR).action == Action::PassThrough);
+    // Right Alt is a dedicated protocol delimiter and never reaches the app.
+    CHECK(step(state, false, SymAltR).action == Action::Consume);
     // Unrelated Left Alt press passes through while held.
     CHECK(step(state, false, SymAltL).action == Action::PassThrough);
     // Digits are consumed while Right Alt is held.
@@ -107,30 +107,37 @@ void testBasicSequence() {
 void testEmacsMeta() {
     // Right Alt mapped to Meta_R behaves identically.
     State state;
-    CHECK(step(state, false, SymMetaR).action == Action::PassThrough);
+    CHECK(step(state, false, SymMetaR).action == Action::Consume);
     CHECK(step(state, false, 'a').action == Action::Consume);
     const unicodehex::Step s = step(state, true, SymMetaR);
     CHECK(s.action == Action::Commit);
     CHECK(s.codepoint == 0xa);
 }
 
-void testRightAltNeverStuck() {
-    // Plain Right Alt tap: nothing consumed, nothing committed.
+void testRightAltIsDedicatedTrigger() {
+    // A plain Right Alt tap is swallowed without committing anything.
     State state;
-    CHECK(step(state, false, SymAltR).action == Action::PassThrough);
-    CHECK(step(state, true, SymAltR).action == Action::PassThrough);
+    CHECK(step(state, false, SymAltR).action == Action::Consume);
+    CHECK(step(state, true, SymAltR).action == Action::Consume);
     CHECK(state.buffer.empty() && !state.rightAltHeld);
 
-    // Tap with no digits in between two holds does not concatenate.
-    CHECK(step(state, false, SymAltR).action == Action::PassThrough);
+    // Separate holds do not concatenate.
+    CHECK(step(state, false, SymAltR).action == Action::Consume);
     CHECK(step(state, false, '1').action == Action::Consume);
     // A single buffered hex digit is already a complete 1-digit sequence.
     const unicodehex::Step one = step(state, true, SymAltR);
     CHECK(one.action == Action::Commit && one.codepoint == 0x1);
-    CHECK(step(state, false, SymAltR).action == Action::PassThrough);
+    CHECK(step(state, false, SymAltR).action == Action::Consume);
     CHECK(step(state, false, '2').action == Action::Consume);
     const unicodehex::Step s = step(state, true, SymAltR);
     CHECK(s.action == Action::Commit && s.codepoint == 0x2);
+}
+
+void testUnmatchedRightAltReleasePassesThrough() {
+    // Never swallow a release unless this input context swallowed its press.
+    State state;
+    CHECK(step(state, true, SymAltR).action == Action::PassThrough);
+    CHECK(step(state, true, SymMetaR).action == Action::PassThrough);
 }
 
 void testLeftAltPassthrough() {
@@ -151,7 +158,7 @@ void testInvalidSequences() {
     CHECK(step(state, false, 'd').action == Action::Consume);
     CHECK(step(state, false, SymG).action == Action::PassThrough);
     CHECK(step(state, false, '8').action == Action::PassThrough);
-    CHECK(step(state, true, SymAltR).action == Action::PassThrough);
+    CHECK(step(state, true, SymAltR).action == Action::Consume);
 
     // Even a hex-only sequence with a bad value does not commit.
     State state2;
@@ -173,7 +180,7 @@ void testOverlongInputPassesThrough() {
     // release for a key that was never swallowed passes through.
     CHECK(step(state, true, 'd').action == Action::Consume);
     CHECK(step(state, true, 'e').action == Action::PassThrough);
-    CHECK(step(state, true, SymAltR).action == Action::PassThrough);
+    CHECK(step(state, true, SymAltR).action == Action::Consume);
 }
 
 void testModifiersAndFunctionKeys() {
@@ -216,7 +223,8 @@ int main() {
     testParserDirect();
     testBasicSequence();
     testEmacsMeta();
-    testRightAltNeverStuck();
+    testRightAltIsDedicatedTrigger();
+    testUnmatchedRightAltReleasePassesThrough();
     testLeftAltPassthrough();
     testInvalidSequences();
     testOverlongInputPassesThrough();

@@ -33,7 +33,7 @@ enum class Action {
     PassThrough,
     // Swallow the event (it was part of the sequence).
     Consume,
-    // Commit a character (event itself still passes through).
+    // Commit a character and swallow the current event.
     Commit,
 };
 
@@ -109,27 +109,31 @@ inline std::optional<uint32_t> parse(const std::string &digits) {
     return 0x10000 + ((high - 0xD800) << 10) + (low - 0xDC00);
 }
 
-// Advances the state machine by one key event. Never leaves consumed keys
-// unpaired and never consumes Right Alt down/up itself, so no modifiers or
-// keys can get stuck.
+// Advances the state machine by one key event. Right Alt is a dedicated
+// delimiter: each matched press and release is swallowed, so applications
+// never see a partial or bare Alt sequence.
 inline Step step(State &state, bool isRelease, uint32_t sym) {
     if (isRightAltSym(sym)) {
         if (isRelease) {
-            const bool committing = state.rightAltHeld && !state.aborted &&
-                                    !state.buffer.empty();
+            // Preserve pairing if focus changed or the addon started while
+            // Right Alt was already held: only consume releases we matched.
+            if (!state.rightAltHeld) {
+                return {};
+            }
+            const bool committing = !state.aborted && !state.buffer.empty();
             const std::optional<uint32_t> codepoint =
                 committing ? parse(state.buffer) : std::nullopt;
             state.clear();
             if (codepoint) {
                 return {Action::Commit, *codepoint};
             }
-            return {};
+            return {Action::Consume, 0};
         }
         // A fresh Right Alt press starts a new sequence.
         state.buffer.clear();
         state.aborted = false;
         state.rightAltHeld = true;
-        return {};
+        return {Action::Consume, 0};
     }
 
     if (!state.rightAltHeld) {
