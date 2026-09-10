@@ -80,7 +80,9 @@ export default function (pi: ExtensionAPI) {
       const fresh = ctx.modelRegistry.find(current.provider, current.id);
 
       if (fresh) {
+        const thinkingLevel = pi.getThinkingLevel();
         await pi.setModel(fresh);
+        pi.setThinkingLevel(thinkingLevel);
       }
     }
   }
