@@ -161,8 +161,26 @@
     i18n.inputMethod = {
       enable = true;
       type = "fcitx5";
-      fcitx5.addons = [ (pkgs.callPackage ../../packages/mac-unicode-hex { }) ];
+      fcitx5 = {
+        waylandFrontend = true;
+        addons = [ (pkgs.callPackage ../../packages/mac-unicode-hex { }) ];
+        settings = {
+          inputMethod = {
+            GroupOrder."0" = "Default";
+            "Groups/0" = {
+              Name = "Default";
+              "Default Layout" = "us";
+              DefaultIM = "keyboard-us";
+            };
+            "Groups/0/Items/0".Name = "keyboard-us";
+          };
+          addons.wayland.globalSection."Allow Overriding System XKB Settings" = false;
+        };
+      };
     };
+    # Keep Fcitx's runtime-generated caches alongside the declarative profile
+    # and Wayland settings instead of replacing the entire config directory.
+    xdg.configFile.fcitx5.recursive = true;
 
     # Sunshine must follow the actual Hyprland session, not the generic
     # graphical-session.target that GDM also exposes to its greeter user.
