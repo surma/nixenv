@@ -9,20 +9,20 @@
 }:
 
 let
-  version = "0.85.0";
+  version = "0.85.1";
 
   src = fetchFromGitHub {
     owner = "badlogic";
     repo = "pi-mono";
     tag = "v${version}";
-    hash = "sha256-gznGlneVCx3htxRiJq0/futm4qLR9Bzfv3UwP3ES9v0=";
+    hash = "sha256-gU8BSiqqOYt2RRuQONHHGvZeSM5KFQVrwif9bmuUXUc=";
   };
 
-  npmDepsHash = "sha256-K/KiukwTHwu4HE8hUu7ur3bxggwfO0WL+QDI0FtxP3I=";
+  npmDepsHash = "sha256-jzlsZIQzfl1FCZZ5//dHFWwMfBZQ4nRD6KB4HHifPqE=";
 
   modelData = fetchzip {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-A9g1o7e+oSfTxejvR1n53ziHhkMf30VoS+qvyX1letM=";
+    hash = "sha256-KzewhtP1DRFDIOrJ4wN9bKwG3EioQW7eTsipK5AJ2z8=";
   };
 in
 buildNpmPackage rec {
