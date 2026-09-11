@@ -1345,7 +1345,6 @@
         "scout": "scout",
         "shopify-framework": "shopify-framework",
         "system-manager": "system-manager",
-        "voice-memos": "voice-memos",
         "web-search-cli": "web-search-cli"
       }
     },
@@ -1607,30 +1606,6 @@
         "ref": "system-manager",
         "repo": "userborn",
         "type": "github"
-      }
-    },
-    "voice-memos": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1769900046,
-        "narHash": "sha256-mmH/7gcxi8mKOZyT9lbmTlSO/g5qSfjjJQSz/3VN+gE=",
-        "ref": "main",
-        "rev": "ba200ea8e866262a3c6bca9da6b8e1a593ae29ef",
-        "revCount": 16,
-        "type": "git",
-        "url": "ssh://git@github.com/surma/voice-memos"
-      },
-      "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://git@github.com/surma/voice-memos"
       }
     },
     "web-search-cli": {

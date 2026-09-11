@@ -28,7 +28,6 @@
     ./service-postgresql.nix
     ./service-ups.nix
     ./service-dump.nix
-    ./service-voice-memos.nix
     ./service-overview.nix
     ./service-github-runner.nix
     ./service-gitea-runner.nix
