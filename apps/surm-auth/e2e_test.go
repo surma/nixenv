@@ -64,18 +64,28 @@ type mockUser struct {
 // consumes: authorization, token exchange, the authenticated user,
 // and the users lookup API used for seed resolution.
 type mockProvider struct {
-	mu     sync.Mutex
-	asUser mockUser
-	codes  map[string]mockUser
-	tokens map[string]mockUser
+	mu      sync.Mutex
+	asUser  mockUser
+	codes   map[string]mockUser
+	tokens  map[string]mockUser
+	lookups map[string]int
 }
 
 func newMockProvider() *mockProvider {
 	return &mockProvider{
-		asUser: userGrants,
-		codes:  map[string]mockUser{},
-		tokens: map[string]mockUser{},
+		asUser:  userGrants,
+		codes:   map[string]mockUser{},
+		tokens:  map[string]mockUser{},
+		lookups: map[string]int{},
 	}
+}
+
+// lookupCount reports how often the users lookup API resolved a
+// login, proving the grant form resolves usernames server-side.
+func (m *mockProvider) lookupCount(login string) int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.lookups[login]
 }
 
 // loginAs selects the identity the authorization endpoint signs in.
@@ -180,6 +190,9 @@ func (m *mockProvider) handleUser(w http.ResponseWriter, r *http.Request) {
 // numeric ID, or 404 for unknown logins.
 func (m *mockProvider) handleUserLookup(w http.ResponseWriter, r *http.Request) {
 	login := strings.TrimPrefix(r.URL.Path, "/users/")
+	m.mu.Lock()
+	m.lookups[login]++
+	m.mu.Unlock()
 	user, ok := usersByLogin[login]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
@@ -222,6 +235,14 @@ func newBrowser(base string) *browser {
 	return &browser{base: base, cookies: map[string]string{}}
 }
 
+// noRedirectClient never follows redirects, like a browser under
+// test control that surfaces every hop.
+var noRedirectClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
 // get performs one GET without following redirects. Absolute targets
 // bypass the base address; a non-empty host overrides the Host
 // header, standing in for DNS on the auth domain.
@@ -247,14 +268,38 @@ func (b *browser) get(t *testing.T, target string, host string, fwd *forwarded) 
 		request.Header.Set("Cookie", header)
 	}
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	response, err := client.Do(request)
+	response, err := noRedirectClient.Do(request)
 	if err != nil {
 		t.Fatalf("request to %s failed: %v", target, err)
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("failed to read body for %s: %v", target, err)
+	}
+	response.Body.Close()
+	b.trackCookies(response)
+	return response, string(body)
+}
+
+// postForm submits one form as the browser: a urlencoded body, the
+// canonical Origin the CSRF check requires, the canonical Host, and
+// the session cookies. It does not follow redirects.
+func (b *browser) postForm(t *testing.T, target string, values url.Values) (*http.Response, string) {
+	t.Helper()
+	request, err := http.NewRequest(http.MethodPost, b.base+target, strings.NewReader(values.Encode()))
+	if err != nil {
+		t.Fatalf("invalid form target %q: %v", target, err)
+	}
+	request.Host = canonicalHost
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set("Origin", "https://"+canonicalHost)
+	if header := b.cookieHeader(); header != "" {
+		request.Header.Set("Cookie", header)
+	}
+
+	response, err := noRedirectClient.Do(request)
+	if err != nil {
+		t.Fatalf("form post to %s failed: %v", target, err)
 	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -499,15 +544,16 @@ apps:
 		t.Fatalf("forward-auth on the authenticated app = %d, want 200: %s", response.StatusCode, body)
 	}
 
-	// ...but still receives a blocking response on the allowlisted
-	// app despite holding a valid session.
-	response, body = nobody.get(t, "/auth?app=packapp", "", &packFwd)
-
-	// 7. Internal apps are blocked outright, even for sessions.
+	// 7. Internal apps are blocked outright, for valid sessions and
+	// anonymous requests alike.
+	response, body = nobody.get(t, "/auth?app=intapp", "", nil)
+	if response.StatusCode != http.StatusForbidden {
+		t.Fatalf("forward-auth for the internal app with a valid session = %d, want 403: %s", response.StatusCode, body)
+	}
 	anon := newBrowser(base)
 	response, body = anon.get(t, "/auth?app=intapp", "", nil)
 	if response.StatusCode != http.StatusForbidden {
-		t.Fatalf("forward-auth for the internal app = %d, want 403: %s", response.StatusCode, body)
+		t.Fatalf("forward-auth for the internal app without a session = %d, want 403: %s", response.StatusCode, body)
 	}
 
 	// 8. Unknown apps fail closed with 404.
@@ -526,13 +572,119 @@ apps:
 	if got := response.Header.Get("X-Auth-Request-User"); got != "" {
 		t.Errorf("public app fabricated an identity header: %q", got)
 	}
+
+	// 10. The bootstrap admin authenticates through the same real
+	// OAuth flow: the anonymous dashboard redirects to the canonical
+	// login, and the mocked provider signs in the admin identity.
+	mock.loginAs(userAdmin)
+	adminBrowser := newBrowser(base)
+	response, body = adminBrowser.get(t, "/admin", canonicalHost, nil)
+	if response.StatusCode != http.StatusFound {
+		t.Fatalf("anonymous admin dashboard = %d, want 302: %s", response.StatusCode, body)
+	}
+	if location := response.Header.Get("Location"); location != "https://"+canonicalHost+"/login?redirect=%2Fadmin" {
+		t.Errorf("admin login redirect = %q, want the canonical admin login", location)
+	}
+	adminCallback, _, _ := followLogin(t, adminBrowser, rewriteToLoopback(t, response.Header.Get("Location")), "")
+	if adminCallback.StatusCode != http.StatusFound {
+		t.Fatalf("admin login callback = %d, want 302", adminCallback.StatusCode)
+	}
+	if location := adminCallback.Header.Get("Location"); location != "/admin" {
+		t.Errorf("admin login redirect = %q, want /admin", location)
+	}
+	if !adminBrowser.hasSession() {
+		t.Fatal("no session cookie issued for the admin login")
+	}
+
+	// 11. The packaged admin app page renders the CSRF-protected
+	// add-grant form. It takes a username, never a pre-minted ID.
+	response, body = adminBrowser.get(t, "/admin/apps/packapp", canonicalHost, nil)
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("packaged admin app page = %d, want 200: %s", response.StatusCode, body)
+	}
+	grantForm, addFormHTML := packagedForm(t, body, `action="/admin/apps/packapp/grants"`)
+	if grantForm.Get("csrf_token") == "" {
+		t.Fatal("packaged add-grant form carries no CSRF token")
+	}
+	if !strings.Contains(addFormHTML, `name="username"`) {
+		t.Fatalf("packaged add-grant form takes no username: %s", addFormHTML)
+	}
+	if strings.Contains(addFormHTML, `name="id"`) {
+		t.Fatalf("packaged add-grant form accepts a pre-minted ID: %s", addFormHTML)
+	}
+
+	// 12. Submitting the packaged form with the username resolves it
+	// through the users API and persists the stable-ID grant.
+	grantForm.Set("username", userDenied.login)
+	response, body = adminBrowser.postForm(t, "/admin/apps/packapp/grants", grantForm)
+	if response.StatusCode != http.StatusSeeOther {
+		t.Fatalf("grant form post = %d, want 303: %s", response.StatusCode, body)
+	}
+	if location := response.Header.Get("Location"); location != "/admin/apps/packapp" {
+		t.Errorf("grant form redirect = %q, want /admin/apps/packapp", location)
+	}
+	if mock.lookupCount(userDenied.login) == 0 {
+		t.Errorf("grant form did not resolve %q through the users API", userDenied.login)
+	}
+	persisted = readPersistedPolicy(t, policyPath)
+	if !hasGrant(persisted, "packapp", "github", userDenied.id) {
+		t.Errorf("admin grant for github:%s missing after the form post: %s", userDenied.id, persisted.raw)
+	}
+
+	// 13. The same real browser session flips from blocked to allowed
+	// without a new login.
+	response, body = nobody.get(t, "/auth?app=packapp", "", &packFwd)
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("forward-auth after the admin grant = %d, want 200: %s", response.StatusCode, body)
+	}
+	if got := response.Header.Get("X-Auth-Request-User"); got != userDenied.login {
+		t.Errorf("X-Auth-Request-User after the grant = %q, want %q", got, userDenied.login)
+	}
+
+	// 14. The packaged per-row delete form carries the grant identity;
+	// submitting it removes exactly that grant.
+	response, body = adminBrowser.get(t, "/admin/apps/packapp", canonicalHost, nil)
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("packaged admin app page after the grant = %d, want 200: %s", response.StatusCode, body)
+	}
+	deleteForm, deleteFormHTML := packagedForm(t, body, "<code>github:"+userDenied.id+"</code>")
+	if !strings.Contains(deleteFormHTML, `action="/admin/grants/delete"`) {
+		t.Fatalf("packaged grant row does not post to /admin/grants/delete: %s", deleteFormHTML)
+	}
+	if deleteForm.Get("csrf_token") == "" || deleteForm.Get("app") != "packapp" ||
+		deleteForm.Get("provider") != "github" || deleteForm.Get("id") != userDenied.id {
+		t.Fatalf("packaged delete form carries wrong fields: %v", deleteForm)
+	}
+	response, body = adminBrowser.postForm(t, "/admin/grants/delete", deleteForm)
+	if response.StatusCode != http.StatusSeeOther {
+		t.Fatalf("delete form post = %d, want 303: %s", response.StatusCode, body)
+	}
+	if location := response.Header.Get("Location"); location != "/admin/apps/packapp" {
+		t.Errorf("delete form redirect = %q, want /admin/apps/packapp", location)
+	}
+
+	// 15. The same session flips back to blocked, and the policy lost
+	// only the deleted grant while keeping the seed grant.
+	response, body = nobody.get(t, "/auth?app=packapp", "", &packFwd)
+	if response.StatusCode != http.StatusForbidden {
+		t.Fatalf("forward-auth after the grant delete = %d, want 403: %s", response.StatusCode, body)
+	}
+	if !strings.Contains(body, "Access denied") {
+		t.Errorf("blocked forward-auth body lacks the block message: %s", body)
+	}
+	persisted = readPersistedPolicy(t, policyPath)
+	if hasGrant(persisted, "packapp", "github", userDenied.id) {
+		t.Errorf("deleted grant survived in the policy: %s", persisted.raw)
+	}
+	if !hasGrant(persisted, "packapp", "github", userGrants.id) {
+		t.Errorf("seed grant for github:%s was removed by the delete: %s", userGrants.id, persisted.raw)
+	}
 }
 
 // driveLogin performs the browser side of one full login for the app:
-// it follows the forward-auth redirect, loads the login page, clicks
-// through to the mocked provider, and completes the mocked callback.
-// It returns the callback response, its body, and the login page's
-// provider link for diagnostics.
+// it follows the forward-auth redirect to the login page and hands
+// over to followLogin. It returns the callback response, its body,
+// and the login page's provider link for diagnostics.
 func driveLogin(t *testing.T, b *browser, app string, fwd *forwarded) (*http.Response, string, string) {
 	t.Helper()
 
@@ -543,16 +695,31 @@ func driveLogin(t *testing.T, b *browser, app string, fwd *forwarded) (*http.Res
 	}
 	loginURL := rewriteToLoopback(t, response.Header.Get("Location"))
 
+	callbackResponse, callbackBody, authURLPath := followLogin(t, b, loginURL, app)
+	return callbackResponse, callbackBody, authURLPath
+}
+
+// followLogin walks the packaged login page, the mocked provider, and
+// the real callback for one login that starts at loginURL. displayApp
+// must be the app name the page shows, or empty for the plain
+// auth-host login.
+func followLogin(t *testing.T, b *browser, loginURL, displayApp string) (*http.Response, string, string) {
+	t.Helper()
+
 	// The login page renders through the packaged templates.
-	response, body = b.get(t, loginURL, canonicalHost, nil)
+	response, body := b.get(t, loginURL, canonicalHost, nil)
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("login page = %d, want 200: %s", response.StatusCode, body)
 	}
-	if !strings.Contains(body, "Authentication Required") {
-		t.Errorf("login page lacks the packaged template copy: %s", body)
-	}
-	if !strings.Contains(body, app) {
-		t.Errorf("login page lacks the app name %q: %s", app, body)
+	if displayApp != "" {
+		if !strings.Contains(body, "Authentication Required") {
+			t.Errorf("login page lacks the packaged template copy: %s", body)
+		}
+		if !strings.Contains(body, displayApp) {
+			t.Errorf("login page lacks the app name %q: %s", displayApp, body)
+		}
+	} else if !strings.Contains(body, "Log in to your surm-auth account") {
+		t.Errorf("plain login page lacks the packaged template copy: %s", body)
 	}
 
 	// Clicking "Login with GitHub" starts the OAuth transaction.
@@ -604,6 +771,31 @@ func extractAuthURL(t *testing.T, body string) string {
 	}
 	return strings.ReplaceAll(match[1], "&amp;", "&")
 }
+
+// packagedForm locates the first form whose HTML contains the marker
+// and returns its hidden input fields together with the form's HTML
+// for structural assertions. The packaged templates place the action
+// attribute and hidden inputs before any other markup.
+func packagedForm(t *testing.T, body, marker string) (url.Values, string) {
+	t.Helper()
+	mark := strings.Index(body, marker)
+	if mark < 0 {
+		t.Fatalf("page lacks the packaged form %q: %s", marker, body)
+	}
+	segment := body[mark:]
+	if end := strings.Index(segment, "</form>"); end >= 0 {
+		segment = segment[:end]
+	}
+	fields := url.Values{}
+	for _, input := range hiddenInput.FindAllStringSubmatch(segment, -1) {
+		fields.Set(input[1], input[2])
+	}
+	return fields, segment
+}
+
+// hiddenInput matches one hidden input carrying a name and a value,
+// in the packaged templates' attribute order.
+var hiddenInput = regexp.MustCompile(`<input[^>]*type="hidden"[^>]*name="([^"]+)"[^>]*value="([^"]*)"[^>]*>`)
 
 // persistedPolicy is the on-disk policy document the binary commits.
 type persistedPolicy struct {
