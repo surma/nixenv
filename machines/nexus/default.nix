@@ -67,9 +67,13 @@
   secrets.items.llm-proxy-secret.command = ''
     secret="$(cat)"
     mkdir -p /var/lib/key-poller /var/lib/llm-proxy-credentials
+    chown root:root /var/lib/llm-proxy-credentials
+    chmod 0755 /var/lib/llm-proxy-credentials
     printf '%s\n' "$secret" > /var/lib/key-poller/receiver-secret
+    chown root:root /var/lib/key-poller/receiver-secret
     chmod 0400 /var/lib/key-poller/receiver-secret
     printf '%s\n' "$secret" > /var/lib/llm-proxy-credentials/receiver-secret
+    chown root:root /var/lib/llm-proxy-credentials/receiver-secret
     chmod 0644 /var/lib/llm-proxy-credentials/receiver-secret
   '';
 
