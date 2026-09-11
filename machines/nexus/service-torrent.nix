@@ -6,7 +6,16 @@ in
   networking.firewall.allowedTCPPorts = [ ports.torrenting ];
   networking.firewall.allowedUDPPorts = [ ports.torrenting ];
 
-  services.surmhosting.services.torrent.expose.port = 8080;
+  services.surmhosting.services.torrent.expose.apps.torrent = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "torrent";
+      }
+    ];
+  };
   services.surmhosting.services.torrent.container = {
     config = {
       system.stateVersion = "25.05";

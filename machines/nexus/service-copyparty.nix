@@ -5,7 +5,16 @@
     chmod 0644 /var/lib/copyparty/surma.passwd
   '';
 
-  services.surmhosting.services.copyparty.expose.port = 8080;
+  services.surmhosting.services.copyparty.expose.apps.copyparty = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "copyparty";
+      }
+    ];
+  };
   services.surmhosting.services.copyparty.container = {
     config =
       { ... }:

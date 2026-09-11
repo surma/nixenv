@@ -44,11 +44,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
-    voice-memos = {
-      url = "git+ssh://git@github.com/surma/voice-memos?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
-    };
     opencode = {
       url = "github:anomalyco/opencode?ref=v1.17.14";
       inputs.nixpkgs.follows = "nixpkgs";

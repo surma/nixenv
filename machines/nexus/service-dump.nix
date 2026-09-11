@@ -5,7 +5,19 @@ in
 {
   networking.firewall.allowedTCPPorts = [ ports.dump ];
 
-  services.surmhosting.services.dump.expose.port = ports.dump;
+  services.surmhosting.services.dump.expose.apps.dump = {
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
+    internal.access = "trusted-network";
+    public.domain = "dump.apps.surma.technology";
+    public.aliases = [ "dump.surma.technology" ];
+    ports = [
+      {
+        port = ports.dump;
+        hostname = "dump";
+      }
+    ];
+  };
   services.surmhosting.services.dump.container = {
     config = {
       system.stateVersion = "25.05";

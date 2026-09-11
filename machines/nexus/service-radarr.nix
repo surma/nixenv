@@ -11,7 +11,16 @@ in
     ];
   };
 
-  services.surmhosting.services.radarr.expose.port = 8080;
+  services.surmhosting.services.radarr.expose.apps.radarr = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "radarr";
+      }
+    ];
+  };
   services.surmhosting.services.radarr.container = {
     config = {
       system.stateVersion = "25.05";

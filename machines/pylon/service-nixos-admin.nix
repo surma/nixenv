@@ -41,8 +41,11 @@ in
     '';
   };
 
-  # SSH key for git+ssh:// flake fetches from GitHub.
-  secrets.items.nixos-admin-repo-key.command = ''
+  # SSH key for git+ssh:// flake fetches from GitHub. Uses the existing
+  # `scout-repo-ssh-key` secret item (id_repo_scout.age). Pylon must be
+  # added to its recipients and the item re-encrypted by the operator
+  # (`nix run .#secrets -- recrypt scout-repo-ssh-key`).
+  secrets.items.scout-repo-ssh-key.command = ''
     key="$(cat)"
 
     mkdir -p ${stateDir}/.ssh
@@ -53,8 +56,7 @@ in
     chmod 0600 ${stateDir}/.ssh/id_repo_scout
   '';
 
-  services.surmhosting.services.admin = {
-    host = "localhost";
-    expose.port = port;
-  };
+  # Admin UI access is SSH-tunnel only: the listener stays on
+  # 127.0.0.1:8092 and no surmhosting exposure exists on Pylon anymore
+  # (auth-rework section 8.3).
 }

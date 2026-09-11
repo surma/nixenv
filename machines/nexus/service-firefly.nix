@@ -10,7 +10,16 @@
     after = [ "secrets.service" ];
   };
 
-  services.surmhosting.services.firefly.expose.port = 80;
+  services.surmhosting.services.firefly.expose.apps.firefly = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 80;
+        hostname = "firefly";
+      }
+    ];
+  };
   services.surmhosting.services.firefly.container = {
     config = {
       system.stateVersion = "25.05";
@@ -24,7 +33,7 @@
           APP_ENV = "production";
           APP_KEY_FILE = "/var/lib/credentials/firefly/app-key.txt";
           DB_CONNECTION = "sqlite";
-          APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
+          APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
           TRUSTED_PROXIES = "**";
           USE_RUNNING_BALANCE = "true";
         };

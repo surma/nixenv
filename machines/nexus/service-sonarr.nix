@@ -11,7 +11,16 @@ in
     ];
   };
 
-  services.surmhosting.services.sonarr.expose.port = 8080;
+  services.surmhosting.services.sonarr.expose.apps.sonarr = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "sonarr";
+      }
+    ];
+  };
   services.surmhosting.services.sonarr.container = {
     config = {
       system.stateVersion = "25.05";

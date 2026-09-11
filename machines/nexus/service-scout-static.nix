@@ -5,12 +5,19 @@
   ];
 
   services.surmhosting.services.scout-static = {
-    expose.ports = [
-      {
-        port = 8080;
-        hostname = "scout-static";
-      }
-    ];
+    expose.apps.scout-static = {
+      access.mode = "allowlist";
+      access.seedUsers = [ "surma" ];
+      internal.access = "trusted-network";
+      public.domain = "scout-static.apps.surma.technology";
+      public.aliases = [ "scout-static.surma.technology" ];
+      ports = [
+        {
+          port = 8080;
+          hostname = "scout-static";
+        }
+      ];
+    };
     container = {
       config = {
         system.stateVersion = "25.05";

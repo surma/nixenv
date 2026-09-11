@@ -26,7 +26,7 @@ in
 
     serverUrl = lib.mkOption {
       type = lib.types.str;
-      default = "http://gitea.nexus.hosts.10.0.0.2.nip.io";
+      default = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
       description = "Gitea server URL used by tea.";
     };
 

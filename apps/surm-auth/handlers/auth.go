@@ -1,86 +1,136 @@
 package handlers
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
 
-	"github.com/surma/surm-auth/auth"
+	"github.com/surma/surm-auth/audit"
 	"github.com/surma/surm-auth/config"
 )
 
-// AuthHandler handles the ForwardAuth endpoint
-// This is called by Traefik to validate requests
-func AuthHandler(cfg *config.Config, sm *auth.Manager) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Get app name from query parameter
-		app := r.URL.Query().Get("app")
-		if app == "" {
-			slog.Error("auth request missing app parameter")
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
+// handleAuth implements the forward-auth endpoint. Policy selection
+// uses the fixed `app` query parameter only; Host and forwarded
+// headers never choose a policy.
+func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-		// Build original URL from forwarded headers
-		proto := r.Header.Get("X-Forwarded-Proto")
-		if proto == "" {
-			proto = "https"
-		}
-		host := r.Header.Get("X-Forwarded-Host")
-		uri := r.Header.Get("X-Forwarded-Uri")
-		if uri == "" {
-			uri = "/"
-		}
-		originalURL := fmt.Sprintf("%s://%s%s", proto, host, uri)
+	// Missing, duplicate, and unknown app keys fail closed with 404.
+	apps := r.URL.Query()["app"]
+	if len(apps) != 1 {
+		slog.Warn("forward-auth request without exactly one app key", "count", len(apps))
+		http.NotFound(w, r)
+		return
+	}
+	appKey := apps[0]
 
-		// Validate session cookie
-		claims, err := sm.Validate(r)
-		if err != nil {
-			// No valid session - redirect to login
-			loginURL := fmt.Sprintf("%s/login?app=%s&redirect=%s",
-				cfg.Server.BaseURL, app, url.QueryEscape(originalURL))
-			
-			slog.Info("no valid session, redirecting to login",
-				"app", app,
-				"redirect", originalURL)
-			
-			http.Redirect(w, r, loginURL, http.StatusFound)
-			return
-		}
+	appCfg, ok := s.deps.Config.Apps[appKey]
+	if !ok {
+		slog.Warn("forward-auth request for unknown app", "app", appKey)
+		http.NotFound(w, r)
+		return
+	}
 
-		// Check if app exists in config
-		appCfg, exists := cfg.Apps[app]
-		if !exists {
-			slog.Error("unknown app", "app", app)
-			http.Error(w, "Access denied", http.StatusForbidden)
-			return
-		}
+	if appCfg.Mode == config.ModeInternal {
+		s.auditAccessDenied("", appKey, "internal app presented to forward-auth")
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
 
-		// Check if user is in allowlist
-		allowed := false
-		for _, allowedUser := range appCfg.AllowedUsers {
-			if allowedUser == claims.Username {
-				allowed = true
-				break
-			}
-		}
+	// Every mode validates the forwarded return metadata: malformed or
+	// cross-app metadata fails with 400 before any successful
+	// response. The metadata only reconstructs the redirect; it never
+	// selects policy.
+	returnURL, err := s.forwardedReturnURL(r, &appCfg)
+	if err != nil {
+		slog.Warn("malformed forward-auth return metadata",
+			"app", appKey,
+			"error", err)
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 
-		if !allowed {
-			slog.Warn("user not in allowlist",
-				"app", app,
-				"user", claims.Username)
-			http.Error(w, "Access denied", http.StatusForbidden)
-			return
-		}
-
-		// User is authenticated and authorized
-		slog.Info("auth success",
-			"app", app,
-			"user", claims.Username)
-
-		w.Header().Set("X-Auth-Request-User", claims.Username)
-		w.Header().Set("X-Auth-Request-Email", claims.Email)
+	if appCfg.Mode == config.ModePublic {
+		// Public apps bypass authentication. Never fabricate identity
+		// headers.
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Restricted apps require current policy state.
+	if !s.deps.Policy.Available() {
+		s.renderError(w, http.StatusServiceUnavailable, "Authentication policy is temporarily unavailable")
+		return
+	}
+
+	claims := s.session(r)
+	if claims == nil {
+		loginURL := s.canonical + "/login?app=" + url.QueryEscape(appKey) +
+			"&redirect=" + url.QueryEscape(returnURL)
+		http.Redirect(w, r, loginURL, http.StatusFound)
+		return
+	}
+
+	allowed := appCfg.Mode == config.ModeAuthenticated
+	if appCfg.Mode == config.ModeAllowlist {
+		granted, err := s.deps.Policy.HasAccess(appKey, claims.Provider, claims.UID)
+		if err != nil {
+			s.renderError(w, http.StatusServiceUnavailable, "Authentication policy is temporarily unavailable")
+			return
+		}
+		allowed = granted
+	}
+
+	if !allowed {
+		s.auditAccessDenied(claims.SubjectID(), appKey, "no grant on allowlisted app")
+		s.renderError(w, http.StatusForbidden, "Access denied")
+		return
+	}
+
+	w.Header().Set("X-Auth-Request-User", claims.Username)
+	w.Header().Set("X-Auth-Request-Email", claims.Email)
+	w.WriteHeader(http.StatusOK)
+}
+
+// auditAccessDenied records an access denial event.
+func (s *Server) auditAccessDenied(subject, app, detail string) {
+	if err := s.deps.Audit.Record(audit.Event{
+		Event:   audit.EventAccessDenied,
+		Actor:   subject,
+		Subject: subject,
+		App:     app,
+		Detail:  detail,
+	}); err != nil {
+		slog.Error("failed to write audit event", "error", err)
 	}
 }
+
+// forwardedReturnURL reconstructs and validates the return URL from
+// Traefik's forwarded request metadata. The metadata only serves to
+// reconstruct the redirect; it never selects policy.
+func (s *Server) forwardedReturnURL(r *http.Request, appCfg *config.AppConf) (string, error) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	host := r.Header.Get("X-Forwarded-Host")
+	uri := r.Header.Get("X-Forwarded-Uri")
+	if proto == "" || host == "" {
+		return "", errMalformedReturn("missing forwarded proto or host")
+	}
+	if uri == "" {
+		uri = "/"
+	}
+	raw := proto + "://" + host + uri
+	redirect := s.validateRedirect(raw, appCfg.Domains, "")
+	if redirect == "" {
+		return "", errMalformedReturn("return URL does not belong to the app domains: " + raw)
+	}
+	return redirect, nil
+}
+
+type returnError struct{ msg string }
+
+func (e returnError) Error() string { return e.msg }
+
+func errMalformedReturn(msg string) error { return returnError{msg: msg} }

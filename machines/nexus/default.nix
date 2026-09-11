@@ -28,7 +28,6 @@
     ./service-postgresql.nix
     ./service-ups.nix
     ./service-dump.nix
-    ./service-voice-memos.nix
     ./service-overview.nix
     ./service-github-runner.nix
     ./service-gitea-runner.nix
@@ -40,6 +39,9 @@
     ./service-firefly-importer.nix
     ./service-firefly-enricher.nix
     ./service-firefly-categoriser.nix
+    ./service-surm-auth.nix
+    ./service-llm-proxy.nix
+    ./service-ha-proxy.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
@@ -56,10 +58,21 @@
   };
 
   secrets.identity = "/home/surma/.ssh/id_machine";
-  secrets.items.llm-proxy-secret = {
-    target = "/var/lib/key-poller/receiver-secret";
-    mode = "0400";
-  };
+
+  # The receiver secret is consumed by two services with different
+  # ownership contracts: the root-only poller state (0400) and the
+  # LLM receiver's credential bind-mount (0644). One command writes
+  # both destinations from a single stdin read; no competing targets
+  # are declared (auth-rework section 6.5).
+  secrets.items.llm-proxy-secret.command = ''
+    secret="$(cat)"
+    mkdir -p /var/lib/key-poller /var/lib/llm-proxy-credentials
+    printf '%s\n' "$secret" > /var/lib/key-poller/receiver-secret
+    chmod 0400 /var/lib/key-poller/receiver-secret
+    printf '%s\n' "$secret" > /var/lib/llm-proxy-credentials/receiver-secret
+    chmod 0644 /var/lib/llm-proxy-credentials/receiver-secret
+  '';
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -95,17 +108,6 @@
 
   services.tailscale.enable = true;
 
-  # nexus's Traefik sits behind pylon's public Traefik (reached over Tailscale).
-  # Trust pylon's X-Forwarded-* headers so the real request scheme survives the
-  # inner hop. Without this, nexus rewrites X-Forwarded-Proto to "http", and
-  # backends that gate on HTTPS break -- notably HedgeDoc, whose session cookie
-  # is Secure-only (protocolUseSSL) and whose socket.io auth then rejects the
-  # connection ("Cookie is invalid"), leaving the editor stuck OFFLINE.
-  # Scoped to pylon's Tailscale IP.
-  services.traefik.staticConfigOptions.entryPoints.web.forwardedHeaders.trustedIPs = [
-    "100.64.107.114/32"
-  ];
-
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
@@ -113,9 +115,55 @@
   services.surmhosting.dashboard.enable = true;
   services.surmhosting.docker.enable = true;
 
+  # Nexus is now the public edge: it terminates HTTPS for the legacy
+  # *.surma.technology domains and the new *.apps.surma.technology
+  # namespace (auth-rework sections 3.3 and 6.4, as corrected: HTTP-01
+  # per-domain certificates; the apps namespace is a DNS routing entry
+  # only, never a certificate wildcard). Setting the namespace also
+  # marks the host as migrated: every HTTP exposure must be an explicit
+  # logical app.
+  services.surmhosting.appsNamespace = "apps.surma.technology";
+  services.surmhosting.internalPort = 8081;
+
+  services.surmhosting.tls.enable = true;
+  # Per-domain HTTP-01 certificates. No static certDomains: the resolver
+  # derives one exact certificate per Host-routed domain.
+  services.surmhosting.tls.challenge = "http-01";
+  services.surmhosting.tls.email = "surma@surma.dev";
+
+  # surm-auth v2 (auth-rework sections 5 and 6).
+  services.surmhosting.auth = {
+    enable = true;
+    domain = "auth.surma.technology";
+    aliases = [ "auth.apps.surma.technology" ];
+    cookieDomain = ".surma.technology";
+    github.clientIdFile = "/var/lib/surm-auth-credentials/github-client-id";
+    github.clientSecretFile = "/var/lib/surm-auth-credentials/github-client-secret";
+    cookieSecretFile = "/var/lib/surm-auth-credentials/cookie-secret";
+    # Surma's stable numeric GitHub ID (verified via
+    # https://api.github.com/users/surma). Never a username.
+    bootstrapAdmins = [
+      {
+        provider = "github";
+        id = "234957";
+      }
+    ];
+  };
+
+  # The dedicated internal HTTP entrypoint. Reachable only from the LAN
+  # and the tailnet; container veths (10.201.x.x) fall inside 10/8. Not
+  # added to allowedTCPPorts (auth-rework section 3.2).
+  networking.firewall.extraInputRules = ''
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport 8081 accept comment "surmhosting internal HTTP"
+  '';
+
   services.openssh.enable = true;
 
   services.key-poller.enable = true;
+  systemd.services.key-poller = {
+    requires = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+  };
   services.key-poller.secretFile = "/var/lib/key-poller/receiver-secret";
   # Tried in order, first non-empty key wins. shopisurm is a Mac and keeps its
   # tooling in a standalone home-manager profile under /Users; archon is NixOS

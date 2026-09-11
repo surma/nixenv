@@ -5,7 +5,19 @@ in
 {
   networking.firewall.allowedTCPPorts = [ ports.giteaSsh ];
 
-  services.surmhosting.services.gitea.expose.port = 8080;
+  services.surmhosting.services.gitea.expose.apps.gitea = {
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
+    internal.access = "trusted-network";
+    public.domain = "gitea.apps.surma.technology";
+    public.aliases = [ "gitea.surma.technology" ];
+    ports = [
+      {
+        port = 8080;
+        hostname = "gitea";
+      }
+    ];
+  };
   services.surmhosting.services.gitea.container = {
     config = {
       system.stateVersion = "25.05";

@@ -124,17 +124,35 @@ in
     serviceConfig.MemoryMax = "8G";
   };
 
-  services.surmhosting.services.brain-serve.expose.ports = [
-    {
-      port = 8080;
-      hostname = "brain-serve";
-    }
-    {
-      port = 8081;
-      hostname = "public-brain";
-      rule = "HostRegexp(`^public-brain\\.`) || Host(`public-brain.surma.technology`)";
-    }
-  ];
+  # Brain runs two servers with separate policies: private (8080,
+  # allowlist) and public (8081, public). They are different logical
+  # apps and must never share a grant (auth-rework section 4.3).
+  services.surmhosting.services.brain-serve.expose.apps.brain = {
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
+    internal.access = "trusted-network";
+    public.domain = "brain.apps.surma.technology";
+    public.aliases = [ "brain.surma.technology" ];
+    ports = [
+      {
+        port = 8080;
+        hostname = "brain-serve";
+      }
+    ];
+  };
+
+  services.surmhosting.services.brain-serve.expose.apps.public-brain = {
+    access.mode = "public";
+    internal.access = "trusted-network";
+    public.domain = "public-brain.apps.surma.technology";
+    public.aliases = [ "public-brain.surma.technology" ];
+    ports = [
+      {
+        port = 8081;
+        hostname = "public-brain";
+      }
+    ];
+  };
   services.surmhosting.services.brain-serve.container = {
     # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
     allowedDevices = [

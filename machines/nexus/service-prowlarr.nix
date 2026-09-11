@@ -11,7 +11,16 @@ in
     ];
   };
 
-  services.surmhosting.services.prowlarr.expose.port = 8080;
+  services.surmhosting.services.prowlarr.expose.apps.prowlarr = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "prowlarr";
+      }
+    ];
+  };
   services.surmhosting.services.prowlarr.container = {
     config = {
       system.stateVersion = "25.05";

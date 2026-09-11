@@ -31,7 +31,7 @@ Shell state does not persist between tool calls.
 ```bash
 set -euo pipefail
 
-HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io"
+HD_BASE_URL="http://hedgedoc2.nexus.hosts.10.0.0.2.nip.io:8081"
 HD_TOKEN_FILE="/var/lib/credentials/scout/hedgedoc-token"
 HD_TOKEN=$(cat "$HD_TOKEN_FILE")
 

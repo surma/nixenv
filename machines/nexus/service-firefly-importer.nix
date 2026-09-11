@@ -12,8 +12,8 @@ let
     set -euo pipefail
     ${pkgs.coreutils}/bin/rm -f ${importCompletedMarker}
     set -a
-    FIREFLY_III_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
-    VANITY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
+    FIREFLY_III_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
+    VANITY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
     TRUSTED_PROXIES="**"
     FIREFLY_III_ACCESS_TOKEN="$(< /var/lib/credentials/firefly-importer/access-token.txt)"
     LUNCH_FLOW_API_KEY="$(< /var/lib/credentials/firefly-importer/lunchflow-api-key.txt)"
@@ -59,7 +59,16 @@ in
     after = [ "secrets.service" ];
   };
 
-  services.surmhosting.services.firefly-imp.expose.port = 80;
+  services.surmhosting.services.firefly-imp.expose.apps.firefly-imp = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 80;
+        hostname = "firefly-imp";
+      }
+    ];
+  };
   services.surmhosting.services.firefly-imp.container = {
     config = {
       system.stateVersion = "25.05";
@@ -69,8 +78,8 @@ in
         enableNginx = true;
         virtualHost = "firefly-imp.nexus.hosts.10.0.0.2.nip.io";
         settings = {
-          FIREFLY_III_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
-          VANITY_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io";
+          FIREFLY_III_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
+          VANITY_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
           FIREFLY_III_ACCESS_TOKEN_FILE = "/var/lib/credentials/firefly-importer/access-token.txt";
           LUNCH_FLOW_API_KEY_FILE = "/var/lib/credentials/firefly-importer/lunchflow-api-key.txt";
           TRUSTED_PROXIES = "**";

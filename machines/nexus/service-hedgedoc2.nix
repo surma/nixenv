@@ -74,18 +74,38 @@ in
       after = [ "secrets.service" ];
     };
 
-    expose.ports = [
-      {
-        port = 3000;
-        hostname = "backend";
-        rule = ''HostRegexp(`^hedgedoc2\.nexus\.hosts`) && (PathPrefix(`/realtime`) || PathPrefix(`/api`) || PathPrefix(`/public`) || PathPrefix(`/media`) || PathPrefix(`/uploads`) || PathPrefix(`/apidoc`))'';
-      }
-      {
-        port = 3001;
-        hostname = "frontend";
-        rule = ''HostRegexp(`^hedgedoc2\.nexus\.hosts`)'';
-      }
-    ];
+    # Both ports belong to one logical app (`hedgedoc2`) so frontend and
+    # backend share one policy. The base URL stays on the legacy domain
+    # during migration (auth-rework sections 3.3 and 4.3).
+    expose.apps.hedgedoc2 = {
+      access.mode = "allowlist";
+      access.seedUsers = [ "surma" ];
+      internal.access = "trusted-network";
+      public.domain = "hedgedoc.apps.surma.technology";
+      public.aliases = [ "hedgedoc.surma.technology" ];
+      ports = [
+        {
+          port = 3000;
+          hostname = "backend";
+          internalRule = ''HostRegexp(`^hedgedoc2\.nexus\.hosts`) && (PathPrefix(`/realtime`) || PathPrefix(`/api`) || PathPrefix(`/public`) || PathPrefix(`/media`) || PathPrefix(`/uploads`) || PathPrefix(`/apidoc`))'';
+          publicPathPrefixes = [
+            "/realtime"
+            "/api"
+            "/public"
+            "/media"
+            "/uploads"
+            "/apidoc"
+          ];
+          publicPriority = 100;
+        }
+        {
+          port = 3001;
+          hostname = "frontend";
+          internalRule = ''HostRegexp(`^hedgedoc2\.nexus\.hosts`)'';
+          publicPriority = 1;
+        }
+      ];
+    };
 
     container = {
       bindMounts = {

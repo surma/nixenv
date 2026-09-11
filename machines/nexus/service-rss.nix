@@ -1,6 +1,17 @@
 { ... }:
 {
-  services.surmhosting.services.rss.expose.port = 80;
+  # FreshRSS has authType = "none"; it must stay internal-only with no
+  # public route (auth-rework section 4.4).
+  services.surmhosting.services.rss.expose.apps.rss = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 80;
+        hostname = "rss";
+      }
+    ];
+  };
   services.surmhosting.services.rss.container = {
     config = {
       system.stateVersion = "25.05";
@@ -9,7 +20,7 @@
       services.freshrss.dataDir = "/dump/state/freshrss";
       # services.freshrss.user = "containeruser";
       services.freshrss.authType = "none";
-      services.freshrss.baseUrl = "http://rss.nexus.hosts.10.0.0.2.nip.io";
+      services.freshrss.baseUrl = "http://rss.nexus.hosts.10.0.0.2.nip.io:8081";
     };
 
     bindMounts.state = {
