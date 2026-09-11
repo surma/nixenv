@@ -4,15 +4,31 @@ def log [message: string] {
   print --stderr $message
 }
 
+# The remote binaries differ per host: shopisurm is macOS and archon is
+# NixOS, so each host record carries its own nu and gcloud paths.
+def remote_command_for [host_config: record] {
+  let remote_script = ([
+    $"^($host_config.gcloudBin) auth print-identity-token --format json"
+    "| from json"
+    "| get id_token"
+    '| http post --headers [Authorization $"Bearer ($in)"] https://proxy.shopify.io/hmac/personal'
+    "| get key"
+  ] | str join "\n")
+
+  $"($host_config.nuBin) -c '($remote_script)'"
+}
+
 def fetch_key_from_host [
-  host: string
+  host_config: record
   ssh_bin: string
   ssh_user: string
   ssh_identity_file: string
   known_hosts_file: string
-  remote_command: string
 ] {
-  log $"Trying shopisurm via ($host)"
+  let host = $host_config.address
+  log $"Trying ($host)"
+
+  let remote_command = (remote_command_for $host_config)
 
   let ssh_result = (
     do { ^$ssh_bin -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o StrictHostKeyChecking=accept-new -o $"UserKnownHostsFile=($known_hosts_file)" -i $ssh_identity_file $"($ssh_user)@($host)" $remote_command } | complete
@@ -59,9 +75,7 @@ def main [] {
   )
   let receiver_url = ($env.KEY_POLLER_RECEIVER_URL? | default "https://key.llm.surma.technology")
   let secret_file = ($env.KEY_POLLER_SECRET_FILE? | default "/var/lib/key-poller/receiver-secret")
-  let remote_nu_bin = ($env.KEY_POLLER_REMOTE_NU_BIN? | default "/etc/profiles/per-user/surma/bin/nu")
-  let remote_gcloud_bin = ($env.KEY_POLLER_REMOTE_GCLOUD_BIN? | default "/etc/profiles/per-user/surma/bin/gcloud")
-  let ssh_hosts = ($env.KEY_POLLER_SSH_HOSTS_JSON? | default '["10.0.0.20","100.79.232.5"]' | from json)
+  let ssh_hosts = ($env.KEY_POLLER_HOSTS_JSON? | default '[]' | from json)
   let now = (date now)
   let last_success = if ($success_file | path exists) {
     try {
@@ -85,21 +99,17 @@ def main [] {
     log "No successful poll timestamp found, attempting initial poll"
   }
 
-  let remote_script = ([
-    $"^($remote_gcloud_bin) auth print-identity-token --format json"
-    "| from json"
-    "| get id_token"
-    '| http post --headers [Authorization $"Bearer ($in)"] https://proxy.shopify.io/hmac/personal'
-    "| get key"
-  ] | str join "\n")
-  let remote_command = $"($remote_nu_bin) -c '($remote_script)'"
+  if ($ssh_hosts | is-empty) {
+    log "No source hosts configured"
+    exit 1
+  }
 
   let poll_succeeded = (try {
     mkdir ($known_hosts_file | path dirname)
 
     mut fetched: any = null
-    for host in $ssh_hosts {
-      let attempt = (fetch_key_from_host $host $ssh_bin $ssh_user $ssh_identity_file $known_hosts_file $remote_command)
+    for host_config in $ssh_hosts {
+      let attempt = (fetch_key_from_host $host_config $ssh_bin $ssh_user $ssh_identity_file $known_hosts_file)
       if $attempt != null {
         $fetched = $attempt
         break
