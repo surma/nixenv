@@ -234,7 +234,7 @@ The following services retain `access.mode = "internal"` and `internal.access = 
 
 - `admin`, `copyparty`, `firefly`, and `firefly-imp`.
 - `lidarr`, `prowlarr`, `radarr`, and `sonarr`.
-- `overview`, `rss`, `syncthing`, `torrent`, and `voice-memos`.
+- `overview`, `rss`, `syncthing`, and `torrent`.
 - Docker-provider routes for Jellyfin and Jaeger.
 - The Traefik dashboard.
 
@@ -869,7 +869,6 @@ Internal declarations belong in these existing files:
 - `machines/nexus/service-rss.nix`.
 - `machines/nexus/service-syncthing.nix`.
 - `machines/nexus/service-torrent.nix`.
-- `machines/nexus/service-voice-memos.nix`.
 
 Also modify Docker labels in `machines/nexus/service-jellyfin.nix` and `machines/nexus/service-jaeger.nix`.
 

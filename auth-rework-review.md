@@ -112,7 +112,7 @@ The evaluated Nexus inventory includes these exposed services outside the explic
 
 - `admin`, `copyparty`, `firefly`, and `firefly-imp`.
 - `lidarr`, `prowlarr`, `radarr`, and `sonarr`.
-- `overview`, `rss`, `syncthing`, `torrent`, and `voice-memos`.
+- `overview`, `rss`, `syncthing`, and `torrent`.
 
 Leaving those files unchanged does not keep them internal. The default `authenticated` mode admits any valid GitHub session. This is a new access path, not preservation of current exposure. In particular, the plan publishes the admin route despite its stated non-goal.
 
