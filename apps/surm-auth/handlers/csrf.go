@@ -63,8 +63,14 @@ func (s *Server) checkCSRF(r *http.Request, claims *auth.Claims, action string) 
 	if payload.Expiry <= time.Now().Unix() {
 		return fmt.Errorf("expired CSRF token")
 	}
+	// Tokens are minted for POST only, so a token can never match a
+	// request with another method. Comparing against the actual method
+	// also keeps non-POST requests out of form-parsing mutations.
 	if payload.Method != http.MethodPost {
 		return fmt.Errorf("CSRF token method mismatch")
+	}
+	if r.Method != payload.Method {
+		return fmt.Errorf("CSRF token does not match the request method")
 	}
 	if payload.Action != action {
 		return fmt.Errorf("CSRF token action mismatch")

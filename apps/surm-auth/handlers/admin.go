@@ -247,6 +247,10 @@ func (s *Server) handleAdminAppGrant(w http.ResponseWriter, r *http.Request, nam
 
 // handleAdminGrantDelete removes one grant.
 func (s *Server) handleAdminGrantDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	claims, ok := s.requireAdmin(w, r)
 	if !ok {
 		return
@@ -295,6 +299,10 @@ func (s *Server) handleAdminGrantDelete(w http.ResponseWriter, r *http.Request) 
 
 // handleAdminRole changes one mutable role.
 func (s *Server) handleAdminRole(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	claims, ok := s.requireAdmin(w, r)
 	if !ok {
 		return

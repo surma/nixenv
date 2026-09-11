@@ -147,10 +147,19 @@ func VerifyToken(token string, key []byte, v any) error {
 // Transactions tracks outstanding OAuth transactions in a bounded
 // in-memory map. A restart invalidates all pending transactions.
 type Transactions struct {
-	mu  sync.Mutex
-	txs map[string]StateData
-	max int
-	ttl time.Duration
+	mu      sync.Mutex
+	txs     map[string]txEntry
+	max     int
+	ttl     time.Duration
+	nextSeq uint64
+}
+
+// txEntry pairs a transaction with its insertion sequence. Eviction
+// uses the sequence, not IssuedAt, so same-second ties evict
+// deterministically in insertion order.
+type txEntry struct {
+	data StateData
+	seq  uint64
 }
 
 // NewTransactions creates a bounded transaction store.
@@ -162,7 +171,7 @@ func NewTransactions(max int, ttl time.Duration) *Transactions {
 		ttl = DefaultTransactionTTL
 	}
 	return &Transactions{
-		txs: make(map[string]StateData),
+		txs: make(map[string]txEntry),
 		max: max,
 		ttl: ttl,
 	}
@@ -180,20 +189,26 @@ func (t *Transactions) Begin(data StateData) error {
 	if len(t.txs) >= t.max {
 		t.evictOldestLocked()
 	}
-	t.txs[data.Nonce] = data
+	t.nextSeq++
+	t.txs[data.Nonce] = txEntry{data: data, seq: t.nextSeq}
 	return nil
 }
 
+// evictOldestLocked removes the transaction inserted first. The
+// insertion sequence makes the choice deterministic even when all
+// outstanding transactions share one IssuedAt second.
 func (t *Transactions) evictOldestLocked() {
 	var oldestNonce string
-	var oldest int64 = 1 << 62
-	for nonce, data := range t.txs {
-		if data.IssuedAt < oldest {
-			oldest = data.IssuedAt
+	var oldestSeq uint64
+	found := false
+	for nonce, entry := range t.txs {
+		if !found || entry.seq < oldestSeq {
+			found = true
 			oldestNonce = nonce
+			oldestSeq = entry.seq
 		}
 	}
-	if oldestNonce != "" {
+	if found {
 		delete(t.txs, oldestNonce)
 	}
 }
@@ -204,16 +219,16 @@ func (t *Transactions) Consume(nonce string) (StateData, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	data, ok := t.txs[nonce]
+	entry, ok := t.txs[nonce]
 	if !ok {
 		return StateData{}, fmt.Errorf("unknown or consumed transaction; start a new login attempt")
 	}
-	if time.Now().Unix() > data.ExpiresAt {
+	if time.Now().Unix() > entry.data.ExpiresAt {
 		delete(t.txs, nonce)
 		return StateData{}, fmt.Errorf("transaction expired; start a new login attempt")
 	}
 	delete(t.txs, nonce)
-	return data, nil
+	return entry.data, nil
 }
 
 // Len returns the number of outstanding transactions.
@@ -229,8 +244,8 @@ func (t *Transactions) TTL() time.Duration {
 }
 
 func (t *Transactions) pruneLocked(now time.Time) {
-	for nonce, data := range t.txs {
-		if now.Unix() > data.ExpiresAt {
+	for nonce, entry := range t.txs {
+		if now.Unix() > entry.data.ExpiresAt {
 			delete(t.txs, nonce)
 		}
 	}

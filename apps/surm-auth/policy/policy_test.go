@@ -169,6 +169,64 @@ func TestAddGrantPersistsAndBacksUp(t *testing.T) {
 	}
 }
 
+// TestCorruptFileNeverReplacesGoodBackup covers corruption between a
+// successful load and a later mutation: the malformed on-disk bytes
+// must never replace the last good .bak backup.
+func TestCorruptFileNeverReplacesGoodBackup(t *testing.T) {
+	s, path := openStore(t)
+	if err := s.AddGrant("app1", "github", "1", "alice", "a"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.AddGrant("app1", "github", "2", "bob", "a"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The backup after the second commit holds the previous good
+	// generation with one grant.
+	before, err := os.ReadFile(path + BackupSuffix)
+	if err != nil {
+		t.Fatalf("backup missing: %v", err)
+	}
+	previous, err := parse(before)
+	if err != nil {
+		t.Fatalf("backup invalid after second commit: %v", err)
+	}
+	if len(previous.Grants["app1"]) != 1 {
+		t.Fatalf("backup holds %d grants, want the previous generation's 1", len(previous.Grants["app1"]))
+	}
+
+	// Corrupt the live file on disk while the store keeps its good
+	// in-memory snapshot.
+	writeRawPolicy(t, path, `{corrupt`)
+
+	// A later mutation must not copy the malformed bytes over the
+	// last good backup.
+	if err := s.AddGrant("app1", "github", "3", "carol", "a"); err != nil {
+		t.Fatalf("mutation after corruption failed: %v", err)
+	}
+
+	after, err := os.ReadFile(path + BackupSuffix)
+	if err != nil {
+		t.Fatalf("backup missing: %v", err)
+	}
+	bak, err := parse(after)
+	if err != nil {
+		t.Fatalf("backup no longer parses after a later mutation: %v", err)
+	}
+	if len(bak.Grants["app1"]) != 2 {
+		t.Errorf("backup holds %d grants, want the last good generation's 2", len(bak.Grants["app1"]))
+	}
+
+	// The store stays available and serves the new generation.
+	if !s.Available() {
+		t.Error("store unavailable after committing over a corrupt file")
+	}
+	ok, err := s.HasAccess("app1", "github", "3")
+	if err != nil || !ok {
+		t.Errorf("new grant lost: %v, %v", ok, err)
+	}
+}
+
 func TestAddGrantIdempotent(t *testing.T) {
 	s, _ := openStore(t)
 	if err := s.AddGrant("app1", "github", "1", "alice", "a"); err != nil {

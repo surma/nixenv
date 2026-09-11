@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 	"testing"
@@ -53,13 +54,18 @@ func TestStateRejectsTampering(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Flip the payload characters.
+	// Flip the first token character. The token is base64 text, so
+	// the change always yields a different token whose verification
+	// must fail, independent of which characters the payload or
+	// signature happen to contain.
 	mutated := []byte(token)
-	for i := 0; i < len(mutated); i++ {
-		if mutated[i] == 'A' {
-			mutated[i] = 'B'
-			break
-		}
+	if mutated[0] == 'B' {
+		mutated[0] = 'C'
+	} else {
+		mutated[0] = 'B'
+	}
+	if bytes.Equal(mutated, []byte(token)) {
+		t.Fatal("tampering did not change the token")
 	}
 	if _, err := DecodeState(string(mutated), secret); err == nil {
 		t.Fatal("tampered state accepted")
@@ -219,6 +225,44 @@ func TestTransactionsBounded(t *testing.T) {
 	// The oldest transaction must have been evicted.
 	if _, err := txs.Consume(first.Nonce); err == nil {
 		t.Error("evicted transaction still consumable")
+	}
+}
+
+// TestTransactionsEvictsOldestDeterministically pins the eviction
+// contract for same-second transactions: with identical IssuedAt
+// values, the transaction inserted first is evicted first.
+func TestTransactionsEvictsOldestDeterministically(t *testing.T) {
+	txs := NewTransactions(3, time.Minute)
+
+	now := time.Now().Unix()
+	first := stateForTest()
+	first.IssuedAt = now
+	first.ExpiresAt = now + 60
+	if err := txs.Begin(first); err != nil {
+		t.Fatal(err)
+	}
+
+	var lastNonce string
+	for i := 0; i < 3; i++ {
+		data := stateForTest()
+		data.IssuedAt = now
+		data.ExpiresAt = now + 60
+		if err := txs.Begin(data); err != nil {
+			t.Fatalf("Begin %d failed: %v", i, err)
+		}
+		lastNonce = data.Nonce
+	}
+
+	if txs.Len() != 3 {
+		t.Fatalf("len = %d, want 3", txs.Len())
+	}
+	if _, err := txs.Consume(first.Nonce); err == nil {
+		t.Error("first-inserted transaction survived eviction")
+	}
+	// The newest transaction must still be outstanding and consumable
+	// exactly once.
+	if _, err := txs.Consume(lastNonce); err != nil {
+		t.Errorf("newest transaction was evicted: %v", err)
 	}
 }
 

@@ -225,6 +225,56 @@ func TestAdminGrantDelete(t *testing.T) {
 	}
 }
 
+// TestAdminMutationsRequirePOST covers PUT and PATCH against grant
+// deletion and role changes. Only POST may reach these mutations,
+// even with a valid admin, a matching Origin, and a POST-bound CSRF
+// token.
+func TestAdminMutationsRequirePOST(t *testing.T) {
+	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
+	if err := server.deps.Policy.AddGrant("testapp", "github", "2001", "alice", "admin"); err != nil {
+		t.Fatal(err)
+	}
+	if err := server.deps.Policy.UpsertUser(plainUser("2001"), "self"); err != nil {
+		t.Fatal(err)
+	}
+	cookie := adminSession(t, server)
+
+	appPage := get(server, sessionRequest(http.MethodGet, "/admin/apps/testapp", cookie))
+	csrfDelete := csrfFrom(t, appPage.Body.String(), "CD:")
+	adminPage := get(server, sessionRequest(http.MethodGet, "/admin", cookie))
+	csrfRole := csrfFrom(t, adminPage.Body.String(), "CSRF:")
+
+	try := func(method, target, token string, form url.Values) int {
+		form.Set("csrf_token", token)
+		request := sessionRequest(method, target, cookie)
+		request.Header.Set("Origin", canonicalBase)
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		request.PostForm = form
+		return get(server, request).Code
+	}
+
+	for _, method := range []string{http.MethodPut, http.MethodPatch} {
+		deleteForm := url.Values{"app": {"testapp"}, "provider": {"github"}, "id": {"2001"}}
+		if code := try(method, "/admin/grants/delete", csrfDelete, deleteForm); code != 405 {
+			t.Errorf("%s grant delete: status = %d, want 405", method, code)
+		}
+		roleForm := url.Values{"provider": {"github"}, "id": {"2001"}, "role": {"admin"}}
+		if code := try(method, "/admin/users/role", csrfRole, roleForm); code != 405 {
+			t.Errorf("%s role change: status = %d, want 405", method, code)
+		}
+	}
+
+	// No mutation happened.
+	ok, _ := server.deps.Policy.HasAccess("testapp", "github", "2001")
+	if !ok {
+		t.Error("a wrong-method request removed the grant")
+	}
+	admin, _ := server.deps.Policy.IsAdmin("github", "2001")
+	if admin {
+		t.Error("a wrong-method request changed the role")
+	}
+}
+
 func TestAdminRoleChange(t *testing.T) {
 	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
 	if err := server.deps.Policy.UpsertUser(plainUser("2001"), "self"); err != nil {

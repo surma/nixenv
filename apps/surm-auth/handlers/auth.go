@@ -40,6 +40,19 @@ func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Every mode validates the forwarded return metadata: malformed or
+	// cross-app metadata fails with 400 before any successful
+	// response. The metadata only reconstructs the redirect; it never
+	// selects policy.
+	returnURL, err := s.forwardedReturnURL(r, &appCfg)
+	if err != nil {
+		slog.Warn("malformed forward-auth return metadata",
+			"app", appKey,
+			"error", err)
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
 	if appCfg.Mode == config.ModePublic {
 		// Public apps bypass authentication. Never fabricate identity
 		// headers.
@@ -55,14 +68,6 @@ func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 
 	claims := s.session(r)
 	if claims == nil {
-		returnURL, err := s.forwardedReturnURL(r, &appCfg)
-		if err != nil {
-			slog.Warn("malformed forward-auth return metadata",
-				"app", appKey,
-				"error", err)
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
 		loginURL := s.canonical + "/login?app=" + url.QueryEscape(appKey) +
 			"&redirect=" + url.QueryEscape(returnURL)
 		http.Redirect(w, r, loginURL, http.StatusFound)

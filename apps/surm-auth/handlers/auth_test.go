@@ -46,7 +46,9 @@ func TestAuthInternalAppRejected(t *testing.T) {
 func TestAuthPublicAppPassesWithoutIdentityHeaders(t *testing.T) {
 	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
 
-	recorder := get(server, forwardRequest(t, "/auth?app=pubapp", nil))
+	recorder := get(server, forwardRequest(t, "/auth?app=pubapp", map[string]string{
+		"X-Forwarded-Host": "pubapp.apps.surma.technology",
+	}))
 	if recorder.Code != 200 {
 		t.Fatalf("public app: status = %d, want 200", recorder.Code)
 	}
@@ -117,6 +119,71 @@ func TestAuthMalformedReturnMetadata(t *testing.T) {
 		recorder := get(server, forwardRequest(t, "/auth?app=testapp", headers))
 		if recorder.Code != 400 {
 			t.Errorf("%s: status = %d, want 400", name, recorder.Code)
+		}
+	}
+}
+
+// TestAuthValidSessionRejectsBadReturnMetadata covers the matrix for
+// authenticated requests: malformed or cross-app return metadata must
+// fail with 400 even when the session itself is authorized. Metadata
+// never changes the policy selection.
+func TestAuthValidSessionRejectsBadReturnMetadata(t *testing.T) {
+	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
+	user := plainUser("2001")
+	if err := server.deps.Policy.AddGrant("testapp", "github", "2001", user.Username, "admin"); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := map[string]map[string]string{
+		"cross-app host": {"X-Forwarded-Host": "pubapp.apps.surma.technology"},
+		"external host":  {"X-Forwarded-Host": "evil.example.com"},
+		"http proto":     {"X-Forwarded-Proto": "http"},
+		"missing host":   {"X-Forwarded-Host": ""},
+	}
+	for name, headers := range cases {
+		recorder := get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, headers))
+		if recorder.Code != 400 {
+			t.Errorf("%s: status = %d, want 400", name, recorder.Code)
+		}
+	}
+
+	// The same session with the app's own metadata still succeeds.
+	recorder := get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, nil))
+	if recorder.Code != 200 {
+		t.Errorf("own metadata with session: status = %d, want 200", recorder.Code)
+	}
+}
+
+// TestAuthPublicAppRejectsBadReturnMetadata covers the matrix for
+// public apps: the authentication bypass never accepts malformed or
+// cross-app return metadata.
+func TestAuthPublicAppRejectsBadReturnMetadata(t *testing.T) {
+	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
+
+	cases := map[string]map[string]string{
+		"cross-app host": {"X-Forwarded-Host": "testapp.apps.surma.technology"},
+		"external host":  {"X-Forwarded-Host": "evil.example.com"},
+		"http proto":     {"X-Forwarded-Proto": "http"},
+		"missing host":   {"X-Forwarded-Host": ""},
+	}
+	for name, headers := range cases {
+		recorder := get(server, forwardRequest(t, "/auth?app=pubapp", headers))
+		if recorder.Code != 400 {
+			t.Errorf("%s: status = %d, want 400", name, recorder.Code)
+		}
+	}
+
+	// The public app's own metadata still yields 200 without identity
+	// headers.
+	recorder := get(server, forwardRequest(t, "/auth?app=pubapp", map[string]string{
+		"X-Forwarded-Host": "pubapp.apps.surma.technology",
+	}))
+	if recorder.Code != 200 {
+		t.Fatalf("public app with own metadata: status = %d, want 200", recorder.Code)
+	}
+	for _, header := range []string{"X-Auth-Request-User", "X-Auth-Request-Email"} {
+		if got := recorder.Header().Get(header); got != "" {
+			t.Errorf("public app invented identity header %s = %q", header, got)
 		}
 	}
 }
@@ -217,8 +284,11 @@ func TestAuthPolicyUnavailable(t *testing.T) {
 		t.Errorf("restricted app with unavailable policy: status = %d, want 503", recorder.Code)
 	}
 
-	// Public apps must still pass during a policy outage.
-	recorder = get(server, forwardRequest(t, "/auth?app=pubapp", nil))
+	// Public apps must still pass during a policy outage when their
+	// own return metadata is valid.
+	recorder = get(server, forwardRequest(t, "/auth?app=pubapp", map[string]string{
+		"X-Forwarded-Host": "pubapp.apps.surma.technology",
+	}))
 	if recorder.Code != 200 {
 		t.Errorf("public app during policy outage: status = %d, want 200", recorder.Code)
 	}
@@ -249,20 +319,21 @@ func TestAuthSpoofedForwardedHeadersDoNotSelectPolicy(t *testing.T) {
 		t.Errorf("spoofed cross-app metadata: status = %d, want 400", recorder.Code)
 	}
 
-	// With a valid session for a testapp grantee, forwarded headers
-	// are irrelevant: authorization reads the fixed app key's live
-	// policy and returns 200 with identity headers.
+	// With a valid session for a testapp grantee, cross-app metadata
+	// still fails with 400: a successful response requires return
+	// metadata that belongs to the selected app. The fixed app key
+	// remains the only policy selector.
 	recorder = get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, headers))
-	if recorder.Code != 200 {
-		t.Errorf("spoofed headers with a valid grantee session: status = %d, want 200", recorder.Code)
+	if recorder.Code != 400 {
+		t.Errorf("spoofed headers with a valid grantee session: status = %d, want 400", recorder.Code)
 	}
 
 	// A grant-less user cannot bypass testapp by spoofing the public
-	// app's host.
+	// app's host; the malformed metadata fails first.
 	outsider := plainUser("2002")
 	recorder = get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", outsider, headers))
-	if recorder.Code != 403 {
-		t.Errorf("grant-less user with spoofed headers: status = %d, want 403", recorder.Code)
+	if recorder.Code != 400 {
+		t.Errorf("grant-less user with spoofed headers: status = %d, want 400", recorder.Code)
 	}
 
 	// A grant on one app key never leaks into another.

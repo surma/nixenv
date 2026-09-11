@@ -256,14 +256,22 @@ func (s *Store) commit(candidate *Policy, by string) error {
 
 	dir := filepath.Dir(s.path)
 
-	// Back up the previous committed file before replacing it. Only
-	// the last good committed file is ever backed up.
-	if prev, err := os.ReadFile(s.path); err == nil {
+	// Back up the last good committed policy before replacing the
+	// file. The backup comes from the validated in-memory snapshot,
+	// never from the on-disk bytes: a file corrupted between a
+	// successful load and this commit must not replace the last good
+	// backup.
+	prev, err := json.MarshalIndent(s.current, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal previous policy: %w", err)
+	}
+	prev = append(prev, '\n')
+	if _, err := os.Stat(s.path); err == nil {
 		if err := atomicWrite(dir, s.path+BackupSuffix, prev); err != nil {
 			return fmt.Errorf("failed to back up policy: %w", err)
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("failed to read previous policy: %w", err)
+		return fmt.Errorf("failed to inspect previous policy: %w", err)
 	}
 
 	if err := atomicWrite(dir, s.path, data); err != nil {
