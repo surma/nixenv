@@ -18,6 +18,13 @@
     "d /var/lib/llm-proxy-credentials 0755 root root -"
   ];
 
+  # The secret commands also enforce this directory mode on an already
+  # running host. The ordering prevents a first boot race with tmpfiles.
+  systemd.services.secrets = {
+    after = [ "systemd-tmpfiles-setup.service" ];
+    requires = [ "systemd-tmpfiles-setup.service" ];
+  };
+
   services.surmhosting.services.llm-proxy.containerService = {
     wants = [ "secrets.service" ];
     # Top-level (unit section) Requires=: a failed or missing secrets.service

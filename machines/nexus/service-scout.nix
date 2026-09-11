@@ -83,10 +83,14 @@ in
   # (auth-rework section 6.5). No competing target declarations.
   secrets.items.llm-proxy-client-key.command = ''
     mkdir -p /var/lib/scout /var/lib/llm-proxy-credentials
+    chown root:root /var/lib/llm-proxy-credentials
+    chmod 0755 /var/lib/llm-proxy-credentials
     key="$(cat)"
     printf '%s\n' "$key" > /var/lib/scout/llm-proxy-client-key
+    chown root:root /var/lib/scout/llm-proxy-client-key
     chmod 0644 /var/lib/scout/llm-proxy-client-key
     printf '%s\n' "$key" > /var/lib/llm-proxy-credentials/client-key
+    chown root:root /var/lib/llm-proxy-credentials/client-key
     chmod 0644 /var/lib/llm-proxy-credentials/client-key
   '';
 
@@ -177,11 +181,14 @@ in
   # receiver's root-owned credential copy (auth-rework section 6.5).
   secrets.items.openrouter-api-key.command = ''
     mkdir -p /var/lib/scout /var/lib/llm-proxy-credentials
+    chown root:root /var/lib/llm-proxy-credentials
+    chmod 0755 /var/lib/llm-proxy-credentials
     key="$(cat)"
     printf '%s\n' "$key" > /var/lib/scout/openrouter-api-key
     chown surma:users /var/lib/scout/openrouter-api-key
     chmod 0600 /var/lib/scout/openrouter-api-key
     printf '%s\n' "$key" > /var/lib/llm-proxy-credentials/openrouter-key
+    chown root:root /var/lib/llm-proxy-credentials/openrouter-key
     chmod 0644 /var/lib/llm-proxy-credentials/openrouter-key
   '';
 
