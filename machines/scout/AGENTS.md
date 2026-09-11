@@ -171,7 +171,7 @@ Load the **nexus-admin** skill for full API reference, workflows, and examples.
 NixOS Admin is an HTTP service that manages NixOS deployments and provides journal log access for the host and all containers. It runs on both Nexus and Citadel.
 
 **Base URLs:**
-- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io`
+- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io:8081`
 - **Citadel:** `http://admin.citadel.hosts.10.0.0.32.nip.io`
 
 ### CRITICAL: requires explicit user confirmation

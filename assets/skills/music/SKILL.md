@@ -22,10 +22,10 @@ are bind-mounted read-only at `/var/lib/credentials/scout/`.
 
 | Service | Base URL | Credential file |
 |---|---|---|
-| Navidrome | `http://music.nexus.hosts.10.0.0.2.nip.io` | `navidrome-password` |
-| Lidarr | `http://lidarr.nexus.hosts.10.0.0.2.nip.io` | `lidarr-api-key` |
-| Prowlarr | `http://prowlarr.nexus.hosts.10.0.0.2.nip.io` | `prowlarr-api-key` |
-| qBittorrent | `http://torrent.nexus.hosts.10.0.0.2.nip.io` | (auth whitelisted by subnet) |
+| Navidrome | `http://music.nexus.hosts.10.0.0.2.nip.io:8081` | `navidrome-password` |
+| Lidarr | `http://lidarr.nexus.hosts.10.0.0.2.nip.io:8081` | `lidarr-api-key` |
+| Prowlarr | `http://prowlarr.nexus.hosts.10.0.0.2.nip.io:8081` | `prowlarr-api-key` |
+| qBittorrent | `http://torrent.nexus.hosts.10.0.0.2.nip.io:8081` | (auth whitelisted by subnet) |
 
 ## Navidrome — browsing the music library
 
@@ -34,7 +34,7 @@ collection, get play counts, search for artists/albums, and verify imports.
 
 ```bash
 NAVIDROME_PASS=$(cat /var/lib/credentials/scout/navidrome-password)
-BASE="http://music.nexus.hosts.10.0.0.2.nip.io/rest"
+BASE="http://music.nexus.hosts.10.0.0.2.nip.io:8081/rest"
 AUTH="u=surma&p=$NAVIDROME_PASS&v=1.16.1&c=scout&f=json"
 
 # Search for an artist
@@ -71,7 +71,7 @@ searches, and importing downloaded files.
 
 ```bash
 LIDARR_KEY=$(cat /var/lib/credentials/scout/lidarr-api-key)
-LIDARR="http://lidarr.nexus.hosts.10.0.0.2.nip.io/api/v1"
+LIDARR="http://lidarr.nexus.hosts.10.0.0.2.nip.io:8081/api/v1"
 AUTH="-H 'X-Api-Key: $LIDARR_KEY'"
 
 # Search for an artist to add
@@ -175,7 +175,7 @@ search fails to find a release.
 
 ```bash
 PROWLARR_KEY=$(cat /var/lib/credentials/scout/prowlarr-api-key)
-PROWLARR="http://prowlarr.nexus.hosts.10.0.0.2.nip.io/api/v1"
+PROWLARR="http://prowlarr.nexus.hosts.10.0.0.2.nip.io:8081/api/v1"
 
 # Search across all indexers
 curl -s "$PROWLARR/search?query=Floating+Points+Crush+FLAC&type=search" \
@@ -188,7 +188,7 @@ Filter for FLAC releases with good seeder counts.
 ### Downloading via qBittorrent
 
 ```bash
-QBIT="http://torrent.nexus.hosts.10.0.0.2.nip.io/api/v2"
+QBIT="http://torrent.nexus.hosts.10.0.0.2.nip.io:8081/api/v2"
 
 # Add a torrent (use default save path — custom paths cause permission errors)
 curl -s -X POST "$QBIT/torrents/add" \

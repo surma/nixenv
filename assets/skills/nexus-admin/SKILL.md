@@ -9,7 +9,7 @@ compatibility: Requires network access to the NixOS Admin service on the target 
 NixOS Admin is an HTTP service that manages NixOS deployments and provides access to systemd journal logs, units, and timers — both on the host and inside systemd-nspawn containers. It runs on both Nexus and Citadel.
 
 **Base URLs:**
-- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io`
+- **Nexus:** `http://admin.nexus.hosts.10.0.0.2.nip.io:8081`
 - **Citadel:** `http://admin.citadel.hosts.10.0.0.32.nip.io`
 
 All examples below use the Nexus URL. Replace the base URL with the Citadel one when targeting Citadel.
@@ -61,10 +61,10 @@ All endpoints are relative to the base URL above. Use `curl` (via `nix run nixpk
 
 ```bash
 # Deploy from the default flake (github:surma/nixenv#nexus):
-curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy
 
 # Deploy from a specific branch:
-curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy \
   -H 'Content-Type: application/json' \
   -d '{"flake_url":"github:surma/nixenv/my-branch#nexus"}'
 ```
@@ -86,13 +86,13 @@ Returns `409 Conflict` if a deploy is already running.
 #### Cancel a running deploy
 
 ```bash
-curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/cancel
+curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy/<id>/cancel
 ```
 
 #### List all deploys
 
 ```bash
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploys
 ```
 
 Returns:
@@ -118,7 +118,7 @@ Returns:
 #### Read deploy logs (plain text)
 
 ```bash
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploys/<id>/log
 ```
 
 Returns the full deploy log as plain text.
@@ -126,7 +126,7 @@ Returns the full deploy log as plain text.
 #### Stream deploy logs (SSE)
 
 ```bash
-curl -sN http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/<id>/stream
+curl -sN http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy/<id>/stream
 ```
 
 Returns a Server-Sent Events stream. Each `data:` line is a log line. For active deploys, existing lines are replayed first, then new lines stream live.
@@ -154,7 +154,7 @@ The stream ends with a line matching `[deploy] DONE:<status>` where status is on
 #### List containers
 
 ```bash
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/containers
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/containers
 ```
 
 Returns:
@@ -173,10 +173,10 @@ These are systemd-nspawn machines visible via `machinectl list`.
 
 ```bash
 # Host units:
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/units
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units
 
 # Units inside a container:
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout'
 ```
 
 Returns:
@@ -201,10 +201,10 @@ Returns:
 
 ```bash
 # Host timers:
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers
 
 # Timers inside a container:
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers?container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers?container=scout'
 ```
 
 Returns:
@@ -232,10 +232,10 @@ If the container is unreachable, returns an empty list rather than an error.
 
 ```bash
 # Trigger a timer's associated service on the host:
-curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/logrotate.service/trigger
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers/logrotate.service/trigger
 
 # Trigger inside a container:
-curl -s -X POST 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/logrotate.service/trigger?container=scout'
+curl -s -X POST 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers/logrotate.service/trigger?container=scout'
 ```
 
 The `{unit}` in the URL is the **activates** service name (not the timer unit).
@@ -257,13 +257,13 @@ Returns `502` if the container is unreachable, `500` for other failures.
 
 ```bash
 # Basic usage (last 100 lines):
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=sshd.service'
 
 # Inside a container:
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout'
 
 # With options:
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=sshd.service&lines=200&boot=true&since=-1h'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=sshd.service&lines=200&boot=true&since=-1h'
 ```
 
 Returns plain text (journalctl output in `short-iso` format).
@@ -282,7 +282,7 @@ Returns plain text (journalctl output in `short-iso` format).
 ### Health check
 
 ```bash
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/health
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/health
 ```
 
 Returns `200 OK` with `{"status":"ok"}`. Useful for verifying the service is up.
@@ -293,17 +293,17 @@ Returns `200 OK` with `{"status":"ok"}`. Useful for verifying the service is up.
 
 ```bash
 # 1. Start the deploy (uses default flake: github:surma/nixenv#nexus)
-DEPLOY=$(curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy)
+DEPLOY=$(curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy)
 ID=$(echo "$DEPLOY" | jq -r '.id')
 
 # 2. Stream logs until done
-curl -sN "http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy/$ID/stream"
+curl -sN "http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy/$ID/stream"
 ```
 
 ### Deploy from a branch
 
 ```bash
-curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy \
   -H 'Content-Type: application/json' \
   -d '{"flake_url":"github:surma/nixenv/my-feature-branch#nexus"}'
 ```
@@ -312,40 +312,40 @@ curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploy \
 
 ```bash
 # List all service units in the scout container
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.sub != "dead")'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout' | jq '.units[] | select(.sub != "dead")'
 ```
 
 ### Troubleshoot a service
 
 ```bash
 # 1. Check the unit status
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/units?container=scout' | jq '.units[] | select(.unit == "opencode.service")'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout' | jq '.units[] | select(.unit == "opencode.service")'
 
 # 2. Fetch recent logs
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&lines=200'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout&lines=200'
 
 # 3. Fetch logs from the last hour only
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io/api/logs?unit=opencode.service&container=scout&since=-1h'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout&since=-1h'
 ```
 
 ### List and trigger timers
 
 ```bash
 # List all timers on the host
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers | jq '.timers[] | {unit, activates, next, last}'
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers | jq '.timers[] | {unit, activates, next, last}'
 
 # Manually trigger a backup (runs the associated service immediately)
-curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io/api/timers/restic-backups-nexus-local.service/trigger
+curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/timers/restic-backups-nexus-local.service/trigger
 ```
 
 ### Check deploy history
 
 ```bash
 # List recent deploys
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys | jq '.deploys[:5]'
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploys | jq '.deploys[:5]'
 
 # Read logs for a specific past deploy
-curl -s http://admin.nexus.hosts.10.0.0.2.nip.io/api/deploys/<id>/log
+curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploys/<id>/log
 ```
 
 ## Tips
