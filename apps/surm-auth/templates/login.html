@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - {{.App}}</title>
+    <title>Login{{if .App}} - {{.App}}{{end}}</title>
     <style>
         * {
             margin: 0;
@@ -63,9 +63,19 @@
 </head>
 <body>
     <div class="login-box">
+        {{if .LoggedIn}}
+        <h1>Signed in</h1>
+        <p>You are signed in as <span class="app-name">{{.Subject}}</span></p>
+        <a href="/admin" class="btn">Open the admin console</a>
+        {{else if .App}}
         <h1>Authentication Required</h1>
         <p>Please log in to access <span class="app-name">{{.App}}</span></p>
         <a href="{{.AuthURL}}" class="btn">Login with GitHub</a>
+        {{else}}
+        <h1>surm-auth</h1>
+        <p>Log in to your surm-auth account</p>
+        <a href="{{.AuthURL}}" class="btn">Login with GitHub</a>
+        {{end}}
     </div>
 </body>
 </html>

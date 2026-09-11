@@ -1,76 +1,237 @@
 package auth
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
 )
 
-// StateData contains the data stored in the OAuth state parameter
+// statePurpose separates the OAuth state signing key from other uses
+// of the cookie secret.
+const statePurpose = "surm-auth:oauth-state:v2"
+
+// DefaultTransactionTTL is the OAuth transaction lifetime.
+const DefaultTransactionTTL = 10 * time.Minute
+
+// DefaultTransactionLimit bounds the outstanding transaction map.
+const DefaultTransactionLimit = 1024
+
+// StateData contains the signed data carried in the OAuth state
+// parameter.
 type StateData struct {
-	App      string `json:"app"`
-	Redirect string `json:"redirect"`
+	Provider  string `json:"provider"`
+	App       string `json:"app,omitempty"`
+	Redirect  string `json:"redirect"`
+	Nonce     string `json:"nonce"`
+	IssuedAt  int64  `json:"issued_at"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
-// EncodeState encodes and signs the state data
-func EncodeState(app, redirect string, secret []byte) (string, error) {
-	data := StateData{
-		App:      app,
-		Redirect: redirect,
-	}
-
-	// Marshal to JSON
-	jsonData, err := json.Marshal(data)
+// NewStateData builds state data with a cryptographically random
+// 32-byte nonce and the given lifetime.
+func NewStateData(provider, app, redirect string, now time.Time, ttl time.Duration) (StateData, error) {
+	nonce, err := randomToken(32)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal state: %w", err)
+		return StateData{}, fmt.Errorf("failed to generate nonce: %w", err)
 	}
-
-	// Create HMAC signature
-	h := hmac.New(sha256.New, secret)
-	h.Write(jsonData)
-	signature := h.Sum(nil)
-
-	// Combine data and signature
-	combined := append(jsonData, signature...)
-
-	// Base64 encode
-	encoded := base64.URLEncoding.EncodeToString(combined)
-
-	return encoded, nil
+	return StateData{
+		Provider:  provider,
+		App:       app,
+		Redirect:  redirect,
+		Nonce:     nonce,
+		IssuedAt:  now.Unix(),
+		ExpiresAt: now.Add(ttl).Unix(),
+	}, nil
 }
 
-// DecodeState decodes and verifies the state data
-func DecodeState(encoded string, secret []byte) (*StateData, error) {
-	// Base64 decode
-	combined, err := base64.URLEncoding.DecodeString(encoded)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode state: %w", err)
-	}
+// EncodeState signs the state data with a purpose-derived HMAC key and
+// returns a URL-safe token.
+func EncodeState(data StateData, secret []byte) (string, error) {
+	key := DerivePurposeKey(secret, statePurpose)
+	return encodeSignedJSON(data, key)
+}
 
-	// Split data and signature (signature is last 32 bytes)
-	if len(combined) < 32 {
-		return nil, fmt.Errorf("invalid state: too short")
-	}
+// DecodeState verifies the state token signature and decodes the data.
+func DecodeState(token string, secret []byte) (*StateData, error) {
+	key := DerivePurposeKey(secret, statePurpose)
 
-	jsonData := combined[:len(combined)-32]
-	signature := combined[len(combined)-32:]
-
-	// Verify HMAC signature
-	h := hmac.New(sha256.New, secret)
-	h.Write(jsonData)
-	expectedSignature := h.Sum(nil)
-
-	if !hmac.Equal(signature, expectedSignature) {
-		return nil, fmt.Errorf("invalid state: signature mismatch")
-	}
-
-	// Unmarshal JSON
 	var data StateData
-	if err := json.Unmarshal(jsonData, &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal state: %w", err)
+	if err := decodeSignedJSON(token, key, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+// Validate checks the state data against the expected provider and the
+// current time. Clock skew of up to one minute is tolerated for issued
+// timestamps.
+func (d *StateData) Validate(provider string, now time.Time) error {
+	if d.Provider != provider {
+		return fmt.Errorf("state provider mismatch")
+	}
+	if d.Nonce == "" {
+		return fmt.Errorf("state nonce is empty")
+	}
+	if d.Redirect == "" {
+		return fmt.Errorf("state redirect is empty")
+	}
+	if now.Unix() > d.ExpiresAt {
+		return fmt.Errorf("state expired")
+	}
+	if now.Unix()+60 < d.IssuedAt {
+		return fmt.Errorf("state issued in the future")
+	}
+	return nil
+}
+
+func encodeSignedJSON(v any, key []byte) (string, error) {
+	return SignToken(v, key)
+}
+
+func decodeSignedJSON(token string, key []byte, v any) error {
+	return VerifyToken(token, key, v)
+}
+
+// SignToken marshals v, signs it with the keyed HMAC, and returns a
+// URL-safe "payload.signature" token.
+func SignToken(v any, key []byte) (string, error) {
+	payload, err := json.Marshal(v)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal signed payload: %w", err)
+	}
+	mac := hmac.New(sha256.New, key)
+	mac.Write(payload)
+	signature := mac.Sum(nil)
+
+	value := base64.RawURLEncoding.EncodeToString(payload) + "." +
+		base64.RawURLEncoding.EncodeToString(signature)
+	return value, nil
+}
+
+// VerifyToken verifies a signed token's signature with constant-time
+// comparison and decodes its payload strictly (unknown fields are
+// rejected).
+func VerifyToken(token string, key []byte, v any) error {
+	payloadEnc, sigEnc, ok := bytes.Cut([]byte(token), []byte("."))
+	if !ok {
+		return fmt.Errorf("invalid signed token format")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(string(payloadEnc))
+	if err != nil {
+		return fmt.Errorf("invalid signed token payload: %w", err)
+	}
+	signature, err := base64.RawURLEncoding.DecodeString(string(sigEnc))
+	if err != nil {
+		return fmt.Errorf("invalid signed token signature: %w", err)
 	}
 
-	return &data, nil
+	mac := hmac.New(sha256.New, key)
+	mac.Write(payload)
+	if !hmac.Equal(signature, mac.Sum(nil)) {
+		return fmt.Errorf("signed token signature mismatch")
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(payload))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		return fmt.Errorf("invalid signed token payload: %w", err)
+	}
+	return nil
+}
+
+// Transactions tracks outstanding OAuth transactions in a bounded
+// in-memory map. A restart invalidates all pending transactions.
+type Transactions struct {
+	mu  sync.Mutex
+	txs map[string]StateData
+	max int
+	ttl time.Duration
+}
+
+// NewTransactions creates a bounded transaction store.
+func NewTransactions(max int, ttl time.Duration) *Transactions {
+	if max <= 0 {
+		max = DefaultTransactionLimit
+	}
+	if ttl <= 0 {
+		ttl = DefaultTransactionTTL
+	}
+	return &Transactions{
+		txs: make(map[string]StateData),
+		max: max,
+		ttl: ttl,
+	}
+}
+
+// Begin records a new outstanding transaction.
+func (t *Transactions) Begin(data StateData) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	t.pruneLocked(time.Now())
+	if _, exists := t.txs[data.Nonce]; exists {
+		return fmt.Errorf("transaction nonce already outstanding")
+	}
+	if len(t.txs) >= t.max {
+		t.evictOldestLocked()
+	}
+	t.txs[data.Nonce] = data
+	return nil
+}
+
+func (t *Transactions) evictOldestLocked() {
+	var oldestNonce string
+	var oldest int64 = 1 << 62
+	for nonce, data := range t.txs {
+		if data.IssuedAt < oldest {
+			oldest = data.IssuedAt
+			oldestNonce = nonce
+		}
+	}
+	if oldestNonce != "" {
+		delete(t.txs, oldestNonce)
+	}
+}
+
+// Consume atomically removes an outstanding transaction and returns
+// its data. Replayed or expired transactions return an error.
+func (t *Transactions) Consume(nonce string) (StateData, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	data, ok := t.txs[nonce]
+	if !ok {
+		return StateData{}, fmt.Errorf("unknown or consumed transaction; start a new login attempt")
+	}
+	if time.Now().Unix() > data.ExpiresAt {
+		delete(t.txs, nonce)
+		return StateData{}, fmt.Errorf("transaction expired; start a new login attempt")
+	}
+	delete(t.txs, nonce)
+	return data, nil
+}
+
+// Len returns the number of outstanding transactions.
+func (t *Transactions) Len() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return len(t.txs)
+}
+
+// TTL returns the transaction lifetime.
+func (t *Transactions) TTL() time.Duration {
+	return t.ttl
+}
+
+func (t *Transactions) pruneLocked(now time.Time) {
+	for nonce, data := range t.txs {
+		if now.Unix() > data.ExpiresAt {
+			delete(t.txs, nonce)
+		}
+	}
 }
