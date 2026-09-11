@@ -193,8 +193,18 @@ func TestAuthAllowlistGrantMatrix(t *testing.T) {
 	server := newTestServer(t, cfg, newFakeProvider(), 0)
 	user := plainUser("2001")
 
+	// One session cookie for the entire scenario: a live revocation
+	// must cut off the original session without a new login. Minting
+	// a fresh cookie per request would prove nothing about revocation.
+	cookie := mintCookie(t, server, user)
+	withSession := func(headers map[string]string) *http.Request {
+		r := forwardRequest(t, "/auth?app=testapp", headers)
+		r.AddCookie(cookie)
+		return r
+	}
+
 	// Without a grant: 403 plus an audit event.
-	recorder := get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, nil))
+	recorder := get(server, withSession(nil))
 	if recorder.Code != 403 {
 		t.Fatalf("allowlist without grant: status = %d, want 403", recorder.Code)
 	}
@@ -212,12 +222,12 @@ func TestAuthAllowlistGrantMatrix(t *testing.T) {
 		t.Error("no access_denied audit event for the allowlist rejection")
 	}
 
-	// The current policy applies even for an old session cookie: grant
-	// now and the same cookie must pass without a new login.
+	// The current policy applies even for the old session cookie:
+	// grant now and the same cookie must pass without a new login.
 	if err := server.deps.Policy.AddGrant("testapp", "github", "2001", user.Username, "admin"); err != nil {
 		t.Fatal(err)
 	}
-	recorder = get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, nil))
+	recorder = get(server, withSession(nil))
 	if recorder.Code != 200 {
 		t.Fatalf("allowlist with grant: status = %d, want 200", recorder.Code)
 	}
@@ -228,11 +238,12 @@ func TestAuthAllowlistGrantMatrix(t *testing.T) {
 		t.Errorf("X-Auth-Request-Email = %q", got)
 	}
 
-	// Revoke without a new session: the same cookie must now fail.
+	// Revoke without a new session: the same original cookie must now
+	// fail.
 	if err := server.deps.Policy.RemoveGrant("testapp", "github", "2001", "admin"); err != nil {
 		t.Fatal(err)
 	}
-	recorder = get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", user, nil))
+	recorder = get(server, withSession(nil))
 	if recorder.Code != 403 {
 		t.Errorf("allowlist after revocation: status = %d, want 403", recorder.Code)
 	}

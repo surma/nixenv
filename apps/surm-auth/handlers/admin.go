@@ -128,6 +128,13 @@ func (s *Server) handleAdminApps(w http.ResponseWriter, r *http.Request) {
 // handleAdminApp renders one app's Nix-owned topology and editable
 // grants.
 func (s *Server) handleAdminApp(w http.ResponseWriter, r *http.Request, name string) {
+	// Canonicalize before rendering any form: relative form actions
+	// submit to the rendering host, and CSRF Origin checks accept only
+	// the canonical auth host. The dashboard and audit pages follow
+	// the same rule.
+	if !s.canonicalize(w, r) {
+		return
+	}
 	claims, ok := s.requireAdmin(w, r)
 	if !ok {
 		return

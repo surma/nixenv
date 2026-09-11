@@ -404,7 +404,7 @@ func TestAdminCSRFRejections(t *testing.T) {
 	}
 
 	// Expired token.
-	expired := issueExpiredCSRF(t, server, cookie)
+	expired := issueExpiredCSRF(t, server, cookie, "/admin/apps/testapp/grants")
 	if r := post("/admin/apps/testapp/grants", expired, canonicalBase); r.code != 403 {
 		t.Errorf("expired CSRF token status = %d, want 403", r.code)
 	}
@@ -421,6 +421,202 @@ func TestAdminCSRFRejections(t *testing.T) {
 	snapshot := server.deps.Policy.Snapshot()
 	if len(snapshot.Grants["testapp"]) != 0 {
 		t.Errorf("a rejected mutation changed policy: %+v", snapshot.Grants["testapp"])
+	}
+}
+
+// TestAdminFormsViaAuthAlias covers grant and role forms reached
+// through the auth alias (auth.apps.surma.technology): the alias must
+// redirect to the canonical host before rendering any form, the form
+// submission succeeds on the canonical host, and a mutation that
+// still arrives through the alias fails its Origin check.
+func TestAdminFormsViaAuthAlias(t *testing.T) {
+	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
+	if err := server.deps.Policy.UpsertUser(plainUser("2001"), "self"); err != nil {
+		t.Fatal(err)
+	}
+	cookie := adminSession(t, server)
+
+	// The app page and the dashboard redirect the alias to the
+	// canonical host without rendering any form.
+	for _, target := range []string{"/admin/apps/testapp", "/admin"} {
+		recorder := get(server, aliasRequest(http.MethodGet, target, cookie))
+		if recorder.Code != 302 {
+			t.Fatalf("alias GET %s: status = %d, want 302", target, recorder.Code)
+		}
+		if got := recorder.Header().Get("Location"); got != canonicalBase+target {
+			t.Errorf("alias GET %s redirect = %q, want %q", target, got, canonicalBase+target)
+		}
+		if strings.Contains(recorder.Body.String(), "csrf_token") {
+			t.Errorf("alias GET %s rendered a form on the alias", target)
+		}
+	}
+
+	// Grant form: starting through the alias, the canonical page
+	// renders and the submission succeeds there.
+	page := get(server, sessionRequest(http.MethodGet, "/admin/apps/testapp", cookie))
+	if page.Code != 200 {
+		t.Fatalf("canonical app page status = %d", page.Code)
+	}
+	csrfGrant := csrfFrom(t, page.Body.String(), "CG:")
+	grantPost := postForm(sessionRequest(http.MethodPost, "/admin/apps/testapp/grants", cookie),
+		url.Values{"csrf_token": {csrfGrant}, "username": {"alice"}})
+	grantPost.Header.Set("Origin", canonicalBase)
+	recorder := get(server, grantPost)
+	if recorder.Code != 303 {
+		t.Fatalf("grant add after alias redirect: status = %d, body: %s", recorder.Code, recorder.Body.String())
+	}
+	if ok, _ := server.deps.Policy.HasAccess("testapp", "github", "2001"); !ok {
+		t.Error("grant from the alias-driven flow missing")
+	}
+
+	// Role form: the same alias-start flow on the dashboard.
+	dash := get(server, sessionRequest(http.MethodGet, "/admin", cookie))
+	if dash.Code != 200 {
+		t.Fatalf("canonical dashboard status = %d", dash.Code)
+	}
+	csrfRole := csrfFrom(t, dash.Body.String(), "CSRF:")
+	rolePost := postForm(sessionRequest(http.MethodPost, "/admin/users/role", cookie),
+		url.Values{"csrf_token": {csrfRole}, "provider": {"github"}, "id": {"2001"}, "role": {"admin"}})
+	rolePost.Header.Set("Origin", canonicalBase)
+	recorder = get(server, rolePost)
+	if recorder.Code != 303 {
+		t.Fatalf("role change after alias redirect: status = %d", recorder.Code)
+	}
+	if admin, _ := server.deps.Policy.IsAdmin("github", "2001"); !admin {
+		t.Error("role change from the alias-driven flow missing")
+	}
+
+	// A mutation submitted through the alias itself fails closed: its
+	// Origin is the alias, never the canonical auth host. The fixed
+	// GitHub callback host is unaffected.
+	aliasPost := aliasRequest(http.MethodPost, "/admin/apps/testapp/grants", cookie)
+	aliasPost.Header.Set("Origin", "https://auth.apps.surma.technology")
+	recorder = get(server, postForm(aliasPost, url.Values{"csrf_token": {csrfGrant}, "username": {"bob"}}))
+	if recorder.Code != 403 {
+		t.Errorf("alias-host mutation status = %d, want 403", recorder.Code)
+	}
+	snapshot := server.deps.Policy.Snapshot()
+	for _, g := range snapshot.Grants["testapp"] {
+		if g.ID == "2002" {
+			t.Error("an alias-host mutation created a grant")
+		}
+	}
+}
+
+// TestAllMutationsRejectWrongMethodAndBadCSRF runs the method and
+// CSRF matrix over every mutating endpoint: grant add, grant delete,
+// role change, and logout. A valid POST-bound token never authorizes
+// another method, and every invalid token class is rejected with 403
+// without a state change.
+func TestAllMutationsRejectWrongMethodAndBadCSRF(t *testing.T) {
+	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
+	if err := server.deps.Policy.UpsertUser(plainUser("2001"), "self"); err != nil {
+		t.Fatal(err)
+	}
+	if err := server.deps.Policy.AddGrant("testapp", "github", "2001", "alice", "admin"); err != nil {
+		t.Fatal(err)
+	}
+	cookie := adminSession(t, server)
+	otherSession := mintCookie(t, server, adminUser())
+
+	// Valid, action-bound tokens for each mutation.
+	appPage := get(server, sessionRequest(http.MethodGet, "/admin/apps/testapp", cookie))
+	dash := get(server, sessionRequest(http.MethodGet, "/admin", cookie))
+	logoutPage := get(server, sessionRequest(http.MethodGet, "/logout", cookie))
+	validTokens := map[string]string{
+		"/admin/apps/testapp/grants": csrfFrom(t, appPage.Body.String(), "CG:"),
+		"/admin/grants/delete":       csrfFrom(t, appPage.Body.String(), "CD:"),
+		"/admin/users/role":          csrfFrom(t, dash.Body.String(), "CSRF:"),
+		"/logout":                    csrfFromHTML(t, logoutPage.Body.String()),
+	}
+	actions := make([]string, 0, len(validTokens))
+	for _, action := range []string{"/admin/apps/testapp/grants", "/admin/grants/delete", "/admin/users/role", "/logout"} {
+		actions = append(actions, action)
+	}
+
+	// The form body of each mutation, with the given token.
+	forms := map[string]func(string) url.Values{
+		"/admin/apps/testapp/grants": func(token string) url.Values {
+			return url.Values{"csrf_token": {token}, "username": {"bob"}}
+		},
+		"/admin/grants/delete": func(token string) url.Values {
+			return url.Values{"csrf_token": {token}, "app": {"testapp"}, "provider": {"github"}, "id": {"2001"}}
+		},
+		"/admin/users/role": func(token string) url.Values {
+			return url.Values{"csrf_token": {token}, "provider": {"github"}, "id": {"2001"}, "role": {"admin"}}
+		},
+		"/logout": func(token string) url.Values {
+			return url.Values{"csrf_token": {token}}
+		},
+	}
+
+	// Wrong methods never mutate, even with a valid POST-bound token.
+	for _, action := range actions {
+		for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodPatch} {
+			if action == "/logout" && method == http.MethodGet {
+				// GET /logout is the confirmation page only.
+				recorder := get(server, sessionRequest(method, action, cookie))
+				if recorder.Code != 200 {
+					t.Errorf("GET %s: status = %d, want 200", action, recorder.Code)
+				}
+				if _, err := server.deps.Sessions.Validate(sessionRequest(http.MethodGet, "/", cookie)); err != nil {
+					t.Errorf("GET %s ended the session: %v", action, err)
+				}
+				continue
+			}
+			request := postForm(sessionRequest(method, action, cookie), forms[action](validTokens[action]))
+			request.Header.Set("Origin", canonicalBase)
+			if recorder := get(server, request); recorder.Code != 405 {
+				t.Errorf("%s %s: status = %d, want 405", method, action, recorder.Code)
+			}
+		}
+	}
+
+	// Invalid token classes on POST: missing, forged, expired,
+	// wrong-action, and cross-session tokens all fail with 403.
+	submit := func(action, token string, withCookie *http.Cookie) int {
+		request := postForm(sessionRequest(http.MethodPost, action, withCookie), forms[action](token))
+		request.Header.Set("Origin", canonicalBase)
+		return get(server, request).Code
+	}
+	for i, action := range actions {
+		otherAction := actions[(i+1)%len(actions)]
+		cases := []struct {
+			name  string
+			token string
+			sess  *http.Cookie
+		}{
+			{"missing token", "", cookie},
+			{"forged token", validTokens[action][:20] + "forged", cookie},
+			{"expired token", issueExpiredCSRF(t, server, cookie, action), cookie},
+			{"wrong-action token", validTokens[otherAction], cookie},
+			{"cross-session token", validTokens[action], otherSession},
+		}
+		for _, c := range cases {
+			if code := submit(action, c.token, c.sess); code != 403 {
+				t.Errorf("%s with %s: status = %d, want 403", action, c.name, code)
+			}
+		}
+	}
+
+	// No rejected request changed any state.
+	ok, _ := server.deps.Policy.HasAccess("testapp", "github", "2001")
+	if !ok {
+		t.Error("a rejected mutation removed the grant")
+	}
+	admin, _ := server.deps.Policy.IsAdmin("github", "2001")
+	if admin {
+		t.Error("a rejected mutation granted the admin role")
+	}
+	snapshot := server.deps.Policy.Snapshot()
+	if len(snapshot.Grants["testapp"]) != 1 {
+		t.Errorf("a rejected mutation changed grants: %+v", snapshot.Grants["testapp"])
+	}
+	if _, err := server.deps.Sessions.Validate(sessionRequest(http.MethodGet, "/", cookie)); err != nil {
+		t.Errorf("a rejected logout ended the session: %v", err)
+	}
+	if _, err := server.deps.Sessions.Validate(sessionRequest(http.MethodGet, "/", otherSession)); err != nil {
+		t.Errorf("a rejected logout ended the other session: %v", err)
 	}
 }
 
@@ -496,9 +692,9 @@ func TestLogoutFlow(t *testing.T) {
 
 // --- helpers ---
 
-// issueExpiredCSRF mints a correctly signed token whose expiry has
-// passed.
-func issueExpiredCSRF(t *testing.T, server *Server, cookie *http.Cookie) string {
+// issueExpiredCSRF mints a correctly signed token for action whose
+// expiry has passed.
+func issueExpiredCSRF(t *testing.T, server *Server, cookie *http.Cookie, action string) string {
 	t.Helper()
 	request := sessionRequest(http.MethodGet, "/", cookie)
 	claims, err := server.deps.Sessions.Validate(request)
@@ -510,7 +706,7 @@ func issueExpiredCSRF(t *testing.T, server *Server, cookie *http.Cookie) string 
 		Sub:    claims.Subject,
 		JTI:    claims.ID,
 		Method: http.MethodPost,
-		Action: "/admin/apps/testapp/grants",
+		Action: action,
 		Expiry: time.Now().Add(-time.Minute).Unix(),
 	}, key)
 	if err != nil {

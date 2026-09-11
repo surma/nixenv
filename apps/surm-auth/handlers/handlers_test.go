@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -213,6 +214,24 @@ func sessionRequest(method, target string, cookie *http.Cookie) *http.Request {
 	if cookie != nil {
 		r.AddCookie(cookie)
 	}
+	return r
+}
+
+// aliasRequest builds a request on the auth alias host with the
+// session cookie attached.
+func aliasRequest(method, target string, cookie *http.Cookie) *http.Request {
+	r := httptest.NewRequest(method, "https://auth.apps.surma.technology"+target, nil)
+	r.Host = "auth.apps.surma.technology"
+	if cookie != nil {
+		r.AddCookie(cookie)
+	}
+	return r
+}
+
+// postForm attaches form values to a request as a POST body.
+func postForm(r *http.Request, form url.Values) *http.Request {
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.PostForm = form
 	return r
 }
 

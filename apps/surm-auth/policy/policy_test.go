@@ -358,6 +358,102 @@ func TestSeedMarkerSurvivesRestart(t *testing.T) {
 	}
 }
 
+// failingDirHandle stands in for an open directory whose Sync fails.
+// The failure models an I/O error on the final durability step after
+// a successful rename.
+type failingDirHandle struct {
+	syncErr error
+}
+
+func (h failingDirHandle) Sync() error  { return h.syncErr }
+func (h failingDirHandle) Close() error { return nil }
+
+// TestDirSyncFailureAfterRenameKeepsPreviousPolicy covers the final
+// directory durability step of a commit: the rename succeeds, then the
+// directory sync fails. The commit must report the failure, the store
+// must keep the previous in-memory policy, and the last good backup
+// must survive.
+func TestDirSyncFailureAfterRenameKeepsPreviousPolicy(t *testing.T) {
+	s, path := openStore(t)
+	if err := s.AddGrant("app1", "github", "1", "alice", "a"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The backup's durability step still succeeds; only the live
+	// file's post-rename directory sync fails.
+	calls := 0
+	s.dirOpener = func(dir string) (dirHandle, error) {
+		calls++
+		if calls == 1 {
+			return os.Open(dir)
+		}
+		return failingDirHandle{syncErr: errors.New("injected sync failure")}, nil
+	}
+
+	if err := s.AddGrant("app2", "github", "2", "bob", "a"); err == nil {
+		t.Fatal("commit succeeded despite a failed directory sync")
+	}
+	if calls != 2 {
+		t.Fatalf("directory syncs = %d, want 2 (backup, then live file)", calls)
+	}
+
+	// The previous in-memory policy stays active and available.
+	if !s.Available() {
+		t.Error("store became unavailable after a failed directory sync")
+	}
+	ok, err := s.HasAccess("app1", "github", "1")
+	if err != nil || !ok {
+		t.Errorf("previous grant lost after failed directory sync: %v, %v", ok, err)
+	}
+	ok, _ = s.HasAccess("app2", "github", "2")
+	if ok {
+		t.Error("uncommitted grant visible after failed directory sync")
+	}
+
+	// The backup still holds the last good generation.
+	backup, err := os.ReadFile(path + BackupSuffix)
+	if err != nil {
+		t.Fatalf("backup missing: %v", err)
+	}
+	bak, err := parse(backup)
+	if err != nil {
+		t.Fatalf("backup invalid after failed commit: %v", err)
+	}
+	if len(bak.Grants["app1"]) != 1 || len(bak.Grants["app2"]) != 0 {
+		t.Errorf("backup no longer holds the previous generation: %+v", bak.Grants)
+	}
+}
+
+// TestDirOpenFailureKeepsPreviousPolicy covers the other half of the
+// durability step: the directory cannot be opened for sync at all.
+// The failure must propagate instead of reporting success.
+func TestDirOpenFailureKeepsPreviousPolicy(t *testing.T) {
+	s, _ := openStore(t)
+	if err := s.AddGrant("app1", "github", "1", "alice", "a"); err != nil {
+		t.Fatal(err)
+	}
+
+	s.dirOpener = func(dir string) (dirHandle, error) {
+		return nil, errors.New("injected open failure")
+	}
+
+	if err := s.AddGrant("app2", "github", "2", "bob", "a"); err == nil {
+		t.Fatal("commit succeeded despite a failed directory open")
+	}
+
+	if !s.Available() {
+		t.Error("store became unavailable after a failed directory open")
+	}
+	ok, err := s.HasAccess("app1", "github", "1")
+	if err != nil || !ok {
+		t.Errorf("previous grant lost after failed directory open: %v, %v", ok, err)
+	}
+	ok, _ = s.HasAccess("app2", "github", "2")
+	if ok {
+		t.Error("uncommitted grant visible after failed directory open")
+	}
+}
+
 func TestBootstrapAdminReassertAndGuard(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "policy.json")
@@ -381,22 +477,39 @@ func TestBootstrapAdminReassertAndGuard(t *testing.T) {
 		t.Error("bootstrap admin not flagged as managed")
 	}
 
-	// Startup reasserts the role even if it was somehow lost.
-	if err := s.SetRole("github", "1", RoleUser, "nix"); err == nil {
-		// The guard blocks every UI demotion, so simulate a foreign
-		// edit on disk instead.
-		raw, _ := os.ReadFile(path)
-		demoted := replaceOnce(t, string(raw), `"role": "admin"`, `"role": "user"`)
-		writeRawPolicy(t, path, demoted)
-		if err := s.Reload(); err != nil {
-			t.Fatal(err)
-		}
-		if err := s.Bootstrap([]Admin{adminSpec("1")}, nil); err != nil {
-			t.Fatal(err)
-		}
-		if ok, _ := s.IsAdmin("github", "1"); !ok {
-			t.Error("startup failed to reassert the bootstrap admin role")
-		}
+	// The guard blocks every UI demotion, so simulate a foreign edit
+	// on disk that strips the role, then load it.
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	demoted := replaceOnce(t, string(raw), `"role": "admin"`, `"role": "user"`)
+	writeRawPolicy(t, path, demoted)
+	if err := s.Reload(); err != nil {
+		t.Fatal(err)
+	}
+	if ok, _ := s.IsAdmin("github", "1"); ok {
+		t.Fatal("demoted role did not load; the reassertion below would prove nothing")
+	}
+
+	// Startup reasserts the bootstrap admin role.
+	if err := s.Bootstrap([]Admin{adminSpec("1")}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if ok, _ := s.IsAdmin("github", "1"); !ok {
+		t.Error("startup failed to reassert the bootstrap admin role")
+	}
+	if !s.IsManaged("github", "1") {
+		t.Error("reassertion lost the managed flag")
+	}
+
+	// The reassertion was persisted and survives a restart.
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok, _ := reopened.IsAdmin("github", "1"); !ok {
+		t.Error("reasserted admin role not persisted across restart")
 	}
 }
 

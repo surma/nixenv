@@ -80,6 +80,13 @@ func nowString() string {
 // after a failed reload. Callers must map it to 503.
 var ErrUnavailable = errors.New("policy store unavailable")
 
+// dirHandle is the subset of an open directory file that the final
+// durability step needs.
+type dirHandle interface {
+	Sync() error
+	Close() error
+}
+
 // Store is the persistent policy store. All mutations serialize through
 // one mutex and publish in-memory state only after a successful atomic
 // commit.
@@ -90,6 +97,11 @@ type Store struct {
 	managed map[string]bool // bootstrap-managed subjects
 
 	available bool
+
+	// dirOpener opens a directory for the durability sync of an
+	// atomic write. Tests replace it to inject open and sync failures
+	// after the rename. Production code always uses os.Open.
+	dirOpener func(dir string) (dirHandle, error)
 }
 
 // Open loads the policy file. A missing file initializes an empty,
@@ -99,6 +111,9 @@ func Open(path string) (*Store, error) {
 	s := &Store{
 		path:    path,
 		managed: make(map[string]bool),
+		dirOpener: func(dir string) (dirHandle, error) {
+			return os.Open(dir)
+		},
 	}
 
 	data, err := os.ReadFile(path)
@@ -254,8 +269,6 @@ func (s *Store) commit(candidate *Policy, by string) error {
 	}
 	data = append(data, '\n')
 
-	dir := filepath.Dir(s.path)
-
 	// Back up the last good committed policy before replacing the
 	// file. The backup comes from the validated in-memory snapshot,
 	// never from the on-disk bytes: a file corrupted between a
@@ -267,14 +280,14 @@ func (s *Store) commit(candidate *Policy, by string) error {
 	}
 	prev = append(prev, '\n')
 	if _, err := os.Stat(s.path); err == nil {
-		if err := atomicWrite(dir, s.path+BackupSuffix, prev); err != nil {
+		if err := s.atomicWrite(s.path+BackupSuffix, prev); err != nil {
 			return fmt.Errorf("failed to back up policy: %w", err)
 		}
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("failed to inspect previous policy: %w", err)
 	}
 
-	if err := atomicWrite(dir, s.path, data); err != nil {
+	if err := s.atomicWrite(s.path, data); err != nil {
 		return fmt.Errorf("failed to commit policy: %w", err)
 	}
 
@@ -282,9 +295,13 @@ func (s *Store) commit(candidate *Policy, by string) error {
 	return nil
 }
 
-// atomicWrite writes data to a temporary file inside dir and renames
-// it onto target, syncing file and directory.
-func atomicWrite(dir, target string, data []byte) error {
+// atomicWrite writes data to a temporary file inside the policy
+// directory and renames it onto target. It syncs the file before the
+// rename and the directory after it. Errors from the final directory
+// durability step propagate: a candidate whose rename cannot be made
+// durable is never reported as committed.
+func (s *Store) atomicWrite(target string, data []byte) error {
+	dir := filepath.Dir(s.path)
 	tmp, err := os.CreateTemp(dir, ".surm-auth-*.tmp")
 	if err != nil {
 		return err
@@ -309,9 +326,19 @@ func atomicWrite(dir, target string, data []byte) error {
 	if err := os.Rename(tmpPath, target); err != nil {
 		return err
 	}
-	if dirHandle, err := os.Open(dir); err == nil {
-		dirHandle.Sync()
-		dirHandle.Close()
+	return s.syncDir(dir)
+}
+
+// syncDir opens dir and syncs it. Both failure modes, a failed open
+// and a failed sync, propagate to the caller.
+func (s *Store) syncDir(dir string) error {
+	handle, err := s.dirOpener(dir)
+	if err != nil {
+		return fmt.Errorf("failed to open %s for sync: %w", dir, err)
+	}
+	defer handle.Close()
+	if err := handle.Sync(); err != nil {
+		return fmt.Errorf("failed to sync %s: %w", dir, err)
 	}
 	return nil
 }
