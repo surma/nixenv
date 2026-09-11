@@ -127,15 +127,18 @@
         nuBin = "/Users/surma/.nix-profile/bin/nu";
         gcloudBin = "/Users/surma/.nix-profile/bin/gcloud";
       };
-    in
-    [
-      (shopisurm "10.0.0.20")
-      (shopisurm "100.79.232.5")
-      {
-        address = "10.0.0.30";
+      archon = address: {
+        inherit address;
         nuBin = "/run/current-system/sw/bin/nu";
         gcloudBin = "/run/current-system/sw/bin/gcloud";
-      }
+      };
+    in
+    [
+      # LAN address first, Tailscale as the fallback, for each host in turn.
+      (shopisurm "10.0.0.20")
+      (shopisurm "100.79.232.5")
+      (archon "10.0.0.30")
+      (archon "100.70.35.41")
     ];
 
   programs.mosh.enable = true;
