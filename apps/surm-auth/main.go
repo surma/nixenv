@@ -45,12 +45,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 3. Construct providers and their resolvers.
+	// 3. Construct providers and their resolvers. Endpoint overrides
+	// are an explicit test seam; production keeps the GitHub defaults.
 	provider := auth.NewGitHubProvider(
 		cfg.Providers.GitHub.ClientID,
 		cfg.Providers.GitHub.ClientSecret,
 		cfg.Server.BaseURL+"/callback",
-		auth.DefaultGitHubEndpoints(),
+		githubEndpoints(cfg),
 		nil,
 	)
 	providers := map[string]auth.Provider{provider.Name(): provider}
@@ -139,6 +140,27 @@ func main() {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+// githubEndpoints maps the optional configuration endpoint overrides
+// onto the provider endpoints. Empty fields fall back to the public
+// GitHub endpoints, so production configuration stays unchanged.
+func githubEndpoints(cfg *config.Config) auth.GitHubEndpoints {
+	endpoints := auth.DefaultGitHubEndpoints()
+	gh := cfg.Providers.GitHub
+	if gh.AuthURL != "" {
+		endpoints.AuthURL = gh.AuthURL
+	}
+	if gh.TokenURL != "" {
+		endpoints.TokenURL = gh.TokenURL
+	}
+	if gh.UserURL != "" {
+		endpoints.UserURL = gh.UserURL
+	}
+	if gh.UsersAPIURL != "" {
+		endpoints.UsersAPIURL = gh.UsersAPIURL
+	}
+	return endpoints
 }
 
 // resolveSeeds resolves seed usernames to stable identities for every

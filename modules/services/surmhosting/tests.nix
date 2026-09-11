@@ -1,10 +1,17 @@
 /**
-  Focused evaluation fixtures for the surmhosting and surm-auth modules.
+  Focused fixtures for the surmhosting and surm-auth modules.
 
-  Each fixture evaluates a minimal NixOS host that imports the real shared
-  modules and asserts on the generated Traefik configuration, the auth
+  Most fixtures evaluate a minimal NixOS host that imports the real shared
+  modules and assert on the generated Traefik configuration, the auth
   container contract, and the rendered surm-auth v2 configuration. Invalid
-  declarations must produce the intended assertion message.
+  declarations must produce the intended assertion message. These are
+  evaluation fixtures: they prove configuration values, not runtime
+  behavior.
+
+  Two fixtures execute real programs: `unitDependencyRuntime` runs
+  `systemd-analyze verify` against the generated unit dependency section,
+  and `legacyV1Rejected` runs the packaged surm-auth v2 binary against the
+  legacy v1 configuration schema and asserts the rejection.
 
   Import with a flake for full fidelity:
 
@@ -119,6 +126,10 @@ let
         messages |> lib.concatStringsSep " | "
       }";
 
+  # The failed assertion messages of a host, for assertions about the
+  # message content itself.
+  expectMessages = failedAssertionMessages;
+
   noSurmhostingAssertions =
     host: msg:
     let
@@ -127,6 +138,45 @@ let
     expect (
       !(messages |> lib.any (m: lib.hasInfix "surmhosting" m))
     ) "${msg} — unexpected surmhosting assertions: ${messages |> lib.concatStringsSep " | "}";
+
+  # Lines of one INI section of a rendered systemd unit text. Used to prove
+  # WHERE systemd reads a generated dependency from: top-level `[Unit]`
+  # dependencies are enforced, `[Service]` dependency keys are ignored.
+  iniSectionLines =
+    text: wanted:
+    let
+      lines = lib.splitString "\n" text;
+      isHeader = line: lib.hasPrefix "[" line && lib.hasSuffix "]" line;
+      headerName = line: builtins.substring 1 (builtins.stringLength line - 2) line;
+      step =
+        { current, found }:
+        line:
+        let
+          trimmed = lib.trim line;
+        in
+        if trimmed == "" then
+          {
+            inherit current found;
+          }
+        else if isHeader trimmed then
+          {
+            current = headerName trimmed;
+            inherit found;
+          }
+        else if current == wanted then
+          {
+            inherit current;
+            found = found ++ [ trimmed ];
+          }
+        else
+          {
+            inherit current found;
+          };
+    in
+    (lib.foldl' step {
+      current = null;
+      found = [ ];
+    } lines).found;
 
   checkFixture =
     name: conditions:
@@ -669,6 +719,224 @@ let
     ]) true "the host creates the persistent state and credential directories")
   ];
 
+  # Host mirroring the Nexus LLM proxy contract: a container service whose
+  # generated `container@` unit must depend on secrets.service, plus the v2
+  # auth container for the runtime verification below.
+  mkLlmHost =
+    containerService:
+    evalHost {
+      surmhosting = {
+        tls.enable = true;
+      }
+      // authCommon;
+      extraModules = [
+        (
+          { lib, ... }:
+          {
+            services.surmhosting.services.llm-proxy = {
+              inherit containerService;
+              container.config.system.stateVersion = "25.05";
+              expose.apps.proxy-llm = {
+                access.mode = "public";
+                internal.access = "trusted-network";
+                public.domain = "proxy-llm.apps.surma.technology";
+                public.aliases = [ "proxy.llm.surma.technology" ];
+                ports = [
+                  {
+                    port = 4000;
+                    hostname = "proxy-llm";
+                  }
+                ];
+              };
+            };
+          }
+        )
+      ];
+    };
+
+  # The corrected declaration shape: top-level `requires`.
+  llmFixed = mkLlmHost {
+    wants = [ "secrets.service" ];
+    requires = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+  };
+
+  # The rejected pre-fix shape: `serviceConfig.Requires` only, which the
+  # `[Service]` section does not interpret as a dependency.
+  llmServiceShape = mkLlmHost {
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+    serviceConfig.Requires = [ "secrets.service" ];
+  };
+
+  llmUnitName = "container@lc-llm-proxy";
+  llmUnitText = llmFixed.config.systemd.units."${llmUnitName}.service".text;
+  llmServiceShapeUnitText = llmServiceShape.config.systemd.units."${llmUnitName}.service".text;
+  authUnitText = llmFixed.config.systemd.units."container@surm-auth.service".text;
+
+  llmDependency = checkFixture "llm-dependency-contract" [
+    (noSurmhostingAssertions llmFixed "llm-dependency-contract")
+    (expectEq llmFixed.config.systemd.services.${llmUnitName}.requires [
+      "secrets.service"
+    ] "the generated LLM container unit requires secrets.service at the top level")
+    (expectEq (builtins.elem "secrets.service"
+      llmFixed.config.systemd.services.${llmUnitName}.wants
+    ) true "the generated LLM unit wants secrets.service")
+    (expectEq (builtins.elem "secrets.service"
+      llmFixed.config.systemd.services.${llmUnitName}.after
+    ) true "the generated LLM unit orders after secrets.service")
+    (expectEq (llmFixed.config.systemd.services.${llmUnitName}.serviceConfig.Requires or null
+    ) null "the generated LLM unit must not place Requires in the [Service] section")
+    (expectEq (lib.elem "Requires=secrets.service" (
+      iniSectionLines llmUnitText "Unit"
+    )) true "the rendered unit declares Requires=secrets.service in its [Unit] section")
+    (expectEq (lib.elem "Requires=secrets.service" (
+      iniSectionLines llmUnitText "Service"
+    )) false "the rendered unit has no Requires=secrets.service left in [Service]")
+    (expectEq (lib.elem "Requires=secrets.service" (
+      iniSectionLines llmServiceShapeUnitText "Unit"
+    )) false "the serviceConfig.Requires shape leaves the [Unit] section without the dependency")
+  ];
+
+  # Executable check with systemd's own unit loader: `systemd-analyze verify`
+  # (from the same nixpkgs systemd) parses the rendered [Unit] section,
+  # composed with a container@ template. A present secrets.service verifies
+  # cleanly; an absent one must make verify fail, proving a missing
+  # secrets.service cannot silently start the container. The pre-fix
+  # `[Service]`-section shape verifies cleanly without the unit — the
+  # silent-start defect this contract removes.
+  # Dependency directives only. systemd's verify behavior is only reliable
+  # on a dependency-only drop-in; the surrounding directives of the full
+  # section are covered by the evaluation assertions above.
+  unitDependencyLines =
+    text:
+    let
+      depKeys = [
+        "After="
+        "Wants="
+        "Requires="
+        "BindsTo="
+        "PartOf="
+      ];
+      isDep = line: lib.any (k: lib.hasPrefix k line) depKeys;
+    in
+    iniSectionLines text "Unit" |> lib.filter isDep;
+
+  unitDependencyDropin =
+    text:
+    pkgs.writeText "overrides.conf" (
+      "[Unit]\n" + (lib.concatStringsSep "\n" (unitDependencyLines text)) + "\n"
+    );
+
+  llmOverrides = unitDependencyDropin llmUnitText;
+  llmServiceShapeOverrides = unitDependencyDropin llmServiceShapeUnitText;
+  authOverrides = unitDependencyDropin authUnitText;
+
+  # Executable check with systemd's own unit loader: `systemd-analyze --user
+  # verify` (from the same nixpkgs systemd) parses the dependency lines of
+  # the rendered unit, composed with a container@ template. A present
+  # secrets.service verifies cleanly; an absent one must make verify fail,
+  # proving a missing secrets.service cannot silently start the container.
+  # The pre-fix `[Service]`-section shape verifies cleanly without the unit
+  # — the silent-start defect this contract removes. A canary drop-in with
+  # a broken ExecStart proves each drop-in is actually loaded.
+  # This is not a boot test: nothing starts a VM or a real manager.
+  unitDependencyRuntime =
+    pkgs.runCommand "surmhosting-unit-dependency-runtime"
+      {
+        template = pkgs.writeText "container@.service" ''
+          [Unit]
+          Description=Container '%i'
+          DefaultDependencies=no
+
+          [Service]
+          Type=oneshot
+          ExecStart=${pkgs.coreutils}/bin/true
+        '';
+        secretsStub = pkgs.writeText "secrets.service" ''
+          [Unit]
+          Description=secrets stub
+          DefaultDependencies=no
+
+          [Service]
+          Type=oneshot
+          ExecStart=${pkgs.coreutils}/bin/true
+        '';
+        inherit llmOverrides llmServiceShapeOverrides authOverrides;
+      }
+      ''
+        set -eu
+        da="${pkgs.systemd}/bin/systemd-analyze"
+        export XDG_RUNTIME_DIR="$PWD/xdg-run"
+        mkdir -p "$XDG_RUNTIME_DIR" units 'units/container@lc-llm-proxy.service.d' 'units/container@surm-auth.service.d'
+
+        cp "$template" units/container@.service
+        cp "$secretsStub" units/secrets.service
+        cp "$llmOverrides" units/container@lc-llm-proxy.service.d/overrides.conf
+        cp "$authOverrides" units/container@surm-auth.service.d/overrides.conf
+
+        verifyExpectOk() {
+          if ! "$da" --user verify --man=no "$1" >verify-ok.out 2>verify-ok.err; then
+            echo "systemd-analyze verify unexpectedly failed for $1" >&2
+            cat verify-ok.err >&2
+            exit 1
+          fi
+        }
+
+        verifyExpectMissingSecrets() {
+          set +e
+          "$da" --user verify --man=no "$1" >verify-missing.out 2>verify-missing.err
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "systemd-analyze verify unexpectedly succeeded without secrets.service for $1" >&2
+            exit 1
+          fi
+          if ! grep -q "secrets.service" verify-missing.err; then
+            echo "verify output did not mention secrets.service for $1" >&2
+            cat verify-missing.err >&2
+            exit 1
+          fi
+        }
+
+        verifyExpectCanary() {
+          # A drop-in with a broken ExecStart must fail verification. This
+          # proves the drop-in is actually loaded, so the passing and failing
+          # cases above are not vacuous. writeText outputs are read-only, so
+          # the replacement goes through a temporary file and mv.
+          printf '%s\n%s\n%s\n%s\n\n%s\n%s\n' '[Unit]' 'After=secrets.service' 'Wants=secrets.service' 'Requires=secrets.service' '[Service]' 'ExecStart=/nonexistent-canary' > canary-overrides.conf
+          mv canary-overrides.conf "$1"
+          set +e
+          "$da" --user verify --man=no "$2" >canary.out 2>canary.err
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "the canary drop-in was not loaded for $2" >&2
+            exit 1
+          fi
+        }
+
+        verifyExpectOk units/container@lc-llm-proxy.service
+        verifyExpectOk units/container@surm-auth.service
+
+        mv units/secrets.service units/secrets.service.saved
+        verifyExpectMissingSecrets units/container@lc-llm-proxy.service
+        verifyExpectMissingSecrets units/container@surm-auth.service
+
+        mv units/secrets.service.saved units/secrets.service
+        verifyExpectCanary units/container@lc-llm-proxy.service.d/overrides.conf units/container@lc-llm-proxy.service
+
+        # The [Service]-section shape stays silent when secrets.service is
+        # missing, which is exactly the defect the top-level requires option
+        # removes.
+        mv units/secrets.service units/secrets.service.saved
+        rm -f units/container@lc-llm-proxy.service.d/overrides.conf
+        cp "$llmServiceShapeOverrides" units/container@lc-llm-proxy.service.d/overrides.conf
+        verifyExpectOk units/container@lc-llm-proxy.service
+
+        touch $out
+      '';
+
   internalEntrypoint = checkFixture "internal-entrypoint" (
     let
       customPort = evalHost {
@@ -751,17 +1019,156 @@ let
     ]
   );
 
+  # internal.enable = false must suppress the app's internal routers while
+  # public routing stays independent, and an app that disables internal
+  # routing must not keep the shared internal entrypoint alive by itself.
+  internalDisabled = checkFixture "internal-disabled" (
+    let
+      host = evalHost {
+        surmhosting = {
+          tls.enable = true;
+        };
+        extraModules = [
+          (
+            { lib, ... }:
+            {
+              services.surmhosting.services.svc-one.expose.apps.app1 = {
+                access.mode = "public";
+                internal.enable = false;
+                public.domain = "app1.apps.surma.technology";
+                ports = [
+                  {
+                    port = 8080;
+                    hostname = "app1";
+                  }
+                ];
+              };
+              services.surmhosting.services.svc-two.expose.apps.app2 = {
+                access.mode = "public";
+                internal.access = "trusted-network";
+                public.domain = "app2.apps.surma.technology";
+                ports = [
+                  {
+                    port = 8081;
+                    hostname = "app2";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      allDisabled = evalHost {
+        surmhosting = {
+          tls.enable = true;
+        };
+        extraModules = [
+          (
+            { lib, ... }:
+            {
+              services.surmhosting.services.svc-one.expose.apps.app1 = {
+                access.mode = "public";
+                internal.enable = false;
+                public.domain = "app1.apps.surma.technology";
+                ports = [
+                  {
+                    port = 8080;
+                    hostname = "app1";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      internalModeDisabled = evalHost {
+        surmhosting = {
+          tls.enable = true;
+        };
+        extraModules = [
+          (
+            { lib, ... }:
+            {
+              services.surmhosting.services.svc-one.expose.apps.app1 = {
+                access.mode = "internal";
+                internal.enable = false;
+                ports = [
+                  {
+                    port = 8080;
+                    hostname = "app1";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      http = host.config.services.traefik.dynamicConfigOptions.http;
+      allDisabledStatic = allDisabled.config.services.traefik.staticConfigOptions;
+    in
+    [
+      (noSurmhostingAssertions host "internal-disabled")
+      (expectEq (http.routers ? "svc-one-app1") false "the disabled app has no internal router")
+      (expectEq (
+        http.services ? "svc-one-app1"
+      ) false "the disabled app has no internal load balancer service")
+      (expectEq http.routers."apps-app1-app1".entryPoints [
+        "websecure"
+      ] "the disabled app keeps its public router on websecure")
+      (expectEq http.routers."svc-two-app2".entryPoints [
+        "internal"
+      ] "the other app keeps its internal router")
+      (expectEq (
+        host.config.services.traefik.staticConfigOptions.entryPoints ? "internal"
+      ) true "the internal entrypoint stays for the app that keeps internal routing")
+      (expectEq (
+        allDisabledStatic.entryPoints ? "internal"
+      ) false "disabling the last internal routing consumer removes the internal entrypoint")
+      (expectMsg internalModeDisabled "without any router"
+        "an internal-only app with internal.enable = false"
+      )
+    ]
+  );
+
+  # The v1 schema, rendered by the surm-auth module's version = 1 branch.
+  # This is the exact configuration shape a pre-rework generation ran; the
+  # current v2 binary rejects it.
+  v1AuthHost = evalConfig [
+    ../surm-auth
+    (
+      { lib, ... }:
+      {
+        networking.hostName = "surm-auth-v1-fixture";
+        system.stateVersion = "25.05";
+        services.surm-auth = {
+          enable = true;
+          version = 1;
+          baseUrl = "https://auth.surma.technology";
+          github.clientIdFile = "/var/lib/surm-auth/github-client-id";
+          github.clientSecretFile = "/var/lib/surm-auth/github-client-secret";
+          session.cookieDomain = ".surma.technology";
+          session.cookieName = "_surm_auth";
+          session.cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+          apps.hedgedoc = {
+            mode = "allowlist";
+            seedUsers = [ "surma" ];
+          };
+        };
+      }
+    )
+  ];
+
+  legacyV1Final = v1AuthHost.config.services.surm-auth.finalConfig;
+
   legacyCompat = checkFixture "legacy-compatibility" (
     let
-      legacyHost = evalHost {
+      # Nonmigrated host with the legacy routing shorthand and no
+      # authentication. This shape stays valid: nothing here runs the v1
+      # auth runtime.
+      legacyRoutingHost = evalHost {
         surmhosting = {
           hostname = "surmedge";
           tls.enable = true;
-          auth.domain = "auth.surma.technology";
-          auth.github.clientIdFile = "/var/lib/surm-auth/github-client-id";
-          auth.github.clientSecretFile = "/var/lib/surm-auth/github-client-secret";
-          auth.cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
-          auth.cookieDomain = ".surma.technology";
         };
         extraModules = [
           (
@@ -772,7 +1179,6 @@ let
                 expose.port = 80;
                 expose.rule = "Host(`hedgedoc.surma.technology`)";
                 expose.useTargetHost = true;
-                expose.allowedGitHubUsers = [ "surma" ];
               };
             }
           )
@@ -794,41 +1200,54 @@ let
           )
         ];
       };
-      legacyHttp = legacyHost.config.services.traefik.dynamicConfigOptions.http;
-      legacyAuthContainer = legacyHost.config.containers."surm-auth";
-      legacyAuthService = legacyAuthContainer.config.services.surm-auth;
+      # Nonmigrated host with a legacy seed list. The repository ships only
+      # the v2 surm-auth binary, so this shape must fail evaluation instead
+      # of rendering a v1 auth container no binary can run.
+      legacyAuthHost = evalHost {
+        surmhosting = {
+          hostname = "surmedge";
+          tls.enable = true;
+          auth.domain = "auth.surma.technology";
+          auth.github.clientIdFile = "/var/lib/surm-auth/github-client-id";
+          auth.github.clientSecretFile = "/var/lib/surm-auth/github-client-secret";
+          auth.cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+          auth.cookieDomain = ".surma.technology";
+        };
+        extraModules = [
+          (
+            { lib, ... }:
+            {
+              services.surmhosting.services.hedgedoc = {
+                host = "10.0.0.5";
+                expose.port = 80;
+                expose.allowedGitHubUsers = [ "surma" ];
+              };
+            }
+          )
+        ];
+      };
+      # The v1 schema, rendered by the surm-auth module's version = 1 branch.
+      # This is the exact configuration shape a pre-rework generation ran;
+      # the current v2 binary rejects it (see legacyV1Rejected below).
+      legacyV1Final = v1AuthHost.config.services.surm-auth.finalConfig;
+      legacyRoutingHttp = legacyRoutingHost.config.services.traefik.dynamicConfigOptions.http;
     in
     [
       (expectEq (
-        legacyHost.config.containers ? "surm-auth"
-      ) true "the legacy host still runs the auth container")
-      (expectEq legacyAuthService.version 1 "the legacy host renders the v1 contract")
-      (expectEq (lib.hasAttr "oauth" legacyAuthService.finalConfig) true
-        "the v1 configuration keeps the oauth key"
-      )
-      (expectEq legacyAuthService.finalConfig.session.cookie_name "_surm_auth"
-        "the v1 configuration keeps the old cookie name"
-      )
-      (expectEq legacyAuthService.finalConfig.apps.hedgedoc.allowed_users [
-        "surma"
-      ] "the v1 configuration keeps allowed_users")
-      (expectEq (
-        legacyAuthContainer.bindMounts ? "state"
-      ) false "the legacy container has no state bind mount")
-      (expectEq (
-        legacyAuthContainer.config.systemd.services."surm-auth".serviceConfig ? "LoadCredential"
-      ) false "the legacy unit has no LoadCredential")
-      (expectEq legacyHttp.middlewares."auth-hedgedoc".forwardAuth.trustForwardHeader true
-        "the legacy middleware keeps trusting forwarded headers"
-      )
-      (expectEq legacyHttp.routers."hedgedoc-hedgedoc".entryPoints [
+        legacyRoutingHost.config.containers ? "surm-auth"
+      ) false "a nonmigrated host without authentication runs no auth container")
+      (expectEq legacyRoutingHttp.routers."hedgedoc-hedgedoc".entryPoints [
         "websecure"
-      ] "legacy routers keep using websecure when TLS is enabled")
+      ] "legacy routing shorthand keeps using websecure when TLS is enabled")
+      (expectEq legacyRoutingHttp.middlewares."host-rewrite-hedgedoc".headers.customRequestHeaders.Host
+        "10.0.0.5"
+        "legacy routing shorthand keeps the useTargetHost middleware"
+      )
       (expectEq (
-        legacyHost.config.services.traefik.staticConfigOptions.entryPoints ? "internal"
-      ) false "the legacy host gets no internal entrypoint")
-      (expectEq legacyHost.config.services.traefik.environmentFiles [ ]
-        "the legacy host gets no environment file"
+        legacyRoutingHost.config.services.traefik.staticConfigOptions.entryPoints ? "internal"
+      ) false "the legacy routing host gets no internal entrypoint")
+      (expectEq legacyRoutingHost.config.services.traefik.environmentFiles [ ]
+        "the legacy routing host gets no environment file"
       )
       (expectEq
         legacyNoTls.config.services.traefik.dynamicConfigOptions.http.routers."admin-admin".entryPoints
@@ -837,8 +1256,49 @@ let
         ]
         "a TLS-less legacy host keeps routing on the web entrypoint"
       )
+      (expectEq (lib.hasAttr "oauth" legacyV1Final) true "the historical v1 schema keeps the oauth key")
+      (expectEq legacyV1Final.session.cookie_name "_surm_auth"
+        "the historical v1 schema keeps the old cookie name"
+      )
+      (expectEq legacyV1Final.apps.hedgedoc.allowed_users [
+        "surma"
+      ] "the historical v1 schema keeps allowed_users")
+      (expectMsg legacyAuthHost "rejects the v1 configuration schema"
+        "legacy v1 authentication on a nonmigrated host must fail evaluation and name the rollback path"
+      )
+      (expectEq (lib.any (m: lib.hasInfix "saved generations" m) (
+        expectMessages legacyAuthHost
+      )) true "the legacy rejection names saved generations as the rollback path")
     ]
   );
+
+  # Executable boundary proof: the current surm-auth v2 binary rejects the
+  # v1 configuration schema that a nonmigrated host would render. Running
+  # the v1 runtime is therefore only possible from old saved generations,
+  # which still contain the v1 binary — not from a newly built generation.
+  legacyV1Rejected =
+    pkgs.runCommand "surmhosting-legacy-v1-rejected"
+      {
+        v1ConfigFile = pkgs.writeText "surm-auth-v1-config.yaml" (builtins.toJSON legacyV1Final);
+        surmAuthPkg = flakeInputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
+      }
+      ''
+        set +e
+        "$surmAuthPkg/bin/surm-auth" --config "$v1ConfigFile" >stdout.log 2>stderr.log
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
+          echo "surm-auth v2 accepted a legacy v1 configuration" >&2
+          exit 1
+        fi
+        if ! grep -q "legacy v1 key 'oauth:'" stderr.log && ! grep -q "legacy v1 key 'oauth:'" stdout.log; then
+          echo "the v2 rejection did not cite the legacy oauth key" >&2
+          cat stderr.log >&2
+          cat stdout.log >&2
+          exit 1
+        fi
+        touch $out
+      '';
 
   authWithoutSeeds = checkFixture "auth-without-legacy-seeds" (
     let
@@ -1132,8 +1592,12 @@ let
       authKeys
       http01Migrated
       v2Config
+      llmDependency
+      unitDependencyRuntime
       internalEntrypoint
+      internalDisabled
       legacyCompat
+      legacyV1Rejected
       authWithoutSeeds
       invalidDeclarations
       ;

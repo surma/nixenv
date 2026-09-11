@@ -148,6 +148,59 @@ func TestLoadRejectsUnknownField(t *testing.T) {
 	}
 }
 
+func TestLoadProviderEndpointOverrides(t *testing.T) {
+	overridden := strings.Replace(validConfig,
+		`    client_secret_file: "/tmp/github-client-secret"`,
+		`    client_secret_file: "/tmp/github-client-secret"
+    auth_url: "http://127.0.0.1:1/authorize"
+    token_url: "http://127.0.0.1:1/token"
+    user_url: "http://127.0.0.1:1/user"
+    users_api_url: "http://127.0.0.1:1/users"`, 1)
+	cfg, err := loadFromString(t, overridden)
+	if err != nil {
+		t.Fatalf("endpoint overrides rejected: %v", err)
+	}
+	if cfg.Providers.GitHub.AuthURL != "http://127.0.0.1:1/authorize" {
+		t.Errorf("auth_url = %q", cfg.Providers.GitHub.AuthURL)
+	}
+	if cfg.Providers.GitHub.TokenURL != "http://127.0.0.1:1/token" {
+		t.Errorf("token_url = %q", cfg.Providers.GitHub.TokenURL)
+	}
+	if cfg.Providers.GitHub.UserURL != "http://127.0.0.1:1/user" {
+		t.Errorf("user_url = %q", cfg.Providers.GitHub.UserURL)
+	}
+	if cfg.Providers.GitHub.UsersAPIURL != "http://127.0.0.1:1/users" {
+		t.Errorf("users_api_url = %q", cfg.Providers.GitHub.UsersAPIURL)
+	}
+
+	plain, err := loadFromString(t, validConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain.Providers.GitHub.AuthURL != "" || plain.Providers.GitHub.TokenURL != "" ||
+		plain.Providers.GitHub.UserURL != "" || plain.Providers.GitHub.UsersAPIURL != "" {
+		t.Error("unset endpoint fields must stay empty so production keeps the GitHub defaults")
+	}
+}
+
+func TestLoadRejectsBadEndpointOverride(t *testing.T) {
+	bad := strings.Replace(validConfig, `    client_secret_file: "/tmp/github-client-secret"`,
+		`    client_secret_file: "/tmp/github-client-secret"
+    token_url: "github.com/not-a-url"`, 1)
+	if _, err := loadFromString(t, bad); err == nil {
+		t.Error("non-URL endpoint override accepted")
+	}
+}
+
+func TestLoadRejectsUnknownProviderField(t *testing.T) {
+	bad := strings.Replace(validConfig, `    client_secret_file: "/tmp/github-client-secret"`,
+		`    client_secret_file: "/tmp/github-client-secret"
+    client_secret: "inline-secrets-are-forbidden"`, 1)
+	if _, err := loadFromString(t, bad); err == nil {
+		t.Error("unknown provider field accepted")
+	}
+}
+
 func TestLoadRejectsWrongVersion(t *testing.T) {
 	_, err := loadFromString(t, strings.Replace(validConfig, "version: 2", "version: 1", 1))
 	if err == nil {

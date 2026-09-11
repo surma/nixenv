@@ -20,8 +20,10 @@
 
   services.surmhosting.services.llm-proxy.containerService = {
     wants = [ "secrets.service" ];
+    # Top-level (unit section) Requires=: a failed or missing secrets.service
+    # must prevent the LLM container from starting, not only order it later.
+    requires = [ "secrets.service" ];
     after = [ "secrets.service" ];
-    serviceConfig.Requires = [ "secrets.service" ];
   };
 
   services.surmhosting.services.llm-proxy.expose.apps = {

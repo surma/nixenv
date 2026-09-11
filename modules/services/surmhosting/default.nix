@@ -135,6 +135,18 @@ let
         default = [ ];
         description = "Additional systemd Wants= dependencies for the container unit.";
       };
+      requires = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = ''
+          Additional top-level systemd `Requires=` dependencies for the
+          container unit. Top-level means the `[Unit]` section, where
+          systemd treats a missing or failed unit as a start failure of
+          the container. `serviceConfig.Requires` does not provide this
+          guarantee because the `[Service]` section ignores dependency
+          keys.
+        '';
+      };
       after = mkOption {
         type = types.listOf types.str;
         default = [ ];
@@ -143,7 +155,12 @@ let
       serviceConfig = mkOption {
         type = types.attrsOf types.anything;
         default = { };
-        description = "Additional systemd serviceConfig for the generated container@ unit.";
+        description = ''
+          Additional systemd serviceConfig for the generated container@ unit.
+          Dependency keys (`Requires=`, `Wants=`, `After=`) belong in the
+          dedicated `requires`/`wants`/`after` options instead; systemd does
+          not interpret them inside `[Service]`.
+        '';
       };
     };
   };
@@ -210,7 +227,9 @@ let
               Legacy seed adapter. On hosts with v2 authentication or an
               appsNamespace, this list must map onto exactly one allowlist
               logical app of this service, whose seed users it extends. On
-              nonmigrated hosts it keeps enabling the v1 allowlist runtime.
+              nonmigrated hosts the evaluation fails: the repository ships
+              only the v2 surm-auth binary, which cannot run the legacy v1
+              allowlist runtime. Old saved generations are the rollback path.
             '';
             example = [
               "surma"
@@ -330,7 +349,7 @@ let
                     " && (${portCfg.publicPathPrefixes |> map (p: "PathPrefix(`${p}`)") |> concatStringsSep " || "})";
               in
               lib.recursiveUpdate
-                {
+                (lib.optionalAttrs app.internal.enable {
                   routers.${serviceName} = {
                     rule =
                       if portCfg.internalRule != null then
@@ -343,7 +362,7 @@ let
                   services.${serviceName}.loadBalancer.servers = [
                     { inherit url; }
                   ];
-                }
+                })
                 (
                   lib.optionalAttrs (app.public.domain != null) {
                     routers.${publicName} = {
@@ -376,6 +395,7 @@ let
           ]
           ++ (lib.optional config.services.tailscale.enable "tailscaled.service")
           ++ value.containerService.wants;
+          requires = value.containerService.requires;
           after = [
             "network-online.target"
           ]
@@ -690,6 +710,10 @@ let
           message = "surmhosting: logical app `${key}` on service `${service}` must set internal.access when internal.enable is true.";
         }
         {
+          assertion = mode != "internal" || app.internal.enable;
+          message = "surmhosting: logical app `${key}` on service `${service}` is internal-only; setting internal.enable = false would leave it without any router.";
+        }
+        {
           assertion = mode != "internal" || app.public.domain == null;
           message = "surmhosting: logical app `${key}` on service `${service}` is internal-only and must not declare a public domain.";
         }
@@ -741,108 +765,14 @@ let
   );
 
   # ---- Legacy v1 authentication (nonmigrated hosts) ----
-  # Preserved byte-for-byte: nonmigrated host generations keep the v1
-  # runtime, and the v2 binary rejects this configuration shape with a
-  # migration error.
-  legacyAuthConfig = {
-    containers."surm-auth" = mkIf legacyAuthEnabled {
-      autoStart = true;
-      privateNetwork = true;
-      localAddress = "10.202.0.2";
-      hostAddress = "10.202.0.1";
-      ephemeral = true;
-
-      bindMounts = {
-        secrets = {
-          mountPoint = "/var/lib/secrets";
-          hostPath = "/var/lib/surm-auth";
-          isReadOnly = true;
-        };
-      };
-
-      config =
-        { ... }:
-        {
-          imports = [ ../surm-auth ];
-
-          system.stateVersion = "25.05";
-
-          networking.useHostResolvConf = mkForce false;
-          networking.nameservers = [ "8.8.8.8" ];
-
-          services.surm-auth = {
-            enable = true;
-            version = 1;
-            package = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
-            baseUrl = "https://${cfg.auth.domain}";
-
-            github.clientIdFile = "/var/lib/secrets/github-client-id";
-            github.clientSecretFile = "/var/lib/secrets/github-client-secret";
-
-            session.cookieName = "_surm_auth";
-            session.cookieDomain = cfg.auth.cookieDomain;
-            session.cookieSecretFile = "/var/lib/secrets/cookie-secret";
-            session.duration = cfg.auth.sessionDuration;
-
-            apps = lib.mapAttrs (_: service: {
-              mode = "allowlist";
-              domains = [ ];
-              seedUsers = service.expose.allowedGitHubUsers;
-            }) servicesWithAuth;
-          };
-
-          networking.firewall.enable = false;
-        };
-    };
-
-    systemd.services."container@surm-auth" = mkIf legacyAuthEnabled {
-      serviceConfig = mkMerge [
-        (mkIf (cfg.containerLimits.memoryMax != null) {
-          MemoryMax = mkDefault cfg.containerLimits.memoryMax;
-        })
-        (mkIf (cfg.containerLimits.memorySwapMax != null) {
-          MemorySwapMax = mkDefault cfg.containerLimits.memorySwapMax;
-        })
-      ];
-    };
-
-    services.traefik = mkIf legacyAuthEnabled {
-      dynamicConfigOptions.http = {
-        routers."surm-auth" = {
-          rule = "Host(`${cfg.auth.domain}`)";
-          service = "surm-auth";
-          entryPoints = [ "websecure" ];
-        };
-
-        services."surm-auth".loadBalancer.servers = [
-          {
-            url = "http://10.202.0.2:8080";
-          }
-        ];
-
-        middlewares = lib.mapAttrs' (
-          name: _service:
-          lib.nameValuePair "auth-${name}" {
-            forwardAuth = {
-              address = "http://10.202.0.2:8080/auth?app=${name}";
-              trustForwardHeader = true;
-              authResponseHeaders = [
-                "X-Auth-Request-User"
-                "X-Auth-Request-Email"
-              ];
-              authRequestHeaders = [
-                "Cookie"
-                "X-Forwarded-Method"
-                "X-Forwarded-Proto"
-                "X-Forwarded-Host"
-                "X-Forwarded-Uri"
-              ];
-            };
-          }
-        ) servicesWithAuth;
-      };
-    };
-  };
+  # The repository ships only the v2 surm-auth binary, and the v2 loader
+  # rejects the v1 schema (`oauth`, `allowed_users`, `_surm_auth`) with a
+  # migration error. A nonmigrated host with a legacy seed list would
+  # otherwise render a v1 configuration that no shipped binary can run,
+  # so the configuration is rejected at evaluation time. Rollback uses
+  # the host's old saved generations, which still contain the v1 binary.
+  # Nonmigrated hosts without authentication keep the legacy routing
+  # shorthand (expose.port/expose.ports) unchanged.
 in
 {
   options = {
@@ -1058,6 +988,15 @@ in
           surmhosting authentication is enabled, but services.surmhosting.auth.cookieSecretFile is not set.
         '';
       }
+      {
+        assertion = !legacyAuthEnabled;
+        message = ''
+          surmhosting: host configures legacy v1 authentication via expose.allowedGitHubUsers (services: ${concatStringsSep ", " (attrNames servicesWithAuth)}) without services.surmhosting.auth.enable. The repository ships only the surm-auth v2
+          binary, which rejects the v1 configuration schema at startup, so a newly built generation
+          cannot run v1 authentication. Roll back with the host's old saved generations, which still
+          contain the v1 binary, or migrate the host to v2 authentication with explicit expose.apps.
+        '';
+      }
     ]
     ++ serviceAssertions
     ++ appAssertions;
@@ -1161,7 +1100,6 @@ in
         }
       ]
       ++ (managedServiceConfigs |> map (service: service.services.traefik))
-      ++ (lib.optional legacyAuthEnabled legacyAuthConfig.services.traefik)
       ++ (lib.optional v2AuthEnabled {
         dynamicConfigOptions.http = {
           routers."surm-auth" = {
@@ -1186,7 +1124,6 @@ in
 
     systemd.services = mkMerge (
       (managedServiceConfigs |> map (service: service.systemd.services))
-      ++ (lib.optional legacyAuthEnabled legacyAuthConfig.systemd.services)
       ++ (lib.optional v2AuthEnabled {
         "container@surm-auth" = {
           # A failed decryption must prevent container startup.
@@ -1220,7 +1157,6 @@ in
 
     containers = mkMerge (
       (managedServiceConfigs |> map (service: service.containers))
-      ++ (lib.optional legacyAuthEnabled legacyAuthConfig.containers)
       ++ (lib.optional v2AuthEnabled {
         "surm-auth" = {
           autoStart = true;

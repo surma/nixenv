@@ -69,12 +69,19 @@ type ProvidersConfig struct {
 }
 
 // GitHubConfig holds GitHub provider file references. The secret values
-// are loaded through LoadSecrets and never serialized.
+// are loaded through LoadSecrets and never serialized. The endpoint
+// fields are an explicit test seam: empty values select the public
+// GitHub endpoints, and production configuration must leave them
+// unset.
 type GitHubConfig struct {
 	ClientIDFile     string `yaml:"client_id_file"`
 	ClientSecretFile string `yaml:"client_secret_file"`
 	ClientID         string `yaml:"-"`
 	ClientSecret     string `yaml:"-"`
+	AuthURL          string `yaml:"auth_url"`
+	TokenURL         string `yaml:"token_url"`
+	UserURL          string `yaml:"user_url"`
+	UsersAPIURL      string `yaml:"users_api_url"`
 }
 
 // BootstrapAdmin is a Nix-owned admin identity. The ID must be the
@@ -167,6 +174,10 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("providers.github: client_id_file and client_secret_file must not be empty")
 	}
 
+	if err := c.Providers.GitHub.validateEndpoints(); err != nil {
+		return fmt.Errorf("providers.github: %w", err)
+	}
+
 	for i, admin := range c.BootstrapAdmins {
 		if admin.Provider == "" {
 			return fmt.Errorf("bootstrap_admins[%d]: provider must not be empty", i)
@@ -241,6 +252,27 @@ func (s *SessionConfig) validate() error {
 	}
 	if d <= 0 {
 		return fmt.Errorf("duration %q must be positive", s.Duration)
+	}
+	return nil
+}
+
+// validateEndpoints requires every configured endpoint override to be
+// an absolute HTTP(S) URL. Empty fields stay untouched and select the
+// GitHub defaults.
+func (g GitHubConfig) validateEndpoints() error {
+	for field, value := range map[string]string{
+		"auth_url":      g.AuthURL,
+		"token_url":     g.TokenURL,
+		"user_url":      g.UserURL,
+		"users_api_url": g.UsersAPIURL,
+	} {
+		if value == "" {
+			continue
+		}
+		u, err := url.Parse(value)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return fmt.Errorf("%s %q must be an absolute HTTP(S) URL", field, value)
+		}
 	}
 	return nil
 }
