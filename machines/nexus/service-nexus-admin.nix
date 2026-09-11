@@ -108,6 +108,15 @@ in
 
   services.surmhosting.services.admin = {
     host = "localhost";
-    expose.port = port;
+    expose.apps.admin = {
+      access.mode = "internal";
+      internal.access = "trusted-network";
+      ports = [
+        {
+          port = port;
+          hostname = "admin";
+        }
+      ];
+    };
   };
 }

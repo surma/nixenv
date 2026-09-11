@@ -11,7 +11,16 @@
     after = [ "secrets.service" ];
   };
 
-  services.surmhosting.services.overview.expose.port = 8080;
+  services.surmhosting.services.overview.expose.apps.overview = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "overview";
+      }
+    ];
+  };
   services.surmhosting.services.overview.container = {
     config = {
       system.stateVersion = "25.05";

@@ -62,7 +62,18 @@ let
   '';
 in
 {
-  services.surmhosting.services.music.expose.port = 8080;
+  services.surmhosting.services.music.expose.apps.music = {
+    access.mode = "public";
+    internal.access = "trusted-network";
+    public.domain = "music.apps.surma.technology";
+    public.aliases = [ "music.surma.technology" ];
+    ports = [
+      {
+        port = 8080;
+        hostname = "music";
+      }
+    ];
+  };
   services.surmhosting.services.music.container = {
     config = {
       system.stateVersion = "25.05";

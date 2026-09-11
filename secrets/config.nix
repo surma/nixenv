@@ -174,6 +174,7 @@
       keys = [
         "surma"
         "pylon"
+        "nexus"
       ];
     };
     surm-auth-github-client-secret = {
@@ -181,6 +182,7 @@
       keys = [
         "surma"
         "pylon"
+        "nexus"
       ];
     };
     surm-auth-cookie-secret = {
@@ -188,6 +190,7 @@
       keys = [
         "surma"
         "pylon"
+        "nexus"
       ];
     };
     dashboard-server-env = {
@@ -242,6 +245,7 @@
         "surma"
         "nexus"
         "citadel"
+        "pylon"
       ];
     };
     nixos-admin-deploy-key = {

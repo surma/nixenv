@@ -28,7 +28,7 @@ let
     export HOME=/var/cache/firefly-enricher
     export GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/var/lib/scout/gws-credentials.json
     export FIREFLY_TOKEN_FILE=/var/lib/firefly-importer/access-token.txt
-    export FIREFLY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
+    export FIREFLY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
     exec ${enricher}/bin/firefly-enricher "$@"
   '';
 in

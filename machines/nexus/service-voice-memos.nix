@@ -1,6 +1,15 @@
 { pkgs, inputs, ... }:
 {
-  services.surmhosting.services.voice-memos.expose.port = 8080;
+  services.surmhosting.services.voice-memos.expose.apps.voice-memos = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "voice-memos";
+      }
+    ];
+  };
   services.surmhosting.services.voice-memos.container = {
     config = {
       system.stateVersion = "25.05";

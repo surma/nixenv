@@ -418,6 +418,94 @@ let
     ]
   );
 
+  # A migrated host behind a plain TCP forwarder (no DNS provider
+  # credentials on this host): the wildcard joins the ACME domain list only
+  # under DNS-01. Under HTTP-01 the resolver uses the HTTP challenge on the
+  # web entrypoint, adds no environment files, and depends on no secrets
+  # service; Traefik derives one exact certificate per router Host rule.
+  http01Migrated = checkFixture "http01-migrated" (
+    let
+      host = evalHost {
+        surmhosting = {
+          appsNamespace = "apps.surma.technology";
+          tls.enable = true;
+          tls.challenge = "http-01";
+          tls.email = "surma@surma.dev";
+          dashboard.enable = true;
+        }
+        // authCommon;
+        extraModules = [
+          (
+            { lib, ... }:
+            {
+              services.surmhosting.services.svc-hedgedoc = {
+                host = "10.201.0.2";
+                expose.apps.hedgedoc2 = {
+                  access.mode = "allowlist";
+                  access.seedUsers = [ "surma" ];
+                  internal.access = "trusted-network";
+                  public.domain = "hedgedoc.apps.surma.technology";
+                  public.aliases = [ "hedgedoc.surma.technology" ];
+                  ports = [
+                    {
+                      port = 3001;
+                      hostname = "frontend";
+                    }
+                  ];
+                };
+              };
+            }
+          )
+        ];
+      };
+      http = host.config.services.traefik.dynamicConfigOptions.http;
+      static = host.config.services.traefik.staticConfigOptions;
+      acme = static.certificatesResolvers.letsencrypt.acme;
+    in
+    [
+      (noSurmhostingAssertions host "http01-migrated")
+      (expectEq acme.httpChallenge.entryPoint "web"
+        "the resolver uses the HTTP-01 challenge on the web entrypoint"
+      )
+      (expectEq (acme ? dnsChallenge) false "the resolver uses no DNS-01 challenge")
+      (expectEq (acme.domains or [ ]
+      ) [ ] "an HTTP-01 migrated host must not contain a wildcard ACME domain for the apps namespace")
+      (expectEq (
+        host.config.services.traefik.environmentFiles |> map toString
+      ) [ ] "the HTTP-01 challenge adds no environment files")
+      (expectEq (builtins.elem "secrets.service" host.config.systemd.services.traefik.requires) false
+        "traefik does not require the secrets service under HTTP-01"
+      )
+      (expectEq (builtins.elem "secrets.service" host.config.systemd.services.traefik.after) false
+        "traefik does not order after the secrets service under HTTP-01"
+      )
+      (expectEq static.entryPoints.web.http.redirections.entryPoint {
+        to = "websecure";
+        scheme = "https";
+        permanent = true;
+      } "port 80 still redirects explicitly to HTTPS under HTTP-01")
+      (expectEq static.entryPoints.web.forwardedHeaders {
+        insecure = false;
+        trustedIPs = [ ];
+      } "the public HTTP entrypoint still distrusts forwarded headers")
+      (expectEq static.entryPoints.websecure.forwardedHeaders {
+        insecure = false;
+        trustedIPs = [ ];
+      } "the public HTTPS entrypoint still distrusts forwarded headers")
+      (expectEq static.entryPoints.websecure.http.tls.certResolver "letsencrypt"
+        "public routers use the HTTP-01 resolver, so Traefik requests exact certificates"
+      )
+      (expectEq http.routers."apps-hedgedoc2-frontend".rule
+        "(Host(`hedgedoc.apps.surma.technology`) || Host(`hedgedoc.surma.technology`))"
+        "the public router pins the exact app domains, from which Traefik derives one certificate per domain"
+      )
+      (expectEq http.routers."surm-auth".rule
+        "Host(`auth.surma.technology`) || Host(`auth.apps.surma.technology`)"
+        "the auth router pins the exact auth domains, from which Traefik derives one certificate per domain"
+      )
+    ]
+  );
+
   surmAuthContainer = inventoryHost.config.containers."surm-auth";
   surmAuthService = surmAuthContainer.config.services.surm-auth;
 
@@ -1042,6 +1130,7 @@ let
     inherit
       routers
       authKeys
+      http01Migrated
       v2Config
       internalEntrypoint
       legacyCompat

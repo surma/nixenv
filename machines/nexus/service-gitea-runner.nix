@@ -58,7 +58,7 @@
       services.gitea-actions-runner.instances.websearchcli = {
         enable = true;
         name = "nexus-web-search-cli-nix-x64";
-        url = "http://gitea.nexus.hosts.10.0.0.2.nip.io";
+        url = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
         tokenFile = "/var/lib/credentials/gitea-runner/token.env";
         labels = [ "nixos:host" ];
         hostPackages = with pkgs; [

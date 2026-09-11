@@ -869,7 +869,7 @@ def cmd_run(args, firefly: FireflyClient, llm: LLMClient) -> int:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--firefly-url", default=os.environ.get(
-        "FIREFLY_URL", "http://firefly.nexus.hosts.10.0.0.2.nip.io"))
+        "FIREFLY_URL", "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"))
     p.add_argument("--firefly-token-file", default=os.environ.get(
         "FIREFLY_TOKEN_FILE", "/var/lib/firefly-importer/access-token.txt"))
     p.add_argument("--llm-endpoint", default=os.environ.get(

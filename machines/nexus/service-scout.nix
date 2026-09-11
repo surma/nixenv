@@ -78,11 +78,16 @@ in
     chmod 0600 /var/lib/scout/scout.env
   '';
 
+  # Read stdin once, then write both consumers: the Scout container key
+  # (existing contract) and the LLM receiver's credential copy
+  # (auth-rework section 6.5). No competing target declarations.
   secrets.items.llm-proxy-client-key.command = ''
-    mkdir -p /var/lib/scout
+    mkdir -p /var/lib/scout /var/lib/llm-proxy-credentials
     key="$(cat)"
     printf '%s\n' "$key" > /var/lib/scout/llm-proxy-client-key
     chmod 0644 /var/lib/scout/llm-proxy-client-key
+    printf '%s\n' "$key" > /var/lib/llm-proxy-credentials/client-key
+    chmod 0644 /var/lib/llm-proxy-credentials/client-key
   '';
 
   secrets.items.scout-gws-credentials.command = ''
@@ -168,11 +173,16 @@ in
     chmod 0600 /var/lib/scout/hetzner-cloud-api-token
   '';
 
+  # Preserve the Scout copy (surma:users, 0600) and add the LLM
+  # receiver's root-owned credential copy (auth-rework section 6.5).
   secrets.items.openrouter-api-key.command = ''
-    mkdir -p /var/lib/scout
-    cat > /var/lib/scout/openrouter-api-key
+    mkdir -p /var/lib/scout /var/lib/llm-proxy-credentials
+    key="$(cat)"
+    printf '%s\n' "$key" > /var/lib/scout/openrouter-api-key
     chown surma:users /var/lib/scout/openrouter-api-key
     chmod 0600 /var/lib/scout/openrouter-api-key
+    printf '%s\n' "$key" > /var/lib/llm-proxy-credentials/openrouter-key
+    chmod 0644 /var/lib/llm-proxy-credentials/openrouter-key
   '';
 
   secrets.items.scout-firefly-access-token.command = ''

@@ -502,10 +502,15 @@ let
   internalEntrypointEnabled = hasInternalApps || (v2RoutingActive && cfg.dashboard.enable);
 
   tlsChallenge = cfg.tls.challenge;
-  certResolverName = if tlsChallenge != null then "cloudflare" else "letsencrypt";
+  certResolverName = if tlsChallenge == "dns-01" then "cloudflare" else "letsencrypt";
 
+  # HTTP-01 cannot issue wildcard certificates, so the apps-namespace
+  # wildcard joins the list only under the DNS-01 challenge. Under HTTP-01
+  # the resolver requests one exact certificate per router Host rule.
   acmeDomains =
-    (lib.optional (cfg.appsNamespace != null) { main = "*.${cfg.appsNamespace}"; })
+    (lib.optional (cfg.appsNamespace != null && tlsChallenge == "dns-01") {
+      main = "*.${cfg.appsNamespace}";
+    })
     ++ (
       cfg.tls.certDomains
       |> map (d: { main = d.main; } // (lib.optionalAttrs (d.sans != [ ]) { inherit (d) sans; }))
@@ -632,10 +637,6 @@ let
     {
       assertion = allUnique appRouterNames;
       message = "surmhosting: generated router names collide: ${concatStringsSep ", " (duplicates appRouterNames)}";
-    }
-    {
-      assertion = !v2RoutingActive || tlsChallenge == "dns-01";
-      message = "surmhosting: appsNamespace requires tls.challenge = \"dns-01\" for wildcard certificates.";
     }
     {
       assertion = tlsChallenge == null || cfg.tls.enable;
@@ -881,9 +882,15 @@ in
         default = null;
         description = ''
           ACME challenge for the certificate resolver. Null keeps the legacy
-          `letsencrypt` HTTP-01 resolver untouched. When set, the resolver is
-          named `cloudflare`, public entrypoints distrust forwarded headers,
-          and port 80 redirects explicitly to HTTPS.
+          `letsencrypt` HTTP-01 resolver untouched. When `dns-01` is set,
+          the resolver uses the Cloudflare DNS provider. When `http-01` is
+          set, it uses the `letsencrypt` resolver. Both explicit modes make
+          public entrypoints distrust forwarded headers and make port 80
+          redirect explicitly to HTTPS. `dns-01` requires
+          `tls.dnsEnvironmentFile` and requests a `*.<appsNamespace>` wildcard
+          when an apps namespace is set. `http-01` needs no credentials. It
+          requests no wildcard; Traefik derives one exact certificate per
+          domain from the router Host rules.
         '';
       };
       tls.dnsEnvironmentFile = mkOption {
@@ -928,9 +935,11 @@ in
         description = ''
           Domain namespace of public logical apps (for example
           `apps.surma.technology`). Setting it marks the host as migrated:
-          every HTTP exposure must be an explicit logical app, app keys are
-          validated as DNS labels, and `*.<namespace>` joins the certificate
-          list. It does not publish any port by itself.
+          every HTTP exposure must be an explicit logical app, and app keys
+          are validated as DNS labels. Under the DNS-01 challenge,
+          `*.<namespace>` joins the certificate list. Under HTTP-01 no
+          wildcard exists; exact certificates come from the router Host
+          rules. The option does not publish any port by itself.
         '';
       };
       internalPort = mkOption {
@@ -1113,8 +1122,8 @@ in
             });
             certificatesResolvers =
               if tlsChallenge != null then
-                lib.optionalAttrs cfg.tls.enable {
-                  cloudflare.acme =
+                lib.optionalAttrs cfg.tls.enable (
+                  lib.setAttrByPath [ certResolverName "acme" ] (
                     { }
                     // (lib.optionalAttrs (cfg.tls.email != null) { email = cfg.tls.email; })
                     // {
@@ -1126,8 +1135,9 @@ in
                       else
                         { httpChallenge.entryPoint = "web"; }
                     )
-                    // (lib.optionalAttrs (acmeDomains != [ ]) { domains = acmeDomains; });
-                }
+                    // (lib.optionalAttrs (acmeDomains != [ ]) { domains = acmeDomains; })
+                  )
+                )
               else
                 lib.optionalAttrs cfg.tls.enable {
                   letsencrypt.acme =

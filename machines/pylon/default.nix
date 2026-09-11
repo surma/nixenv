@@ -4,27 +4,24 @@
   inputs,
   ...
 }:
+let
+  ports = import ./ports.nix;
+
+  # Tailscale IPv4s of the backend hosts (verify with `tailscale status`
+  # before deployment; auth-rework section 8.1).
+  nexusTsV4 = "100.83.198.90";
+  citadelTsV4 = "100.70.63.93";
+  # Pylon's own public IPv4 (Hetzner, enp1s0). Used for hairpin NAT
+  # reflection so hosts behind Pylon can reach the public edge address.
+  pylonPublicV4 = "49.12.5.28";
+in
 {
   imports = [
     ./hardware.nix
-    ./service-surm-auth.nix
-    ./service-llm-proxy.nix
     ./service-syncthing-relay.nix
-    ./service-traefik-tracing.nix
-    ./service-gitea-ssh.nix
-    ./service-music-proxy.nix
-    ./service-ha-proxy.nix
-    ./service-gitea-proxy.nix
-    ./service-hedgedoc-proxy.nix
-    ./service-dump-proxy.nix
-    ./service-brain-proxy.nix
-    ./service-public-brain-proxy.nix
-    ./service-scout-static-proxy.nix
-    ./service-jazzy-poisonous-plant-parlour-proxy.nix
-    ./service-minecraft-proxy.nix
+    ./service-nixos-admin.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../modules/services/surmhosting
 
     # ../../apps/writing-prompt
   ];
@@ -66,14 +63,11 @@
 
   home-manager.users.surma = import ./home.nix;
 
-  services.surmhosting.enable = true;
-  services.surmhosting.externalInterface = "enp1s0";
-  services.surmhosting.hostname = "surmedge";
-  services.surmhosting.dashboard.enable = false;
-  services.surmhosting.tls.enable = true;
-  services.surmhosting.tls.email = "surma@surma.dev";
-  services.surmhosting.docker.enable = true;
-
+  # Pylon is now a packet forwarder only: no TLS termination, no HTTP
+  # parsing, no surm-auth, no LLM receivers (auth-rework sections 2 and
+  # 8.3). services.traefik stays disabled; all HTTP authority moved to
+  # Nexus. The old proxy service files remain in this directory (not
+  # imported) as rollback artifacts.
   virtualisation.oci-containers.backend = "podman";
 
   virtualisation.podman = {
@@ -91,6 +85,73 @@
   ];
   networking.nftables.enable = true;
   services.openssh.enable = true;
+
+  # Forward the public web ports, Gitea SSH, and Minecraft to their
+  # backend hosts over Tailscale. No HTTP parsing happens here; a public
+  # Host header cannot select an internal router (auth-rework section
+  # 8.1). Uses the pinned NAT option names: sourcePort, destination,
+  # proto, loopbackIPs.
+  networking.nat.enable = true;
+  networking.nat.externalInterface = "enp1s0";
+  # Deliberately no internalIPs/internalInterfaces: no broad masquerade.
+  # Return-path SNAT is narrowly scoped to DNAT'd traffic below.
+  networking.nat.forwardPorts = [
+    {
+      sourcePort = 80;
+      destination = "${nexusTsV4}:80";
+      proto = "tcp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = 80;
+      destination = "${nexusTsV4}:80";
+      proto = "udp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = 443;
+      destination = "${nexusTsV4}:443";
+      proto = "tcp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = 443;
+      destination = "${nexusTsV4}:443";
+      proto = "udp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = ports.giteaSsh;
+      destination = "${nexusTsV4}:${toString ports.giteaSsh}";
+      proto = "tcp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = ports.minecraft;
+      destination = "${citadelTsV4}:${toString ports.minecraft}";
+      proto = "tcp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+  ];
+
+  # Narrow source NAT for the forwarded destinations: replies to
+  # externally originated connections must return through Pylon, since
+  # the backend hosts would otherwise answer from their own addresses.
+  # Scoped to `ct status dnat` traffic towards the two backend hosts —
+  # no broad masquerade of unrelated tailnet traffic (auth-rework
+  # section 8.1). Nexus ships no UDP web listener; UDP 80/443 forwarding
+  # is transport provision only (section 8.2).
+  networking.nftables.tables.surmedge-forward = {
+    family = "ip";
+    content = ''
+      chain post {
+        type nat hook postrouting priority srcnat; policy accept;
+        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} tcp dport { 80, 443, ${toString ports.giteaSsh} } masquerade
+        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} udp dport { 80, 443 } masquerade
+        ct status dnat oifname "tailscale0" ip daddr ${citadelTsV4} tcp dport ${toString ports.minecraft} masquerade
+      }
+    '';
+  };
 
   system.stateVersion = "25.05";
 }

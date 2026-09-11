@@ -18,7 +18,7 @@ let
   runCategoriser = pkgs.writeShellScript "firefly-run-categoriser.sh" ''
     set -euo pipefail
     export FIREFLY_TOKEN_FILE=/var/lib/firefly-importer/access-token.txt
-    export FIREFLY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io"
+    export FIREFLY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
     export LLM_ENDPOINT="https://proxy.llm.surma.technology/v1"
     export LLM_KEY_FILE=/var/lib/scout/llm-proxy-client-key
     export LLM_MODEL="shopify:anthropic:claude-haiku-4-5"

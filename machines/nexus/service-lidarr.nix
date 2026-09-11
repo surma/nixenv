@@ -11,7 +11,16 @@ in
     ];
   };
 
-  services.surmhosting.services.lidarr.expose.port = 8080;
+  services.surmhosting.services.lidarr.expose.apps.lidarr = {
+    access.mode = "internal";
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = 8080;
+        hostname = "lidarr";
+      }
+    ];
+  };
   services.surmhosting.services.lidarr.container = {
     config = {
       system.stateVersion = "25.05";
@@ -26,7 +35,11 @@ in
         # Postgres connection. Password comes from environmentFiles below
         # (one-line agenix env file) so it isn't world-readable in the Nix store.
         postgres = {
-          host = "10.201.9.1"; # surmhosting host-side veth address (alpha-stable)
+          # Host-side veth address of THIS container's surmhosting index.
+          # All 10.201.x.1 addresses terminate on the host, so Postgres is
+          # reachable through the container's own veth regardless of index
+          # shifts (verified against the old/new evaluated address maps).
+          host = "10.201.12.1";
           port = 5432;
           user = "lidarr";
           maindb = "lidarr-main";
