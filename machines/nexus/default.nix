@@ -117,8 +117,26 @@
 
   services.key-poller.enable = true;
   services.key-poller.secretFile = "/var/lib/key-poller/receiver-secret";
-  services.key-poller.remoteNuBin = "/Users/surma/.nix-profile/bin/nu";
-  services.key-poller.remoteGcloudBin = "/Users/surma/.nix-profile/bin/gcloud";
+  # Tried in order, first non-empty key wins. shopisurm is a Mac and keeps its
+  # tooling in a standalone home-manager profile under /Users; archon is NixOS
+  # with gcloud and nushell in the system profile, so the paths differ.
+  services.key-poller.hosts =
+    let
+      shopisurm = address: {
+        inherit address;
+        nuBin = "/Users/surma/.nix-profile/bin/nu";
+        gcloudBin = "/Users/surma/.nix-profile/bin/gcloud";
+      };
+    in
+    [
+      (shopisurm "10.0.0.20")
+      (shopisurm "100.79.232.5")
+      {
+        address = "10.0.0.30";
+        nuBin = "/run/current-system/sw/bin/nu";
+        gcloudBin = "/run/current-system/sw/bin/gcloud";
+      }
+    ];
 
   programs.mosh.enable = true;
 

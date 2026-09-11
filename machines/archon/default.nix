@@ -222,6 +222,13 @@
       "uinput"
     ];
     shell = pkgs.zsh;
+
+    # nexus runs services.key-poller and SSHes in as surma to read the
+    # Shopify key when shopisurm is unreachable. Merges with the `surma`
+    # key that profiles/nixos/base.nix already installs.
+    openssh.authorizedKeys.keys = with config.secrets.keys; [
+      nexus
+    ];
   };
 
   home-manager.users.surma = import ./home.nix;
