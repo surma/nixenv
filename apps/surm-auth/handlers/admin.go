@@ -15,7 +15,7 @@ import (
 type appView struct {
 	Key       string
 	Mode      string
-	Domains   string
+	Domains   []string
 	SeedUsers string
 	Grants    int
 }
@@ -65,7 +65,7 @@ func (s *Server) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		apps = append(apps, appView{
 			Key:       key,
 			Mode:      appCfg.Mode,
-			Domains:   strings.Join(appCfg.Domains, ", "),
+			Domains:   appCfg.Domains,
 			SeedUsers: strings.Join(appCfg.SeedUsers, ", "),
 			Grants:    len(snapshot.Grants[key]),
 		})
@@ -178,7 +178,7 @@ func (s *Server) handleAdminApp(w http.ResponseWriter, r *http.Request, name str
 		"App": appView{
 			Key:       name,
 			Mode:      appCfg.Mode,
-			Domains:   strings.Join(appCfg.Domains, ", "),
+			Domains:   appCfg.Domains,
 			SeedUsers: strings.Join(appCfg.SeedUsers, ", "),
 			Grants:    len(grants),
 		},

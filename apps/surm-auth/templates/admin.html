@@ -36,14 +36,13 @@
 
     <h2>Applications</h2>
     <table>
-        <tr><th>App</th><th>Mode</th><th>Domains</th><th>Seed users</th><th>Grants</th></tr>
+        <tr><th>App</th><th>Mode</th><th>Domains</th><th>Seed users</th></tr>
         {{range .Apps}}
         <tr>
             <td><a href="/admin/apps/{{.Key}}">{{.Key}}</a></td>
             <td><span class="badge">{{.Mode}}</span></td>
-            <td>{{.Domains}}</td>
+            <td>{{range $i, $domain := .Domains}}{{if $i}}, {{end}}<a href="https://{{$domain}}">{{$domain}}</a>{{end}}</td>
             <td>{{.SeedUsers}}</td>
-            <td>{{.Grants}}</td>
         </tr>
         {{end}}
     </table>

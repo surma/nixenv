@@ -16,7 +16,6 @@
     ./service-radarr.nix
     ./service-sonarr.nix
     ./service-prowlarr.nix
-    ./service-rss.nix
     ./service-torrent.nix
     ./service-music.nix
     ./service-copyparty.nix

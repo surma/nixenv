@@ -81,8 +81,8 @@ func fixtureTemplates(t *testing.T) string {
 	files := map[string]string{
 		"login.html":     `LOGIN{{if .App}}|{{.App}}{{end}}{{if .LoggedIn}}|LOGGEDIN|{{.Username}}{{if .IsAdmin}}|ADMIN{{end}}{{end}}|{{.AuthURL}}`,
 		"error.html":     `ERROR|{{.Error}}`,
-		"admin.html":     `ADMIN|APPS{{range .Apps}}|{{.Key}}:{{.Mode}}:{{.Grants}}{{end}}|USERS{{range .Users}}|{{.Subject}}:{{.Role}}{{if .Managed}}:managed{{end}}{{end}}|CSRF:{{.CSRF}}|EVENTS{{range .Events}}|{{.Event}}{{end}}`,
-		"admin_app.html": `APP|{{.App.Key}}:{{.App.Mode}}:{{.App.Domains}}|FORM:{{.GrantForm}}|GRANTS{{range .Grants}}|{{.Subject}}{{end}}|CG:{{.CSRFGrant}}|CD:{{.CSRFDelete}}`,
+		"admin.html":     `ADMIN|APPS{{range .Apps}}|{{.Key}}:{{.Mode}}:{{.Grants}}:{{range .Domains}}{{.}}{{end}}{{end}}|USERS{{range .Users}}|{{.Subject}}:{{.Role}}{{if .Managed}}:managed{{end}}{{end}}|CSRF:{{.CSRF}}|EVENTS{{range .Events}}|{{.Event}}{{end}}`,
+		"admin_app.html": `APP|{{.App.Key}}:{{.App.Mode}}:{{range .App.Domains}}{{.}},{{end}}|FORM:{{.GrantForm}}|GRANTS{{range .Grants}}|{{.Subject}}{{end}}|CG:{{.CSRFGrant}}|CD:{{.CSRFDelete}}`,
 		"audit.html":     `AUDIT{{range .Events}}|{{.Event}}:{{.Actor}}:{{.App}}{{end}}`,
 	}
 	for name, content := range files {
