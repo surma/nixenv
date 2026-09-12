@@ -36,6 +36,7 @@ let
 in
 {
   # HedgeDoc 1 used CMD_* names for this encrypted GitHub credential.
+  # The generated file also serves OpenGist, which reuses this GitHub app.
   secrets.items.hedgedoc-github-env.command = ''
     set -euo pipefail
 
@@ -47,6 +48,11 @@ in
       -e 's/^CMD_GITHUB_CLIENTID=/HD_AUTH_OIDC_GITHUB_CLIENT_ID=/' \
       -e 's/^CMD_GITHUB_CLIENTSECRET=/HD_AUTH_OIDC_GITHUB_CLIENT_SECRET=/' \
       > "$temporaryFile"
+
+    githubClientId="$(${pkgs.gnused}/bin/sed -n 's/^HD_AUTH_OIDC_GITHUB_CLIENT_ID=//p' "$temporaryFile")"
+    githubClientSecret="$(${pkgs.gnused}/bin/sed -n 's/^HD_AUTH_OIDC_GITHUB_CLIENT_SECRET=//p' "$temporaryFile")"
+    ${pkgs.coreutils}/bin/printf 'OG_GITHUB_CLIENT_KEY=%s\nOG_GITHUB_SECRET=%s\n' \
+      "$githubClientId" "$githubClientSecret" >> "$temporaryFile"
 
     if ! ${pkgs.gnugrep}/bin/grep -q '^HD_AUTH_OIDC_GITHUB_CLIENT_ID=' "$temporaryFile"; then
       ${pkgs.coreutils}/bin/printf '%s\n' 'The HedgeDoc GitHub client ID is missing' >&2
