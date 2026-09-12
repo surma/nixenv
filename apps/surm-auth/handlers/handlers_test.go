@@ -85,7 +85,7 @@ func fixtureTemplates(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	files := map[string]string{
-		"login.html":     `LOGIN{{if .App}}|{{.App}}{{end}}{{if .LoggedIn}}|LOGGEDIN|{{.Subject}}{{end}}|{{.AuthURL}}`,
+		"login.html":     `LOGIN{{if .App}}|{{.App}}{{end}}{{if .LoggedIn}}|LOGGEDIN|{{.Username}}{{if .IsAdmin}}|ADMIN{{end}}{{end}}|{{.AuthURL}}`,
 		"error.html":     `ERROR|{{.Error}}`,
 		"admin.html":     `ADMIN|APPS{{range .Apps}}|{{.Key}}:{{.Mode}}:{{.Grants}}{{end}}|USERS{{range .Users}}|{{.Subject}}:{{.Role}}{{if .Managed}}:managed{{end}}{{end}}|CSRF:{{.CSRF}}|EVENTS{{range .Events}}|{{.Event}}{{end}}`,
 		"admin_app.html": `APP|{{.App.Key}}:{{.App.Mode}}:{{.App.Domains}}|FORM:{{.GrantForm}}|GRANTS{{range .Grants}}|{{.Subject}}{{end}}|CG:{{.CSRFGrant}}|CD:{{.CSRFDelete}}`,

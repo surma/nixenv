@@ -31,9 +31,10 @@ func TestRepoTemplatesParse(t *testing.T) {
 	}
 
 	body = render("login.html", map[string]any{
-		"App": "", "AuthURL": "/login/github?redirect=%2F", "LoggedIn": true, "Subject": "github:7",
+		"App": "", "AuthURL": "/login/github?redirect=%2F", "LoggedIn": true,
+		"Username": "surma", "IsAdmin": true,
 	})
-	if !containsAll(body, "Signed in", "github:7") {
+	if !containsAll(body, "Signed in", "surma", "Open the admin console") {
 		t.Errorf("landing login.html rendered unexpected content: %s", body)
 	}
 
