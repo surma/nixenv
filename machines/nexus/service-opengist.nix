@@ -65,6 +65,7 @@ in
           wantedBy = [ "multi-user.target" ];
           wants = [ "network-online.target" ];
           after = [ "network-online.target" ];
+          path = [ pkgs.git ];
           serviceConfig = {
             ExecStart = "${pkgs.opengist}/bin/opengist --config ${configFile} start";
             EnvironmentFile = [ githubEnvironmentFile ];
