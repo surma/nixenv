@@ -333,7 +333,7 @@ func TestLoadSecretsMissingFile(t *testing.T) {
 	}
 }
 
-func TestLoadSecretsShortCookieSecret(t *testing.T) {
+func TestLoadSecretsAcceptsShortCookieSecret(t *testing.T) {
 	dir := t.TempDir()
 	write := func(name, value string) string {
 		path := filepath.Join(dir, name)
@@ -350,7 +350,10 @@ func TestLoadSecretsShortCookieSecret(t *testing.T) {
 	cfg.Providers.GitHub.ClientSecretFile = write("secret", "secret")
 	cfg.Session.CookieSecretFile = write("cookie", "too-short")
 
-	if err := cfg.LoadSecrets(); err == nil {
-		t.Fatal("short cookie secret accepted")
+	if err := cfg.LoadSecrets(); err != nil {
+		t.Fatalf("LoadSecrets rejected short cookie secret: %v", err)
+	}
+	if cfg.Session.CookieSecret != "too-short" {
+		t.Errorf("cookie secret = %q", cfg.Session.CookieSecret)
 	}
 }
