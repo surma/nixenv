@@ -352,9 +352,6 @@ func (c *Config) LoadSecrets() error {
 	if err != nil {
 		return fmt.Errorf("failed to read cookie secret: %w", err)
 	}
-	if len(cookieSecret) < 32 {
-		return fmt.Errorf("cookie secret must be at least 32 bytes")
-	}
 	c.Session.CookieSecret = cookieSecret
 
 	return nil
