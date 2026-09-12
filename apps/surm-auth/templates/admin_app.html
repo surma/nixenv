@@ -40,7 +40,7 @@
         <dt>Mode</dt>
         <dd>{{.App.Mode}}</dd>
         <dt>Domains</dt>
-        <dd>{{.App.Domains}}</dd>
+        <dd>{{range $i, $domain := .App.Domains}}{{if $i}}, {{end}}{{$domain}}{{end}}</dd>
         <dt>Seed users</dt>
         <dd>{{.App.SeedUsers}}</dd>
     </dl>

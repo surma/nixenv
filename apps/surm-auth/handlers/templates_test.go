@@ -44,7 +44,7 @@ func TestRepoTemplatesParse(t *testing.T) {
 	}
 
 	body = render("admin.html", map[string]any{
-		"Apps": []appView{{Key: "k", Mode: "allowlist", Domains: "d", Grants: 1}},
+		"Apps": []appView{{Key: "k", Mode: "allowlist", Domains: []string{"one.example", "two.example"}, Grants: 1}},
 		"Users": []userView{
 			{Subject: "github:1", Provider: "github", ID: "1", Username: "u", Role: "admin", Managed: true},
 			{Subject: "github:2", Provider: "github", ID: "2", Username: "v", Role: "user", Managed: false},
@@ -52,12 +52,21 @@ func TestRepoTemplatesParse(t *testing.T) {
 		"Events": nil,
 		"CSRF":   "tok",
 	})
-	if !containsAll(body, "github:1", "managed by Nix", "/admin/users/role", `value="tok"`) {
+	if !containsAll(body, "github:1", "managed by Nix", "/admin/users/role", `value="tok"`,
+		`<a href="https://one.example">one.example</a>`,
+		`<a href="https://two.example">two.example</a>`,
+	) {
 		t.Errorf("admin.html rendered unexpected content: %s", body)
+	}
+	if bytes.Contains([]byte(body), []byte("<th>Grants</th>")) {
+		t.Errorf("admin.html still renders a grants header: %s", body)
+	}
+	if bytes.Contains([]byte(body), []byte("<td>1</td>")) {
+		t.Errorf("admin.html still renders a grants cell: %s", body)
 	}
 
 	body = render("admin_app.html", map[string]any{
-		"App":       appView{Key: "k", Mode: "allowlist", Domains: "d"},
+		"App":       appView{Key: "k", Mode: "allowlist", Domains: []string{"d"}},
 		"Grants":    []grantView{{Subject: "github:2", Username: "u2", Provider: "github", ID: "2"}},
 		"GrantForm": true, "CSRFGrant": "g", "CSRFDelete": "d",
 	})
@@ -67,7 +76,7 @@ func TestRepoTemplatesParse(t *testing.T) {
 
 	// Public mode renders without a grant-edit form.
 	body = render("admin_app.html", map[string]any{
-		"App":    appView{Key: "k", Mode: "public", Domains: "d"},
+		"App":    appView{Key: "k", Mode: "public", Domains: []string{"d"}},
 		"Grants": []grantView{}, "GrantForm": false, "CSRFGrant": "", "CSRFDelete": "",
 	})
 	if containsAll(body, "/admin/apps/k/grants") {

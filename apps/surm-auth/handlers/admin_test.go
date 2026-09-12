@@ -70,7 +70,10 @@ func TestAdminDashboardRenders(t *testing.T) {
 	body := recorder.Body.String()
 	for _, want := range []string{
 		"testapp:allowlist:1",
+		"testapp.apps.surma.technology",
+		"testapp.surma.technology",
 		"pubapp:public:0",
+		"pubapp.apps.surma.technology",
 		"github:1000:admin:managed",
 		"github:2001:user",
 		"login_success",
