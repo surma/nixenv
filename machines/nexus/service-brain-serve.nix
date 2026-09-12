@@ -131,7 +131,6 @@ in
     access.mode = "allowlist";
     access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
-    public.domain = "brain.apps.surma.technology";
     public.aliases = [ "brain.surma.technology" ];
     ports = [
       {
@@ -144,7 +143,6 @@ in
   services.surmhosting.services.brain-serve.expose.apps.public-brain = {
     access.mode = "public";
     internal.access = "trusted-network";
-    public.domain = "public-brain.apps.surma.technology";
     public.aliases = [ "public-brain.surma.technology" ];
     ports = [
       {

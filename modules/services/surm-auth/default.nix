@@ -15,9 +15,7 @@ let
   credentialDir = "/run/credentials/surm-auth.service";
 
   accessModes = [
-    "internal"
     "public"
-    "authenticated"
     "allowlist"
   ];
 
@@ -235,8 +233,7 @@ in
             mode = mkOption {
               type = types.enum accessModes;
               description = ''
-                Access mode for this app: `internal`, `public`,
-                `authenticated`, or `allowlist`.
+                Access mode for this app: `public` or `allowlist`.
               '';
             };
             domains = mkOption {

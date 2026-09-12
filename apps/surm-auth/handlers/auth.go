@@ -34,12 +34,6 @@ func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if appCfg.Mode == config.ModeInternal {
-		s.auditAccessDenied("", appKey, "internal app presented to forward-auth")
-		http.Error(w, "Access denied", http.StatusForbidden)
-		return
-	}
-
 	// Every mode validates the forwarded return metadata: malformed or
 	// cross-app metadata fails with 400 before any successful
 	// response. The metadata only reconstructs the redirect; it never
@@ -60,7 +54,7 @@ func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Restricted apps require current policy state.
+	// Allowlisted apps require current policy state.
 	if !s.deps.Policy.Available() {
 		s.renderError(w, http.StatusServiceUnavailable, "Authentication policy is temporarily unavailable")
 		return
@@ -74,14 +68,10 @@ func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allowed := appCfg.Mode == config.ModeAuthenticated
-	if appCfg.Mode == config.ModeAllowlist {
-		granted, err := s.deps.Policy.HasAccess(appKey, claims.Provider, claims.UID)
-		if err != nil {
-			s.renderError(w, http.StatusServiceUnavailable, "Authentication policy is temporarily unavailable")
-			return
-		}
-		allowed = granted
+	allowed, err := s.deps.Policy.HasAccess(appKey, claims.Provider, claims.UID)
+	if err != nil {
+		s.renderError(w, http.StatusServiceUnavailable, "Authentication policy is temporarily unavailable")
+		return
 	}
 
 	if !allowed {

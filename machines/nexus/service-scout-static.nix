@@ -9,7 +9,6 @@
       access.mode = "allowlist";
       access.seedUsers = [ "surma" ];
       internal.access = "trusted-network";
-      public.domain = "scout-static.apps.surma.technology";
       public.aliases = [ "scout-static.surma.technology" ];
       ports = [
         {

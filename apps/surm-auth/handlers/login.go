@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/surma/surm-auth/auth"
-	"github.com/surma/surm-auth/config"
 )
 
 // handleLogin renders the login page. A missing app key renders the
@@ -28,7 +27,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	allowedHosts := s.authHostList()
 	if app != "" {
 		appCfg, ok := s.deps.Config.Apps[app]
-		if !ok || appCfg.Mode == config.ModeInternal {
+		if !ok {
 			s.renderError(w, http.StatusNotFound, "Unknown application")
 			return
 		}
@@ -76,7 +75,7 @@ func (s *Server) handleLoginGitHub(w http.ResponseWriter, r *http.Request) {
 	allowedHosts := s.authHostList()
 	if app != "" {
 		appCfg, ok := s.deps.Config.Apps[app]
-		if !ok || appCfg.Mode == config.ModeInternal {
+		if !ok {
 			s.renderError(w, http.StatusNotFound, "Unknown application")
 			return
 		}

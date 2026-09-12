@@ -12,7 +12,6 @@ in
     expose.apps.jazzy = {
       access.mode = "public";
       internal.access = "trusted-network";
-      public.domain = "jazzy.apps.surma.technology";
       public.aliases = [ "jazzy-poisonous-plant-parlour.surma.technology" ];
       ports = [
         {

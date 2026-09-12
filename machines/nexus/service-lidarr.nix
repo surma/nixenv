@@ -12,7 +12,8 @@ in
   };
 
   services.surmhosting.services.lidarr.expose.apps.lidarr = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {

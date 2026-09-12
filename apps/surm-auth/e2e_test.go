@@ -11,8 +11,8 @@ package main
 // outside the source tree and drives the complete browser-like OAuth
 // flow against a fully mocked GitHub provider on the loopback
 // interface: forward-auth blocking, login redirect, mocked code
-// exchange, real session issuance, grant enforcement, and public and
-// internal app behavior. No request leaves the machine and no test
+// exchange, real session issuance, grant enforcement, and public app
+// behavior. No request leaves the machine and no test
 // JWT is minted; every session comes from the real binary.
 
 import (
@@ -214,10 +214,6 @@ func packForwarded() forwarded {
 	return forwarded{proto: "https", host: "packapp.apps.surma.technology", uri: "/"}
 }
 
-func authAppForwarded() forwarded {
-	return forwarded{proto: "https", host: "authapp.apps.surma.technology", uri: "/"}
-}
-
 func pubForwarded() forwarded {
 	return forwarded{proto: "https", host: "pubapp.apps.surma.technology", uri: "/"}
 }
@@ -408,11 +404,6 @@ apps:
   pubapp:
     mode: "public"
     domains: ["pubapp.apps.surma.technology"]
-  intapp:
-    mode: "internal"
-  authapp:
-    mode: "authenticated"
-    domains: ["authapp.apps.surma.technology"]
 `,
 		port, canonicalHost, canonicalHost,
 		sessionCookie,
@@ -522,15 +513,15 @@ apps:
 		t.Error("a session cookie was issued to an ungranted user")
 	}
 
-	// ...the same user can authenticate through the authenticated
-	// app, which requires no grant...
-	authFwd := authAppForwarded()
-	authAppCallback, _, _ := driveLogin(t, nobody, "authapp", &authFwd)
-	if authAppCallback.StatusCode != http.StatusFound {
-		t.Fatalf("callback for the authenticated app = %d, want 302", authAppCallback.StatusCode)
+	// The same user can authenticate through the public app, which
+	// requires no grant, and then receive a real session cookie.
+	pubFwd := pubForwarded()
+	publicCallback, _, _ := followLogin(t, nobody, "/login?app=pubapp", "pubapp")
+	if publicCallback.StatusCode != http.StatusFound {
+		t.Fatalf("callback for the public app = %d, want 302", publicCallback.StatusCode)
 	}
 	if !nobody.hasSession() {
-		t.Fatal("no session cookie issued for the authenticated app login")
+		t.Fatal("no session cookie issued for the public app login")
 	}
 	response, body = nobody.get(t, "/auth?app=packapp", "", &packFwd)
 	if response.StatusCode != http.StatusForbidden {
@@ -539,24 +530,8 @@ apps:
 	if !strings.Contains(body, "Access denied") {
 		t.Errorf("blocked forward-auth body lacks the block message: %s", body)
 	}
-	response, body = nobody.get(t, "/auth?app=authapp", "", &authFwd)
-	if response.StatusCode != http.StatusOK {
-		t.Fatalf("forward-auth on the authenticated app = %d, want 200: %s", response.StatusCode, body)
-	}
-
-	// 7. Internal apps are blocked outright, for valid sessions and
-	// anonymous requests alike.
-	response, body = nobody.get(t, "/auth?app=intapp", "", nil)
-	if response.StatusCode != http.StatusForbidden {
-		t.Fatalf("forward-auth for the internal app with a valid session = %d, want 403: %s", response.StatusCode, body)
-	}
+	// 7. Unknown apps fail closed with 404.
 	anon := newBrowser(base)
-	response, body = anon.get(t, "/auth?app=intapp", "", nil)
-	if response.StatusCode != http.StatusForbidden {
-		t.Fatalf("forward-auth for the internal app without a session = %d, want 403: %s", response.StatusCode, body)
-	}
-
-	// 8. Unknown apps fail closed with 404.
 	response, body = anon.get(t, "/auth?app=unknown", "", nil)
 	if response.StatusCode != http.StatusNotFound {
 		t.Fatalf("forward-auth for an unknown app = %d, want 404: %s", response.StatusCode, body)
@@ -564,7 +539,6 @@ apps:
 
 	// 9. Public apps bypass the GitHub gate without a session and
 	// without fabricated identity headers.
-	pubFwd := pubForwarded()
 	response, body = anon.get(t, "/auth?app=pubapp", "", &pubFwd)
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("forward-auth for the public app = %d, want 200: %s", response.StatusCode, body)

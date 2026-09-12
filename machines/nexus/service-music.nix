@@ -65,7 +65,6 @@ in
   services.surmhosting.services.music.expose.apps.music = {
     access.mode = "public";
     internal.access = "trusted-network";
-    public.domain = "music.apps.surma.technology";
     public.aliases = [ "music.surma.technology" ];
     ports = [
       {

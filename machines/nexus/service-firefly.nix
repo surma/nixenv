@@ -11,7 +11,8 @@
   };
 
   services.surmhosting.services.firefly.expose.apps.firefly = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {

@@ -161,8 +161,8 @@ func (s *Server) handleAdminApp(w http.ResponseWriter, r *http.Request, name str
 		})
 	}
 
-	// Grant editing only applies to allowlisted apps; internal and
-	// public apps show their explicit mode without grant-edit forms.
+	// Grant editing only applies to allowlisted apps. Public apps show
+	// their explicit mode without grant-edit forms.
 	grantForm := appCfg.Mode == config.ModeAllowlist
 
 	csrfGrant, err := s.csrfToken(claims, "/admin/apps/"+name+"/grants")

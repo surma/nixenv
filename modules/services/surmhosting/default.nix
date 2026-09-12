@@ -36,11 +36,12 @@ let
   };
 
   accessModes = [
-    "internal"
     "public"
-    "authenticated"
     "allowlist"
   ];
+
+  appPrimaryDomain =
+    appKey: if cfg.appsNamespace != null then "${appKey}.${cfg.appsNamespace}" else null;
 
   appPortConfig = types.submodule {
     options = {
@@ -80,11 +81,9 @@ let
         mode = mkOption {
           type = types.enum accessModes;
           description = ''
-            Access mode of this logical app: `internal` emits internal
-            routes only, `public` emits public routes without
-            authentication, `authenticated` requires any valid v2
-            session, and `allowlist` requires a stable-ID grant or an
-            admin role.
+            Access mode of this logical app: `public` emits public
+            routes without authentication, and `allowlist` requires a
+            stable-ID grant or an admin role.
           '';
         };
         seedUsers = mkOption {
@@ -106,11 +105,6 @@ let
         };
       };
       public = {
-        domain = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Primary public domain of this app. Null means no public router; it never derives a domain automatically.";
-        };
         aliases = mkOption {
           type = types.listOf types.str;
           default = [ ];
@@ -215,9 +209,9 @@ let
             default = { };
             description = ''
               Explicit logical app declarations keyed by a stable app key.
-              The app key selects the surm-auth policy and is never derived
-              from request headers. Public routers are generated only from
-              these declarations.
+              The app key selects the surm-auth policy and derives the
+              primary public domain under appsNamespace. Request headers
+              never select a policy.
             '';
           };
           allowedGitHubUsers = mkOption {
@@ -320,9 +314,9 @@ let
           );
 
         # Logical apps combine an internal router on the dedicated internal
-        # entrypoint with, when a primary public domain is declared, a public
-        # router on websecure. The public rule always pins the app's own
-        # domains, so request headers cannot change the selected policy.
+        # entrypoint with a public router on websecure. The public rule always
+        # pins the app's derived and aliased domains, so request headers cannot
+        # change the selected policy.
         appTraefikConfigs =
           value.expose.apps
           |> lib.attrsToList
@@ -331,8 +325,9 @@ let
             let
               appKey = entry.name;
               app = entry.value;
-              isRestricted = app.access.mode == "authenticated" || app.access.mode == "allowlist";
-              publicDomains = (lib.optional (app.public.domain != null) app.public.domain) ++ app.public.aliases;
+              primaryDomain = appPrimaryDomain appKey;
+              isRestricted = app.access.mode == "allowlist";
+              publicDomains = (lib.optional (primaryDomain != null) primaryDomain) ++ app.public.aliases;
               baseRule = "(${publicDomains |> map (d: "Host(`${d}`)") |> concatStringsSep " || "})";
             in
             app.ports
@@ -364,7 +359,7 @@ let
                   ];
                 })
                 (
-                  lib.optionalAttrs (app.public.domain != null) {
+                  lib.optionalAttrs (primaryDomain != null) {
                     routers.${publicName} = {
                       rule = baseRule + pathRule;
                       service = publicName;
@@ -486,14 +481,13 @@ let
 
   appKeys = allApps |> map (a: a.key);
 
-  restrictedApps =
-    allApps |> filter (a: a.app.access.mode == "authenticated" || a.app.access.mode == "allowlist");
+  restrictedApps = allApps |> filter (a: a.app.access.mode == "allowlist");
 
   appDomainEntries =
     allApps
     |> concatMap (
       { key, app, ... }:
-      ((lib.optional (app.public.domain != null) app.public.domain) ++ app.public.aliases)
+      ((lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases)
       |> map (domain: {
         inherit domain;
         inherit key;
@@ -514,7 +508,7 @@ let
       |> concatMap (
         portCfg:
         [ "${service}-${portCfg.hostname}" ]
-        ++ (lib.optional (app.public.domain != null) "apps-${key}-${portCfg.hostname}")
+        ++ (lib.optional (appPrimaryDomain key != null) "apps-${key}-${portCfg.hostname}")
       )
     );
 
@@ -586,7 +580,8 @@ let
       in
       nameValuePair key {
         mode = app.access.mode;
-        domains = (lib.optional (app.public.domain != null) app.public.domain) ++ app.public.aliases;
+        domains =
+          (lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases;
         seedUsers = seedUsers;
       }
     )
@@ -699,6 +694,7 @@ let
       }:
       let
         mode = app.access.mode;
+        primaryDomain = appPrimaryDomain key;
       in
       [
         {
@@ -710,49 +706,33 @@ let
           message = "surmhosting: logical app `${key}` on service `${service}` must set internal.access when internal.enable is true.";
         }
         {
-          assertion = mode != "internal" || app.internal.enable;
-          message = "surmhosting: logical app `${key}` on service `${service}` is internal-only; setting internal.enable = false would leave it without any router.";
-        }
-        {
-          assertion = mode != "internal" || app.public.domain == null;
-          message = "surmhosting: logical app `${key}` on service `${service}` is internal-only and must not declare a public domain.";
-        }
-        {
-          assertion = mode != "internal" || app.public.aliases == [ ];
-          message = "surmhosting: logical app `${key}` on service `${service}` is internal-only and must not declare public aliases.";
-        }
-        {
-          assertion = mode != "internal" || app.access.seedUsers == [ ];
-          message = "surmhosting: logical app `${key}` on service `${service}` is internal-only and must not declare seed users.";
-        }
-        {
-          assertion = mode == "internal" || app.public.domain != null;
-          message = "surmhosting: logical app `${key}` on service `${service}` uses mode `${mode}` and must declare a primary public domain.";
+          assertion = primaryDomain != null;
+          message = "surmhosting: logical app `${key}` on service `${service}` requires services.surmhosting.appsNamespace to derive its primary public domain.";
         }
         {
           assertion = mode == "allowlist" || app.access.seedUsers == [ ];
           message = "surmhosting: logical app `${key}` on service `${service}` declares seed users, which are only valid in allowlist mode.";
         }
         {
-          assertion = !(mode == "authenticated" || mode == "allowlist") || v2AuthEnabled;
+          assertion = mode != "allowlist" || v2AuthEnabled;
           message = "surmhosting: logical app `${key}` on service `${service}` requires authentication. Set services.surmhosting.auth.enable = true.";
         }
         {
-          assertion = app.public.domain == null || cfg.tls.enable;
-          message = "surmhosting: logical app `${key}` on service `${service}` declares a public domain. Public routers require tls.enable.";
+          assertion = primaryDomain == null || cfg.tls.enable;
+          message = "surmhosting: logical app `${key}` on service `${service}` has a public route. Public routers require tls.enable.";
         }
         {
-          assertion = app.public.domain == null || !(builtins.elem app.public.domain app.public.aliases);
-          message = "surmhosting: logical app `${key}` on service `${service}` repeats its primary domain in its aliases.";
+          assertion = primaryDomain == null || !(builtins.elem primaryDomain app.public.aliases);
+          message = "surmhosting: logical app `${key}` on service `${service}` repeats its derived primary domain in its aliases.";
         }
         {
           assertion = duplicates app.public.aliases == [ ];
           message = "surmhosting: logical app `${key}` on service `${service}` repeats an alias: ${concatStringsSep ", " (duplicates app.public.aliases)}";
         }
         {
-          assertion = !v2AuthEnabled || app.public.domain == null || domainCoveredByCookie app.public.domain;
-          message = "surmhosting: logical app `${key}` on service `${service}` uses a public domain${
-            optionalString (app.public.domain != null) " `${app.public.domain}`"
+          assertion = !v2AuthEnabled || primaryDomain == null || domainCoveredByCookie primaryDomain;
+          message = "surmhosting: logical app `${key}` on service `${service}` uses its derived public domain${
+            optionalString (primaryDomain != null) " `${primaryDomain}`"
           } that the session cookie domain `${cfg.auth.cookieDomain}` does not cover.";
         }
         {

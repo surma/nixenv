@@ -127,14 +127,14 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 // returns false when the request must not proceed.
 func (s *Server) authorizeCallbackApp(w http.ResponseWriter, r *http.Request, appKey string, user *auth.User) bool {
 	appCfg, ok := s.deps.Config.Apps[appKey]
-	if !ok || appCfg.Mode == config.ModeInternal {
-		slog.Warn("callback for unknown or internal app", "app", appKey)
+	if !ok {
+		slog.Warn("callback for unknown app", "app", appKey)
 		s.auditEvent(audit.Event{
 			Event:   audit.EventLoginDenied,
 			Actor:   user.Subject(),
 			Subject: user.Subject(),
 			App:     appKey,
-			Detail:  "unknown or internal app",
+			Detail:  "unknown app",
 		})
 		s.renderError(w, http.StatusNotFound, "Unknown application")
 		return false

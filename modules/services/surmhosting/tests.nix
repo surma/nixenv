@@ -189,6 +189,7 @@ let
     );
 
   authCommon = {
+    appsNamespace = "apps.surma.technology";
     auth.enable = true;
     auth.domain = "auth.surma.technology";
     auth.aliases = [ "auth.apps.surma.technology" ];
@@ -206,7 +207,7 @@ let
 
   # Migrated host covering the plan's initial public inventory shapes:
   # HedgeDoc's two ports under one app, Brain's private/public split, one
-  # app per LLM port with its own alias, an internal-only app, and the
+  # app per LLM port with its own alias, an allowlisted app, and the
   # legacy seed adapter.
   inventoryHost = evalHost {
     surmhosting = {
@@ -230,7 +231,6 @@ let
               access.mode = "allowlist";
               access.seedUsers = [ "surma" ];
               internal.access = "trusted-network";
-              public.domain = "hedgedoc.apps.surma.technology";
               public.aliases = [ "hedgedoc.surma.technology" ];
               ports = [
                 {
@@ -254,7 +254,6 @@ let
               access.mode = "allowlist";
               access.seedUsers = [ "surma" ];
               internal.access = "trusted-network";
-              public.domain = "brain.apps.surma.technology";
               public.aliases = [ "brain.surma.technology" ];
               ports = [
                 {
@@ -266,7 +265,6 @@ let
             svc-brain.expose.apps.public-brain = {
               access.mode = "public";
               internal.access = "trusted-network";
-              public.domain = "public-brain.apps.surma.technology";
               public.aliases = [ "public-brain.surma.technology" ];
               ports = [
                 {
@@ -280,7 +278,6 @@ let
             svc-llm.expose.apps.proxy-llm = {
               access.mode = "public";
               internal.access = "trusted-network";
-              public.domain = "proxy-llm.apps.surma.technology";
               public.aliases = [ "proxy.llm.surma.technology" ];
               ports = [
                 {
@@ -292,7 +289,6 @@ let
             svc-llm.expose.apps.key-llm = {
               access.mode = "public";
               internal.access = "trusted-network";
-              public.domain = "key-llm.apps.surma.technology";
               public.aliases = [ "key.llm.surma.technology" ];
               ports = [
                 {
@@ -304,7 +300,6 @@ let
             svc-llm.expose.apps.vendors-llm = {
               access.mode = "public";
               internal.access = "trusted-network";
-              public.domain = "vendors-llm.apps.surma.technology";
               public.aliases = [ "vendors.llm.surma.technology" ];
               ports = [
                 {
@@ -316,7 +311,8 @@ let
 
             svc-admin.host = "localhost";
             svc-admin.expose.apps.admin = {
-              access.mode = "internal";
+              access.mode = "allowlist";
+              access.seedUsers = [ "surma" ];
               internal.access = "trusted-network";
               ports = [
                 {
@@ -335,7 +331,6 @@ let
               access.mode = "allowlist";
               access.seedUsers = [ "explicit" ];
               internal.access = "trusted-network";
-              public.domain = "dump.apps.surma.technology";
               public.aliases = [ "dump.surma.technology" ];
               ports = [
                 {
@@ -357,6 +352,7 @@ let
     (noSurmhostingAssertions inventoryHost "logical-app-routers")
     (expectEq (lib.attrNames http.routers) [
       "api"
+      "apps-admin-admin"
       "apps-brain-brain-serve"
       "apps-dump-dump"
       "apps-hedgedoc2-backend"
@@ -377,14 +373,14 @@ let
       "svc-llm-vendors-llm"
     ] "generated router names")
     (expectEq http.routers."apps-hedgedoc2-backend" {
-      rule = "(Host(`hedgedoc.apps.surma.technology`) || Host(`hedgedoc.surma.technology`)) && (PathPrefix(`/realtime`) || PathPrefix(`/api`))";
+      rule = "(Host(`hedgedoc2.apps.surma.technology`) || Host(`hedgedoc.surma.technology`)) && (PathPrefix(`/realtime`) || PathPrefix(`/api`))";
       service = "apps-hedgedoc2-backend";
       entryPoints = [ "websecure" ];
       middlewares = [ "auth-hedgedoc2" ];
       priority = 100;
     } "public backend router")
     (expectEq http.routers."apps-hedgedoc2-frontend" {
-      rule = "(Host(`hedgedoc.apps.surma.technology`) || Host(`hedgedoc.surma.technology`))";
+      rule = "(Host(`hedgedoc2.apps.surma.technology`) || Host(`hedgedoc.surma.technology`))";
       service = "apps-hedgedoc2-frontend";
       entryPoints = [ "websecure" ];
       middlewares = [ "auth-hedgedoc2" ];
@@ -406,9 +402,13 @@ let
     (expectEq http.services."svc-hedgedoc-frontend".loadBalancer.servers [
       { url = "http://10.201.0.2:3001"; }
     ] "internal frontend service backend")
-    (expectEq (
-      http.routers ? "apps-admin-admin"
-    ) false "the internal-only app must not generate a public router")
+    (expectEq http.routers."apps-admin-admin" {
+      rule = "(Host(`admin.apps.surma.technology`))";
+      service = "apps-admin-admin";
+      entryPoints = [ "websecure" ];
+      middlewares = [ "auth-admin" ];
+      priority = 1;
+    } "the allowlisted app gets a derived public router")
     (expectEq (
       http.middlewares ? "auth-public-brain"
     ) false "public apps must not get an auth middleware")
@@ -461,6 +461,7 @@ let
         "the legacy seed adapter's middleware uses the logical app key"
       )
       (expectEq (lib.attrNames (middlewares |> lib.filterAttrs (n: _: lib.hasPrefix "auth-" n))) [
+        "auth-admin"
         "auth-brain"
         "auth-dump"
         "auth-hedgedoc2"
@@ -494,7 +495,6 @@ let
                   access.mode = "allowlist";
                   access.seedUsers = [ "surma" ];
                   internal.access = "trusted-network";
-                  public.domain = "hedgedoc.apps.surma.technology";
                   public.aliases = [ "hedgedoc.surma.technology" ];
                   ports = [
                     {
@@ -546,7 +546,7 @@ let
         "public routers use the HTTP-01 resolver, so Traefik requests exact certificates"
       )
       (expectEq http.routers."apps-hedgedoc2-frontend".rule
-        "(Host(`hedgedoc.apps.surma.technology`) || Host(`hedgedoc.surma.technology`))"
+        "(Host(`hedgedoc2.apps.surma.technology`) || Host(`hedgedoc.surma.technology`))"
         "the public router pins the exact app domains, from which Traefik derives one certificate per domain"
       )
       (expectEq http.routers."surm-auth".rule
@@ -592,7 +592,7 @@ let
       hedgedoc2 = {
         mode = "allowlist";
         domains = [
-          "hedgedoc.apps.surma.technology"
+          "hedgedoc2.apps.surma.technology"
           "hedgedoc.surma.technology"
         ];
         seed_users = [ "surma" ];
@@ -638,9 +638,11 @@ let
         seed_users = [ ];
       };
       admin = {
-        mode = "internal";
-        domains = [ ];
-        seed_users = [ ];
+        mode = "allowlist";
+        domains = [
+          "admin.apps.surma.technology"
+        ];
+        seed_users = [ "surma" ];
       };
       dump = {
         mode = "allowlist";
@@ -739,7 +741,6 @@ let
               expose.apps.proxy-llm = {
                 access.mode = "public";
                 internal.access = "trusted-network";
-                public.domain = "proxy-llm.apps.surma.technology";
                 public.aliases = [ "proxy.llm.surma.technology" ];
                 ports = [
                   {
@@ -941,7 +942,9 @@ let
     let
       customPort = evalHost {
         surmhosting = {
+          appsNamespace = "apps.surma.technology";
           internalPort = 8090;
+          tls.enable = true;
           dashboard.enable = true;
         };
         extraModules = [
@@ -951,7 +954,7 @@ let
               services.surmhosting.services.svc-admin = {
                 host = "localhost";
                 expose.apps.admin = {
-                  access.mode = "internal";
+                  access.mode = "public";
                   internal.access = "trusted-network";
                   ports = [
                     {
@@ -1026,6 +1029,7 @@ let
     let
       host = evalHost {
         surmhosting = {
+          appsNamespace = "apps.surma.technology";
           tls.enable = true;
         };
         extraModules = [
@@ -1035,7 +1039,6 @@ let
               services.surmhosting.services.svc-one.expose.apps.app1 = {
                 access.mode = "public";
                 internal.enable = false;
-                public.domain = "app1.apps.surma.technology";
                 ports = [
                   {
                     port = 8080;
@@ -1046,7 +1049,6 @@ let
               services.surmhosting.services.svc-two.expose.apps.app2 = {
                 access.mode = "public";
                 internal.access = "trusted-network";
-                public.domain = "app2.apps.surma.technology";
                 ports = [
                   {
                     port = 8081;
@@ -1060,6 +1062,7 @@ let
       };
       allDisabled = evalHost {
         surmhosting = {
+          appsNamespace = "apps.surma.technology";
           tls.enable = true;
         };
         extraModules = [
@@ -1068,29 +1071,6 @@ let
             {
               services.surmhosting.services.svc-one.expose.apps.app1 = {
                 access.mode = "public";
-                internal.enable = false;
-                public.domain = "app1.apps.surma.technology";
-                ports = [
-                  {
-                    port = 8080;
-                    hostname = "app1";
-                  }
-                ];
-              };
-            }
-          )
-        ];
-      };
-      internalModeDisabled = evalHost {
-        surmhosting = {
-          tls.enable = true;
-        };
-        extraModules = [
-          (
-            { lib, ... }:
-            {
-              services.surmhosting.services.svc-one.expose.apps.app1 = {
-                access.mode = "internal";
                 internal.enable = false;
                 ports = [
                   {
@@ -1124,9 +1104,6 @@ let
       (expectEq (
         allDisabledStatic.entryPoints ? "internal"
       ) false "disabling the last internal routing consumer removes the internal entrypoint")
-      (expectMsg internalModeDisabled "without any router"
-        "an internal-only app with internal.enable = false"
-      )
     ]
   );
 
@@ -1159,6 +1136,45 @@ let
   ];
 
   legacyV1Final = v1AuthHost.config.services.surm-auth.finalConfig;
+
+  # Direct module evaluation must reject the modes removed by the v2
+  # two-route contract before it can render a configuration.
+  standaloneModeContract = checkFixture "standalone-surm-auth-mode-contract" (
+    let
+      evalMode =
+        mode:
+        evalConfig [
+          ../surm-auth
+          (
+            { ... }:
+            {
+              system.stateVersion = "25.05";
+              services.surm-auth = {
+                enable = true;
+                baseUrl = "https://auth.surma.technology";
+                github.clientIdFile = "/var/lib/surm-auth/github-client-id";
+                github.clientSecretFile = "/var/lib/surm-auth/github-client-secret";
+                session.cookieDomain = ".surma.technology";
+                session.cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+                apps.fixture.mode = mode;
+              };
+            }
+          )
+        ];
+      removedModes = [
+        "internal"
+        "authenticated"
+      ];
+    in
+    removedModes
+    |> lib.map (
+      mode:
+      expect (
+        !(builtins.tryEval (builtins.deepSeq (evalMode mode).config.services.surm-auth.finalConfig true))
+        .success
+      ) "standalone surm-auth mode `${mode}` must fail module evaluation"
+    )
+  );
 
   legacyCompat = checkFixture "legacy-compatibility" (
     let
@@ -1303,7 +1319,9 @@ let
   authWithoutSeeds = checkFixture "auth-without-legacy-seeds" (
     let
       host = evalHost {
-        surmhosting = authCommon;
+        surmhosting = authCommon // {
+          appsNamespace = "apps.surma.technology";
+        };
         extraModules = [
           (
             { lib, ... }:
@@ -1317,7 +1335,6 @@ let
                   access.mode = "allowlist";
                   access.seedUsers = [ "surma" ];
                   internal.access = "trusted-network";
-                  public.domain = "myapp.apps.surma.technology";
                   public.aliases = [ "myapp.surma.technology" ];
                   ports = [
                     {
@@ -1348,7 +1365,6 @@ let
         access.mode = "allowlist";
         access.seedUsers = [ "surma" ];
         internal.access = "trusted-network";
-        public.domain = "app1.apps.surma.technology";
         public.aliases = [ ];
         ports = [
           {
@@ -1383,8 +1399,7 @@ let
             auth.enable = true;
             services.svc-one.expose.apps.app1 = baseApps;
             services.svc-two.expose.apps.app2 = lib.recursiveUpdate baseApps {
-              public.domain = "app1.apps.surma.technology";
-              public.aliases = [ "app2.apps.surma.technology" ];
+              public.aliases = [ "app1.apps.surma.technology" ];
             };
           };
           needle = "same public domain is declared by multiple logical apps";
@@ -1397,7 +1412,7 @@ let
               public.aliases = [ "app1.apps.surma.technology" ];
             };
           };
-          needle = "repeats its primary domain";
+          needle = "repeats its derived primary domain";
         }
         {
           name = "duplicate-alias";
@@ -1417,9 +1432,7 @@ let
           host = brokenHost {
             auth.enable = true;
             services.svc-one.expose.apps.app1 = baseApps;
-            services.svc-two.expose.apps.app1 = lib.recursiveUpdate baseApps {
-              public.domain = "app2.apps.surma.technology";
-            };
+            services.svc-two.expose.apps.app1 = baseApps;
           };
           needle = "duplicate logical app keys";
         }
@@ -1444,14 +1457,24 @@ let
           needle = "declares no ports";
         }
         {
-          name = "internal-app-with-public-domain";
+          name = "removed-internal-mode";
           host = brokenHost {
             auth.enable = true;
             services.svc-one.expose.apps.app1 = lib.recursiveUpdate baseApps {
               access.mode = "internal";
             };
           };
-          needle = "internal-only and must not declare a public domain";
+          needle = null;
+        }
+        {
+          name = "removed-authenticated-mode";
+          host = brokenHost {
+            auth.enable = true;
+            services.svc-one.expose.apps.app1 = lib.recursiveUpdate baseApps {
+              access.mode = "authenticated";
+            };
+          };
+          needle = null;
         }
         {
           name = "restricted-app-without-auth";
@@ -1473,9 +1496,7 @@ let
           host = brokenHost {
             services.svc-one.expose.allowedGitHubUsers = [ "surma" ];
             services.svc-one.expose.apps.app1 = baseApps;
-            services.svc-one.expose.apps.app2 = lib.recursiveUpdate baseApps {
-              public.domain = "app2.apps.surma.technology";
-            };
+            services.svc-one.expose.apps.app2 = baseApps;
           };
           needle = "seeds exactly one allowlist logical app (found 2)";
         }
@@ -1500,7 +1521,7 @@ let
           host = brokenHost {
             auth.enable = true;
             services.svc-one.expose.apps.app1 = lib.recursiveUpdate baseApps {
-              public.domain = "app1.other.example";
+              public.aliases = [ "app1.other.example" ];
             };
           };
           needle = "does not cover";
@@ -1538,7 +1559,7 @@ let
           needle = "forbids forwarded-header trust";
         }
         {
-          name = "missing-access-mode";
+          name = "missing-apps-namespace";
           host = evalHost {
             surmhosting = {
               tls.enable = true;
@@ -1550,8 +1571,8 @@ let
                   services.surmhosting.services.svc-one = {
                     host = "10.201.0.2";
                     expose.apps.app1 = {
+                      access.mode = "public";
                       internal.access = "trusted-network";
-                      public.domain = "app1.apps.surma.technology";
                       ports = [
                         {
                           port = 8080;
@@ -1564,7 +1585,7 @@ let
               )
             ];
           };
-          needle = null;
+          needle = "requires services.surmhosting.appsNamespace";
         }
       ];
 
@@ -1598,6 +1619,7 @@ let
       internalDisabled
       legacyCompat
       legacyV1Rejected
+      standaloneModeContract
       authWithoutSeeds
       invalidDeclarations
       ;

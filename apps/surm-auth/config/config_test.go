@@ -41,8 +41,9 @@ apps:
     mode: "public"
     domains: ["public-brain.apps.surma.technology"]
   rss:
-    mode: "internal"
-    domains: []
+    mode: "allowlist"
+    domains: ["rss.apps.surma.technology"]
+    seed_users: ["surma"]
 `
 
 func loadFromString(t *testing.T, input string) (*Config, error) {
@@ -242,14 +243,16 @@ func TestLoadRejectsPublicAppWithoutDomains(t *testing.T) {
 	}
 }
 
-func TestLoadRejectsInternalAppWithDomains(t *testing.T) {
-	bad := strings.Replace(validConfig, `  rss:
-    mode: "internal"
-    domains: []`, `  rss:
-    mode: "internal"
+func TestLoadRejectsRemovedModes(t *testing.T) {
+	for _, mode := range []string{"internal", "authenticated"} {
+		bad := strings.Replace(validConfig, `    mode: "allowlist"
+    domains: ["rss.apps.surma.technology"]`, `    mode: "`+mode+`"
     domains: ["rss.apps.surma.technology"]`, 1)
-	if _, err := loadFromString(t, bad); err == nil {
-		t.Error("internal app with domains accepted")
+		if _, err := loadFromString(t, bad); err == nil {
+			t.Errorf("%s mode accepted", mode)
+		} else if !strings.Contains(err.Error(), "mode must be one of public, allowlist") {
+			t.Errorf("%s mode error = %v", mode, err)
+		}
 	}
 }
 
