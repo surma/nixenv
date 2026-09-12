@@ -1,9 +1,10 @@
 { ... }:
 {
-  # FreshRSS has authType = "none"; it must stay internal-only with no
-  # public route (auth-rework section 4.4).
+  # FreshRSS has authType = "none"; the public route stays behind the
+  # allowlist while the trusted internal route remains available.
   services.surmhosting.services.rss.expose.apps.rss = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {
@@ -20,7 +21,7 @@
       services.freshrss.dataDir = "/dump/state/freshrss";
       # services.freshrss.user = "containeruser";
       services.freshrss.authType = "none";
-      services.freshrss.baseUrl = "http://rss.nexus.hosts.10.0.0.2.nip.io:8081";
+      services.freshrss.baseUrl = "https://rss.apps.surma.technology";
     };
 
     bindMounts.state = {

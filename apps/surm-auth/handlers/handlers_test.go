@@ -58,12 +58,6 @@ apps:
   pubapp:
     mode: "public"
     domains: ["pubapp.apps.surma.technology"]
-  intapp:
-    mode: "internal"
-    domains: []
-  authapp:
-    mode: "authenticated"
-    domains: ["authapp.apps.surma.technology"]
 `
 	raw = strings.Replace(raw, "POLICY", filepath.Join(t.TempDir(), "policy.json"), 1)
 	raw = strings.Replace(raw, "AUDIT", filepath.Join(t.TempDir(), "audit.log"), 1)

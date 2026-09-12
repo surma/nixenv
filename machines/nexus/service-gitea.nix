@@ -9,7 +9,6 @@ in
     access.mode = "allowlist";
     access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
-    public.domain = "gitea.apps.surma.technology";
     public.aliases = [ "gitea.surma.technology" ];
     ports = [
       {

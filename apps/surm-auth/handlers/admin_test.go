@@ -71,7 +71,6 @@ func TestAdminDashboardRenders(t *testing.T) {
 	for _, want := range []string{
 		"testapp:allowlist:1",
 		"pubapp:public:0",
-		"intapp:internal:0",
 		"github:1000:admin:managed",
 		"github:2001:user",
 		"login_success",
@@ -106,8 +105,8 @@ func TestAdminAppPage(t *testing.T) {
 		t.Error("app page lacks CSRF tokens")
 	}
 
-	// Public and internal apps show their mode without grant forms.
-	for _, app := range []string{"pubapp", "intapp"} {
+	// Public apps show their mode without grant forms.
+	for _, app := range []string{"pubapp"} {
 		recorder := get(server, sessionRequest(http.MethodGet, "/admin/apps/"+app, cookie))
 		if recorder.Code != 200 {
 			t.Fatalf("%s page status = %d", app, recorder.Code)

@@ -37,7 +37,6 @@
     proxy-llm = {
       access.mode = "public";
       internal.access = "trusted-network";
-      public.domain = "proxy-llm.apps.surma.technology";
       public.aliases = [ "proxy.llm.surma.technology" ];
       ports = [
         {
@@ -50,7 +49,6 @@
     key-llm = {
       access.mode = "public";
       internal.access = "trusted-network";
-      public.domain = "key-llm.apps.surma.technology";
       public.aliases = [ "key.llm.surma.technology" ];
       ports = [
         {
@@ -63,7 +61,6 @@
     vendors-llm = {
       access.mode = "public";
       internal.access = "trusted-network";
-      public.domain = "vendors-llm.apps.surma.technology";
       public.aliases = [ "vendors.llm.surma.technology" ];
       ports = [
         {

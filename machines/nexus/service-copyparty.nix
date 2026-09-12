@@ -6,7 +6,8 @@
   '';
 
   services.surmhosting.services.copyparty.expose.apps.copyparty = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {

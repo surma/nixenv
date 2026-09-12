@@ -7,7 +7,8 @@ in
   networking.firewall.allowedUDPPorts = [ ports.torrenting ];
 
   services.surmhosting.services.torrent.expose.apps.torrent = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {

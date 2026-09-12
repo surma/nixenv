@@ -12,7 +12,8 @@ in
   };
 
   services.surmhosting.services.prowlarr.expose.apps.prowlarr = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {

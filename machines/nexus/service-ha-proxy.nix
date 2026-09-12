@@ -10,7 +10,6 @@
     expose.apps.ha = {
       access.mode = "public";
       internal.access = "trusted-network";
-      public.domain = "ha.apps.surma.technology";
       public.aliases = [ "ha.surma.technology" ];
       ports = [
         {

@@ -35,14 +35,6 @@ func TestAuthMissingAppKey(t *testing.T) {
 	}
 }
 
-func TestAuthInternalAppRejected(t *testing.T) {
-	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
-	recorder := get(server, forwardRequest(t, "/auth?app=intapp", nil))
-	if recorder.Code != 403 {
-		t.Errorf("internal app: status = %d, want 403", recorder.Code)
-	}
-}
-
 func TestAuthPublicAppPassesWithoutIdentityHeaders(t *testing.T) {
 	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
 
@@ -124,7 +116,7 @@ func TestAuthMalformedReturnMetadata(t *testing.T) {
 }
 
 // TestAuthValidSessionRejectsBadReturnMetadata covers the matrix for
-// authenticated requests: malformed or cross-app return metadata must
+// authorized requests: malformed or cross-app return metadata must
 // fail with 400 even when the session itself is authorized. Metadata
 // never changes the policy selection.
 func TestAuthValidSessionRejectsBadReturnMetadata(t *testing.T) {
@@ -254,26 +246,6 @@ func TestAuthAdminRoleGrantsAccess(t *testing.T) {
 	recorder := get(server, forwardRequestWithSession(t, server, "/auth?app=testapp", adminUser(), nil))
 	if recorder.Code != 200 {
 		t.Fatalf("admin on allowlisted app: status = %d, want 200", recorder.Code)
-	}
-}
-
-func TestAuthAuthenticatedMode(t *testing.T) {
-	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
-	headers := map[string]string{
-		"X-Forwarded-Host": "authapp.apps.surma.technology",
-	}
-
-	recorder := get(server, forwardRequest(t, "/auth?app=authapp", headers))
-	if recorder.Code != 302 {
-		t.Errorf("authenticated app without session: status = %d, want 302", recorder.Code)
-	}
-
-	recorder = get(server, forwardRequestWithSession(t, server, "/auth?app=authapp", plainUser("2001"), headers))
-	if recorder.Code != 200 {
-		t.Errorf("authenticated app with session: status = %d, want 200", recorder.Code)
-	}
-	if got := recorder.Header().Get("X-Auth-Request-User"); got == "" {
-		t.Error("authenticated app did not set identity headers")
 	}
 }
 

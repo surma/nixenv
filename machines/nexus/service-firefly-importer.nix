@@ -13,7 +13,7 @@ let
     ${pkgs.coreutils}/bin/rm -f ${importCompletedMarker}
     set -a
     FIREFLY_III_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
-    VANITY_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
+    VANITY_URL="https://firefly.apps.surma.technology"
     TRUSTED_PROXIES="**"
     FIREFLY_III_ACCESS_TOKEN="$(< /var/lib/credentials/firefly-importer/access-token.txt)"
     LUNCH_FLOW_API_KEY="$(< /var/lib/credentials/firefly-importer/lunchflow-api-key.txt)"
@@ -60,7 +60,8 @@ in
   };
 
   services.surmhosting.services.firefly-imp.expose.apps.firefly-imp = {
-    access.mode = "internal";
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
     internal.access = "trusted-network";
     ports = [
       {
@@ -79,7 +80,7 @@ in
         virtualHost = "firefly-imp.nexus.hosts.10.0.0.2.nip.io";
         settings = {
           FIREFLY_III_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
-          VANITY_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
+          VANITY_URL = "https://firefly.apps.surma.technology";
           FIREFLY_III_ACCESS_TOKEN_FILE = "/var/lib/credentials/firefly-importer/access-token.txt";
           LUNCH_FLOW_API_KEY_FILE = "/var/lib/credentials/firefly-importer/lunchflow-api-key.txt";
           TRUSTED_PROXIES = "**";

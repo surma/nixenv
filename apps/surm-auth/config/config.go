@@ -18,10 +18,8 @@ const CurrentVersion = 2
 
 // App access modes.
 const (
-	ModeInternal      = "internal"
-	ModePublic        = "public"
-	ModeAuthenticated = "authenticated"
-	ModeAllowlist     = "allowlist"
+	ModePublic    = "public"
+	ModeAllowlist = "allowlist"
 )
 
 // Config is the complete v2 configuration.
@@ -279,16 +277,12 @@ func (g GitHubConfig) validateEndpoints() error {
 
 func (a *AppConf) validate() error {
 	switch a.Mode {
-	case ModeInternal:
-		if len(a.Domains) != 0 {
-			return fmt.Errorf("internal apps must not declare domains")
-		}
-	case ModePublic, ModeAuthenticated, ModeAllowlist:
+	case ModePublic, ModeAllowlist:
 		if len(a.Domains) == 0 {
 			return fmt.Errorf("%s apps must declare at least one domain", a.Mode)
 		}
 	default:
-		return fmt.Errorf("mode must be one of internal, public, authenticated, allowlist (got %q)", a.Mode)
+		return fmt.Errorf("mode must be one of public, allowlist (got %q)", a.Mode)
 	}
 	if a.Mode != ModeAllowlist && len(a.SeedUsers) != 0 {
 		return fmt.Errorf("seed users are only valid on %s apps", ModeAllowlist)

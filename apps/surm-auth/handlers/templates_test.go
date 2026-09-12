@@ -65,7 +65,7 @@ func TestRepoTemplatesParse(t *testing.T) {
 		t.Errorf("admin_app.html rendered unexpected content: %s", body)
 	}
 
-	// Public and internal modes render without grant-edit forms.
+	// Public mode renders without a grant-edit form.
 	body = render("admin_app.html", map[string]any{
 		"App":    appView{Key: "k", Mode: "public", Domains: "d"},
 		"Grants": []grantView{}, "GrantForm": false, "CSRFGrant": "", "CSRFDelete": "",

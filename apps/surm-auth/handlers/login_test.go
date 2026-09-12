@@ -37,16 +37,12 @@ func TestLoginPageWithApp(t *testing.T) {
 	}
 }
 
-func TestLoginPageRejectsUnknownAndInternalApps(t *testing.T) {
+func TestLoginPageRejectsUnknownApp(t *testing.T) {
 	server := newTestServer(t, testConfig(t), newFakeProvider(), 0)
 
 	recorder := get(server, sessionRequest(http.MethodGet, "/login?app=ghost", nil))
 	if recorder.Code != 404 {
 		t.Errorf("unknown app: status = %d, want 404", recorder.Code)
-	}
-	recorder = get(server, sessionRequest(http.MethodGet, "/login?app=intapp", nil))
-	if recorder.Code != 404 {
-		t.Errorf("internal app: status = %d, want 404", recorder.Code)
 	}
 }
 
@@ -157,10 +153,6 @@ func TestLoginGitHubRejectsUnknownApp(t *testing.T) {
 	recorder := get(server, sessionRequest(http.MethodGet, "/login/github?app=ghost", nil))
 	if recorder.Code != 404 {
 		t.Errorf("unknown app initiation: status = %d, want 404", recorder.Code)
-	}
-	recorder = get(server, sessionRequest(http.MethodGet, "/login/github?app=intapp", nil))
-	if recorder.Code != 404 {
-		t.Errorf("internal app initiation: status = %d, want 404", recorder.Code)
 	}
 }
 
