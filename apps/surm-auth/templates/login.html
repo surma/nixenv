@@ -65,8 +65,8 @@
     <div class="login-box">
         {{if .LoggedIn}}
         <h1>Signed in</h1>
-        <p>You are signed in as <span class="app-name">{{.Subject}}</span></p>
-        <a href="/admin" class="btn">Open the admin console</a>
+        <p>You are signed in as <span class="app-name">{{.Username}}</span></p>
+        {{if .IsAdmin}}<a href="/admin" class="btn">Open the admin console</a>{{end}}
         {{else if .App}}
         <h1>Authentication Required</h1>
         <p>Please log in to access <span class="app-name">{{.App}}</span></p>

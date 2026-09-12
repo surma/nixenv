@@ -118,19 +118,32 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := s.session(r)
+	isAdmin := false
+	if claims != nil {
+		var err error
+		isAdmin, err = s.deps.Policy.IsAdmin(claims.Provider, claims.UID)
+		if err != nil {
+			slog.Warn("failed to check landing-page admin status", "subject", claims.SubjectID(), "error", err)
+			isAdmin = false
+		}
+	}
 	if err := s.tmpl.ExecuteTemplate(w, "login.html", map[string]any{
 		"App":      "",
 		"LoggedIn": claims != nil,
-		"Subject":  subjectOrEmpty(claims),
+		"Username": usernameOrEmpty(claims),
+		"IsAdmin":  isAdmin,
 		"AuthURL":  "/login/github?redirect=%2F",
 	}); err != nil {
 		slog.Error("failed to render landing template", "error", err)
 	}
 }
 
-func subjectOrEmpty(claims *auth.Claims) string {
+func usernameOrEmpty(claims *auth.Claims) string {
 	if claims == nil {
 		return ""
+	}
+	if claims.Username != "" {
+		return claims.Username
 	}
 	return claims.SubjectID()
 }

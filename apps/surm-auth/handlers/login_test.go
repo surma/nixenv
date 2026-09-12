@@ -180,8 +180,21 @@ func TestLandingPage(t *testing.T) {
 	if recorder.Code != 200 {
 		t.Fatalf("landing (logged in) status = %d, want 200", recorder.Code)
 	}
-	if !strings.Contains(recorder.Body.String(), "LOGGEDIN|github:1000") {
-		t.Errorf("logged-in landing lacks the subject: %q", recorder.Body.String())
+	if !strings.Contains(recorder.Body.String(), "LOGGEDIN|boss|ADMIN") {
+		t.Errorf("admin landing lacks the username or admin control: %q", recorder.Body.String())
+	}
+
+	nonAdmin := plainUser("2001")
+	recorder = get(server, sessionRequest(http.MethodGet, "/", mintCookie(t, server, nonAdmin)))
+	if recorder.Code != 200 {
+		t.Fatalf("non-admin landing status = %d, want 200", recorder.Code)
+	}
+	body := recorder.Body.String()
+	if !strings.Contains(body, "LOGGEDIN|user2001") {
+		t.Errorf("non-admin landing lacks the username: %q", body)
+	}
+	if strings.Contains(body, "|ADMIN") {
+		t.Errorf("non-admin landing shows the admin control: %q", body)
 	}
 }
 
