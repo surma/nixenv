@@ -1316,6 +1316,63 @@ let
         touch $out
       '';
 
+  nexusConsumerHost = evalConfig [
+    ./default.nix
+    {
+      options.secrets = lib.mkOption {
+        type = lib.types.attrs;
+        default = { };
+      };
+    }
+    (
+      { ... }:
+      {
+        networking.hostName = "surmhosting-consumer-fixture";
+        system.stateVersion = "25.05";
+        services.surmhosting = lib.mkMerge [
+          {
+            enable = true;
+            hostname = "nexus";
+            externalInterface = "eth0";
+            internalPort = 8081;
+            tls = {
+              enable = true;
+              challenge = "http-01";
+              email = "surma@surma.dev";
+            };
+          }
+          authCommon
+        ];
+      }
+    )
+    (repoRoot + "/machines/nexus/service-rss.nix")
+    (repoRoot + "/machines/nexus/service-firefly-importer.nix")
+  ];
+
+  nexusBrowserURLs = checkFixture "nexus-browser-urls" (
+    let
+      rss = nexusConsumerHost.config.containers.lc-rss.config.services.freshrss;
+      importer =
+        nexusConsumerHost.config.containers.lc-firefly-im.config.services.firefly-iii-data-importer;
+      http = nexusConsumerHost.config.services.traefik.dynamicConfigOptions.http;
+    in
+    [
+      (expectEq rss.baseUrl "https://rss.apps.surma.technology"
+        "FreshRSS uses its derived public browser URL"
+      )
+      (expectEq importer.settings.VANITY_URL "https://firefly.apps.surma.technology"
+        "the importer uses Firefly's derived public browser URL"
+      )
+      (expectEq importer.settings.FIREFLY_III_URL "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
+        "the importer keeps its internal Firefly backend URL"
+      )
+      (expectEq (http.routers ? "apps-rss-rss") true "FreshRSS has a generated public route")
+      (expectEq (
+        http.routers ? "apps-firefly-imp-firefly-imp"
+      ) true "the Firefly importer has a generated public route")
+    ]
+  );
+
   authWithoutSeeds = checkFixture "auth-without-legacy-seeds" (
     let
       host = evalHost {
@@ -1620,6 +1677,7 @@ let
       legacyCompat
       legacyV1Rejected
       standaloneModeContract
+      nexusBrowserURLs
       authWithoutSeeds
       invalidDeclarations
       ;

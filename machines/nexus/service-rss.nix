@@ -21,7 +21,7 @@
       services.freshrss.dataDir = "/dump/state/freshrss";
       # services.freshrss.user = "containeruser";
       services.freshrss.authType = "none";
-      services.freshrss.baseUrl = "http://rss.nexus.hosts.10.0.0.2.nip.io:8081";
+      services.freshrss.baseUrl = "https://rss.apps.surma.technology";
     };
 
     bindMounts.state = {
