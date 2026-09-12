@@ -59,8 +59,7 @@ in
   # Pylon is now a packet forwarder only: no TLS termination, no HTTP
   # parsing, no surm-auth, no LLM receivers (auth-rework sections 2 and
   # 8.3). services.traefik stays disabled; all HTTP authority moved to
-  # Nexus. The old proxy service files remain in this directory (not
-  # imported) as rollback artifacts.
+  # Nexus. No obsolete proxy service files remain.
   virtualisation.oci-containers.backend = "podman";
 
   virtualisation.podman = {
