@@ -19,7 +19,7 @@
         f = builtins.getFlake (toString ./.);
         pkgs = f.inputs.nixpkgs.legacyPackages.x86_64-linux;
       in
-      import ./modules/services/surmhosting/tests.nix {
+      import ./modules/services/surmhosting/tests {
         inherit pkgs;
         inputs = f.inputs // { self = f; };
       }
@@ -35,7 +35,7 @@
 let
   # Repository root, resolved relative to this file. Used to evaluate the
   # surm-auth package without requiring a flake `self` input.
-  repoRoot = ./../../..;
+  repoRoot = ./../../../..;
 
   flakeInputs =
     if inputs != null then
@@ -48,7 +48,7 @@ let
         };
         self = {
           packages.${pkgs.stdenv.hostPlatform.system}.surm-auth =
-            pkgs.callPackage (repoRoot + "/packages/surm-auth")
+            pkgs.callPackage (repoRoot + "/modules/services/surmhosting/nix/packages/surm-auth.nix")
               {
                 inputs.self = repoRoot;
               };
@@ -81,7 +81,7 @@ let
     }:
     evalConfig (
       [
-        ./default.nix
+        ../nix/modules/surmhosting.nix
         (
           { lib, ... }:
           {
@@ -1111,7 +1111,7 @@ let
   # This is the exact configuration shape a pre-rework generation ran; the
   # current v2 binary rejects it.
   v1AuthHost = evalConfig [
-    ../surm-auth
+    ../nix/modules/surm-auth.nix
     (
       { lib, ... }:
       {
@@ -1144,7 +1144,7 @@ let
       evalMode =
         mode:
         evalConfig [
-          ../surm-auth
+          ../nix/modules/surm-auth.nix
           (
             { ... }:
             {
@@ -1317,7 +1317,7 @@ let
       '';
 
   nexusConsumerHost = evalConfig [
-    ./default.nix
+    ../nix/modules/surmhosting.nix
     {
       options.secrets = lib.mkOption {
         type = lib.types.attrs;

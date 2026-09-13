@@ -2,23 +2,24 @@
   lib,
   buildGoModule,
   makeWrapper,
+  inputs,
+  ...
 }:
 
 buildGoModule rec {
   pname = "surm-auth";
   version = "0.1.0";
 
-  # Source from the relocated component directory
-  src = ../../modules/services/surmhosting/surm-auth;
+  # Source from the component directory in the flake
+  src = inputs.self + "/modules/services/surmhosting/surm-auth";
 
-  # Vendor hash - will be calculated on first build
-  # This is a placeholder that will cause the build to fail with the correct hash
-  vendorHash = null;
+  # Vendor hash calculated from go.mod/go.sum
+  vendorHash = "sha256-+SRUX9Vqifp30pPq1qg8vvA0mHMi7gAGrJatdUMVDRA=";
 
   # Include templates in the output
   postInstall = ''
     mkdir -p $out/share/surm-auth
-    cp -r ${src}/templates $out/share/surm-auth/
+    cp -r $src/templates $out/share/surm-auth/
   '';
 
   # Wrap binary to set template path
