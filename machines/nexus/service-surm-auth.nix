@@ -24,9 +24,14 @@
     mode = "0600";
   };
 
-  # The credential target directory is created by tmpfiles (mode 0700
-  # via the surmhosting module). Order decryption after tmpfiles setup
-  # so the prelude's mkdir -p never races ahead of it.
+  # Nexus owns the persistent auth state and credential directories.
+  systemd.tmpfiles.rules = [
+    "d /var/lib/surm-auth-state 0700 root root -"
+    "d /var/lib/surm-auth-credentials 0700 root root -"
+  ];
+
+  # Order decryption after tmpfiles setup so the prelude's mkdir -p never
+  # races ahead of the directory owner.
   systemd.services.secrets = {
     after = [ "systemd-tmpfiles-setup.service" ];
     requires = [ "systemd-tmpfiles-setup.service" ];

@@ -2,19 +2,18 @@
   lib,
   stdenv,
   go,
-  inputs,
   surm-auth,
 }:
 
 # Runs the packaged surm-auth binary through a full mocked-OAuth
-# end-to-end flow. The Go test lives in apps/surm-auth/e2e_test.go
+# end-to-end flow. The Go test lives in modules/services/surmhosting/surm-auth/e2e_test.go
 # behind the `surm_auth_e2e` build tag and fails instead of skipping
 # when SURM_AUTH_BIN is absent. The binary under test is the wrapped
 # package, so the test also exercises the packaged templates.
 stdenv.mkDerivation {
   name = "surm-auth-e2e-check";
 
-  src = inputs.self + "/apps/surm-auth";
+  src = ../../surm-auth;
 
   nativeBuildInputs = [ go ];
 

@@ -13,66 +13,21 @@
   and `legacyV1Rejected` runs the packaged surm-auth v2 binary against the
   legacy v1 configuration schema and asserts the rejection.
 
-  Import with a flake for full fidelity:
+  Import with a package set:
 
-      let
-        f = builtins.getFlake (toString ./.);
-        pkgs = f.inputs.nixpkgs.legacyPackages.x86_64-linux;
-      in
-      import ./modules/services/surmhosting/tests.nix {
-        inherit pkgs;
-        inputs = f.inputs // { self = f; };
-      }
-
-  Without `inputs`, the fixtures evaluate the repository directly from the
-  working tree.
+      import ./modules/services/surmhosting/tests { inherit pkgs; }
 */
 {
   pkgs,
-  inputs ? null,
   lib ? pkgs.lib,
 }:
 let
-  # Repository root, resolved relative to this file. Used to evaluate the
-  # surm-auth package without requiring a flake `self` input.
-  repoRoot = ./../../..;
+  surmAuthPackage = pkgs.callPackage ../nix/packages/surm-auth.nix { };
 
-  flakeInputs =
-    if inputs != null then
-      inputs
-    else
-      {
-        nixpkgs = {
-          lib = pkgs.lib;
-          outPath = pkgs.path;
-        };
-        self = {
-          packages.${pkgs.stdenv.hostPlatform.system}.surm-auth =
-            pkgs.callPackage (repoRoot + "/packages/surm-auth")
-              {
-                inputs.self = repoRoot;
-              };
-        };
-      };
-
-  evalConfig =
-    modules:
-    if flakeInputs.nixpkgs ? lib && (flakeInputs.nixpkgs.lib ? nixosSystem) then
-      flakeInputs.nixpkgs.lib.nixosSystem {
-        system = pkgs.stdenv.hostPlatform.system;
-        modules = modules;
-        specialArgs = {
-          inputs = flakeInputs;
-        };
-      }
-    else
-      import (pkgs.path + "/nixos/lib/eval-config.nix") {
-        system = pkgs.stdenv.hostPlatform.system;
-        modules = modules;
-        specialArgs = {
-          inputs = flakeInputs;
-        };
-      };
+  evalConfig = modules: import (pkgs.path + "/nixos/lib/eval-config.nix") {
+    system = pkgs.stdenv.hostPlatform.system;
+    modules = modules;
+  };
 
   evalHost =
     {
@@ -81,7 +36,7 @@ let
     }:
     evalConfig (
       [
-        ./default.nix
+        ../nix/modules/surmhosting.nix
         (
           { lib, ... }:
           {
@@ -114,16 +69,16 @@ let
   # trips over upstream assertions whose message interpolation is broken
   # for the passing case (filesystems.nix `cycle`).
   failedAssertionMessages =
-    host: host.config.assertions |> lib.filter (a: !a.assertion) |> lib.map (a: a.message);
+    host: lib.map (a: a.message) (lib.filter (a: !a.assertion) host.config.assertions);
 
   expectMsg =
     host: needle: msg:
     let
       messages = failedAssertionMessages host;
     in
-    expect (messages |> lib.any (m: lib.hasInfix needle m))
+    expect (lib.any (m: lib.hasInfix needle m) messages)
       "${msg} — no failed assertion message contains `${needle}`; failed assertions were: ${
-        messages |> lib.concatStringsSep " | "
+        lib.concatStringsSep " | " messages
       }";
 
   # The failed assertion messages of a host, for assertions about the
@@ -136,8 +91,8 @@ let
       messages = failedAssertionMessages host;
     in
     expect (
-      !(messages |> lib.any (m: lib.hasInfix "surmhosting" m))
-    ) "${msg} — unexpected surmhosting assertions: ${messages |> lib.concatStringsSep " | "}";
+      !(lib.any (m: lib.hasInfix "surmhosting" m) messages)
+    ) "${msg} — unexpected surmhosting assertions: ${lib.concatStringsSep " | " messages}";
 
   # Lines of one INI section of a rendered systemd unit text. Used to prove
   # WHERE systemd reads a generated dependency from: top-level `[Unit]`
@@ -181,8 +136,8 @@ let
   checkFixture =
     name: conditions:
     let
-      failures = conditions |> lib.filter (c: !c.ok);
-      failureText = failures |> lib.map (c: "  - ${c.msg}") |> lib.concatStringsSep "\n";
+      failures = lib.filter (c: !c.ok) conditions;
+      failureText = lib.concatStringsSep "\n" (lib.map (c: "  - ${c.msg}") failures);
     in
     lib.throwIfNot (failures == [ ]) "surmhosting fixture `${name}` failed:\n${failureText}" (
       pkgs.runCommand "surmhosting-fixture-${name}" { } "touch $out"
@@ -194,9 +149,10 @@ let
     auth.domain = "auth.surma.technology";
     auth.aliases = [ "auth.apps.surma.technology" ];
     auth.cookieDomain = ".surma.technology";
-    auth.github.clientIdFile = "/var/lib/surm-auth-credentials/github-client-id";
-    auth.github.clientSecretFile = "/var/lib/surm-auth-credentials/github-client-secret";
-    auth.cookieSecretFile = "/var/lib/surm-auth-credentials/cookie-secret";
+    auth.stateHostPath = "/var/lib/surm-auth-test-state";
+    auth.github.clientIdFile = "/var/lib/surm-auth-test/client-id";
+    auth.github.clientSecretFile = "/run/credentials/surm-auth-test/client-secret";
+    auth.cookieSecretFile = "/opt/surm-auth-test/cookie-secret";
     auth.bootstrapAdmins = [
       {
         provider = "github";
@@ -350,6 +306,8 @@ let
 
   routers = checkFixture "logical-app-routers" ([
     (noSurmhostingAssertions inventoryHost "logical-app-routers")
+    (expectEq http.routers.api.rule "HostRegexp(`^dashboard\\.surmcluster`)"
+      "the dashboard keeps its default rule")
     (expectEq (lib.attrNames http.routers) [
       "api"
       "apps-admin-admin"
@@ -433,12 +391,12 @@ let
     (expectEq static.certificatesResolvers.cloudflare.acme.domains [
       { main = "*.apps.surma.technology"; }
     ] "the apps namespace wildcard joins the certificate list")
-    (expectEq (inventoryHost.config.services.traefik.environmentFiles |> map toString) [
+    (expectEq (map toString inventoryHost.config.services.traefik.environmentFiles) [
       "/var/lib/surmedge-credentials/cloudflare.env"
     ] "the DNS-01 challenge consumes the Cloudflare credential environment file")
-    (expectEq inventoryHost.config.systemd.services.traefik.requires [
-      "secrets.service"
-    ] "traefik requires the secrets service for the DNS credentials")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.requires
+    ) false "traefik has no default dependency on the secrets service")
   ]);
 
   authKeys = checkFixture "fixed-auth-keys" (
@@ -460,7 +418,7 @@ let
       (expectEq middlewares."auth-dump".forwardAuth.address "http://10.202.0.2:8080/auth?app=dump"
         "the legacy seed adapter's middleware uses the logical app key"
       )
-      (expectEq (lib.attrNames (middlewares |> lib.filterAttrs (n: _: lib.hasPrefix "auth-" n))) [
+      (expectEq (lib.attrNames (lib.filterAttrs (n: _: lib.hasPrefix "auth-" n) middlewares)) [
         "auth-admin"
         "auth-brain"
         "auth-dump"
@@ -521,7 +479,7 @@ let
       (expectEq (acme.domains or [ ]
       ) [ ] "an HTTP-01 migrated host must not contain a wildcard ACME domain for the apps namespace")
       (expectEq (
-        host.config.services.traefik.environmentFiles |> map toString
+        (map toString host.config.services.traefik.environmentFiles)
       ) [ ] "the HTTP-01 challenge adds no environment files")
       (expectEq (builtins.elem "secrets.service" host.config.systemd.services.traefik.requires) false
         "traefik does not require the secrets service under HTTP-01"
@@ -665,22 +623,32 @@ let
     )
     (expectEq surmAuthContainer.bindMounts.state {
       mountPoint = "/var/lib/private";
-      hostPath = "/var/lib/surm-auth-state";
+      hostPath = "/var/lib/surm-auth-test-state";
       isReadOnly = false;
-    } "the auth container bind-mounts the dedicated persistent state directory to /var/lib/private")
-    (expectEq surmAuthContainer.bindMounts.secrets {
-      mountPoint = "/var/lib/secrets";
-      hostPath = "/var/lib/surm-auth-credentials";
+    } "the auth container mounts the configured state path at /var/lib/private")
+    (expectEq surmAuthContainer.bindMounts.githubClientId {
+      mountPoint = "/var/lib/secrets/github-client-id";
+      hostPath = "/var/lib/surm-auth-test/client-id";
       isReadOnly = true;
-    } "the auth container bind-mounts decrypted credentials read-only")
+    } "the client ID path controls its fixed read-only container mount")
+    (expectEq surmAuthContainer.bindMounts.githubClientSecret {
+      mountPoint = "/var/lib/secrets/github-client-secret";
+      hostPath = "/run/credentials/surm-auth-test/client-secret";
+      isReadOnly = true;
+    } "the client secret path controls its fixed read-only container mount")
+    (expectEq surmAuthContainer.bindMounts.cookieSecret {
+      mountPoint = "/var/lib/secrets/cookie-secret";
+      hostPath = "/opt/surm-auth-test/cookie-secret";
+      isReadOnly = true;
+    } "the cookie secret path controls its fixed read-only container mount")
     (expectEq (surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.LoadCredential) [
       "github-client-id:/var/lib/secrets/github-client-id"
       "github-client-secret:/var/lib/secrets/github-client-secret"
       "cookie-secret:/var/lib/secrets/cookie-secret"
     ] "the in-container auth unit receives the three credentials through LoadCredential")
     (expectEq (
-      surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.ExecStart
-      |> lib.hasInfix "surm-auth --config"
+      (lib.hasInfix "surm-auth --config"
+        surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.ExecStart)
     ) true "the auth unit starts the packaged binary with a generated config file")
     (expectEq
       [
@@ -709,17 +677,123 @@ let
     (expectEq (lib.hasAttr "oauth" surmAuthService.finalConfig) false
       "the v2 configuration contains no legacy oauth key"
     )
-    (expectEq inventoryHost.config.systemd.services."container@surm-auth".requires [
-      "secrets.service"
-    ] "the auth container unit requires secrets.service")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services."container@surm-auth".wants
+    ) false "the default auth unit has no secrets Wants dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services."container@surm-auth".requires
+    ) false "the default auth unit has no secrets Requires dependency")
     (expectEq (builtins.elem "secrets.service"
       inventoryHost.config.systemd.services."container@surm-auth".after
-    ) true "the auth container unit orders after secrets.service")
-    (expectEq (lib.all (rule: builtins.elem rule inventoryHost.config.systemd.tmpfiles.rules) [
-      "d /var/lib/surm-auth-state 0700 root root -"
-      "d /var/lib/surm-auth-credentials 0700 root root -"
-    ]) true "the host creates the persistent state and credential directories")
+    ) false "the default auth unit has no secrets After dependency")
+    (expectEq (lib.any (rule: lib.hasInfix "/var/lib/surm-auth" rule)
+      inventoryHost.config.systemd.tmpfiles.rules
+    ) false "surmhosting does not create auth state or credential paths")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.wants
+    ) false "the default Traefik unit has no secrets Wants dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.requires
+    ) false "the default Traefik unit has no secrets Requires dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.after
+    ) false "the default Traefik unit has no secrets After dependency")
   ];
+
+  endpointRendering = checkFixture "auth-endpoint-rendering" (
+    let
+      endpointHost = evalConfig [
+        ../nix/modules/surm-auth.nix
+        (
+          { ... }:
+          {
+            system.stateVersion = "25.05";
+            services.surm-auth = {
+              enable = true;
+              baseUrl = "https://auth.example.test";
+              github = {
+                clientIdFile = "/var/lib/surm-auth/client-id";
+                clientSecretFile = "/var/lib/surm-auth/client-secret";
+                authUrl = "http://127.0.0.1:18080/authorize";
+                tokenUrl = "http://127.0.0.1:18080/token";
+                userUrl = "http://127.0.0.1:18080/user";
+                usersApiUrl = "http://127.0.0.1:18080/users";
+              };
+              session = {
+                cookieDomain = ".example.test";
+                cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+              };
+            };
+          }
+        )
+      ];
+      publicEndpoint = builtins.tryEval (
+        builtins.deepSeq (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate authCommon {
+              tls.enable = true;
+              auth.github.authUrl = "http://127.0.0.1:18080/authorize";
+            };
+          })
+        ).config.services.surmhosting.auth.enable true
+      );
+    in
+    [
+      (expectEq inventoryHost.config.containers."surm-auth".config.services.surm-auth.finalConfig.providers.github
+        expectedV2Config.providers.github
+        "production rendering omits all nullable GitHub endpoint overrides")
+      (expectEq endpointHost.config.services.surm-auth.finalConfig.providers.github {
+        client_id_file = "/run/credentials/surm-auth.service/github-client-id";
+        client_secret_file = "/run/credentials/surm-auth.service/github-client-secret";
+        auth_url = "http://127.0.0.1:18080/authorize";
+        token_url = "http://127.0.0.1:18080/token";
+        user_url = "http://127.0.0.1:18080/user";
+        users_api_url = "http://127.0.0.1:18080/users";
+      } "all internal GitHub endpoint overrides reach rendered configuration")
+      (expect (!publicEndpoint.success)
+        "GitHub endpoint overrides are not public Surmhosting options")
+    ]
+  );
+
+  configuredUnitDependencies = checkFixture "configured-unit-dependencies" (
+    let
+      host = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.unitDependencies = {
+            wants = [ "auth-wants.service" ];
+            requires = [ "auth-requires.service" ];
+            after = [ "auth-after.service" ];
+          };
+          tls.unitDependencies = {
+            wants = [ "traefik-wants.service" ];
+            requires = [ "traefik-requires.service" ];
+            after = [ "traefik-after.service" ];
+          };
+        };
+      };
+    in
+    [
+      (expectEq (builtins.elem "auth-wants.service"
+        host.config.systemd.services."container@surm-auth".wants
+      ) true "configured auth Wants reaches the container unit")
+      (expectEq (builtins.elem "auth-requires.service"
+        host.config.systemd.services."container@surm-auth".requires
+      ) true "configured auth Requires reaches the container unit")
+      (expectEq (builtins.elem "auth-after.service"
+        host.config.systemd.services."container@surm-auth".after
+      ) true "configured auth After reaches the container unit")
+      (expectEq (builtins.elem "traefik-wants.service"
+        host.config.systemd.services.traefik.wants
+      ) true "configured Traefik Wants reaches the service unit")
+      (expectEq (builtins.elem "traefik-requires.service"
+        host.config.systemd.services.traefik.requires
+      ) true "configured Traefik Requires reaches the service unit")
+      (expectEq (builtins.elem "traefik-after.service"
+        host.config.systemd.services.traefik.after
+      ) true "configured Traefik After reaches the service unit")
+    ]
+  );
 
   # Host mirroring the Nexus LLM proxy contract: a container service whose
   # generated `container@` unit must depend on secrets.service, plus the v2
@@ -727,10 +801,14 @@ let
   mkLlmHost =
     containerService:
     evalHost {
-      surmhosting = {
+      surmhosting = lib.recursiveUpdate authCommon {
         tls.enable = true;
-      }
-      // authCommon;
+        auth.unitDependencies = {
+          wants = [ "secrets.service" ];
+          requires = [ "secrets.service" ];
+          after = [ "secrets.service" ];
+        };
+      };
       extraModules = [
         (
           { lib, ... }:
@@ -821,7 +899,7 @@ let
       ];
       isDep = line: lib.any (k: lib.hasPrefix k line) depKeys;
     in
-    iniSectionLines text "Unit" |> lib.filter isDep;
+    lib.filter isDep (iniSectionLines text "Unit");
 
   unitDependencyDropin =
     text:
@@ -1111,7 +1189,7 @@ let
   # This is the exact configuration shape a pre-rework generation ran; the
   # current v2 binary rejects it.
   v1AuthHost = evalConfig [
-    ../surm-auth
+    ../nix/modules/surm-auth.nix
     (
       { lib, ... }:
       {
@@ -1144,7 +1222,7 @@ let
       evalMode =
         mode:
         evalConfig [
-          ../surm-auth
+          ../nix/modules/surm-auth.nix
           (
             { ... }:
             {
@@ -1166,14 +1244,13 @@ let
         "authenticated"
       ];
     in
-    removedModes
-    |> lib.map (
+    lib.map (
       mode:
       expect (
         !(builtins.tryEval (builtins.deepSeq (evalMode mode).config.services.surm-auth.finalConfig true))
         .success
       ) "standalone surm-auth mode `${mode}` must fail module evaluation"
-    )
+    ) removedModes
   );
 
   legacyCompat = checkFixture "legacy-compatibility" (
@@ -1296,7 +1373,7 @@ let
     pkgs.runCommand "surmhosting-legacy-v1-rejected"
       {
         v1ConfigFile = pkgs.writeText "surm-auth-v1-config.yaml" (builtins.toJSON legacyV1Final);
-        surmAuthPkg = flakeInputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
+        surmAuthPkg = surmAuthPackage;
       }
       ''
         set +e
@@ -1316,54 +1393,289 @@ let
         touch $out
       '';
 
-  nexusConsumerHost = evalConfig [
-    ./default.nix
-    {
-      options.secrets = lib.mkOption {
-        type = lib.types.attrs;
-        default = { };
-      };
-    }
-    (
-      { ... }:
-      {
-        networking.hostName = "surmhosting-consumer-fixture";
-        system.stateVersion = "25.05";
-        services.surmhosting = lib.mkMerge [
-          {
-            enable = true;
-            hostname = "nexus";
-            externalInterface = "eth0";
-            internalPort = 8081;
-            tls = {
-              enable = true;
-              challenge = "http-01";
-              email = "surma@surma.dev";
+  syntheticComponentHost = evalHost {
+    surmhosting = {
+      appsNamespace = "apps.surma.technology";
+      tls.enable = true;
+    };
+    extraModules = [
+      (
+        { ... }:
+        {
+          services.surmhosting.services.browser-app = {
+            container.config.system.stateVersion = "25.05";
+            expose.apps.browser = {
+              access.mode = "public";
+              internal.access = "trusted-network";
+              public.aliases = [ "browser.surma.technology" ];
+              ports = [
+                {
+                  port = 8080;
+                  hostname = "browser";
+                }
+              ];
             };
-          }
-          authCommon
-        ];
-      }
-    )
-    (repoRoot + "/machines/nexus/service-firefly-importer.nix")
-  ];
+          };
+        }
+      )
+    ];
+  };
 
-  nexusBrowserURLs = checkFixture "nexus-browser-urls" (
+  syntheticComponentRoutes = checkFixture "synthetic-component-routes" (
     let
-      importer =
-        nexusConsumerHost.config.containers.lc-firefly-im.config.services.firefly-iii-data-importer;
-      http = nexusConsumerHost.config.services.traefik.dynamicConfigOptions.http;
+      http = syntheticComponentHost.config.services.traefik.dynamicConfigOptions.http;
     in
     [
-      (expectEq importer.settings.VANITY_URL "https://firefly.apps.surma.technology"
-        "the importer uses Firefly's derived public browser URL"
-      )
-      (expectEq importer.settings.FIREFLY_III_URL "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
-        "the importer keeps its internal Firefly backend URL"
-      )
-      (expectEq (
-        http.routers ? "apps-firefly-imp-firefly-imp"
-      ) true "the Firefly importer has a generated public route")
+      (expectEq http.routers."apps-browser-browser" {
+        rule = "(Host(`browser.apps.surma.technology`) || Host(`browser.surma.technology`))";
+        service = "apps-browser-browser";
+        entryPoints = [ "websecure" ];
+        middlewares = [ ];
+        priority = 1;
+      } "a synthetic container gets a component-generated public route")
+      (expectEq http.services."apps-browser-browser".loadBalancer.servers [
+        { url = "http://10.201.0.2:8080"; }
+      ] "a synthetic container route uses the generated container address")
+    ]
+  );
+
+  networkContract = checkFixture "network-contract" (
+    let
+      defaultHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.network-default = {
+                containerName = "network-default";
+                container.config.system.stateVersion = "25.05";
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "default";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      overrideHost = evalHost {
+        surmhosting = {
+          network.nameservers = [ "9.9.9.9" ];
+        };
+        extraModules = [
+          (
+            { ... }:
+            {
+              networking.nat.internalIPs = [ "10.250.0.0/16" ];
+              services.surmhosting.services.network-override = {
+                containerName = "network-override";
+                container = {
+                  localAddress = "10.50.0.2/24";
+                  hostAddress = "10.50.0.1/24";
+                  config = {
+                    system.stateVersion = "25.05";
+                    networking.nameservers = [ "1.1.1.1" ];
+                  };
+                };
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "override";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      authHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          network.nameservers = [ "9.9.9.9" ];
+          auth.network = {
+            hostAddress = "10.202.1.1/24";
+            localAddress = "10.202.1.2/24";
+          };
+        };
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.auth-app = {
+                host = "10.0.0.10";
+                expose.apps.restricted = {
+                  access.mode = "allowlist";
+                  internal.access = "trusted-network";
+                  public.aliases = [ "restricted.surma.technology" ];
+                  ports = [
+                    {
+                      port = 8080;
+                      hostname = "restricted";
+                    }
+                  ];
+                };
+              };
+            }
+          )
+        ];
+      };
+      invalidAuthLocalHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network.localAddress = "not-an-ip";
+        };
+      };
+      invalidAuthHostHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network.hostAddress = "not-an-ip";
+        };
+      };
+      equalAuthHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network = {
+            hostAddress = "10.202.1.2";
+            localAddress = "10.202.1.2";
+          };
+        };
+      };
+      nullAddressHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.null-address = {
+                container = {
+                  localAddress = null;
+                  config.system.stateVersion = "25.05";
+                };
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "null-address";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      noPublicFirewallHost = evalHost { };
+      httpFirewallHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.http = {
+                host = "127.0.0.1";
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "http";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      tlsFirewallHost = evalHost {
+        surmhosting.tls.enable = true;
+      };
+      disabledFirewallHost = evalHost {
+        surmhosting = {
+          firewall.enable = false;
+          tls.enable = true;
+        };
+      };
+      customOptionsHost = evalHost {
+        surmhosting = {
+          tls.enable = true;
+          tls.challenge = "dns-01";
+          tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
+          tls.dnsProvider = "route53";
+          dashboard.enable = true;
+          dashboard.rule = "Host(`dashboard.example`)";
+        };
+      };
+    in
+    [
+      (expectEq defaultHost.config.containers.network-default.localAddress "10.201.0.2"
+        "a workload keeps the generated default local address")
+      (expectEq defaultHost.config.containers.network-default.hostAddress "10.201.0.1"
+        "a workload keeps the generated default host address")
+      (expectEq defaultHost.config.containers.network-default.config.networking.nameservers [ "8.8.8.8" ]
+        "a workload receives the default nameserver")
+      (expectEq defaultHost.config.networking.nat.internalIPs [
+        "10.201.0.0/16"
+        "10.202.0.0/16"
+      ] "the native NAT ranges keep their defaults")
+      (expectEq overrideHost.config.containers.network-override.localAddress "10.50.0.2/24"
+        "a workload keeps the complete overridden local address")
+      (expectEq overrideHost.config.containers.network-override.hostAddress "10.50.0.1/24"
+        "a workload keeps the complete overridden host address")
+      (expectEq overrideHost.config.services.traefik.dynamicConfigOptions.http.services."network-override-override".loadBalancer.servers [
+        { url = "http://10.50.0.2:8080"; }
+      ] "Traefik strips only the CIDR suffix from the workload URL")
+      (expectEq overrideHost.config.containers.network-override.config.networking.nameservers [ "1.1.1.1" ]
+        "a workload nameserver override wins normally")
+      (expectEq overrideHost.config.networking.nat.internalIPs [ "10.250.0.0/16" ]
+        "a native NAT override wins over the Surmhosting default")
+      (expectEq inventoryHost.config.containers."surm-auth".localAddress "10.202.0.2"
+        "the auth container keeps its default local address")
+      (expectEq inventoryHost.config.containers."surm-auth".hostAddress "10.202.0.1"
+        "the auth container keeps its default host address")
+      (expectEq authHost.config.containers."surm-auth".localAddress "10.202.1.2/24"
+        "the auth container keeps its complete configured local address")
+      (expectEq authHost.config.containers."surm-auth".hostAddress "10.202.1.1/24"
+        "the auth container keeps its complete configured host address")
+      (expectEq authHost.config.containers."surm-auth".config.networking.nameservers [ "9.9.9.9" ]
+        "the auth container receives the configured nameserver directly")
+      (expectEq authHost.config.services.traefik.dynamicConfigOptions.http.services."surm-auth".loadBalancer.servers [
+        { url = "http://10.202.1.2:8080"; }
+      ] "the auth backend URL strips its CIDR suffix")
+      (expectEq authHost.config.services.traefik.dynamicConfigOptions.http.middlewares."auth-restricted".forwardAuth.address
+        "http://10.202.1.2:8080/auth?app=restricted"
+        "forward-auth URLs use the normalized auth local address")
+      (expectMsg equalAuthHost "auth network hostAddress and localAddress must differ"
+        "equal auth network addresses must fail evaluation")
+      (expectMsg invalidAuthLocalHost "usable IPv4 local address"
+        "an auth container with an invalid local address must fail clearly")
+      (expectMsg invalidAuthHostHost "usable IPv4 host address"
+        "an auth container with an invalid host address must fail clearly")
+      (expectMsg nullAddressHost "usable IPv4 local address"
+        "an exposed workload with a null local address must fail clearly")
+      (expectEq noPublicFirewallHost.config.networking.firewall.enable true
+        "Surmhosting enables its firewall by default")
+      (expectEq noPublicFirewallHost.config.networking.firewall.allowedTCPPorts [ ]
+        "Surmhosting opens no public port without public HTTP or TLS")
+      (expectEq httpFirewallHost.config.networking.firewall.allowedTCPPorts [ 80 ]
+        "public HTTP opens only port 80")
+      (expectEq tlsFirewallHost.config.networking.firewall.allowedTCPPorts [ 80 443 ]
+        "TLS opens ports 80 and 443")
+      (expectEq disabledFirewallHost.config.networking.firewall.allowedTCPPorts [ ]
+        "disabling Surmhosting firewall management opens no public ports")
+      (expectEq (builtins.elem "ve-+" inventoryHost.config.networking.firewall.trustedInterfaces) false
+        "Surmhosting does not trust veth interfaces")
+      (expectEq (builtins.elem 8081 inventoryHost.config.networking.firewall.allowedTCPPorts) false
+        "Surmhosting does not open the internal port")
+      (expectEq customOptionsHost.config.services.traefik.staticConfigOptions.certificatesResolvers.cloudflare.acme.dnsChallenge.provider
+        "route53" "the configurable DNS provider reaches Traefik")
+      (expectEq customOptionsHost.config.services.traefik.dynamicConfigOptions.http.routers.api.rule
+        "Host(`dashboard.example`)" "the configurable dashboard rule reaches Traefik")
+      (expectEq (static.providers ? "docker") true
+        "Traefik keeps the Docker provider with Podman enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.enable true
+        "docker.enable keeps Podman enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.dockerCompat true
+        "docker.enable keeps Docker compatibility enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.dockerSocket.enable true
+        "docker.enable keeps the Docker socket enabled")
+      (expectEq inventoryHost.config.services.traefik.group "podman"
+        "Traefik keeps the Podman group")
     ]
   );
 
@@ -1436,6 +1748,7 @@ let
             tls.challenge = "dns-01";
             tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
             auth.domain = "auth.surma.technology";
+            auth.stateHostPath = "/var/lib/surm-auth-state";
             auth.github.clientIdFile = "/var/lib/surm-auth-credentials/github-client-id";
             auth.github.clientSecretFile = "/var/lib/surm-auth-credentials/github-client-secret";
             auth.cookieSecretFile = "/var/lib/surm-auth-credentials/cookie-secret";
@@ -1640,22 +1953,85 @@ let
         }
       ];
 
-      checkedCases =
-        cases
-        |> lib.map (
+      checkedCases = lib.map (
           case:
           if case.needle == null then
             # These cases must make evaluation fail outright (conflicting
             # definitions or a missing access mode). Forcing the assertion
             # VALUES throws before any message is rendered.
             expect (
-              !(builtins.tryEval (case.host.config.assertions |> lib.all (a: a.assertion))).success
+              !(builtins.tryEval (lib.all (a: a.assertion) case.host.config.assertions)).success
             ) "fixture case `${case.name}` must fail evaluation"
           else
             expectMsg case.host case.needle "fixture case `${case.name}`"
-        );
+        ) cases;
     in
     checkedCases
+  );
+
+  authPathValidation = checkFixture "auth-path-validation" (
+    let
+      validAuth = lib.recursiveUpdate authCommon {
+        tls.enable = true;
+      };
+      evalWith =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.auth.github.clientIdFile
+        );
+      evalState =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.auth.stateHostPath
+        );
+      evalDns =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.tls.dnsEnvironmentFile
+        );
+    in
+    [
+      (let
+        result = evalDns {
+          tls.challenge = "dns-01";
+          tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
+        };
+      in
+      expect (result.success && result.value == "/var/lib/surmedge-credentials/cloudflare.env")
+        "a quoted absolute DNS environment path remains valid")
+      (expect (!(evalDns {
+        tls.challenge = "dns-01";
+        tls.dnsEnvironmentFile = toString pkgs.hello;
+      }).success) "a store-backed DNS environment string must fail option validation")
+      (expect (!(evalDns {
+        tls.challenge = "dns-01";
+        tls.dnsEnvironmentFile = ./default.nix;
+      }).success) "a Nix path literal DNS environment file must fail option validation")
+      (expect (!(evalWith {
+        auth.github.clientIdFile = toString pkgs.hello;
+      }).success) "a store-backed credential string must fail option validation")
+      (expect (!(evalWith {
+        auth.github.clientIdFile = ./default.nix;
+      }).success) "a Nix path literal credential must fail option validation")
+      (expect (!(evalState {
+        auth.stateHostPath = toString pkgs.hello;
+      }).success) "a store-backed state string must fail option validation")
+      (expect (
+        lib.any
+          (a: !a.assertion && lib.hasInfix "stateHostPath" a.message)
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth {
+              auth.stateHostPath = null;
+            };
+          }).config.assertions
+      ) "auth.enable must require auth.stateHostPath")
+    ]
   );
 
   fixtures = {
@@ -1664,6 +2040,8 @@ let
       authKeys
       http01Migrated
       v2Config
+      endpointRendering
+      configuredUnitDependencies
       llmDependency
       unitDependencyRuntime
       internalEntrypoint
@@ -1671,19 +2049,16 @@ let
       legacyCompat
       legacyV1Rejected
       standaloneModeContract
-      nexusBrowserURLs
+      syntheticComponentRoutes
+      networkContract
       authWithoutSeeds
       invalidDeclarations
+      authPathValidation
       ;
   };
 
   all = pkgs.runCommand "surmhosting-focused-tests" { } ''
-    ${
-      fixtures
-      |> lib.attrValues
-      |> lib.map (f: "test -e ${f}")
-      |> lib.concatStringsSep "\n"
-    }
+    ${lib.concatStringsSep "\n" (lib.map (f: "test -e ${f}") (lib.attrValues fixtures))}
     touch $out
   '';
 in

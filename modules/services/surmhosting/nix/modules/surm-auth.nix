@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 with lib;
@@ -38,10 +37,23 @@ let
     };
     policy.file = cfg.policy.file;
     audit.file = cfg.audit.file;
-    providers.github = {
-      client_id_file = "${credentialDir}/github-client-id";
-      client_secret_file = "${credentialDir}/github-client-secret";
-    };
+    providers.github =
+      {
+        client_id_file = "${credentialDir}/github-client-id";
+        client_secret_file = "${credentialDir}/github-client-secret";
+      }
+      // optionalAttrs (cfg.github.authUrl != null) {
+        auth_url = cfg.github.authUrl;
+      }
+      // optionalAttrs (cfg.github.tokenUrl != null) {
+        token_url = cfg.github.tokenUrl;
+      }
+      // optionalAttrs (cfg.github.userUrl != null) {
+        user_url = cfg.github.userUrl;
+      }
+      // optionalAttrs (cfg.github.usersApiUrl != null) {
+        users_api_url = cfg.github.usersApiUrl;
+      };
     bootstrap_admins = cfg.bootstrapAdmins;
     apps = mapAttrs (_: app: {
       mode = app.mode;
@@ -99,7 +111,7 @@ in
 
     package = mkOption {
       type = types.package;
-      default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
+      default = pkgs.callPackage ../packages/surm-auth.nix { };
       description = "The surm-auth package to use";
     };
 
@@ -131,7 +143,7 @@ in
 
     github = {
       clientIdFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the GitHub OAuth client ID credential. For
           version 2 this is the LoadCredential source; the rendered
@@ -140,12 +152,36 @@ in
       };
 
       clientSecretFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the GitHub OAuth client secret credential. For
           version 2 this is the LoadCredential source; the rendered
           configuration always reads the credential copy.
         '';
+      };
+
+      authUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub OAuth authorization endpoint";
+      };
+
+      tokenUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub OAuth token endpoint";
+      };
+
+      userUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub current-user endpoint";
+      };
+
+      usersApiUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub user-lookup endpoint";
       };
     };
 
@@ -163,7 +199,7 @@ in
       };
 
       cookieSecretFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the cookie signing secret credential. For
           version 2 this is the LoadCredential source; the rendered

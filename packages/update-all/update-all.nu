@@ -65,7 +65,7 @@ def main [] {
 
   let surm_auth_version = (try {
     let surm_auth_version_lines = (
-      open packages/surm-auth/default.nix
+      open modules/services/surmhosting/nix/packages/surm-auth.nix
       | lines
       | where { |line| $line | str contains 'version = "' }
     )
@@ -79,7 +79,7 @@ def main [] {
     }
   } catch { null })
   if $surm_auth_version == null {
-    print "Warning: could not determine surm-auth version from packages/surm-auth/default.nix."
+    print "Warning: could not determine surm-auth version from modules/services/surmhosting/nix/packages/surm-auth.nix."
   }
 
   let packages = [
