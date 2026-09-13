@@ -26,7 +26,8 @@
     ./service-vsftpd.nix
     ./service-redis.nix
     ./service-postgresql.nix
-    ./service-ups.nix
+    # Disabled while the disconnected UPS awaits replacement.
+    # ./service-ups.nix
     ./service-dump.nix
     ./service-overview.nix
     ./service-github-runner.nix
