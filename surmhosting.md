@@ -990,7 +990,7 @@ Run:
 
 ```bash
 nix shell --impure --expr \
-  '(builtins.getFlake (toString ../../../..)).inputs.nixpkgs.legacyPackages.x86_64-linux.go' \
+  'let pkgs = (builtins.getFlake (toString ../../../..)).inputs.nixpkgs.legacyPackages.x86_64-linux; in [ pkgs.go pkgs.stdenv.cc ]' \
   -c env GOTOOLCHAIN=local go vet ./...
 ```
 
