@@ -700,6 +700,61 @@ let
     ) false "the default Traefik unit has no secrets After dependency")
   ];
 
+  endpointRendering = checkFixture "auth-endpoint-rendering" (
+    let
+      endpointHost = evalConfig [
+        ../nix/modules/surm-auth.nix
+        (
+          { ... }:
+          {
+            system.stateVersion = "25.05";
+            services.surm-auth = {
+              enable = true;
+              baseUrl = "https://auth.example.test";
+              github = {
+                clientIdFile = "/var/lib/surm-auth/client-id";
+                clientSecretFile = "/var/lib/surm-auth/client-secret";
+                authUrl = "http://127.0.0.1:18080/authorize";
+                tokenUrl = "http://127.0.0.1:18080/token";
+                userUrl = "http://127.0.0.1:18080/user";
+                usersApiUrl = "http://127.0.0.1:18080/users";
+              };
+              session = {
+                cookieDomain = ".example.test";
+                cookieSecretFile = "/var/lib/surm-auth/cookie-secret";
+              };
+            };
+          }
+        )
+      ];
+      publicEndpoint = builtins.tryEval (
+        builtins.deepSeq (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate authCommon {
+              tls.enable = true;
+              auth.github.authUrl = "http://127.0.0.1:18080/authorize";
+            };
+          })
+        ).config.services.surmhosting.auth.enable true
+      );
+    in
+    [
+      (expectEq inventoryHost.config.containers."surm-auth".config.services.surm-auth.finalConfig.providers.github
+        expectedV2Config.providers.github
+        "production rendering omits all nullable GitHub endpoint overrides")
+      (expectEq endpointHost.config.services.surm-auth.finalConfig.providers.github {
+        client_id_file = "/run/credentials/surm-auth.service/github-client-id";
+        client_secret_file = "/run/credentials/surm-auth.service/github-client-secret";
+        auth_url = "http://127.0.0.1:18080/authorize";
+        token_url = "http://127.0.0.1:18080/token";
+        user_url = "http://127.0.0.1:18080/user";
+        users_api_url = "http://127.0.0.1:18080/users";
+      } "all internal GitHub endpoint overrides reach rendered configuration")
+      (expect (!publicEndpoint.success)
+        "GitHub endpoint overrides are not public Surmhosting options")
+    ]
+  );
+
   configuredUnitDependencies = checkFixture "configured-unit-dependencies" (
     let
       host = evalHost {
@@ -1946,6 +2001,7 @@ let
       authKeys
       http01Migrated
       v2Config
+      endpointRendering
       configuredUnitDependencies
       llmDependency
       unitDependencyRuntime

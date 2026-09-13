@@ -37,10 +37,23 @@ let
     };
     policy.file = cfg.policy.file;
     audit.file = cfg.audit.file;
-    providers.github = {
-      client_id_file = "${credentialDir}/github-client-id";
-      client_secret_file = "${credentialDir}/github-client-secret";
-    };
+    providers.github =
+      {
+        client_id_file = "${credentialDir}/github-client-id";
+        client_secret_file = "${credentialDir}/github-client-secret";
+      }
+      // optionalAttrs (cfg.github.authUrl != null) {
+        auth_url = cfg.github.authUrl;
+      }
+      // optionalAttrs (cfg.github.tokenUrl != null) {
+        token_url = cfg.github.tokenUrl;
+      }
+      // optionalAttrs (cfg.github.userUrl != null) {
+        user_url = cfg.github.userUrl;
+      }
+      // optionalAttrs (cfg.github.usersApiUrl != null) {
+        users_api_url = cfg.github.usersApiUrl;
+      };
     bootstrap_admins = cfg.bootstrapAdmins;
     apps = mapAttrs (_: app: {
       mode = app.mode;
@@ -145,6 +158,30 @@ in
           version 2 this is the LoadCredential source; the rendered
           configuration always reads the credential copy.
         '';
+      };
+
+      authUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub OAuth authorization endpoint";
+      };
+
+      tokenUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub OAuth token endpoint";
+      };
+
+      userUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub current-user endpoint";
+      };
+
+      usersApiUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Optional internal GitHub user-lookup endpoint";
       };
     };
 
