@@ -270,6 +270,12 @@ let
 
   serviceEntries = lib.attrsToList cfg.services;
 
+  ipv4Octet = "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
+  ipv4AddressPattern =
+    "${ipv4Octet}\\.${ipv4Octet}\\.${ipv4Octet}\\.${ipv4Octet}(/[0-9]|/[12][0-9]|/3[0-2])?";
+  isUsableIPv4 = address: address != null && builtins.match ipv4AddressPattern address != null;
+  normalizeIPv4 = address: if address == null then "" else head (splitString "/" address);
+
   managedServiceConfigs = imap0 (
       i:
       { name, value }:
@@ -284,11 +290,16 @@ let
         containerName =
           if value.containerName != null then value.containerName else "lc-${lib.substring 0 10 name}";
         containerUnitName = "container@${containerName}";
-        localAddress = "10.201.${toString i}.2";
-        hostAddress = "10.201.${toString i}.1";
+        generatedLocalAddress = "10.201.${toString i}.2";
+        generatedHostAddress = "10.201.${toString i}.1";
+        finalLocalAddress =
+          if hasContainer then
+            config.containers.${containerName}.localAddress
+          else
+            null;
         forwardHost =
           if hasContainer then
-            localAddress
+            normalizeIPv4 finalLocalAddress
           else if value.host != null then
             value.host
           else
@@ -428,13 +439,13 @@ let
               };
               networking.firewall.enable = mkDefault false;
               networking.useHostResolvConf = mkForce false;
-              networking.nameservers = mkDefault [ "8.8.8.8" ];
+              networking.nameservers = mkDefault cfg.network.nameservers;
             };
 
             nixpkgs = mkDefault pkgs.path;
             privateNetwork = mkDefault true;
-            localAddress = mkDefault localAddress;
-            hostAddress = mkDefault hostAddress;
+            localAddress = mkDefault generatedLocalAddress;
+            hostAddress = mkDefault generatedHostAddress;
             ephemeral = mkDefault true;
             autoStart = mkDefault true;
           }
@@ -469,12 +480,29 @@ let
   # v2 authentication is explicitly enabled. It no longer depends on the
   # presence of legacy seed lists.
   v2AuthEnabled = cfg.auth.enable;
+  authLocalAddress = if v2AuthEnabled then config.containers."surm-auth".localAddress else null;
+  authForwardAddress = normalizeIPv4 authLocalAddress;
   legacyAuthEnabled = !v2AuthEnabled && servicesWithAuth != { };
 
   # A migrated host declares an apps namespace and must express every HTTP
   # exposure through explicit logical apps.
   v2RoutingActive = cfg.appsNamespace != null;
   v2Active = v2AuthEnabled || v2RoutingActive;
+
+  hasPublicLegacyHttp = any (
+    { value, ... }:
+    value.expose.enable
+    && (value.expose.port != null || value.expose.ports != [ ])
+  ) serviceEntries;
+  hasPublicAppHttp = any (
+    { value, ... }:
+    value.expose.enable && v2RoutingActive && value.expose.apps != { }
+  ) serviceEntries;
+  publicHttpExists =
+    cfg.tls.enable
+    || (!v2RoutingActive && cfg.dashboard.enable)
+    || hasPublicLegacyHttp
+    || hasPublicAppHttp;
 
   allApps = concatMap (
     { name, value }:
@@ -545,7 +573,7 @@ let
     { key, ... }:
     nameValuePair "auth-${key}" {
       forwardAuth = {
-        address = "http://10.202.0.2:8080/auth?app=${key}";
+        address = "http://${authForwardAddress}:8080/auth?app=${key}";
         trustForwardHeader = false;
         authRequestHeaders = [ "Cookie" ];
         authResponseHeaders = [
@@ -621,7 +649,29 @@ let
       ]
   ) serviceEntries;
 
+  workloadAddressAssertions = map (
+    { name, value }:
+    let
+      hasContainer = value.container != null;
+      containerName =
+        if value.containerName != null then value.containerName else "lc-${lib.substring 0 10 name}";
+      finalLocalAddress =
+        if hasContainer then
+          config.containers.${containerName}.localAddress
+        else
+          null;
+    in
+    {
+      assertion = !value.expose.enable || !hasContainer || isUsableIPv4 finalLocalAddress;
+      message = "surmhosting service `${name}` exposes a container with no usable IPv4 local address.";
+    }
+  ) serviceEntries;
+
   appAssertions = [
+    {
+      assertion = !v2AuthEnabled || cfg.auth.network.hostAddress != cfg.auth.network.localAddress;
+      message = "surmhosting: auth network hostAddress and localAddress must differ.";
+    }
     {
       assertion = allUnique appKeys;
       message = "surmhosting: duplicate logical app keys: ${concatStringsSep ", " (duplicates appKeys)}";
@@ -747,6 +797,11 @@ in
       externalInterface = mkOption {
         type = types.str;
       };
+      network.nameservers = mkOption {
+        type = types.listOf types.str;
+        default = [ "8.8.8.8" ];
+        description = "Nameservers applied to generated workload and auth containers.";
+      };
       containeruser.name = mkOption {
         type = types.str;
         default = "containeruser";
@@ -793,6 +848,11 @@ in
           requests no wildcard; Traefik derives one exact certificate per
           domain from the router Host rules.
         '';
+      };
+      tls.dnsProvider = mkOption {
+        type = types.str;
+        default = "cloudflare";
+        description = "DNS provider passed to the Traefik ACME DNS challenge.";
       };
       tls.dnsEnvironmentFile = mkOption {
         type = types.nullOr types.path;
@@ -849,7 +909,17 @@ in
         description = "Port of the dedicated internal HTTP entrypoint.";
       };
       dashboard.enable = mkEnableOption "";
+      dashboard.rule = mkOption {
+        type = types.str;
+        default = "HostRegexp(`^dashboard\\.surmcluster`)";
+        description = "Traefik rule for the dashboard router.";
+      };
       docker.enable = mkEnableOption "";
+      firewall.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Whether Surmhosting manages the public firewall ports.";
+      };
       hostname = mkOption {
         type = types.str;
       };
@@ -872,6 +942,18 @@ in
           type = types.listOf types.str;
           default = [ ];
           description = "Additional auth domains served by the same login and callback validator.";
+        };
+        network = {
+          hostAddress = mkOption {
+            type = types.str;
+            default = "10.202.0.1";
+            description = "Host-side address of the auth container network.";
+          };
+          localAddress = mkOption {
+            type = types.str;
+            default = "10.202.0.2";
+            description = "Container-side address of the auth container network.";
+          };
         };
         unitDependencies = mkOption {
           type = unitDependencyConfig;
@@ -986,6 +1068,7 @@ in
       }
     ]
     ++ serviceAssertions
+    ++ workloadAddressAssertions
     ++ appAssertions;
 
     virtualisation.podman = lib.optionalAttrs (cfg.docker.enable) {
@@ -996,13 +1079,15 @@ in
 
     networking.nat.enable = true;
     networking.nat.externalInterface = cfg.externalInterface;
-    networking.nat.internalIPs = [
+    networking.nat.internalIPs = mkDefault [
       "10.201.0.0/16"
       "10.202.0.0/16"
     ];
 
-    networking.firewall.allowedTCPPorts = [ 80 ] ++ (lib.optionals cfg.tls.enable [ 443 ]);
-    networking.firewall.trustedInterfaces = [ "ve-+" ];
+    networking.firewall = mkIf cfg.firewall.enable {
+      enable = mkDefault true;
+      allowedTCPPorts = (lib.optional publicHttpExists 80) ++ (lib.optional cfg.tls.enable 443);
+    };
 
     services.traefik = mkMerge (
       [
@@ -1057,7 +1142,7 @@ in
                     }
                     // (
                       if tlsChallenge == "dns-01" then
-                        { dnsChallenge.provider = "cloudflare"; }
+                        { dnsChallenge.provider = cfg.tls.dnsProvider; }
                       else
                         { httpChallenge.entryPoint = "web"; }
                     )
@@ -1080,7 +1165,7 @@ in
               routers.api = lib.optionalAttrs (cfg.dashboard.enable) {
                 service = "api@internal";
                 entryPoints = if v2RoutingActive then [ "internal" ] else [ "web" ];
-                rule = "HostRegexp(`^dashboard\\.surmcluster`)";
+                rule = cfg.dashboard.rule;
               };
             };
           };
@@ -1097,7 +1182,7 @@ in
 
           services."surm-auth".loadBalancer.servers = [
             {
-              url = "http://10.202.0.2:8080";
+              url = "http://${authForwardAddress}:8080";
             }
           ];
 
@@ -1144,8 +1229,8 @@ in
         "surm-auth" = {
           autoStart = true;
           privateNetwork = true;
-          localAddress = "10.202.0.2";
-          hostAddress = "10.202.0.1";
+          localAddress = cfg.auth.network.localAddress;
+          hostAddress = cfg.auth.network.hostAddress;
           ephemeral = true;
 
           bindMounts =
@@ -1186,7 +1271,7 @@ in
               system.stateVersion = "25.05";
 
               networking.useHostResolvConf = mkForce false;
-              networking.nameservers = [ "8.8.8.8" ];
+              networking.nameservers = cfg.network.nameservers;
 
               services.surm-auth = {
                 enable = true;

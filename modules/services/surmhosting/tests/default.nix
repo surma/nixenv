@@ -306,6 +306,8 @@ let
 
   routers = checkFixture "logical-app-routers" ([
     (noSurmhostingAssertions inventoryHost "logical-app-routers")
+    (expectEq http.routers.api.rule "HostRegexp(`^dashboard\\.surmcluster`)"
+      "the dashboard keeps its default rule")
     (expectEq (lib.attrNames http.routers) [
       "api"
       "apps-admin-admin"
@@ -1382,6 +1384,230 @@ let
     ]
   );
 
+  networkContract = checkFixture "network-contract" (
+    let
+      defaultHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.network-default = {
+                containerName = "network-default";
+                container.config.system.stateVersion = "25.05";
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "default";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      overrideHost = evalHost {
+        surmhosting = {
+          network.nameservers = [ "9.9.9.9" ];
+        };
+        extraModules = [
+          (
+            { ... }:
+            {
+              networking.nat.internalIPs = [ "10.250.0.0/16" ];
+              services.surmhosting.services.network-override = {
+                containerName = "network-override";
+                container = {
+                  localAddress = "10.50.0.2/24";
+                  hostAddress = "10.50.0.1/24";
+                  config = {
+                    system.stateVersion = "25.05";
+                    networking.nameservers = [ "1.1.1.1" ];
+                  };
+                };
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "override";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      authHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          network.nameservers = [ "9.9.9.9" ];
+          auth.network = {
+            hostAddress = "10.202.1.1/24";
+            localAddress = "10.202.1.2/24";
+          };
+        };
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.auth-app = {
+                host = "10.0.0.10";
+                expose.apps.restricted = {
+                  access.mode = "allowlist";
+                  internal.access = "trusted-network";
+                  public.aliases = [ "restricted.surma.technology" ];
+                  ports = [
+                    {
+                      port = 8080;
+                      hostname = "restricted";
+                    }
+                  ];
+                };
+              };
+            }
+          )
+        ];
+      };
+      equalAuthHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network = {
+            hostAddress = "10.202.1.2";
+            localAddress = "10.202.1.2";
+          };
+        };
+      };
+      nullAddressHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.null-address = {
+                container = {
+                  localAddress = null;
+                  config.system.stateVersion = "25.05";
+                };
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "null-address";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      noPublicFirewallHost = evalHost { };
+      httpFirewallHost = evalHost {
+        extraModules = [
+          (
+            { ... }:
+            {
+              services.surmhosting.services.http = {
+                host = "127.0.0.1";
+                expose.ports = [
+                  {
+                    port = 8080;
+                    hostname = "http";
+                  }
+                ];
+              };
+            }
+          )
+        ];
+      };
+      tlsFirewallHost = evalHost {
+        surmhosting.tls.enable = true;
+      };
+      disabledFirewallHost = evalHost {
+        surmhosting = {
+          firewall.enable = false;
+          tls.enable = true;
+        };
+      };
+      customOptionsHost = evalHost {
+        surmhosting = {
+          tls.enable = true;
+          tls.challenge = "dns-01";
+          tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
+          tls.dnsProvider = "route53";
+          dashboard.enable = true;
+          dashboard.rule = "Host(`dashboard.example`)";
+        };
+      };
+    in
+    [
+      (expectEq defaultHost.config.containers.network-default.localAddress "10.201.0.2"
+        "a workload keeps the generated default local address")
+      (expectEq defaultHost.config.containers.network-default.hostAddress "10.201.0.1"
+        "a workload keeps the generated default host address")
+      (expectEq defaultHost.config.containers.network-default.config.networking.nameservers [ "8.8.8.8" ]
+        "a workload receives the default nameserver")
+      (expectEq defaultHost.config.networking.nat.internalIPs [
+        "10.201.0.0/16"
+        "10.202.0.0/16"
+      ] "the native NAT ranges keep their defaults")
+      (expectEq overrideHost.config.containers.network-override.localAddress "10.50.0.2/24"
+        "a workload keeps the complete overridden local address")
+      (expectEq overrideHost.config.containers.network-override.hostAddress "10.50.0.1/24"
+        "a workload keeps the complete overridden host address")
+      (expectEq overrideHost.config.services.traefik.dynamicConfigOptions.http.services."network-override-override".loadBalancer.servers [
+        { url = "http://10.50.0.2:8080"; }
+      ] "Traefik strips only the CIDR suffix from the workload URL")
+      (expectEq overrideHost.config.containers.network-override.config.networking.nameservers [ "1.1.1.1" ]
+        "a workload nameserver override wins normally")
+      (expectEq overrideHost.config.networking.nat.internalIPs [ "10.250.0.0/16" ]
+        "a native NAT override wins over the Surmhosting default")
+      (expectEq inventoryHost.config.containers."surm-auth".localAddress "10.202.0.2"
+        "the auth container keeps its default local address")
+      (expectEq inventoryHost.config.containers."surm-auth".hostAddress "10.202.0.1"
+        "the auth container keeps its default host address")
+      (expectEq authHost.config.containers."surm-auth".localAddress "10.202.1.2/24"
+        "the auth container keeps its complete configured local address")
+      (expectEq authHost.config.containers."surm-auth".hostAddress "10.202.1.1/24"
+        "the auth container keeps its complete configured host address")
+      (expectEq authHost.config.containers."surm-auth".config.networking.nameservers [ "9.9.9.9" ]
+        "the auth container receives the configured nameserver directly")
+      (expectEq authHost.config.services.traefik.dynamicConfigOptions.http.services."surm-auth".loadBalancer.servers [
+        { url = "http://10.202.1.2:8080"; }
+      ] "the auth backend URL strips its CIDR suffix")
+      (expectEq authHost.config.services.traefik.dynamicConfigOptions.http.middlewares."auth-restricted".forwardAuth.address
+        "http://10.202.1.2:8080/auth?app=restricted"
+        "forward-auth URLs use the normalized auth local address")
+      (expectMsg equalAuthHost "auth network hostAddress and localAddress must differ"
+        "equal auth network addresses must fail evaluation")
+      (expectMsg nullAddressHost "usable IPv4 local address"
+        "an exposed workload with a null local address must fail clearly")
+      (expectEq noPublicFirewallHost.config.networking.firewall.enable true
+        "Surmhosting enables its firewall by default")
+      (expectEq noPublicFirewallHost.config.networking.firewall.allowedTCPPorts [ ]
+        "Surmhosting opens no public port without public HTTP or TLS")
+      (expectEq httpFirewallHost.config.networking.firewall.allowedTCPPorts [ 80 ]
+        "public HTTP opens only port 80")
+      (expectEq tlsFirewallHost.config.networking.firewall.allowedTCPPorts [ 80 443 ]
+        "TLS opens ports 80 and 443")
+      (expectEq disabledFirewallHost.config.networking.firewall.allowedTCPPorts [ ]
+        "disabling Surmhosting firewall management opens no public ports")
+      (expectEq (builtins.elem "ve-+" inventoryHost.config.networking.firewall.trustedInterfaces) false
+        "Surmhosting does not trust veth interfaces")
+      (expectEq (builtins.elem 8081 inventoryHost.config.networking.firewall.allowedTCPPorts) false
+        "Surmhosting does not open the internal port")
+      (expectEq customOptionsHost.config.services.traefik.staticConfigOptions.certificatesResolvers.cloudflare.acme.dnsChallenge.provider
+        "route53" "the configurable DNS provider reaches Traefik")
+      (expectEq customOptionsHost.config.services.traefik.dynamicConfigOptions.http.routers.api.rule
+        "Host(`dashboard.example`)" "the configurable dashboard rule reaches Traefik")
+      (expectEq (static.providers ? "docker") true
+        "Traefik keeps the Docker provider with Podman enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.enable true
+        "docker.enable keeps Podman enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.dockerCompat true
+        "docker.enable keeps Docker compatibility enabled")
+      (expectEq inventoryHost.config.virtualisation.podman.dockerSocket.enable true
+        "docker.enable keeps the Docker socket enabled")
+      (expectEq inventoryHost.config.services.traefik.group "podman"
+        "Traefik keeps the Podman group")
+    ]
+  );
+
   authWithoutSeeds = checkFixture "auth-without-legacy-seeds" (
     let
       host = evalHost {
@@ -1729,6 +1955,7 @@ let
       legacyV1Rejected
       standaloneModeContract
       syntheticComponentRoutes
+      networkContract
       authWithoutSeeds
       invalidDeclarations
       authPathValidation
