@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  inputs,
   ...
 }:
 with lib;
@@ -15,7 +14,7 @@ let
     let
       counts = foldl' (acc: x: acc // { ${x} = (acc.${x} or 0) + 1; }) { } list;
     in
-    list |> unique |> filter (x: counts.${x} > 1);
+    filter (x: counts.${x} > 1) (unique list);
 
   portConfig = types.submodule {
     options = {
@@ -249,11 +248,9 @@ let
       };
     };
 
-  serviceEntries = cfg.services |> lib.attrsToList;
+  serviceEntries = lib.attrsToList cfg.services;
 
-  managedServiceConfigs =
-    serviceEntries
-    |> imap0 (
+  managedServiceConfigs = imap0 (
       i:
       { name, value }:
       let
@@ -265,10 +262,10 @@ let
         hasHomeManager = hasContainer && (value.container.config or { }) ? home-manager;
         isExposed = value.expose.enable;
         containerName =
-          if value.containerName != null then value.containerName else "lc-${name |> lib.substring 0 10}";
+          if value.containerName != null then value.containerName else "lc-${lib.substring 0 10 name}";
         containerUnitName = "container@${containerName}";
-        localAddress = "10.201.${i |> toString}.2";
-        hostAddress = "10.201.${i |> toString}.1";
+        localAddress = "10.201.${toString i}.2";
+        hostAddress = "10.201.${toString i}.1";
         forwardHost =
           if hasContainer then
             localAddress
@@ -280,9 +277,7 @@ let
         needsAuth = value.expose.allowedGitHubUsers != [ ];
         needsHostRewrite = value.expose.useTargetHost && !hasContainer && value.host != null;
 
-        legacyTraefikConfigs =
-          value.expose.ports
-          |> map (
+        legacyTraefikConfigs = map (
             portCfg:
             let
               serviceName = "${name}-${portCfg.hostname}";
@@ -311,16 +306,13 @@ let
                 headers.customRequestHeaders.Host = value.host;
               };
             })
-          );
+          ) value.expose.ports;
 
         # Logical apps combine an internal router on the dedicated internal
         # entrypoint with a public router on websecure. The public rule always
         # pins the app's derived and aliased domains, so request headers cannot
         # change the selected policy.
-        appTraefikConfigs =
-          value.expose.apps
-          |> lib.attrsToList
-          |> concatMap (
+        appTraefikConfigs = concatMap (
             entry:
             let
               appKey = entry.name;
@@ -328,10 +320,9 @@ let
               primaryDomain = appPrimaryDomain appKey;
               isRestricted = app.access.mode == "allowlist";
               publicDomains = (lib.optional (primaryDomain != null) primaryDomain) ++ app.public.aliases;
-              baseRule = "(${publicDomains |> map (d: "Host(`${d}`)") |> concatStringsSep " || "})";
+              baseRule = "(${concatStringsSep " || " (map (d: "Host(`${d}`)") publicDomains)})";
             in
-            app.ports
-            |> map (
+            map (
               portCfg:
               let
                 serviceName = "${name}-${portCfg.hostname}";
@@ -341,7 +332,7 @@ let
                   if portCfg.publicPathPrefixes == [ ] then
                     ""
                   else
-                    " && (${portCfg.publicPathPrefixes |> map (p: "PathPrefix(`${p}`)") |> concatStringsSep " || "})";
+                    " && (${concatStringsSep " || " (map (p: "PathPrefix(`${p}`)") portCfg.publicPathPrefixes)})";
               in
               lib.recursiveUpdate
                 (lib.optionalAttrs app.internal.enable {
@@ -372,8 +363,8 @@ let
                     ];
                   }
                 )
-            )
-          );
+            ) app.ports
+          ) (lib.attrsToList value.expose.apps);
 
         mergedTraefikConfig = lib.foldl' lib.recursiveUpdate { } (
           legacyTraefikConfigs ++ appTraefikConfigs
@@ -449,7 +440,7 @@ let
           value.container
         ]);
       }
-    );
+    ) serviceEntries;
 
   servicesWithAuth = lib.filterAttrs (
     _: service: service.expose.allowedGitHubUsers != [ ]
@@ -465,54 +456,44 @@ let
   v2RoutingActive = cfg.appsNamespace != null;
   v2Active = v2AuthEnabled || v2RoutingActive;
 
-  allApps =
-    serviceEntries
-    |> concatMap (
-      { name, value }:
-      value.expose.apps
-      |> lib.attrsToList
-      |> map (entry: {
-        service = name;
-        serviceValue = value;
-        key = entry.name;
-        app = entry.value;
-      })
-    );
+  allApps = concatMap (
+    { name, value }:
+    map (entry: {
+      service = name;
+      serviceValue = value;
+      key = entry.name;
+      app = entry.value;
+    }) (lib.attrsToList value.expose.apps)
+  ) serviceEntries;
 
-  appKeys = allApps |> map (a: a.key);
+  appKeys = map (a: a.key) allApps;
 
-  restrictedApps = allApps |> filter (a: a.app.access.mode == "allowlist");
+  restrictedApps = filter (a: a.app.access.mode == "allowlist") allApps;
 
-  appDomainEntries =
-    allApps
-    |> concatMap (
-      { key, app, ... }:
-      ((lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases)
-      |> map (domain: {
-        inherit domain;
-        inherit key;
-      })
-    );
-  duplicateAppDomains = appDomainEntries |> map (a: a.domain) |> duplicates;
+  appDomainEntries = concatMap (
+    { key, app, ... }:
+    map (domain: {
+      inherit domain;
+      inherit key;
+    }) ((lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases)
+  ) allApps;
+  duplicateAppDomains = duplicates (map (a: a.domain) appDomainEntries);
 
-  appRouterNames =
-    allApps
-    |> concatMap (
-      {
-        service,
-        key,
-        app,
-        ...
-      }:
-      app.ports
-      |> concatMap (
-        portCfg:
-        [ "${service}-${portCfg.hostname}" ]
-        ++ (lib.optional (appPrimaryDomain key != null) "apps-${key}-${portCfg.hostname}")
-      )
-    );
+  appRouterNames = concatMap (
+    {
+      service,
+      key,
+      app,
+      ...
+    }:
+    concatMap (
+      portCfg:
+      [ "${service}-${portCfg.hostname}" ]
+      ++ (lib.optional (appPrimaryDomain key != null) "apps-${key}-${portCfg.hostname}")
+    ) app.ports
+  ) allApps;
 
-  hasInternalApps = allApps |> any (a: a.app.internal.enable);
+  hasInternalApps = any (a: a.app.internal.enable) allApps;
   internalEntrypointEnabled = hasInternalApps || (v2RoutingActive && cfg.dashboard.enable);
 
   tlsChallenge = cfg.tls.challenge;
@@ -526,8 +507,7 @@ let
       main = "*.${cfg.appsNamespace}";
     })
     ++ (
-      cfg.tls.certDomains
-      |> map (d: { main = d.main; } // (lib.optionalAttrs (d.sans != [ ]) { inherit (d) sans; }))
+      map (d: { main = d.main; } // (lib.optionalAttrs (d.sans != [ ]) { inherit (d) sans; })) cfg.tls.certDomains
     );
 
   # The session cookie is set for the parent domain; every public app domain
@@ -536,69 +516,58 @@ let
   domainCoveredByCookie = domain: domain == cookieBase || hasSuffix ".${cookieBase}" domain;
 
   authDomainsList = (lib.optional (cfg.auth.domain != null) cfg.auth.domain) ++ cfg.auth.aliases;
-  authRouterRule = authDomainsList |> map (d: "Host(`${d}`)") |> concatStringsSep " || ";
+  authRouterRule = concatStringsSep " || " (map (d: "Host(`${d}`)") authDomainsList);
 
   # Per-app forward-auth middlewares. The middleware URL pins the logical app
   # key from Nix; the policy is never selected from the Host header or
   # forwarded metadata.
-  appAuthMiddlewares =
-    restrictedApps
-    |> map (
-      { key, ... }:
-      nameValuePair "auth-${key}" {
-        forwardAuth = {
-          address = "http://10.202.0.2:8080/auth?app=${key}";
-          trustForwardHeader = false;
-          authRequestHeaders = [ "Cookie" ];
-          authResponseHeaders = [
-            "X-Auth-Request-User"
-            "X-Auth-Request-Email"
-          ];
-        };
-      }
-    )
-    |> listToAttrs;
+  appAuthMiddlewares = listToAttrs (map (
+    { key, ... }:
+    nameValuePair "auth-${key}" {
+      forwardAuth = {
+        address = "http://10.202.0.2:8080/auth?app=${key}";
+        trustForwardHeader = false;
+        authRequestHeaders = [ "Cookie" ];
+        authResponseHeaders = [
+          "X-Auth-Request-User"
+          "X-Auth-Request-Email"
+        ];
+      };
+    }
+  ) restrictedApps);
 
   # The v2 auth configuration lists every logical app with its mode,
   # domains, and seed users (legacy seed adapters included).
-  v2AuthApps =
-    allApps
-    |> map (
-      {
-        serviceValue,
-        key,
-        app,
-        ...
-      }:
-      let
-        adapterUsers = serviceValue.expose.allowedGitHubUsers;
-        seedUsers =
-          if app.access.mode == "allowlist" then
-            lib.unique (app.access.seedUsers ++ adapterUsers)
-          else
-            app.access.seedUsers;
-      in
-      nameValuePair key {
-        mode = app.access.mode;
-        domains =
-          (lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases;
-        seedUsers = seedUsers;
-      }
-    )
-    |> listToAttrs;
+  v2AuthApps = listToAttrs (map (
+    {
+      serviceValue,
+      key,
+      app,
+      ...
+    }:
+    let
+      adapterUsers = serviceValue.expose.allowedGitHubUsers;
+      seedUsers =
+        if app.access.mode == "allowlist" then
+          lib.unique (app.access.seedUsers ++ adapterUsers)
+        else
+          app.access.seedUsers;
+    in
+    nameValuePair key {
+      mode = app.access.mode;
+      domains =
+        (lib.optional (appPrimaryDomain key != null) (appPrimaryDomain key)) ++ app.public.aliases;
+      seedUsers = seedUsers;
+    }
+  ) allApps);
 
-  serviceAssertions =
-    serviceEntries
-    |> concatMap (
-      { name, value }:
-      let
-        hasLegacyExposure = value.expose.port != null || value.expose.ports != [ ];
-        allowlistApps =
-          value.expose.apps
-          |> lib.attrsToList
-          |> filter (entry: entry.value.access.mode == "allowlist")
-          |> length;
-      in
+  serviceAssertions = concatMap (
+    { name, value }:
+    let
+      hasLegacyExposure = value.expose.port != null || value.expose.ports != [ ];
+      allowlistApps =
+        length (filter (entry: entry.value.access.mode == "allowlist") (lib.attrsToList value.expose.apps));
+    in
       [
         {
           assertion = !(value.container != null && value.host != null);
@@ -630,7 +599,7 @@ let
           message = "surmhosting service `${name}` sets expose.allowedGitHubUsers, which seeds exactly one allowlist logical app (found ${toString allowlistApps}).";
         }
       ]
-    );
+  ) serviceEntries;
 
   appAssertions = [
     {
@@ -638,10 +607,10 @@ let
       message = "surmhosting: duplicate logical app keys: ${concatStringsSep ", " (duplicates appKeys)}";
     }
     {
-      assertion = allApps |> all (a: builtins.match "[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?" a.key != null);
+      assertion = all (a: builtins.match "[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?" a.key != null) allApps;
       message = "surmhosting: logical app keys must be DNS labels (invalid: ${
         concatStringsSep ", " (
-          appKeys |> filter (k: builtins.match "[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?" k == null)
+          filter (k: builtins.match "[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?" k == null) appKeys
         )
       })";
     }
@@ -683,9 +652,7 @@ let
       message = "surmhosting: auth.enable requires tls.enable because the auth service is only reachable over HTTPS.";
     }
   ]
-  ++ (
-    allApps
-    |> concatMap (
+  ++ (concatMap (
       {
         service,
         key,
@@ -741,8 +708,7 @@ let
           message = "surmhosting: logical app `${key}` on service `${service}` uses an alias that the session cookie domain `${cfg.auth.cookieDomain}` does not cover.";
         }
       ]
-    )
-  );
+    ) allApps);
 
   # ---- Legacy v1 authentication (nonmigrated hosts) ----
   # The repository ships only the v2 surm-auth binary, and the v2 loader
@@ -1079,7 +1045,7 @@ in
           };
         }
       ]
-      ++ (managedServiceConfigs |> map (service: service.services.traefik))
+      ++ (map (service: service.services.traefik) managedServiceConfigs)
       ++ (lib.optional v2AuthEnabled {
         dynamicConfigOptions.http = {
           routers."surm-auth" = {
@@ -1103,7 +1069,7 @@ in
     );
 
     systemd.services = mkMerge (
-      (managedServiceConfigs |> map (service: service.systemd.services))
+      (map (service: service.systemd.services) managedServiceConfigs)
       ++ (lib.optional v2AuthEnabled {
         "container@surm-auth" = {
           # A failed decryption must prevent container startup.
@@ -1136,7 +1102,7 @@ in
     ];
 
     containers = mkMerge (
-      (managedServiceConfigs |> map (service: service.containers))
+      (map (service: service.containers) managedServiceConfigs)
       ++ (lib.optional v2AuthEnabled {
         "surm-auth" = {
           autoStart = true;
@@ -1176,7 +1142,7 @@ in
               services.surm-auth = {
                 enable = true;
                 version = 2;
-                package = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
+                package = pkgs.callPackage ../packages/surm-auth.nix { };
                 baseUrl = "https://${cfg.auth.domain}";
                 authDomains = authDomainsList;
 

@@ -539,7 +539,7 @@ Run:
 
 ```bash
 git fetch origin main
-git switch -c refactor/surmhosting-module origin/main
+git switch -c surmhosting-module origin/main
 ```
 
 Do not run these commands when the existing approved branch already starts at the reviewed baseline.
@@ -1074,13 +1074,13 @@ The unrelated `testcontainer` output still lacks its module import and uses `ser
 Use:
 
 ```bash
-git push -u origin refactor/surmhosting-module
+git push -u origin surmhosting-module
 ```
 
 Send this review link:
 
 ```text
-https://github.com/surma/nixenv/compare/main...refactor/surmhosting-module
+https://github.com/surma/nixenv/compare/main...surmhosting-module
 ```
 
 Stop after Stage 1. Wait for review and merge approval.

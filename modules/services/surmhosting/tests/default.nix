@@ -13,66 +13,21 @@
   and `legacyV1Rejected` runs the packaged surm-auth v2 binary against the
   legacy v1 configuration schema and asserts the rejection.
 
-  Import with a flake for full fidelity:
+  Import with a package set:
 
-      let
-        f = builtins.getFlake (toString ./.);
-        pkgs = f.inputs.nixpkgs.legacyPackages.x86_64-linux;
-      in
-      import ./modules/services/surmhosting/tests {
-        inherit pkgs;
-        inputs = f.inputs // { self = f; };
-      }
-
-  Without `inputs`, the fixtures evaluate the repository directly from the
-  working tree.
+      import ./modules/services/surmhosting/tests { inherit pkgs; }
 */
 {
   pkgs,
-  inputs ? null,
   lib ? pkgs.lib,
 }:
 let
-  # Repository root, resolved relative to this file. Used to evaluate the
-  # surm-auth package without requiring a flake `self` input.
-  repoRoot = ./../../../..;
+  surmAuthPackage = pkgs.callPackage ../nix/packages/surm-auth.nix { };
 
-  flakeInputs =
-    if inputs != null then
-      inputs
-    else
-      {
-        nixpkgs = {
-          lib = pkgs.lib;
-          outPath = pkgs.path;
-        };
-        self = {
-          packages.${pkgs.stdenv.hostPlatform.system}.surm-auth =
-            pkgs.callPackage (repoRoot + "/modules/services/surmhosting/nix/packages/surm-auth.nix")
-              {
-                inputs.self = repoRoot;
-              };
-        };
-      };
-
-  evalConfig =
-    modules:
-    if flakeInputs.nixpkgs ? lib && (flakeInputs.nixpkgs.lib ? nixosSystem) then
-      flakeInputs.nixpkgs.lib.nixosSystem {
-        system = pkgs.stdenv.hostPlatform.system;
-        modules = modules;
-        specialArgs = {
-          inputs = flakeInputs;
-        };
-      }
-    else
-      import (pkgs.path + "/nixos/lib/eval-config.nix") {
-        system = pkgs.stdenv.hostPlatform.system;
-        modules = modules;
-        specialArgs = {
-          inputs = flakeInputs;
-        };
-      };
+  evalConfig = modules: import (pkgs.path + "/nixos/lib/eval-config.nix") {
+    system = pkgs.stdenv.hostPlatform.system;
+    modules = modules;
+  };
 
   evalHost =
     {
@@ -114,16 +69,16 @@ let
   # trips over upstream assertions whose message interpolation is broken
   # for the passing case (filesystems.nix `cycle`).
   failedAssertionMessages =
-    host: host.config.assertions |> lib.filter (a: !a.assertion) |> lib.map (a: a.message);
+    host: lib.map (a: a.message) (lib.filter (a: !a.assertion) host.config.assertions);
 
   expectMsg =
     host: needle: msg:
     let
       messages = failedAssertionMessages host;
     in
-    expect (messages |> lib.any (m: lib.hasInfix needle m))
+    expect (lib.any (m: lib.hasInfix needle m) messages)
       "${msg} — no failed assertion message contains `${needle}`; failed assertions were: ${
-        messages |> lib.concatStringsSep " | "
+        lib.concatStringsSep " | " messages
       }";
 
   # The failed assertion messages of a host, for assertions about the
@@ -136,8 +91,8 @@ let
       messages = failedAssertionMessages host;
     in
     expect (
-      !(messages |> lib.any (m: lib.hasInfix "surmhosting" m))
-    ) "${msg} — unexpected surmhosting assertions: ${messages |> lib.concatStringsSep " | "}";
+      !(lib.any (m: lib.hasInfix "surmhosting" m) messages)
+    ) "${msg} — unexpected surmhosting assertions: ${lib.concatStringsSep " | " messages}";
 
   # Lines of one INI section of a rendered systemd unit text. Used to prove
   # WHERE systemd reads a generated dependency from: top-level `[Unit]`
@@ -181,8 +136,8 @@ let
   checkFixture =
     name: conditions:
     let
-      failures = conditions |> lib.filter (c: !c.ok);
-      failureText = failures |> lib.map (c: "  - ${c.msg}") |> lib.concatStringsSep "\n";
+      failures = lib.filter (c: !c.ok) conditions;
+      failureText = lib.concatStringsSep "\n" (lib.map (c: "  - ${c.msg}") failures);
     in
     lib.throwIfNot (failures == [ ]) "surmhosting fixture `${name}` failed:\n${failureText}" (
       pkgs.runCommand "surmhosting-fixture-${name}" { } "touch $out"
@@ -433,7 +388,7 @@ let
     (expectEq static.certificatesResolvers.cloudflare.acme.domains [
       { main = "*.apps.surma.technology"; }
     ] "the apps namespace wildcard joins the certificate list")
-    (expectEq (inventoryHost.config.services.traefik.environmentFiles |> map toString) [
+    (expectEq (map toString inventoryHost.config.services.traefik.environmentFiles) [
       "/var/lib/surmedge-credentials/cloudflare.env"
     ] "the DNS-01 challenge consumes the Cloudflare credential environment file")
     (expectEq inventoryHost.config.systemd.services.traefik.requires [
@@ -460,7 +415,7 @@ let
       (expectEq middlewares."auth-dump".forwardAuth.address "http://10.202.0.2:8080/auth?app=dump"
         "the legacy seed adapter's middleware uses the logical app key"
       )
-      (expectEq (lib.attrNames (middlewares |> lib.filterAttrs (n: _: lib.hasPrefix "auth-" n))) [
+      (expectEq (lib.attrNames (lib.filterAttrs (n: _: lib.hasPrefix "auth-" n) middlewares)) [
         "auth-admin"
         "auth-brain"
         "auth-dump"
@@ -521,7 +476,7 @@ let
       (expectEq (acme.domains or [ ]
       ) [ ] "an HTTP-01 migrated host must not contain a wildcard ACME domain for the apps namespace")
       (expectEq (
-        host.config.services.traefik.environmentFiles |> map toString
+        (map toString host.config.services.traefik.environmentFiles)
       ) [ ] "the HTTP-01 challenge adds no environment files")
       (expectEq (builtins.elem "secrets.service" host.config.systemd.services.traefik.requires) false
         "traefik does not require the secrets service under HTTP-01"
@@ -679,8 +634,8 @@ let
       "cookie-secret:/var/lib/secrets/cookie-secret"
     ] "the in-container auth unit receives the three credentials through LoadCredential")
     (expectEq (
-      surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.ExecStart
-      |> lib.hasInfix "surm-auth --config"
+      (lib.hasInfix "surm-auth --config"
+        surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.ExecStart)
     ) true "the auth unit starts the packaged binary with a generated config file")
     (expectEq
       [
@@ -821,7 +776,7 @@ let
       ];
       isDep = line: lib.any (k: lib.hasPrefix k line) depKeys;
     in
-    iniSectionLines text "Unit" |> lib.filter isDep;
+    lib.filter isDep (iniSectionLines text "Unit");
 
   unitDependencyDropin =
     text:
@@ -1166,14 +1121,13 @@ let
         "authenticated"
       ];
     in
-    removedModes
-    |> lib.map (
+    lib.map (
       mode:
       expect (
         !(builtins.tryEval (builtins.deepSeq (evalMode mode).config.services.surm-auth.finalConfig true))
         .success
       ) "standalone surm-auth mode `${mode}` must fail module evaluation"
-    )
+    ) removedModes
   );
 
   legacyCompat = checkFixture "legacy-compatibility" (
@@ -1296,7 +1250,7 @@ let
     pkgs.runCommand "surmhosting-legacy-v1-rejected"
       {
         v1ConfigFile = pkgs.writeText "surm-auth-v1-config.yaml" (builtins.toJSON legacyV1Final);
-        surmAuthPkg = flakeInputs.self.packages.${pkgs.stdenv.hostPlatform.system}.surm-auth;
+        surmAuthPkg = surmAuthPackage;
       }
       ''
         set +e
@@ -1316,54 +1270,49 @@ let
         touch $out
       '';
 
-  nexusConsumerHost = evalConfig [
-    ../nix/modules/surmhosting.nix
-    {
-      options.secrets = lib.mkOption {
-        type = lib.types.attrs;
-        default = { };
-      };
-    }
-    (
-      { ... }:
-      {
-        networking.hostName = "surmhosting-consumer-fixture";
-        system.stateVersion = "25.05";
-        services.surmhosting = lib.mkMerge [
-          {
-            enable = true;
-            hostname = "nexus";
-            externalInterface = "eth0";
-            internalPort = 8081;
-            tls = {
-              enable = true;
-              challenge = "http-01";
-              email = "surma@surma.dev";
+  syntheticComponentHost = evalHost {
+    surmhosting = {
+      appsNamespace = "apps.surma.technology";
+      tls.enable = true;
+    };
+    extraModules = [
+      (
+        { ... }:
+        {
+          services.surmhosting.services.browser-app = {
+            container.config.system.stateVersion = "25.05";
+            expose.apps.browser = {
+              access.mode = "public";
+              internal.access = "trusted-network";
+              public.aliases = [ "browser.surma.technology" ];
+              ports = [
+                {
+                  port = 8080;
+                  hostname = "browser";
+                }
+              ];
             };
-          }
-          authCommon
-        ];
-      }
-    )
-    (repoRoot + "/machines/nexus/service-firefly-importer.nix")
-  ];
+          };
+        }
+      )
+    ];
+  };
 
-  nexusBrowserURLs = checkFixture "nexus-browser-urls" (
+  syntheticComponentRoutes = checkFixture "synthetic-component-routes" (
     let
-      importer =
-        nexusConsumerHost.config.containers.lc-firefly-im.config.services.firefly-iii-data-importer;
-      http = nexusConsumerHost.config.services.traefik.dynamicConfigOptions.http;
+      http = syntheticComponentHost.config.services.traefik.dynamicConfigOptions.http;
     in
     [
-      (expectEq importer.settings.VANITY_URL "https://firefly.apps.surma.technology"
-        "the importer uses Firefly's derived public browser URL"
-      )
-      (expectEq importer.settings.FIREFLY_III_URL "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
-        "the importer keeps its internal Firefly backend URL"
-      )
-      (expectEq (
-        http.routers ? "apps-firefly-imp-firefly-imp"
-      ) true "the Firefly importer has a generated public route")
+      (expectEq http.routers."apps-browser-browser" {
+        rule = "(Host(`browser.apps.surma.technology`) || Host(`browser.surma.technology`))";
+        service = "apps-browser-browser";
+        entryPoints = [ "websecure" ];
+        middlewares = [ ];
+        priority = 1;
+      } "a synthetic container gets a component-generated public route")
+      (expectEq http.services."apps-browser-browser".loadBalancer.servers [
+        { url = "http://10.201.0.2:8080"; }
+      ] "a synthetic container route uses the generated container address")
     ]
   );
 
@@ -1640,20 +1589,18 @@ let
         }
       ];
 
-      checkedCases =
-        cases
-        |> lib.map (
+      checkedCases = lib.map (
           case:
           if case.needle == null then
             # These cases must make evaluation fail outright (conflicting
             # definitions or a missing access mode). Forcing the assertion
             # VALUES throws before any message is rendered.
             expect (
-              !(builtins.tryEval (case.host.config.assertions |> lib.all (a: a.assertion))).success
+              !(builtins.tryEval (lib.all (a: a.assertion) case.host.config.assertions)).success
             ) "fixture case `${case.name}` must fail evaluation"
           else
             expectMsg case.host case.needle "fixture case `${case.name}`"
-        );
+        ) cases;
     in
     checkedCases
   );
@@ -1671,19 +1618,14 @@ let
       legacyCompat
       legacyV1Rejected
       standaloneModeContract
-      nexusBrowserURLs
+      syntheticComponentRoutes
       authWithoutSeeds
       invalidDeclarations
       ;
   };
 
   all = pkgs.runCommand "surmhosting-focused-tests" { } ''
-    ${
-      fixtures
-      |> lib.attrValues
-      |> lib.map (f: "test -e ${f}")
-      |> lib.concatStringsSep "\n"
-    }
+    ${lib.concatStringsSep "\n" (lib.map (f: "test -e ${f}") (lib.attrValues fixtures))}
     touch $out
   '';
 in

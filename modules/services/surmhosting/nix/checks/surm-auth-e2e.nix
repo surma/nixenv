@@ -2,7 +2,6 @@
   lib,
   stdenv,
   go,
-  inputs,
   surm-auth,
 }:
 
@@ -14,7 +13,7 @@
 stdenv.mkDerivation {
   name = "surm-auth-e2e-check";
 
-  src = inputs.self + "/modules/services/surmhosting/surm-auth";
+  src = ../../surm-auth;
 
   nativeBuildInputs = [ go ];
 

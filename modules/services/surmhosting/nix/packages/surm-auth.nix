@@ -2,16 +2,14 @@
   lib,
   buildGoModule,
   makeWrapper,
-  inputs,
-  ...
 }:
 
 buildGoModule rec {
   pname = "surm-auth";
   version = "0.1.0";
 
-  # Source from the component directory in the flake
-  src = inputs.self + "/modules/services/surmhosting/surm-auth";
+  # Source from the component directory
+  src = ../../surm-auth;
 
   # Vendor hash calculated from go.mod/go.sum
   vendorHash = "sha256-+SRUX9Vqifp30pPq1qg8vvA0mHMi7gAGrJatdUMVDRA=";
