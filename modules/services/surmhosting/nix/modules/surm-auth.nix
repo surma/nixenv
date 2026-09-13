@@ -130,7 +130,7 @@ in
 
     github = {
       clientIdFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the GitHub OAuth client ID credential. For
           version 2 this is the LoadCredential source; the rendered
@@ -139,7 +139,7 @@ in
       };
 
       clientSecretFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the GitHub OAuth client secret credential. For
           version 2 this is the LoadCredential source; the rendered
@@ -162,7 +162,7 @@ in
       };
 
       cookieSecretFile = mkOption {
-        type = types.path;
+        type = types.externalPath;
         description = ''
           Source path for the cookie signing secret credential. For
           version 2 this is the LoadCredential source; the rendered

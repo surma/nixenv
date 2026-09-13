@@ -149,9 +149,10 @@ let
     auth.domain = "auth.surma.technology";
     auth.aliases = [ "auth.apps.surma.technology" ];
     auth.cookieDomain = ".surma.technology";
-    auth.github.clientIdFile = "/var/lib/surm-auth-credentials/github-client-id";
-    auth.github.clientSecretFile = "/var/lib/surm-auth-credentials/github-client-secret";
-    auth.cookieSecretFile = "/var/lib/surm-auth-credentials/cookie-secret";
+    auth.stateHostPath = "/var/lib/surm-auth-test-state";
+    auth.github.clientIdFile = "/var/lib/surm-auth-test/client-id";
+    auth.github.clientSecretFile = "/run/credentials/surm-auth-test/client-secret";
+    auth.cookieSecretFile = "/opt/surm-auth-test/cookie-secret";
     auth.bootstrapAdmins = [
       {
         provider = "github";
@@ -391,9 +392,9 @@ let
     (expectEq (map toString inventoryHost.config.services.traefik.environmentFiles) [
       "/var/lib/surmedge-credentials/cloudflare.env"
     ] "the DNS-01 challenge consumes the Cloudflare credential environment file")
-    (expectEq inventoryHost.config.systemd.services.traefik.requires [
-      "secrets.service"
-    ] "traefik requires the secrets service for the DNS credentials")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.requires
+    ) false "traefik has no default dependency on the secrets service")
   ]);
 
   authKeys = checkFixture "fixed-auth-keys" (
@@ -620,14 +621,24 @@ let
     )
     (expectEq surmAuthContainer.bindMounts.state {
       mountPoint = "/var/lib/private";
-      hostPath = "/var/lib/surm-auth-state";
+      hostPath = "/var/lib/surm-auth-test-state";
       isReadOnly = false;
-    } "the auth container bind-mounts the dedicated persistent state directory to /var/lib/private")
-    (expectEq surmAuthContainer.bindMounts.secrets {
-      mountPoint = "/var/lib/secrets";
-      hostPath = "/var/lib/surm-auth-credentials";
+    } "the auth container mounts the configured state path at /var/lib/private")
+    (expectEq surmAuthContainer.bindMounts.githubClientId {
+      mountPoint = "/var/lib/secrets/github-client-id";
+      hostPath = "/var/lib/surm-auth-test/client-id";
       isReadOnly = true;
-    } "the auth container bind-mounts decrypted credentials read-only")
+    } "the client ID path controls its fixed read-only container mount")
+    (expectEq surmAuthContainer.bindMounts.githubClientSecret {
+      mountPoint = "/var/lib/secrets/github-client-secret";
+      hostPath = "/run/credentials/surm-auth-test/client-secret";
+      isReadOnly = true;
+    } "the client secret path controls its fixed read-only container mount")
+    (expectEq surmAuthContainer.bindMounts.cookieSecret {
+      mountPoint = "/var/lib/secrets/cookie-secret";
+      hostPath = "/opt/surm-auth-test/cookie-secret";
+      isReadOnly = true;
+    } "the cookie secret path controls its fixed read-only container mount")
     (expectEq (surmAuthContainer.config.systemd.services."surm-auth".serviceConfig.LoadCredential) [
       "github-client-id:/var/lib/secrets/github-client-id"
       "github-client-secret:/var/lib/secrets/github-client-secret"
@@ -664,17 +675,68 @@ let
     (expectEq (lib.hasAttr "oauth" surmAuthService.finalConfig) false
       "the v2 configuration contains no legacy oauth key"
     )
-    (expectEq inventoryHost.config.systemd.services."container@surm-auth".requires [
-      "secrets.service"
-    ] "the auth container unit requires secrets.service")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services."container@surm-auth".wants
+    ) false "the default auth unit has no secrets Wants dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services."container@surm-auth".requires
+    ) false "the default auth unit has no secrets Requires dependency")
     (expectEq (builtins.elem "secrets.service"
       inventoryHost.config.systemd.services."container@surm-auth".after
-    ) true "the auth container unit orders after secrets.service")
-    (expectEq (lib.all (rule: builtins.elem rule inventoryHost.config.systemd.tmpfiles.rules) [
-      "d /var/lib/surm-auth-state 0700 root root -"
-      "d /var/lib/surm-auth-credentials 0700 root root -"
-    ]) true "the host creates the persistent state and credential directories")
+    ) false "the default auth unit has no secrets After dependency")
+    (expectEq (lib.any (rule: lib.hasInfix "/var/lib/surm-auth" rule)
+      inventoryHost.config.systemd.tmpfiles.rules
+    ) false "surmhosting does not create auth state or credential paths")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.wants
+    ) false "the default Traefik unit has no secrets Wants dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.requires
+    ) false "the default Traefik unit has no secrets Requires dependency")
+    (expectEq (builtins.elem "secrets.service"
+      inventoryHost.config.systemd.services.traefik.after
+    ) false "the default Traefik unit has no secrets After dependency")
   ];
+
+  configuredUnitDependencies = checkFixture "configured-unit-dependencies" (
+    let
+      host = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.unitDependencies = {
+            wants = [ "auth-wants.service" ];
+            requires = [ "auth-requires.service" ];
+            after = [ "auth-after.service" ];
+          };
+          tls.unitDependencies = {
+            wants = [ "traefik-wants.service" ];
+            requires = [ "traefik-requires.service" ];
+            after = [ "traefik-after.service" ];
+          };
+        };
+      };
+    in
+    [
+      (expectEq (builtins.elem "auth-wants.service"
+        host.config.systemd.services."container@surm-auth".wants
+      ) true "configured auth Wants reaches the container unit")
+      (expectEq (builtins.elem "auth-requires.service"
+        host.config.systemd.services."container@surm-auth".requires
+      ) true "configured auth Requires reaches the container unit")
+      (expectEq (builtins.elem "auth-after.service"
+        host.config.systemd.services."container@surm-auth".after
+      ) true "configured auth After reaches the container unit")
+      (expectEq (builtins.elem "traefik-wants.service"
+        host.config.systemd.services.traefik.wants
+      ) true "configured Traefik Wants reaches the service unit")
+      (expectEq (builtins.elem "traefik-requires.service"
+        host.config.systemd.services.traefik.requires
+      ) true "configured Traefik Requires reaches the service unit")
+      (expectEq (builtins.elem "traefik-after.service"
+        host.config.systemd.services.traefik.after
+      ) true "configured Traefik After reaches the service unit")
+    ]
+  );
 
   # Host mirroring the Nexus LLM proxy contract: a container service whose
   # generated `container@` unit must depend on secrets.service, plus the v2
@@ -682,10 +744,14 @@ let
   mkLlmHost =
     containerService:
     evalHost {
-      surmhosting = {
+      surmhosting = lib.recursiveUpdate authCommon {
         tls.enable = true;
-      }
-      // authCommon;
+        auth.unitDependencies = {
+          wants = [ "secrets.service" ];
+          requires = [ "secrets.service" ];
+          after = [ "secrets.service" ];
+        };
+      };
       extraModules = [
         (
           { lib, ... }:
@@ -1385,6 +1451,7 @@ let
             tls.challenge = "dns-01";
             tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
             auth.domain = "auth.surma.technology";
+            auth.stateHostPath = "/var/lib/surm-auth-state";
             auth.github.clientIdFile = "/var/lib/surm-auth-credentials/github-client-id";
             auth.github.clientSecretFile = "/var/lib/surm-auth-credentials/github-client-secret";
             auth.cookieSecretFile = "/var/lib/surm-auth-credentials/cookie-secret";
@@ -1605,12 +1672,55 @@ let
     checkedCases
   );
 
+  authPathValidation = checkFixture "auth-path-validation" (
+    let
+      validAuth = lib.recursiveUpdate authCommon {
+        tls.enable = true;
+      };
+      evalWith =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.auth.github.clientIdFile
+        );
+      evalState =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.auth.stateHostPath
+        );
+    in
+    [
+      (expect (!(evalWith {
+        auth.github.clientIdFile = toString pkgs.hello;
+      }).success) "a store-backed credential string must fail option validation")
+      (expect (!(evalWith {
+        auth.github.clientIdFile = ./default.nix;
+      }).success) "a Nix path literal credential must fail option validation")
+      (expect (!(evalState {
+        auth.stateHostPath = toString pkgs.hello;
+      }).success) "a store-backed state string must fail option validation")
+      (expect (
+        lib.any
+          (a: !a.assertion && lib.hasInfix "stateHostPath" a.message)
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth {
+              auth.stateHostPath = null;
+            };
+          }).config.assertions
+      ) "auth.enable must require auth.stateHostPath")
+    ]
+  );
+
   fixtures = {
     inherit
       routers
       authKeys
       http01Migrated
       v2Config
+      configuredUnitDependencies
       llmDependency
       unitDependencyRuntime
       internalEntrypoint
@@ -1621,6 +1731,7 @@ let
       syntheticComponentRoutes
       authWithoutSeeds
       invalidDeclarations
+      authPathValidation
       ;
   };
 

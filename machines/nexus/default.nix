@@ -138,6 +138,11 @@
   # surm-auth v2 (auth-rework sections 5 and 6).
   services.surmhosting.auth = {
     enable = true;
+    stateHostPath = "/var/lib/surm-auth-state";
+    unitDependencies = {
+      requires = [ "secrets.service" ];
+      after = [ "secrets.service" ];
+    };
     domain = "auth.surma.technology";
     aliases = [ "auth.apps.surma.technology" ];
     cookieDomain = ".surma.technology";

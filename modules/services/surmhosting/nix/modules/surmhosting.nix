@@ -121,6 +121,26 @@ let
     };
   };
 
+  unitDependencyConfig = types.submodule {
+    options = {
+      wants = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "Additional systemd Wants= dependencies for the unit.";
+      };
+      requires = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "Additional systemd Requires= dependencies for the unit.";
+      };
+      after = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "Additional systemd After= dependencies for the unit.";
+      };
+    };
+  };
+
   containerServiceConfig = types.submodule {
     options = {
       wants = mkOption {
@@ -748,6 +768,11 @@ in
         };
       };
       tls.enable = mkEnableOption "";
+      tls.unitDependencies = mkOption {
+        type = unitDependencyConfig;
+        default = { };
+        description = "Systemd dependencies for the Traefik service.";
+      };
       tls.challenge = mkOption {
         type = types.nullOr (
           types.enum [
@@ -848,22 +873,32 @@ in
           default = [ ];
           description = "Additional auth domains served by the same login and callback validator.";
         };
+        unitDependencies = mkOption {
+          type = unitDependencyConfig;
+          default = { };
+          description = "Systemd dependencies for the surm-auth container service.";
+        };
+        stateHostPath = mkOption {
+          type = types.nullOr types.externalPath;
+          default = null;
+          description = "Host path for the persistent surm-auth state directory.";
+        };
         github = {
           clientIdFile = mkOption {
-            type = types.nullOr types.path;
+            type = types.nullOr types.externalPath;
             default = null;
-            description = "Path to file containing GitHub OAuth Client ID";
+            description = "Host path to the GitHub OAuth Client ID credential.";
           };
           clientSecretFile = mkOption {
-            type = types.nullOr types.path;
+            type = types.nullOr types.externalPath;
             default = null;
-            description = "Path to file containing GitHub OAuth Client Secret";
+            description = "Host path to the GitHub OAuth Client Secret credential.";
           };
         };
         cookieSecretFile = mkOption {
-          type = types.nullOr types.path;
+          type = types.nullOr types.externalPath;
           default = null;
-          description = "Path to file containing cookie encryption secret";
+          description = "Host path to the cookie encryption secret.";
         };
         cookieDomain = mkOption {
           type = types.str;
@@ -932,6 +967,12 @@ in
         assertion = (legacyAuthEnabled || v2AuthEnabled) -> cfg.auth.cookieSecretFile != null;
         message = ''
           surmhosting authentication is enabled, but services.surmhosting.auth.cookieSecretFile is not set.
+        '';
+      }
+      {
+        assertion = !v2AuthEnabled || cfg.auth.stateHostPath != null;
+        message = ''
+          surmhosting authentication is enabled, but services.surmhosting.auth.stateHostPath is not set.
         '';
       }
       {
@@ -1072,9 +1113,9 @@ in
       (map (service: service.systemd.services) managedServiceConfigs)
       ++ (lib.optional v2AuthEnabled {
         "container@surm-auth" = {
-          # A failed decryption must prevent container startup.
-          requires = [ "secrets.service" ];
-          after = [ "secrets.service" ];
+          wants = cfg.auth.unitDependencies.wants;
+          requires = cfg.auth.unitDependencies.requires;
+          after = cfg.auth.unitDependencies.after;
 
           serviceConfig = mkMerge [
             (mkIf (cfg.containerLimits.memoryMax != null) {
@@ -1086,20 +1127,16 @@ in
           ];
         };
       })
-      ++ (lib.optional (tlsChallenge == "dns-01") {
-        traefik = {
-          requires = [ "secrets.service" ];
-          after = [ "secrets.service" ];
-        };
-      })
+      ++ [
+        {
+          traefik = {
+            wants = cfg.tls.unitDependencies.wants;
+            requires = cfg.tls.unitDependencies.requires;
+            after = cfg.tls.unitDependencies.after;
+          };
+        }
+      ]
     );
-
-    systemd.tmpfiles.rules = lib.optionals v2AuthEnabled [
-      # Dedicated persistent private-state parent and credential directory
-      # for the auth container (auth-rework sections 6.2 and 6.3).
-      "d /var/lib/surm-auth-state 0700 root root -"
-      "d /var/lib/surm-auth-credentials 0700 root root -"
-    ];
 
     containers = mkMerge (
       (map (service: service.containers) managedServiceConfigs)
@@ -1111,23 +1148,35 @@ in
           hostAddress = "10.202.0.1";
           ephemeral = true;
 
-          bindMounts = {
-            # Decrypted credentials; root-only on the host. Container PID 1
-            # reads them through LoadCredential.
-            secrets = {
-              mountPoint = "/var/lib/secrets";
-              hostPath = "/var/lib/surm-auth-credentials";
-              isReadOnly = true;
-            };
-            # Dedicated persistent private-state parent for this container
-            # only. The DynamicUser StateDirectory manages
-            # /var/lib/private/surm-auth inside the container.
-            state = {
-              mountPoint = "/var/lib/private";
-              hostPath = "/var/lib/surm-auth-state";
-              isReadOnly = false;
-            };
-          };
+          bindMounts =
+            (optionalAttrs (cfg.auth.stateHostPath != null) {
+              state = {
+                mountPoint = "/var/lib/private";
+                hostPath = cfg.auth.stateHostPath;
+                isReadOnly = false;
+              };
+            })
+            // (optionalAttrs (cfg.auth.github.clientIdFile != null) {
+              githubClientId = {
+                mountPoint = "/var/lib/secrets/github-client-id";
+                hostPath = cfg.auth.github.clientIdFile;
+                isReadOnly = true;
+              };
+            })
+            // (optionalAttrs (cfg.auth.github.clientSecretFile != null) {
+              githubClientSecret = {
+                mountPoint = "/var/lib/secrets/github-client-secret";
+                hostPath = cfg.auth.github.clientSecretFile;
+                isReadOnly = true;
+              };
+            })
+            // (optionalAttrs (cfg.auth.cookieSecretFile != null) {
+              cookieSecret = {
+                mountPoint = "/var/lib/secrets/cookie-secret";
+                hostPath = cfg.auth.cookieSecretFile;
+                isReadOnly = true;
+              };
+            });
 
           config =
             { ... }:
