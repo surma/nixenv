@@ -31,6 +31,7 @@ in
         Preferences.WebUI = {
           AuthSubnetWhitelistEnabled = true;
           AuthSubnetWhitelist = "0.0.0.0/0";
+          HostHeaderValidation = false;
         };
         BitTorrent.Session = {
           GlobalMaxRatio = 1;
