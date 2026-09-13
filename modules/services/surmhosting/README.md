@@ -295,7 +295,8 @@ Run the focused module check, auth check, and existing auth package build on x86
 nix eval .#nixosModules.surmhosting
 nix build --no-link .#checks.x86_64-linux.surmhosting-module
 nix build --no-link .#checks.x86_64-linux.surm-auth-e2e
+nix build --no-link .#checks.x86_64-linux.surmhosting-auth-container
 nix build --no-link .#packages.x86_64-linux.surm-auth
 ```
 
-The module check evaluates synthetic NixOS fixtures. The auth check runs the packaged binary through its mocked OAuth flow. These checks do not deploy a host.
+The module check evaluates synthetic NixOS fixtures. The auth check runs the packaged binary through its mocked OAuth flow. The `surmhosting-auth-container` check is the offline VM check for the bundled auth container. These checks do not deploy a host.

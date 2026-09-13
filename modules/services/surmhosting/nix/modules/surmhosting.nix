@@ -481,6 +481,7 @@ let
   # presence of legacy seed lists.
   v2AuthEnabled = cfg.auth.enable;
   authLocalAddress = if v2AuthEnabled then config.containers."surm-auth".localAddress else null;
+  authHostAddress = if v2AuthEnabled then config.containers."surm-auth".hostAddress else null;
   authForwardAddress = normalizeIPv4 authLocalAddress;
   legacyAuthEnabled = !v2AuthEnabled && servicesWithAuth != { };
 
@@ -673,6 +674,14 @@ let
       message = "surmhosting: auth network hostAddress and localAddress must differ.";
     }
     {
+      assertion = !v2AuthEnabled || isUsableIPv4 authLocalAddress;
+      message = "surmhosting: auth container has no usable IPv4 local address.";
+    }
+    {
+      assertion = !v2AuthEnabled || isUsableIPv4 authHostAddress;
+      message = "surmhosting: auth container has no usable IPv4 host address.";
+    }
+    {
       assertion = allUnique appKeys;
       message = "surmhosting: duplicate logical app keys: ${concatStringsSep ", " (duplicates appKeys)}";
     }
@@ -855,7 +864,7 @@ in
         description = "DNS provider passed to the Traefik ACME DNS challenge.";
       };
       tls.dnsEnvironmentFile = mkOption {
-        type = types.nullOr types.path;
+        type = types.nullOr types.externalPath;
         default = null;
         description = ''
           Environment file with the DNS provider credentials (for example

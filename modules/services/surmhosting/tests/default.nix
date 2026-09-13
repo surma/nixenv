@@ -1521,6 +1521,18 @@ let
           )
         ];
       };
+      invalidAuthLocalHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network.localAddress = "not-an-ip";
+        };
+      };
+      invalidAuthHostHost = evalHost {
+        surmhosting = lib.recursiveUpdate authCommon {
+          tls.enable = true;
+          auth.network.hostAddress = "not-an-ip";
+        };
+      };
       equalAuthHost = evalHost {
         surmhosting = lib.recursiveUpdate authCommon {
           tls.enable = true;
@@ -1630,6 +1642,10 @@ let
         "forward-auth URLs use the normalized auth local address")
       (expectMsg equalAuthHost "auth network hostAddress and localAddress must differ"
         "equal auth network addresses must fail evaluation")
+      (expectMsg invalidAuthLocalHost "usable IPv4 local address"
+        "an auth container with an invalid local address must fail clearly")
+      (expectMsg invalidAuthHostHost "usable IPv4 host address"
+        "an auth container with an invalid host address must fail clearly")
       (expectMsg nullAddressHost "usable IPv4 local address"
         "an exposed workload with a null local address must fail clearly")
       (expectEq noPublicFirewallHost.config.networking.firewall.enable true
@@ -1972,8 +1988,31 @@ let
             surmhosting = lib.recursiveUpdate validAuth overrides;
           }).config.services.surmhosting.auth.stateHostPath
         );
+      evalDns =
+        overrides:
+        builtins.tryEval (
+          (evalHost {
+            surmhosting = lib.recursiveUpdate validAuth overrides;
+          }).config.services.surmhosting.tls.dnsEnvironmentFile
+        );
     in
     [
+      (let
+        result = evalDns {
+          tls.challenge = "dns-01";
+          tls.dnsEnvironmentFile = "/var/lib/surmedge-credentials/cloudflare.env";
+        };
+      in
+      expect (result.success && result.value == "/var/lib/surmedge-credentials/cloudflare.env")
+        "a quoted absolute DNS environment path remains valid")
+      (expect (!(evalDns {
+        tls.challenge = "dns-01";
+        tls.dnsEnvironmentFile = toString pkgs.hello;
+      }).success) "a store-backed DNS environment string must fail option validation")
+      (expect (!(evalDns {
+        tls.challenge = "dns-01";
+        tls.dnsEnvironmentFile = ./default.nix;
+      }).success) "a Nix path literal DNS environment file must fail option validation")
       (expect (!(evalWith {
         auth.github.clientIdFile = toString pkgs.hello;
       }).success) "a store-backed credential string must fail option validation")
