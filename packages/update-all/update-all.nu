@@ -63,30 +63,10 @@ def main [] {
     print "Warning: could not determine claude-code version from Homebrew cask."
   }
 
-  let surm_auth_version = (try {
-    let surm_auth_version_lines = (
-      open modules/services/surmhosting/nix/packages/surm-auth.nix
-      | lines
-      | where { |line| $line | str contains 'version = "' }
-    )
-    if ($surm_auth_version_lines | is-empty) {
-      null
-    } else {
-      $surm_auth_version_lines
-      | first
-      | parse -r 'version = "(?<version>[^"]+)"'
-      | get 0.version
-    }
-  } catch { null })
-  if $surm_auth_version == null {
-    print "Warning: could not determine surm-auth version from modules/services/surmhosting/nix/packages/surm-auth.nix."
-  }
-
   let packages = [
     { name: "pi-coding-agent" nix_update_args: [ "--custom-dep" "modelData" ] }
     { name: "handy" }
     { name: "claude-code" version: $claude_version requires_version: true }
-    { name: "surm-auth" version: $surm_auth_version requires_version: true }
     { name: "agent-browser" }
     { name: "pi-acp" }
   ]

@@ -27,6 +27,7 @@ nix --extra-experimental-features 'nix-command flakes pipe-operators' \
 
 # NixOS
 sudo nixos-rebuild switch \
+  --impure \
   --extra-experimental-features 'nix-command flakes pipe-operators' \
   --flake 'github:surma/nixenv#generic-nixos'
 
@@ -35,6 +36,8 @@ nix --extra-experimental-features 'nix-command flakes pipe-operators' \
   run 'github:nix-community/nix-on-droid' -- \
   switch --flake 'github:surma/nixenv#generic-android'
 ```
+
+The `--impure` flag makes the generic output available and imports the generated local hardware file.
 
 ## Repository Structure
 

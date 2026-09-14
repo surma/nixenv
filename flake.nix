@@ -104,8 +104,6 @@
         ./modules/core
       ];
 
-      flake.nixosModules.surmhosting = ./modules/services/surmhosting;
-
       systems = [
         "x86_64-linux"
         "aarch64-linux"
