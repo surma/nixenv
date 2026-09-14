@@ -1344,6 +1344,7 @@
         "pi-acp": "pi-acp",
         "scout": "scout",
         "shopify-framework": "shopify-framework",
+        "surmhosting": "surmhosting",
         "system-manager": "system-manager",
         "web-search-cli": "web-search-cli"
       }
@@ -1474,6 +1475,26 @@
         "ref": "main",
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
+      }
+    },
+    "surmhosting": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789375962,
+        "narHash": "sha256-rp8UyQ0J1Br6tQfTR7U5kEoBkmtIejvK+5Rkb4oVYLA=",
+        "ref": "refs/heads/main",
+        "rev": "e3cdf500344c4cd96ba20e5367fab55534359597",
+        "revCount": 9,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git"
       }
     },
     "system-manager": {
