@@ -48,7 +48,7 @@
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../modules/services/surmhosting
+    inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
     ../../apps/hate
   ];

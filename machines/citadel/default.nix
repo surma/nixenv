@@ -9,7 +9,7 @@
     ./hardware.nix
     ../../profiles/nixos/base.nix
 
-    ../../modules/services/surmhosting
+    inputs.surmhosting.nixosModules.default
     ./service-nixos-admin.nix
     ./service-zellij-web.nix
     ./service-minecraft.nix
