@@ -13,7 +13,9 @@ with lib;
   # Zellij is home-manager only, no system-level config needed
   config = mkIf (systemManager == "home-manager") {
     programs.zellij = {
-      enable = true;
+      # Every programs/* module is auto-imported, so a machine that does not want
+      # Zellij needs a way to opt out.
+      enable = mkDefault true;
       package = pkgs-unstable.zellij;
       settings = {
         pane_frames = false;

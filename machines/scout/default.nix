@@ -31,6 +31,10 @@
 
     fonts.fontconfig.enable = true;
 
+    # Scout has no terminal to multiplex. The subagent extension used to drive
+    # Zellij panes; it now uses the Pi RPC protocol and needs no terminal.
+    programs.zellij.enable = false;
+
     home.packages = with pkgs; [
       dejavu_fonts
       liberation_ttf
@@ -42,7 +46,6 @@
       ripgrep
       sqlite
       tmux
-      zellij
       inputs.bandsnatch.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.default
       inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
