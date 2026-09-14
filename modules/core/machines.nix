@@ -7,14 +7,19 @@
 {
   config = {
     # NixOS machines
-    nixosConfigurations = {
-      generic-nixos.imports = [ ../../machines/generic-nixos ];
-      archon.imports = [ ../../machines/archon ];
-      citadel.imports = [ ../../machines/citadel ];
-      nexus.imports = [ ../../machines/nexus ];
-      pylon.imports = [ ../../machines/pylon ];
-      testcontainer.imports = [ ../../machines/testcontainer ];
-    };
+    nixosConfigurations =
+      lib.optionalAttrs (builtins.pathExists /etc/nixos/hardware-configuration.nix) {
+        generic-nixos.imports = [ ../../machines/generic-nixos ];
+      }
+      // {
+        archon.imports = [ ../../machines/archon ];
+        citadel.imports = [ ../../machines/citadel ];
+        nexus.imports = [ ../../machines/nexus ];
+        pylon.imports = [ ../../machines/pylon ];
+        testcontainer.imports = [ ../../machines/testcontainer ];
+        surmframework = config.nixosConfigurations.archon;
+        surmedge = config.nixosConfigurations.pylon;
+      };
 
     # Darwin machines
     darwinConfigurations = {
@@ -44,12 +49,6 @@
     nixOnDroidConfigurations = {
       generic-android.imports = [ ../../machines/generic-android ];
     };
-  };
-
-  # Create aliases directly in the configuration options
-  config.nixosConfigurations = {
-    surmframework = config.nixosConfigurations.archon;
-    surmedge = config.nixosConfigurations.pylon;
   };
 
   config.darwinConfigurations = {

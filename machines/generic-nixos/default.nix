@@ -9,9 +9,7 @@
   imports = [
     /etc/nixos/hardware-configuration.nix
     inputs.home-manager.nixosModules.home-manager
-    ../nixos/base.nix
-
-    ../secrets
+    ../../profiles/nixos/base.nix
   ];
 
   secrets.identity = "/home/surma/.ssh/id_machine";

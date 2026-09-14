@@ -7,6 +7,7 @@
 }:
 {
   imports = [
+    inputs.surmhosting.nixosModules.default
     # ../../apps/traefik.nix
   ];
 
@@ -22,11 +23,7 @@
   ];
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "testcontainer";
-  services.surmhosting.serverExpose = {
-    test = {
-      target = 8000;
-    };
-  };
+  services.surmhosting.services.test.expose.port = 8000;
   services.surmhosting.externalInterface = "eth0";
 
   systemd.services.writing-prompt = {
