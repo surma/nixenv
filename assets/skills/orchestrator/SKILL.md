@@ -12,10 +12,11 @@ description: >-
   implementation needs independent review before acceptance. Do not invoke it for one
   small or tightly coupled change that a single agent can finish in a few edits.
 compatibility: >-
-  Requires a harness that can start persistent worker agents with an explicit model,
-  list them, inspect their status, steer or interrupt an active worker, send a worker
-  another turn, resume a stopped worker, and close a worker. Workers need write access
-  to the workspace.
+  Requires a harness that can start persistent worker agents with an explicit model and
+  reasoning level, list them, inspect a worker's state and its recent messages, send a
+  message to a running or idle worker, interrupt a turn, and close a worker. The harness
+  must announce every worker stop on its own, so the orchestrator never polls. Workers
+  need write access to the workspace.
 ---
 
 # Orchestrator
@@ -124,13 +125,15 @@ Route every cross-stream decision through yourself. Workers never talk to each o
 
 Start every worker from the template below, on the user's model at the user's reasoning level. A worker on anything else is a defect: stop it, then restart it correctly or ask.
 
-Read each assignment back against the budget before sending. Length is the cheap tell: a long, heavily qualified assignment is an oversized chunk, so split it and send the first piece. Have the harness write long worker output to a file, at a path that does not exist yet.
+Read each assignment back against the budget before sending. Length is the cheap tell: a long, heavily qualified assignment is an oversized chunk, so split it and send the first piece.
+
+A worker reports through its final message. When the deliverable is long, such as a review, an audit, or a design, tell the worker to write that file itself and to name the path in its report. Never assume the harness captures worker output for you. Read the file, and treat a missing file as a failed report.
 
 Write every prohibition into the assignment. A worker gets no approval prompt and cannot reach the user to ask.
 
-A start confirms acceptance, not progress: a run is finished only when the harness reports the turn finished. Act on an idle signal. A worker that dies mid-turn is terminal: inspect its status for the exit reason, the error, and the last output.
+A start confirms acceptance, not progress: a run is finished only when the harness announces that the worker stopped. Act on that signal. It covers a worker that finished its turn, one that errored, one you interrupted, and one whose process died.
 
-Steer a worker that drifts; interrupt when the work is unsafe or plainly wrong and you still want it. Send another turn for the next chunk, the rework, or a question. Resume a stopped worker that holds useful context; start fresh when its context caused the failure. Close a worker with no chunk, review, rework, or integration left.
+Steer a worker that drifts; interrupt when the work is unsafe or plainly wrong and you still want it. Send the same worker another message for the next chunk, the rework, or a question. A dead worker is gone: read its log for what it learned, then start a fresh worker with that context. Close a worker with no chunk, review, rework, or integration left.
 
 Intervene on evidence only: scope drift, an unsafe action, a repeated failure, or a worker that cannot prove its criteria. A quiet worker is not a stuck worker.
 
@@ -138,7 +141,7 @@ Intervene on evidence only: scope drift, an unsafe action, a repeated failure, o
 
 Start the workers that can run now, tell the user what is running, and end your turn.
 
-Never sleep, never poll, never loop on a status call. Let the completion signal wake you: check the result, dispatch the next item, end your turn again. Signals go missing, so recover on the user's next message, not on a timer: reconcile worker state whenever you are woken, and before answering a progress question. Reconciling is one status sweep per turn, never two. If you do not know whether this harness wakes you on completion, say so and end your turn anyway; never resolve that doubt by checking.
+Never sleep, never poll, never loop on a status call. Let the stop signal wake you: check the result, dispatch the next item, end your turn again. Signals go missing, so recover on the user's next message, not on a timer: reconcile worker state whenever you are woken, and before answering a progress question. Reconciling is one status sweep per turn, never two. If you do not know whether this harness wakes you on completion, say so and end your turn anyway; never resolve that doubt by checking.
 
 Hold a backlog the user can change mid-flight: accept, reorder, and drop items on request. When something new arrives, decide first whether it changes running work, and correct or stop that worker if it does. Otherwise add it, say where it landed, and leave running work alone.
 
