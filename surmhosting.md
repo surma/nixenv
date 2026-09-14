@@ -43,8 +43,8 @@ The following decisions replace earlier alternatives in this document.
 8. Surmhosting supplies generated container addresses through `lib.mkDefault`.
 9. Traefik reads each final evaluated container address.
 10. The auth container keeps explicit auth network options.
-11. Stage 1 includes no extraction-isolation test or coupling token search.
-12. Stage 2 exposes any remaining repository dependency through normal standalone evaluation.
+11. The merged standalone workflow builds and checks x86 Linux on push, pull request, and manual dispatch. It uploads the x86 package and all three x86 checks to Cachix `surm-builds` with `CACHIX_AUTH_TOKEN`. ARM Linux remains evaluation-only.
+12. Stage 1 includes no extraction-isolation test or coupling token search. Stage 2 exposes any remaining repository dependency through normal standalone evaluation.
 13. The user owns and prepares the auth state host path.
 14. Surmhosting mounts the auth state path but never creates or modifies it.
 15. Stage 2 starts a new repository without imported Git history.
@@ -1170,7 +1170,26 @@ surmhosting/
 └── README.md
 ```
 
-An approved CI file can join this layout later in Stage 2.
+### CI
+
+The standalone repository uses `.gitea/workflows/ci.yml`.
+
+The workflow triggers on push, pull request, and manual dispatch.
+
+One `build-and-test` job runs on the `nixos` runner. It checks out the repository and shows Nix and Git versions.
+
+The job builds `packages.x86_64-linux.surm-auth` and runs `nix flake check`.
+
+The job uploads these x86 outputs to Cachix `surm-builds`:
+
+- `packages.x86_64-linux.surm-auth`
+- `checks.x86_64-linux.surmhosting-module`
+- `checks.x86_64-linux.surm-auth-e2e`
+- `checks.x86_64-linux.surmhosting-auth-container`
+
+The upload step uses `CACHIX_AUTH_TOKEN`.
+
+ARM Linux remains evaluation-only. The workflow adds no status badge.
 
 The standalone flake exports these values:
 
@@ -1187,6 +1206,15 @@ checks.x86_64-linux.surmhosting-auth-container
 `nixosModules.default` and `nixosModules.surmhosting` point to the same module.
 
 The auth module remains an internal implementation detail.
+
+**Suggested standalone commit sequence:**
+
+1. `refactor: extract surmhosting from nixenv`
+2. `feat: add standalone surmhosting flake`
+3. `docs: document standalone surmhosting`
+4. `refactor: update surm-auth module path`
+5. `test: enforce standalone network isolation`
+6. `ci: run standalone flake checks`
 
 ## 15. Stage 2 implementation tasks
 
@@ -1263,23 +1291,36 @@ Do not change third-party versions without a separate reason.
 
 ### Task 10: Add approved CI
 
-Skip this task when Stage 2 approval names no CI provider.
+**Files:**
 
-**Step 1:** Build and test x86 Linux.
+- Create: `.gitea/workflows/ci.yml`
 
-Run these checks:
+**Step 1:** Trigger the workflow on push, pull request, and manual dispatch.
 
-- `nix flake check`
-- The x86 auth package build
-- Go formatting
-- Go vet
-- Go race tests with a C compiler
+**Step 2:** Run one `build-and-test` job on the `nixos` runner.
 
-**Step 2:** Evaluate ARM Linux outputs without a native build requirement.
+The job checks out the repository and shows Nix and Git versions.
 
-**Step 3:** Pin every CI action or reusable dependency.
+**Step 3:** Build `packages.x86_64-linux.surm-auth`.
 
-**Step 4:** Keep CI free of production credentials.
+**Step 4:** Run `nix flake check`.
+
+**Step 5:** Upload the package and all three x86 check outputs to Cachix `surm-builds`.
+
+Use `CACHIX_AUTH_TOKEN` only in the upload step.
+
+**Step 6:** Keep ARM Linux evaluation-only.
+
+Do not add a status badge.
+
+**Acceptance:**
+
+- The workflow has push, pull request, and manual triggers.
+- One job runs on the `nixos` runner.
+- The job builds the x86 auth package and runs all x86 checks.
+- Cachix receives the package and all three x86 check outputs.
+- ARM Linux needs no native build.
+- The workflow has no status badge.
 
 ### Task 11: Verify the standalone repository
 
