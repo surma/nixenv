@@ -36,4 +36,21 @@ in
       ];
     };
   };
+
+  # Remote admin via the public edge: adguard.apps.surma.technology behind
+  # surm-auth with an allowlist grant, same as torrent.apps.surma.technology.
+  # The backend defaults to localhost because adguardhome runs on the host
+  # itself (see service-ha-proxy.nix for the explicit-host variant). Direct
+  # LAN access on the raw port stays available via the firewall rule above.
+  services.surmhosting.services.adguard.expose.apps.adguard = {
+    access.mode = "allowlist";
+    access.seedUsers = [ "surma" ];
+    internal.access = "trusted-network";
+    ports = [
+      {
+        port = ports.adguardHomeWeb;
+        hostname = "adguard";
+      }
+    ];
+  };
 }
