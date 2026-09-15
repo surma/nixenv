@@ -9,13 +9,14 @@ in
   # DNS and DHCP are LAN-only: the tailnet must not resolve through Nexus.
   # Note that 100.64.0.0/10 must never appear next to these ports. It is
   # CGNAT space, so it shows up as a source range on real WAN links, and the
-  # rules apply to every interface.
+  # rules apply to every interface. DHCP uses the LAN interface because new
+  # clients send requests from 0.0.0.0 before they receive an address.
   # The web UI keeps the tailnet like the internal surmhosting entrypoint in
   # default.nix, so the admin interface works while away from home.
   networking.firewall.extraInputRules = ''
     ip saddr 10.0.0.0/8 udp dport 53 accept comment "adguardhome DNS"
     ip saddr 10.0.0.0/8 tcp dport 53 accept comment "adguardhome DNS"
-    ip saddr 10.0.0.0/8 udp dport 67 accept comment "adguardhome DHCP"
+    iifname "enp1s0" udp dport 67 accept comment "adguardhome DHCP"
     ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport ${toString ports.adguardHomeWeb} accept comment "adguardhome web UI"
   '';
 

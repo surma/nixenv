@@ -86,7 +86,24 @@
   hardware.graphics.enable = true;
 
   networking.hostName = "nexus";
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    settings.main.no-auto-default = "enp1s0";
+    ensureProfiles.profiles.enp1s0 = {
+      connection = {
+        id = "enp1s0";
+        type = "ethernet";
+        interface-name = "enp1s0";
+        autoconnect = true;
+      };
+      ipv4 = {
+        method = "manual";
+        addresses = "10.0.0.2/16";
+        gateway = "10.0.0.254";
+      };
+      ipv6.method = "auto";
+    };
+  };
   networking.nftables.enable = true;
   networking.firewall.enable = true;
   networking.firewall.allowedTCPPorts = [
