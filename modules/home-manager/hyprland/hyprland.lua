@@ -17,7 +17,7 @@ hl.monitor({
 hl.monitor({
     output = "desc:Samsung Electric Company Display",
     mode = "3840x2160@60",
-    position = "-920x-1080",
+    position = "-920x1440",
     scale = 2,
 })
 hl.monitor({

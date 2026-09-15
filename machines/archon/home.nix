@@ -36,6 +36,7 @@
     customScripts.toggle-sunset.asDesktopItem = true;
     customScripts.bluetooth-fix.enable = true;
     customScripts.bluetooth-fix.asDesktopItem = true;
+    customScripts.audio-output.enable = true;
     customScripts.wallpaper-shuffle.enable = true;
     customScripts.wallpaper-shuffle.asDesktopItem = true;
 

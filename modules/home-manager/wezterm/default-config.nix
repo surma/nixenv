@@ -105,11 +105,6 @@ with lib;
               action = wezterm.action.DisableDefaultAssignment,
             },
             {
-              key = '0',
-              mods = 'CTRL',
-              action = wezterm.action.DisableDefaultAssignment,
-            },
-            {
               key = '-',
               mods = 'CMD',
               action = wezterm.action.DecreaseFontSize,
@@ -121,7 +116,7 @@ with lib;
             },
             {
               key = '0',
-              mods = 'CMD',
+              mods = is_macos and 'CMD' or 'CTRL',
               action = wezterm.action.ResetFontSize,
             },
             {
@@ -131,7 +126,7 @@ with lib;
             },
             {
               key = 'n',
-              mods = 'CMD',
+              mods = is_macos and 'CMD' or 'CTRL',
               action = wezterm.action.SpawnWindow,
             },
             {
