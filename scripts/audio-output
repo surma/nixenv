@@ -1,0 +1,49 @@
+#!/usr/bin/env nu
+
+def main [] {
+  let outputs = (
+    ^pw-dump
+    | from json
+    | where type == "PipeWire:Interface:Node"
+    | where info.props."media.class"? == "Audio/Sink"
+    | each {|device|
+        {
+          id: $device.id
+          name: $device.info.props."node.description"
+        }
+      }
+  )
+
+  if ($outputs | is-empty) {
+    error make { msg: "No audio outputs found" }
+  }
+
+  let selection = (
+    $outputs
+    | each {|output| $"($output.id)\t($output.name)" }
+    | str join (char nl)
+    | ^fzf --prompt "Audio output> "
+    | complete
+  )
+
+  if $selection.exit_code == 130 {
+    return
+  }
+
+  if $selection.exit_code != 0 {
+    let detail = ($selection.stderr | str trim)
+    error make {
+      msg: $"fzf failed with status ($selection.exit_code): ($detail)"
+    }
+  }
+
+  let id = (
+    $selection.stdout
+    | str trim
+    | split row (char tab)
+    | first
+    | into int
+  )
+
+  ^wpctl set-default $id
+}
