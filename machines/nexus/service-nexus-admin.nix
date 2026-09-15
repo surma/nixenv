@@ -107,7 +107,7 @@ in
   '';
 
   services.surmhosting.services.admin = {
-    host = "localhost";
+    backend.host = "localhost";
     expose.apps.admin = {
       access.mode = "allowlist";
       access.seedUsers = [ "surma" ];

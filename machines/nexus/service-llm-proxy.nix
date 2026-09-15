@@ -25,7 +25,7 @@
     requires = [ "systemd-tmpfiles-setup.service" ];
   };
 
-  services.surmhosting.services.llm-proxy.containerService = {
+  services.surmhosting.services.llm-proxy.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     # Top-level (unit section) Requires=: a failed or missing secrets.service
     # must prevent the LLM container from starting, not only order it later.
@@ -71,7 +71,7 @@
     };
   };
 
-  services.surmhosting.services.llm-proxy.container = {
+  services.surmhosting.services.llm-proxy.backend."nixos-container" = {
     config =
       { pkgs, ... }:
       {

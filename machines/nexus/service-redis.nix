@@ -7,7 +7,7 @@ in
 
   networking.firewall.allowedTCPPorts = [ ports.redis ];
 
-  services.surmhosting.services.redis.container = {
+  services.surmhosting.services.redis.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

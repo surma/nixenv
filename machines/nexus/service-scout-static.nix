@@ -17,7 +17,7 @@
         }
       ];
     };
-    container = {
+    backend."nixos-container" = {
       config = {
         system.stateVersion = "25.05";
 

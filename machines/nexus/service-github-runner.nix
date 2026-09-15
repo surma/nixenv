@@ -17,7 +17,7 @@ in
     "d /dump/state/github-runner 0755 root root - -"
   ];
 
-  services.surmhosting.services.github-runner.containerService = {
+  services.surmhosting.services.github-runner.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     serviceConfig = {
@@ -26,7 +26,7 @@ in
     };
   };
 
-  services.surmhosting.services.github-runner.container = {
+  services.surmhosting.services.github-runner.backend."nixos-container" = {
     bindMounts = {
       state = {
         mountPoint = "/var/lib/github-runner";

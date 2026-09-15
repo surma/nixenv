@@ -48,6 +48,8 @@ in
   services.syncthing.settings.devices.shopisurm = shared.devices.shopisurm;
   services.syncthing.guiAddress = "0.0.0.0:${toString ports.syncthingGui}";
 
+  services.surmhosting.services.syncthing.backend.host = "localhost";
+
   services.surmhosting.services.syncthing.expose.apps.syncthing = {
     access.mode = "allowlist";
     access.seedUsers = [ "surma" ];

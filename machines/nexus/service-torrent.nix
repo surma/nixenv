@@ -17,7 +17,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.torrent.container = {
+  services.surmhosting.services.torrent.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

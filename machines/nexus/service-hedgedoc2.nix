@@ -75,7 +75,7 @@ in
   ];
 
   services.surmhosting.services.hedgedoc2 = {
-    containerService = {
+    backend."nixos-container".service = {
       wants = [ "secrets.service" ];
       after = [ "secrets.service" ];
     };
@@ -112,7 +112,7 @@ in
       ];
     };
 
-    container = {
+    backend."nixos-container" = {
       bindMounts = {
         state = {
           mountPoint = stateDirectory;
