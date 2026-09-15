@@ -9,6 +9,7 @@
     ./hardware.nix
     ./service-syncthing.nix
     ./service-mosquitto.nix
+    ./service-adguardhome.nix
     ./service-scout.nix
     ./service-gitea.nix
     ./service-hedgedoc2.nix
