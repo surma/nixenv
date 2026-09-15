@@ -99,7 +99,7 @@
       ipv4 = {
         method = "manual";
         addresses = "10.0.0.2/16";
-        gateway = "10.0.0.254";
+        gateway = "10.0.254.254";
       };
       ipv6.method = "auto";
     };
