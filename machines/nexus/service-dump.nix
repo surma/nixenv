@@ -17,7 +17,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.dump.container = {
+  services.surmhosting.services.dump.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

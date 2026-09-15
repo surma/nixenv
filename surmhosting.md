@@ -57,6 +57,9 @@ The following decisions replace earlier alternatives in this document.
 22. Runtime state and credential paths must stay outside the Nix store.
 23. Traefik removes CIDR suffixes from final container addresses used in URLs.
 24. The internal auth module exposes local OAuth endpoint seams for offline tests.
+25. Every logical app with `public.enable = true` requires `tls.enable = true` and routes only through `websecure`.
+26. `backend.podman.extraOptions` remains an unparsed escape hatch. Surmhosting passes each string unchanged after generated options.
+27. Surmhosting does not parse, reject, reserve, or block flags in `backend.podman.extraOptions`. Later explicit flags can override generated runtime behavior.
 
 ## 3. Product scope
 

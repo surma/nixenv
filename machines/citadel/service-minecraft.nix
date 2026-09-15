@@ -36,10 +36,10 @@ in
   # `expose` mechanism. Instead we NAT the port straight into the container,
   # mirroring the gitea SSH-port pattern on nexus (machines/nexus/service-gitea.nix).
   services.surmhosting.services.minecraft = {
-    # surmhosting caps containers at 4G by default; bump it above the JVM heap.
-    containerService.serviceConfig.MemoryMax = "8G";
+    backend."nixos-container" = {
+      # surmhosting caps containers at 4G by default; bump it above the JVM heap.
+      service.serviceConfig.MemoryMax = "8G";
 
-    container = {
       # Function form so we build the (unfree) server package with the
       # container's pkgs, which sets allowUnfree below. The host pkgs has
       # allowUnfree = false.

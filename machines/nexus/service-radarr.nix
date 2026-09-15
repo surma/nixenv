@@ -3,7 +3,7 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
-  services.surmhosting.services.radarr.containerService = {
+  services.surmhosting.services.radarr.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [
       "secrets.service"
@@ -22,7 +22,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.radarr.container = {
+  services.surmhosting.services.radarr.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

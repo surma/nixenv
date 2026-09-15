@@ -21,7 +21,7 @@ in
   ];
 
   services.surmhosting.services.gist = {
-    containerService = {
+    backend."nixos-container".service = {
       wants = [ "secrets.service" ];
       after = [ "secrets.service" ];
     };
@@ -38,7 +38,7 @@ in
       ];
     };
 
-    container = {
+    backend."nixos-container" = {
       bindMounts = {
         state = {
           mountPoint = stateDirectory;

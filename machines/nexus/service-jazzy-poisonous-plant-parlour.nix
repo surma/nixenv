@@ -4,7 +4,7 @@ let
 in
 {
   services.surmhosting.services.jazzy-poisonous-plant-parlour = {
-    containerService = {
+    backend."nixos-container".service = {
       wants = [ "secrets.service" ];
       after = [ "secrets.service" ];
     };
@@ -20,7 +20,7 @@ in
         }
       ];
     };
-    container = {
+    backend."nixos-container" = {
       config = {
         system.stateVersion = "25.05";
 

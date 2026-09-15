@@ -16,7 +16,7 @@
       }
     ];
   };
-  services.surmhosting.services.copyparty.container = {
+  services.surmhosting.services.copyparty.backend."nixos-container" = {
     config =
       { ... }:
       {

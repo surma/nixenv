@@ -10,7 +10,7 @@
     "d /var/lib/gitea-runner 0755 root root - -"
   ];
 
-  services.surmhosting.services.gitea-runner.containerService = {
+  services.surmhosting.services.gitea-runner.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     serviceConfig = {
@@ -19,7 +19,7 @@
     };
   };
 
-  services.surmhosting.services.gitea-runner.container = {
+  services.surmhosting.services.gitea-runner.backend."nixos-container" = {
     bindMounts = {
       state = {
         mountPoint = "/var/lib/gitea-runner";

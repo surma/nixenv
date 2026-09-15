@@ -117,7 +117,7 @@ in
     "d /dump/state/brain-serve 0755 surma users - -"
   ];
 
-  services.surmhosting.services.brain-serve.containerService = {
+  services.surmhosting.services.brain-serve.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     # QMD model loading needs ~4GB; give headroom for the server + sync.
@@ -151,7 +151,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.brain-serve.container = {
+  services.surmhosting.services.brain-serve.backend."nixos-container" = {
     # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
     allowedDevices = [
       {

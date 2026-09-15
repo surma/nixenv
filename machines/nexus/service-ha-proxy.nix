@@ -5,7 +5,7 @@
 # existing Tailscale address of the Home Assistant instance, unchanged.
 {
   services.surmhosting.services.ha = {
-    host = "100.97.65.42";
+    backend.host = "100.97.65.42";
 
     expose.apps.ha = {
       access.mode = "public";

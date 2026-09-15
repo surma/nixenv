@@ -218,13 +218,13 @@ in
     "d /dump/state/scout 0755 surma users - -"
   ];
 
-  services.surmhosting.services.scout.containerService = {
+  services.surmhosting.services.scout.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     serviceConfig.MemoryMax = "16G";
   };
 
-  services.surmhosting.services.scout.container = {
+  services.surmhosting.services.scout.backend."nixos-container" = {
     config = {
       imports = [
         inputs.home-manager.nixosModules.home-manager
