@@ -1,0 +1,35 @@
+{ ... }:
+let
+  ports = import ./ports.nix;
+in
+{
+  # DNS (53) and DHCP (67) must not use the plain allowedTCPPorts/
+  # allowedUDPPorts lists: Nexus is the public edge, so a global allow rule
+  # would publish an open resolver and the admin UI to the internet.
+  # Restrict both to the LAN and the tailnet instead, like the internal
+  # surmhosting HTTP entrypoint in default.nix.
+  networking.firewall.extraInputRules = ''
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } udp dport 53 accept comment "adguardhome DNS"
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport 53 accept comment "adguardhome DNS"
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } udp dport 67 accept comment "adguardhome DHCP"
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport ${toString ports.adguardHomeWeb} accept comment "adguardhome web UI"
+  '';
+
+  # allowDHCP grants CAP_NET_RAW unconditionally so the DHCP server can be
+  # enabled from the web UI during the cutover from the Deco. Nothing in the
+  # `dhcp` section is pinned here for the same reason: keys present in
+  # `settings` are re-applied on every start and would revert UI changes.
+  services.adguardhome = {
+    enable = true;
+    allowDHCP = true;
+    host = "0.0.0.0";
+    port = ports.adguardHomeWeb;
+    mutableSettings = true;
+    settings = {
+      dns.bootstrap_dns = [
+        "9.9.9.9"
+        "149.112.112.112"
+      ];
+    };
+  };
+}
