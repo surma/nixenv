@@ -31,22 +31,19 @@
     SHOPIFY_AI_RTK = "0";
   };
   nix.settings.extra-experimental-features = "configurable-impure-env";
-  defaultConfigs.agents = {
-    enable = true;
-    extraSections = [
-      ''
-        ## Shopify World git workflow
+  defaultConfigs.agents.extraSections = [
+    ''
+      ## Shopify World git workflow
 
-        Do not use Graphite: never run `gt` or open the Graphite web UI (app.graphite.dev).
-        Use plain `git` for all repository operations.
+      Do not use Graphite: never run `gt` or open the Graphite web UI (app.graphite.dev).
+      Use plain `git` for all repository operations.
 
-        The monorepo worktrees under `~/world` are enormous and the repo has extremely high commit activity. Keep operations bounded:
-        - Bound history: use `git log -n 20` (or a path/range), never an unbounded full log.
-        - Scope searches: always restrict `rg`/`find`/`grep` to a specific subdirectory, never the worktree root.
-        - Prefer `git`-native selectors (`git log -- <path>`, `git diff <range>`) over walking the tree yourself.
-      ''
-    ];
-  };
+      The monorepo worktrees under `~/world` are enormous and the repo has extremely high commit activity. Keep operations bounded:
+      - Bound history: use `git log -n 20` (or a path/range), never an unbounded full log.
+      - Scope searches: always restrict `rg`/`find`/`grep` to a specific subdirectory, never the worktree root.
+      - Prefer `git`-native selectors (`git log -- <path>`, `git diff <range>`) over walking the tree yourself.
+    ''
+  ];
   programs.gitea-cli.enable = true;
   customScripts.ai.package = pkgs.writeTextFile {
     name = "ai";

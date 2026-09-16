@@ -11,6 +11,8 @@
   # `herdr --skill` on every switch, so the skill matches the binary.
   programs.herdr.enable = true;
 
+  defaultConfigs.agents.enable = true;
+
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
   secrets.items.openrouter-api-key.target = "${config.home.homeDirectory}/.local/state/openrouter-api-key";

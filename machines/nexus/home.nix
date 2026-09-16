@@ -25,7 +25,6 @@
     secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
 
     home.stateVersion = "25.05";
-    defaultConfigs.agents.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;
     customScripts.oc.enable = true;

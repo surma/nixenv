@@ -31,7 +31,6 @@
 
     home.stateVersion = "25.05";
 
-    defaultConfigs.agents.enable = true;
     programs.gitea-cli.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;

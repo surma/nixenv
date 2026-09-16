@@ -72,10 +72,7 @@
     };
 
     defaultConfigs.npm.enable = true;
-    defaultConfigs.agents = {
-      enable = true;
-      extraFiles = [ ./AGENTS.md ];
-    };
+    defaultConfigs.agents.extraFiles = [ ./AGENTS.md ];
 
     programs.ssh = {
       enable = true;
