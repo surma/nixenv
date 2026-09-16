@@ -19,8 +19,7 @@ in
         {
           port = 16686;
           hostname = "jaeger";
-          internalRule =
-            "HostRegexp(`^jaeger\\.surmcluster`) || HostRegexp(`^jaeger\\.nexus\\.hosts`)";
+          internalRule = "HostRegexp(`^jaeger\\.surmcluster`) || HostRegexp(`^jaeger\\.nexus\\.hosts`)";
         }
       ];
     };

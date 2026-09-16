@@ -32,8 +32,7 @@
         {
           port = 8096;
           hostname = "jellyfin";
-          internalRule =
-            "HostRegexp(`^jellyfin\\.surmcluster`) || HostRegexp(`^jellyfin\\.nexus\\.hosts`)";
+          internalRule = "HostRegexp(`^jellyfin\\.surmcluster`) || HostRegexp(`^jellyfin\\.nexus\\.hosts`)";
         }
       ];
     };
