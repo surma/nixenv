@@ -20,7 +20,8 @@ in
       ${pkgs.coreutils}/bin/install -d -m 0755 ${stateDirectory}
       ${pkgs.coreutils}/bin/install -d -m 0700 \
         ${stateDirectory}/media \
-        ${stateDirectory}/ml-cache
+        ${stateDirectory}/ml-cache \
+        ${stateDirectory}/redis
       ${pkgs.coreutils}/bin/install -d -m 0700 -o postgres -g postgres \
         ${stateDirectory}/postgresql
     '';
@@ -52,6 +53,11 @@ in
         ml-cache = {
           mountPoint = "/var/cache/immich";
           hostPath = "${stateDirectory}/ml-cache";
+          isReadOnly = false;
+        };
+        redis = {
+          mountPoint = "/var/lib/redis-immich";
+          hostPath = "${stateDirectory}/redis";
           isReadOnly = false;
         };
       };
