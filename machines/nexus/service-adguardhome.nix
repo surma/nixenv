@@ -31,10 +31,15 @@ in
     port = ports.adguardHomeWeb;
     mutableSettings = true;
     settings = {
-      dns.bootstrap_dns = [
-        "9.9.9.9"
-        "149.112.112.112"
-      ];
+      # AdGuard must not claim port 53 on Podman bridge gateways.
+      # Podman's Aardvark DNS provides service discovery on those networks.
+      dns = {
+        bind_hosts = [ "10.0.0.2" ];
+        bootstrap_dns = [
+          "9.9.9.9"
+          "149.112.112.112"
+        ];
+      };
     };
   };
 
