@@ -209,16 +209,25 @@ say what it is waiting for.
 
 ### Waking up
 
-You only run when the user messages you, so an executor's completion reaches you on your next
-turn. Make that visible without touching the user's input: end every assignment with
+You only run when something prompts you. A finished executor must therefore wake you, and the
+only mechanism for that is a prompt into your pane — `agent wait` takes a single target, so it
+cannot cover several executors, and `notification show` reaches the user, not you. End every
+assignment with the wake:
 
 ```bash
-herdr notification show "T3 done" --body "report at <path>" --sound done
+herdr agent prompt orchestrator "T3 READY_FOR_REVIEW · <report path>"
 ```
 
-Only with the user's explicit consent may an executor instead wake you directly with
-`herdr agent prompt orchestrator "..."` — that types a line into your pane and submits it, and
-will clobber whatever the user was typing. Default to the notification.
+That line arrives as your next user message, so keep it to the task id, the status, and the
+report path — you read the report yourself. The executor sends it without `--wait` and does not
+retry: if you are mid-turn it queues until your next step, and if you are sitting on an approval
+dialog Herdr rejects it as `agent_blocked`, in which case the report on disk is still the truth
+and your next sweep finds it.
+
+It types into your pane, so it can land in a line the user is composing there. That is the price
+of a loop that closes by itself — mention at setup that executors will wake you. Put
+`herdr notification show "<id> done" --body "<one line>" --sound done` before it when the user
+also wants an audible ding.
 
 ## Assignment template
 
@@ -243,8 +252,8 @@ Send this as the prompt and nothing else.
 > When done, write `$BOARD_DIR/<id>.report.md` containing: status
 > (`READY_FOR_REVIEW` | `BLOCKED` | `NEEDS_INPUT`), a summary of at most five sentences, the
 > changed files, the exact commands you ran with their results, and remaining gaps. Write no
-> other file under `$BOARD_DIR`. Then run:
-> `herdr notification show "<id> done" --body "<one line>" --sound done`
+> other file under `$BOARD_DIR`. Then wake the orchestrator with:
+> `herdr agent prompt orchestrator "<id> <status> · <report path>"`
 
 Keep assignments short. A long, heavily qualified assignment is an oversized task: split it and
 send the first piece. Three acceptance criteria is the ceiling; over that, split.
