@@ -14,11 +14,15 @@ The user changed the Stage 2 scope after the initial plan.
 
 The final scope adds managed Podman workloads to Surmhosting. Nexus migrates Jellyfin and Jaeger from raw OCI declarations to `backend.podman`.
 
-Surmhosting owns their Podman units, isolated networks, static addresses, and Traefik routes. Their existing workload settings and route behavior remain unchanged.
+Surmhosting owns their Podman units, isolated networks, static addresses, and Traefik routes. Their images, mounts, published ports, readiness modes, and route behavior remain unchanged.
 
-Pure Podman services do not consume slots in the historical NixOS container address sequence. Nexus removes Docker discovery after no external label-based workloads remain.
+All services share one zero-based lexical address index. NixOS containers use `10.201.<index>.1/2`, while Podman containers use `10.203.<index>.1/2` for separate NAT ownership. Adding a service can renumber later services.
 
-Managed unit and container names now use Surmhosting naming. Default resource limits for managed containers apply.
+Nexus NixOS containers use the synthetic `_gateway` hostname for host PostgreSQL. They do not depend on another service's address slot.
+
+Nexus removes Docker discovery after no external label-based workloads remain. Managed unit and container names use Surmhosting naming.
+
+Default resource limits apply to managed containers. Jellyfin limits both its runtime unit and Podman payload to 12 GiB with no swap, based on its measured 9 GiB peak.
 
 This amendment supersedes statements below that keep these two OCI workloads outside Surmhosting or require their declarations to remain unchanged.
 
