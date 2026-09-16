@@ -48,6 +48,10 @@
       url = "github:anomalyco/opencode?ref=v1.17.14";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    herdr = {
+      url = "github:herdrdev/herdr";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     web-search-cli = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/web-search-cli?ref=main";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -1,5 +1,14 @@
-{ config, ... }:
 {
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
+{
+  home.packages = [
+    inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
   secrets.items.openrouter-api-key.target =

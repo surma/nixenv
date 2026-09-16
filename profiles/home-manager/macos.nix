@@ -19,16 +19,15 @@ in
     home.homeDirectory = lib.mkDefault "/Users/surma";
 
     allowedUnfreeApps = [
-      "raycast"
       "google-chrome"
     ];
     home.packages =
       (with pkgs; [
         inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.lumen
         inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.macpow
+        inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.tinycast
       ])
       ++ (with pkgs-unstable; [
-        # raycast
         aerospace
       ]);
 

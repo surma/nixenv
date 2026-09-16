@@ -69,6 +69,7 @@ def main [] {
     { name: "claude-code" version: $claude_version requires_version: true }
     { name: "agent-browser" }
     { name: "pi-acp" }
+    { name: "tinycast" }
   ]
 
   for pkg in $packages {
