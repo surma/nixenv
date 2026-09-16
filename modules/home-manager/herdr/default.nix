@@ -38,10 +38,24 @@ in
       default = inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
       description = "The herdr package to use";
     };
+    settings = mkOption {
+      type = types.attrsOf types.anything;
+      default = { };
+      description = ''
+        Settings written to ~/.config/herdr/config.toml. Empty by default,
+        which skips generating the file so herdr keeps its own defaults.'';
+    };
   };
 
   config = mkIf (systemManager == "home-manager" && cfg.enable) {
     home.packages = [ cfg.package ];
+
+    home.file = mkIf (cfg.settings != { }) {
+      ".config/herdr/config.toml" = {
+        source = (pkgs.formats.toml { }).generate "herdr-config.toml" cfg.settings;
+        mutable = true;
+      };
+    };
 
     # Regenerate the agent skill file on every home-manager switch.
     # This keeps the skill file version-matched to the installed herdr binary.

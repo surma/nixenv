@@ -11,6 +11,29 @@
   # `herdr --skill` on every switch, so the skill matches the binary.
   programs.herdr.enable = true;
 
+  # Managed values from the live ~/.config/herdr/config.toml, plus keyboard
+  # navigation bindings for the Choc NAV layer (W/R cycle workspaces, S/F
+  # cycle tabs; direct chords, no prefix). Reload applies without restart:
+  # `herdr server reload-config`.
+  programs.herdr.settings = {
+    onboarding = false;
+    theme = {
+      name = "gruvbox";
+      auto_switch = false;
+    };
+    ui = {
+      status_indicators = "symbols";
+      sound.enabled = false;
+      toast.delivery = "system";
+    };
+    keys = {
+      previous_workspace = "alt+left";
+      next_workspace = "alt+right";
+      previous_tab = "ctrl+shift+tab";
+      next_tab = "ctrl+tab";
+    };
+  };
+
   defaultConfigs.agents.enable = true;
 
   programs.pi.enable = true;
