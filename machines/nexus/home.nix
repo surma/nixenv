@@ -31,6 +31,10 @@
     customScripts.ocq.enable = true;
     customScripts.transcribe.enable = true;
 
+    agent.skills = [
+      ../../assets/skills/herdr-orchestrator
+    ];
+
     home.packages = (
       with pkgs;
       [
