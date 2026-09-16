@@ -82,7 +82,7 @@ in
   };
 
   services.surmhosting.services.admin = {
-    host = "localhost";
+    backend.host = "localhost";
     expose.port = port;
   };
 

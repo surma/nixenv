@@ -6,7 +6,7 @@
     chmod 0644 /var/lib/overview/server.env
   '';
 
-  services.surmhosting.services.overview.containerService = {
+  services.surmhosting.services.overview.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
   };
@@ -22,7 +22,7 @@
       }
     ];
   };
-  services.surmhosting.services.overview.container = {
+  services.surmhosting.services.overview.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

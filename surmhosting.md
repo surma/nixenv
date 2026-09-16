@@ -8,6 +8,24 @@
 
 **Reviewed baseline:** `17c48975634079e9bc43b8274eaacbdf5686cd22` on 2026-09-12.
 
+## 0. Stage 2 scope amendment
+
+The user changed the Stage 2 scope after the initial plan.
+
+The final scope adds managed Podman workloads to Surmhosting. Nexus migrates Jellyfin and Jaeger from raw OCI declarations to `backend.podman`.
+
+Surmhosting owns their Podman units, isolated networks, static addresses, and Traefik routes. Their images, mounts, published ports, readiness modes, and route behavior remain unchanged.
+
+All services share one zero-based lexical address index. NixOS containers use `10.201.<index>.1/2`, while Podman containers use `10.203.<index>.1/2` for separate NAT ownership. Adding a service can renumber later services.
+
+Nexus NixOS containers use the synthetic `_gateway` hostname for host PostgreSQL. They do not depend on another service's address slot.
+
+Nexus removes Docker discovery after no external label-based workloads remain. Managed unit and container names use Surmhosting naming.
+
+Default resource limits apply to managed containers. Jellyfin limits both its runtime unit and Podman payload to 12 GiB with no swap, based on its measured 9 GiB peak.
+
+This amendment supersedes statements below that keep these two OCI workloads outside Surmhosting or require their declarations to remain unchanged.
+
 ## 1. Approval boundaries
 
 This plan separates the work into two stages.
@@ -57,6 +75,9 @@ The following decisions replace earlier alternatives in this document.
 22. Runtime state and credential paths must stay outside the Nix store.
 23. Traefik removes CIDR suffixes from final container addresses used in URLs.
 24. The internal auth module exposes local OAuth endpoint seams for offline tests.
+25. Every logical app with `public.enable = true` requires `tls.enable = true` and routes only through `websecure`.
+26. `backend.podman.extraOptions` remains an unparsed escape hatch. Surmhosting passes each string unchanged after generated options.
+27. Surmhosting does not parse, reject, reserve, or block flags in `backend.podman.extraOptions`. Later explicit flags can override generated runtime behavior.
 
 ## 3. Product scope
 

@@ -23,6 +23,7 @@
   ];
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "testcontainer";
+  services.surmhosting.services.test.backend.host = "localhost";
   services.surmhosting.services.test.expose.port = 8000;
   services.surmhosting.externalInterface = "eth0";
 

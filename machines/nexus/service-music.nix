@@ -73,7 +73,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.music.container = {
+  services.surmhosting.services.music.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

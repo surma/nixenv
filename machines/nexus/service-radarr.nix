@@ -3,7 +3,7 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
-  services.surmhosting.services.radarr.containerService = {
+  services.surmhosting.services.radarr.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [
       "secrets.service"
@@ -22,7 +22,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.radarr.container = {
+  services.surmhosting.services.radarr.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 
@@ -34,7 +34,8 @@ in
         server.port = 8080;
         auth.method = "External";
         postgres = {
-          host = "10.201.13.1"; # surmhosting host-side veth address (alpha-stable)
+          # `_gateway` resolves to this container's current host-side address.
+          host = "_gateway";
           port = 5432;
           user = "radarr";
           maindb = "radarr-main";

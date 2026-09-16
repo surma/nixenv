@@ -17,7 +17,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.gitea.container = {
+  services.surmhosting.services.gitea.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

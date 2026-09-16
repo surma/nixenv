@@ -3,7 +3,7 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
-  services.surmhosting.services.prowlarr.containerService = {
+  services.surmhosting.services.prowlarr.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [
       "secrets.service"
@@ -22,7 +22,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.prowlarr.container = {
+  services.surmhosting.services.prowlarr.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 
@@ -34,7 +34,8 @@ in
         # Connection details; the PASSWORD comes from environmentFiles below
         # so it is not baked into the world-readable Nix store.
         postgres = {
-          host = "10.201.12.1"; # surmhosting host-side veth address
+          # `_gateway` resolves to this container's current host-side address.
+          host = "_gateway";
           port = 5432;
           user = "prowlarr";
           maindb = "prowlarr-main";

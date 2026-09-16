@@ -54,7 +54,7 @@ in
     "d /var/lib/firefly-importer-stamps 0755 root root -"
   ];
 
-  services.surmhosting.services.firefly-imp.containerService = {
+  services.surmhosting.services.firefly-imp.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
   };
@@ -70,7 +70,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.firefly-imp.container = {
+  services.surmhosting.services.firefly-imp.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

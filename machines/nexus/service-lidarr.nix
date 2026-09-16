@@ -3,7 +3,7 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
-  services.surmhosting.services.lidarr.containerService = {
+  services.surmhosting.services.lidarr.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [
       "secrets.service"
@@ -22,7 +22,7 @@ in
       }
     ];
   };
-  services.surmhosting.services.lidarr.container = {
+  services.surmhosting.services.lidarr.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 
@@ -36,11 +36,8 @@ in
         # Postgres connection. Password comes from environmentFiles below
         # (one-line agenix env file) so it isn't world-readable in the Nix store.
         postgres = {
-          # Host-side veth address of THIS container's surmhosting index.
-          # All 10.201.x.1 addresses terminate on the host, so Postgres is
-          # reachable through the container's own veth regardless of index
-          # shifts (verified against the old/new evaluated address maps).
-          host = "10.201.12.1";
+          # `_gateway` resolves to this container's current host-side address.
+          host = "_gateway";
           port = 5432;
           user = "lidarr";
           maindb = "lidarr-main";

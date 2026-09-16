@@ -1,4 +1,22 @@
 { pkgs, lib, ... }:
+let
+  giteaUrl = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
+  syncRunnerUrl = pkgs.writeShellScript "sync-gitea-runner-url" ''
+    set -euo pipefail
+
+    runnerFile="$STATE_DIRECTORY/websearchcli/.runner"
+    expectedUrl=${lib.escapeShellArg giteaUrl}
+
+    if [[ -f "$runnerFile" ]]; then
+      currentUrl="$(${pkgs.jq}/bin/jq --raw-output '.address // ""' "$runnerFile")"
+      if [[ "$currentUrl" != "$expectedUrl" ]]; then
+        ${pkgs.jq}/bin/jq --arg address "$expectedUrl" '.address = $address' "$runnerFile" > "$runnerFile.tmp"
+        ${pkgs.coreutils}/bin/chmod --reference="$runnerFile" "$runnerFile.tmp"
+        ${pkgs.coreutils}/bin/mv "$runnerFile.tmp" "$runnerFile"
+      fi
+    fi
+  '';
+in
 {
   secrets.items.gitea-web-search-cli-runner-token = {
     target = "/var/lib/gitea-runner/token.env";
@@ -10,7 +28,7 @@
     "d /var/lib/gitea-runner 0755 root root - -"
   ];
 
-  services.surmhosting.services.gitea-runner.containerService = {
+  services.surmhosting.services.gitea-runner.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
     serviceConfig = {
@@ -19,7 +37,7 @@
     };
   };
 
-  services.surmhosting.services.gitea-runner.container = {
+  services.surmhosting.services.gitea-runner.backend."nixos-container" = {
     bindMounts = {
       state = {
         mountPoint = "/var/lib/gitea-runner";
@@ -58,7 +76,7 @@
       services.gitea-actions-runner.instances.websearchcli = {
         enable = true;
         name = "nexus-web-search-cli-nix-x64";
-        url = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
+        url = giteaUrl;
         tokenFile = "/var/lib/credentials/gitea-runner/token.env";
         labels = [ "nixos:host" ];
         hostPackages = with pkgs; [
@@ -88,6 +106,8 @@
           DynamicUser = lib.mkForce false;
           User = lib.mkForce "containeruser";
           Group = lib.mkForce "users";
+          # The upstream module does not re-register when only the URL changes.
+          ExecStartPre = lib.mkBefore [ syncRunnerUrl ];
         };
       };
 

@@ -5,7 +5,7 @@
     mode = "0644";
   };
 
-  services.surmhosting.services.firefly.containerService = {
+  services.surmhosting.services.firefly.backend."nixos-container".service = {
     wants = [ "secrets.service" ];
     after = [ "secrets.service" ];
   };
@@ -21,7 +21,7 @@
       }
     ];
   };
-  services.surmhosting.services.firefly.container = {
+  services.surmhosting.services.firefly.backend."nixos-container" = {
     config = {
       system.stateVersion = "25.05";
 

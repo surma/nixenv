@@ -127,8 +127,6 @@
     (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
 
-  virtualisation.oci-containers.backend = "podman";
-
   services.tailscale.enable = true;
 
   services.surmhosting.enable = true;
@@ -136,7 +134,6 @@
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
   services.surmhosting.externalInterface = "enp1s0";
   services.surmhosting.dashboard.enable = true;
-  services.surmhosting.docker.enable = true;
 
   # Nexus is now the public edge: it terminates HTTPS for the legacy
   # *.surma.technology domains and the new *.apps.surma.technology
@@ -179,8 +176,8 @@
   };
 
   # The dedicated internal HTTP entrypoint. Reachable only from the LAN
-  # and the tailnet; container veths (10.201.x.x) fall inside 10/8. Not
-  # added to allowedTCPPorts (auth-rework section 3.2).
+  # and the tailnet; managed container networks (10.201.x.x and 10.203.x.x)
+  # fall inside 10/8. Not added to allowedTCPPorts (auth-rework section 3.2).
   networking.firewall.extraInputRules = ''
     ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport 8081 accept comment "surmhosting internal HTTP"
   '';

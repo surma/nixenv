@@ -31,18 +31,24 @@ in
     port = ports.adguardHomeWeb;
     mutableSettings = true;
     settings = {
-      dns.bootstrap_dns = [
-        "9.9.9.9"
-        "149.112.112.112"
-      ];
+      # AdGuard must not claim port 53 on Podman bridge gateways.
+      # Podman's Aardvark DNS provides service discovery on those networks.
+      dns = {
+        bind_hosts = [ "10.0.0.2" ];
+        bootstrap_dns = [
+          "9.9.9.9"
+          "149.112.112.112"
+        ];
+      };
     };
   };
 
   # Remote admin via the public edge: adguard.apps.surma.technology behind
   # surm-auth with an allowlist grant, same as torrent.apps.surma.technology.
-  # The backend defaults to localhost because adguardhome runs on the host
+  # The backend is explicitly localhost because adguardhome runs on the host
   # itself (see service-ha-proxy.nix for the explicit-host variant). Direct
   # LAN access on the raw port stays available via the firewall rule above.
+  services.surmhosting.services.adguard.backend.host = "localhost";
   services.surmhosting.services.adguard.expose.apps.adguard = {
     access.mode = "allowlist";
     access.seedUsers = [ "surma" ];
