@@ -13,6 +13,7 @@
     ./service-scout.nix
     ./service-gitea.nix
     ./service-hedgedoc2.nix
+    ./service-immich.nix
     ./service-opengist.nix
     ./service-lidarr.nix
     ./service-radarr.nix
