@@ -34,7 +34,8 @@ in
         # Connection details; the PASSWORD comes from environmentFiles below
         # so it is not baked into the world-readable Nix store.
         postgres = {
-          host = "10.201.12.1"; # surmhosting host-side veth address
+          # `_gateway` resolves to this container's current host-side address.
+          host = "_gateway";
           port = 5432;
           user = "prowlarr";
           maindb = "prowlarr-main";

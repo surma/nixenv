@@ -34,7 +34,8 @@ in
         server.port = 8080;
         auth.method = "External";
         postgres = {
-          host = "10.201.17.1"; # surmhosting host-side veth address (alpha-stable)
+          # `_gateway` resolves to this container's current host-side address.
+          host = "_gateway";
           port = 5432;
           user = "sonarr";
           maindb = "sonarr-main";
