@@ -115,9 +115,13 @@
 
     # Skills from the AI profile (brainstorming, planning, debugging,
     # surma-writer, triple-helix, preact-signals, web-development,
-    # orchestrator, bro, rust) are inherited via the
+    # bro, rust) are inherited via the
     # import above.  Only Scout-specific skills are listed here.
     agent.skills = [
+      # The generic orchestrator skill used to live in the AI profile. Scout
+      # has no herdr session to orchestrate, so it keeps the harness-agnostic
+      # original while the interactive machines use herdr-orchestrator.
+      ../../assets/skills/orchestrator
       ../../assets/skills/cloudflare
       ../../assets/skills/gws
       ../../assets/skills/hetzner

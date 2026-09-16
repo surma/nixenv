@@ -36,6 +36,10 @@ in
   defaultConfigs.agents.enable = true;
   programs.gitea-cli.enable = true;
 
+  agent.skills = [
+    ../../assets/skills/herdr-orchestrator
+  ];
+
   allowedUnfreeApps = [
     "claude-code"
     "obsidian"

@@ -1,13 +1,15 @@
 {
   config,
-  pkgs,
-  inputs,
   ...
 }:
 {
-  home.packages = [
-    inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default
+  imports = [
+    ../../modules/home-manager/herdr
   ];
+
+  # Installs herdr and regenerates ~/.agents/skills/herdr/SKILL.md from
+  # `herdr --skill` on every switch, so the skill matches the binary.
+  programs.herdr.enable = true;
 
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;
@@ -29,14 +31,13 @@
   defaultConfigs.pi.extraPackages = [ "npm:@sting8k/pi-vcc" ];
 
   agent.skills = [
-    ../../assets/skills/brainstorming
-    ../../assets/skills/planning
-    ../../assets/skills/debugging
+    # ../../assets/skills/brainstorming
+    # ../../assets/skills/planning
+    # ../../assets/skills/debugging
     ../../assets/skills/simplify
     ../../assets/skills/surma-writer
     ../../assets/skills/rust
     ../../assets/skills/triple-helix
-    ../../assets/skills/orchestrator
     ../../assets/skills/preact-signals
     ../../assets/skills/web-development
     ../../assets/skills/bro
