@@ -12,9 +12,9 @@ in
     };
 
     expose.apps.jaeger = {
-      access.mode = "public";
+      access.mode = "allowlist";
+      access.seedUsers = [ "surma" ];
       internal.access = "trusted-network";
-      public.enable = false;
       ports = [
         {
           port = 16686;
