@@ -143,6 +143,10 @@
       extensions.proxy.enable = true;
       extensions.dotenv.enable = true;
       extensions.contextUsage.enable = true;
+      # Migrated from the pi-config repo. Only Scout gets these from nixenv.
+      extensions.subagent.enable = true;
+      extensions.listModels.enable = true;
+      extensions.skillAliases.enable = true;
       settings = {
         defaultProvider = "openai";
         defaultModel = "gpt-5.6-luna";

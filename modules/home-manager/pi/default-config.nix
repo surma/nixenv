@@ -111,6 +111,12 @@ with lib;
 
       extensions.contextUsage.enable = mkEnableOption "the context-usage awareness extension (injects usage warnings into prompts)";
 
+      extensions.subagent.enable = mkEnableOption "the subagent extension (persistent child Pi processes via RPC)";
+
+      extensions.listModels.enable = mkEnableOption "the list-models extension (list_models tool)";
+
+      extensions.skillAliases.enable = mkEnableOption "the skill-aliases extension (bare /skill aliases + autocomplete)";
+
       packages.mcpAdapter.enable = mkEnableOption "the pi-mcp-adapter Pi package";
 
       mcpConfig = mkOption {
@@ -152,6 +158,15 @@ with lib;
         }
         // optionalAttrs piCfg.extensions.contextUsage.enable {
           ".pi/agent/extensions/context-usage.ts".source = ./extension/context-usage.ts;
+        }
+        // optionalAttrs piCfg.extensions.listModels.enable {
+          ".pi/agent/extensions/list-models.ts".source = ./extension/list-models.ts;
+        }
+        // optionalAttrs piCfg.extensions.skillAliases.enable {
+          ".pi/agent/extensions/skill-aliases.ts".source = ./extension/skill-aliases.ts;
+        }
+        // optionalAttrs piCfg.extensions.subagent.enable {
+          ".pi/agent/extensions/subagent".source = ./extension/subagent;
         }
       );
     }
