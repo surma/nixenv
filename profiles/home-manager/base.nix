@@ -10,8 +10,7 @@ let
 
   not = x: !x;
 
-  forwardedAgentMatch =
-    ''Match host *,!gitea.surma.technology,!gitea-brain exec "test -n \"$SSH_CONNECTION\" && test -S \"$SSH_AUTH_SOCK\""'';
+  forwardedAgentMatch = ''Match host *,!gitea.surma.technology,!gitea-brain exec "test -n \"$SSH_CONNECTION\" && test -S \"$SSH_AUTH_SOCK\""'';
 
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 

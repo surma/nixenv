@@ -154,9 +154,7 @@
     };
 
     # The host decrypts this secret and mounts it read-only into Scout.
-    home.activation.secrets = lib.mkForce (
-      lib.hm.dag.entryAfter [ "write-boundary" ] ""
-    );
+    home.activation.secrets = lib.mkForce (lib.hm.dag.entryAfter [ "write-boundary" ] "");
 
     home.activation.rmapi-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       srcFile="/var/lib/credentials/scout/rmapi/rmapi.conf"

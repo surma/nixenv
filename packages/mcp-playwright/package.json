@@ -2,10 +2,10 @@
   "name": "mcp-playwright",
   "version": "0.0.1",
   "description": "",
-  "type": "module",
   "keywords": [],
-  "author": "Surma <surma@surma.dev>",
   "license": "MIT",
+  "author": "Surma <surma@surma.dev>",
+  "type": "module",
   "dependencies": {
     "@playwright/mcp": "^0.0.41"
   }

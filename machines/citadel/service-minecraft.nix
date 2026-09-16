@@ -50,12 +50,14 @@ in
           # (calendar versioning). Build the official server jar with
           # upstream's own wrapper derivation. 26.2 requires Java 25 per
           # Mojang's version manifest (javaVersion.majorVersion = 25).
-          minecraftServer = pkgs.callPackage (pkgs.path + "/pkgs/by-name/mi/minecraft-server/derivation.nix") {
-            version = "26.2";
-            url = "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar";
-            sha1 = "823e2250d24b3ddac457a60c92a6a941943fcd6a";
-            jre_headless = pkgs.jdk25_headless;
-          };
+          minecraftServer =
+            pkgs.callPackage (pkgs.path + "/pkgs/by-name/mi/minecraft-server/derivation.nix")
+              {
+                version = "26.2";
+                url = "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar";
+                sha1 = "823e2250d24b3ddac457a60c92a6a941943fcd6a";
+                jre_headless = pkgs.jdk25_headless;
+              };
         in
         {
           system.stateVersion = "25.05";

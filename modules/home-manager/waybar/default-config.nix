@@ -15,12 +15,13 @@ let
       null;
   sunsetConfig = lib.optionalAttrs (sunsetScript != null) {
     "custom/sunset" = waybarConfig."custom/sunset" // {
-      "on-click" =
-        "PATH=${lib.makeBinPath [
+      "on-click" = "PATH=${
+        lib.makeBinPath [
           sunsetScript
           pkgs.hyprland
           pkgs.systemd
-        ]} toggle-sunset";
+        ]
+      } toggle-sunset";
     };
   };
 in

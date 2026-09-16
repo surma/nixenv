@@ -35,9 +35,7 @@ let
   settings =
     let
       mergedSettings = lib.recursiveUpdate defaultSettings piCfg.settings;
-      extraPackages =
-        lib.optional mcpAdapterCfg.enable "npm:pi-mcp-adapter"
-        ++ piCfg.extraPackages;
+      extraPackages = lib.optional mcpAdapterCfg.enable "npm:pi-mcp-adapter" ++ piCfg.extraPackages;
     in
     mergedSettings
     // lib.optionalAttrs (extraPackages != [ ]) {
@@ -158,8 +156,14 @@ with lib;
       );
     }
 
-    (mkIf (isEnabled && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null || proxyExtensionCfg.enable)) {
-      programs.pi.package = wrapper;
-    })
+    (mkIf
+      (
+        isEnabled
+        && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null || proxyExtensionCfg.enable)
+      )
+      {
+        programs.pi.package = wrapper;
+      }
+    )
   ];
 }

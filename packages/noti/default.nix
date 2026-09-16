@@ -7,9 +7,7 @@
   ...
 }:
 let
-  runtimePath =
-    [ homeassistantCli ]
-    ++ lib.optional stdenv.isLinux pkgs.libnotify;
+  runtimePath = [ homeassistantCli ] ++ lib.optional stdenv.isLinux pkgs.libnotify;
 in
 stdenv.mkDerivation {
   name = "noti";

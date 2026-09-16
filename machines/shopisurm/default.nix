@@ -11,7 +11,7 @@ in
 {
   # Determinate Nix at Shopify
   nix.enable = false;
-  
+
   imports = [
     ../../profiles/darwin/base.nix
     ./nix-custom-conf-workaround.nix
