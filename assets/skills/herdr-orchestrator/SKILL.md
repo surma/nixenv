@@ -180,7 +180,17 @@ at any moment.
 
 ## Every turn
 
-Start each turn with exactly one status sweep — one call, all executors:
+Completions arrive as wake prompts, so you do not go looking for them. Sweep only when you
+actually need the fleet's state:
+
+- before dispatching, to see which executors and trees are free;
+- when a wake arrives, to catch anything that landed alongside it;
+- when an executor has been quiet long enough to doubt, or you suspect a `blocked` dialog;
+- when the user asks where things stand.
+
+At most one sweep per turn, and none at all on a turn that is only conversation — answering a
+question, discussing a design, being told something. A sweep is a lookup you needed, never an
+opening ritual.
 
 ```bash
 herdr agent list | jq -r '.result.agents[] | [.name // .pane_id, .agent_status, .tab_id] | @tsv'
@@ -195,8 +205,9 @@ field on an agent; the human-readable label lives on the pane.
 an approval or question dialog — read it before answering, and ask the user if it is a decision
 rather than a formality. `working` means leave it alone; a quiet executor is not a stuck one.
 
-Then, for anything that finished: read its report file, decide, update the board, dispatch what
-the completion unblocked, tell the user in one or two lines, and **end your turn**.
+For anything that finished — the wake names it — read its report file, decide, update the board,
+dispatch what the completion unblocked, tell the user in one or two lines, and **end your
+turn**.
 
 Report outcomes, not activity. No play-by-play. Blockers and decisions go to the user
 immediately; everything else is a short summary at milestones.
