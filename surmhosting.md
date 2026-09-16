@@ -8,6 +8,20 @@
 
 **Reviewed baseline:** `17c48975634079e9bc43b8274eaacbdf5686cd22` on 2026-09-12.
 
+## 0. Stage 2 scope amendment
+
+The user changed the Stage 2 scope after the initial plan.
+
+The final scope adds managed Podman workloads to Surmhosting. Nexus migrates Jellyfin and Jaeger from raw OCI declarations to `backend.podman`.
+
+Surmhosting owns their Podman units, isolated networks, static addresses, and Traefik routes. Their existing workload settings and route behavior remain unchanged.
+
+Pure Podman services do not consume slots in the historical NixOS container address sequence. Nexus removes Docker discovery after no external label-based workloads remain.
+
+Managed unit and container names now use Surmhosting naming. Default resource limits for managed containers apply.
+
+This amendment supersedes statements below that keep these two OCI workloads outside Surmhosting or require their declarations to remain unchanged.
+
 ## 1. Approval boundaries
 
 This plan separates the work into two stages.

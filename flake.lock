@@ -1527,11 +1527,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1789495258,
-        "narHash": "sha256-8oKx9TX4Do/W/JAQTC20g8pPX0AD+/Rs7hzjU2xkQ6Y=",
+        "lastModified": 1789538714,
+        "narHash": "sha256-gqs9vmH5vjAHOXW7Tc0zitA0ad8vX8P6U6OaCoVAAOE=",
         "ref": "feature/oci-backend",
-        "rev": "096dd3eeb75f48e8abf3c044b1fce4e8a46cf29a",
-        "revCount": 12,
+        "rev": "2af279cda2011bfdc863d91931467b47fd05c430",
+        "revCount": 14,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git"
       },
