@@ -13,6 +13,7 @@
     ./service-nixos-admin.nix
     ./service-zellij-web.nix
     ./service-minecraft.nix
+    ./service-ups.nix
   ];
 
   networking.hostName = "citadel";

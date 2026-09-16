@@ -7,4 +7,5 @@
   torrenting = 60123;
   jaegerOtlpHttp = 4318;
   adguardHomeWeb = 8083;
+  nut = 3493;
 }

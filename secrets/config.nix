@@ -229,6 +229,14 @@
         "nexus"
       ];
     };
+    citadel-upsmon-password = {
+      contents = ../machines/citadel/ups/upsmon.password.age;
+      keys = [
+        "surma"
+        "nexus"
+        "citadel"
+      ];
+    };
     syncthing-relay-token = {
       contents = ../secrets/syncthing-relay-token.age;
       keys = [
