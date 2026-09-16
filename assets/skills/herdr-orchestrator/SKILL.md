@@ -17,7 +17,8 @@ compatibility: >-
 # Herdr orchestrator
 
 You are the planner and the user's only interface. Executors are coding agents you start in
-sibling Herdr panes; they do the work. The user talks to you and never to an executor.
+their own full-window Herdr tabs; they do the work. The user talks to you and never to an
+executor.
 
 First, confirm you are inside Herdr:
 
@@ -26,6 +27,12 @@ test "${HERDR_ENV:-}" = 1 && printf '%s %s %s\n' "$HERDR_WORKSPACE_ID" "$HERDR_T
 ```
 
 If that fails, say so and stop. Do not orchestrate a session you are not in.
+
+**Then load the `herdr` skill before issuing any other Herdr command.** It is generated from
+the installed binary, so it is the current truth about the CLI, and this skill only adds the
+orchestration pattern on top of it. Loading it once costs less than the `--help` spelunking you
+will otherwise do halfway through the run, and it covers what this file does not: read sources,
+the agent lifecycle states, key names, worktrees, and the safety rules.
 
 ## Division of labor
 
@@ -101,6 +108,12 @@ executor can read the plan around it, and say explicitly that it writes only its
 
 ## Starting an executor
 
+**One executor is one tab in your workspace**, unless the user asks for a different layout. A
+split shrinks every pane including yours, and the user reads your output in theirs; a tab is
+full-window and the session stays legible at any executor count. Keep the whole run in one
+workspace so the user switches tabs rather than hunting workspaces — the exception is a
+worktree, which comes with its own workspace by construction.
+
 Decide the tree first.
 
 **Same worktree** only when the tasks cannot collide: at most one writer, and any other
@@ -126,11 +139,11 @@ ln -s "$BOARD_DIR" /path/from/result/worktree/path/.board
 Everything *inside* the tree afterwards — installing dependencies, building, committing — is
 the executor's job.
 
-Same-worktree executors get a sibling pane instead:
+An executor that shares the current tree gets a tab beside yours:
 
 ```bash
-herdr pane layout --pane "$HERDR_PANE_ID"    # wide -> split right, tall/narrow -> split down
-herdr pane split --current --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id'
+herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "T3 docs sweep" --no-focus \
+  | jq -r '.result.root_pane.pane_id'
 ```
 
 Then start the agent and label the pane for the human:
@@ -138,15 +151,14 @@ Then start the agent and label the pane for the human:
 ```bash
 herdr agent start exec-docs --kind pi --pane w2:p1 -- --model <model> --thinking <level>
 herdr pane rename w2:p1 "exec-docs · T3 docs sweep"
-herdr workspace rename w2 "T3 docs"
 ```
 
 Agent names match `[a-z][a-z0-9_-]{0,31}` and must be unique; name them for their stream
 (`exec-docs`, `exec-pub`, `checker`), not `agent1`. `agent start` blocks until the agent is
 interactive, up to 30 s — that is the only blocking call you are allowed.
 
-Prefer Herdr panes over any in-process subagent facility your harness offers: a pane is
-visible to the user, steerable, resumable for rework, and outlives your turn.
+Prefer Herdr tabs over any in-process subagent facility your harness offers: a pane is visible
+to the user, steerable, resumable for rework, and outlives your turn.
 
 ## Dispatch without blocking
 
@@ -171,8 +183,13 @@ at any moment.
 Start each turn with exactly one status sweep — one call, all executors:
 
 ```bash
-herdr agent list | jq -r '.result.agents[] | "\(.name // .pane_id)\t\(.agent_status)\t\(.title // "")"'
+herdr agent list | jq -r '.result.agents[] | [.name // .pane_id, .agent_status, .tab_id] | @tsv'
 ```
+
+Build every jq filter out of `[...] | @tsv` or `[...] | @json`, never an interpolated `"\(.x)"`
+string. The interpolated form needs double quotes inside the single-quoted shell argument, and
+escaping them is a syntax error you will burn three attempts on. There is also no `.title`
+field on an agent; the human-readable label lives on the pane.
 
 `idle` and `done` both mean the executor is ready for input. `blocked` means it is sitting on
 an approval or question dialog — read it before answering, and ask the user if it is a decision
@@ -261,8 +278,10 @@ it learned, then start a fresh one with that context.
 
 ## Rules
 
-- Never steal focus. `--no-focus` on every split, worktree, and workspace you create. The user
-  stays in your pane.
+- Never steal focus. `--no-focus` on every tab and worktree you create. The user stays in your
+  pane.
+- Split a pane only when the user asks for one, and don't resize or zoom to repair a layout you
+  chose yourself.
 - Close only what you created, and only when its stream is finished or the user asks. Never
   `herdr server stop`, never close the user's panes, never `workspace close --group` to get
   past `workspace_group_close_required`.
