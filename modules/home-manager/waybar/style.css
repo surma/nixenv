@@ -89,7 +89,7 @@ button:hover {
 #custom-media,
 #tray,
 #mode,
-#inhibitor,
+#idle_inhibitor,
 #scratchpad,
 #power-profiles-daemon,
 #mpd {
@@ -246,11 +246,11 @@ label:focus {
     background-color: #eb4d4b;
 }
 
-#inhibitor {
+#idle_inhibitor {
     background-color: #2d3436;
 }
 
-#inhibitor.activated {
+#idle_inhibitor.activated {
     background-color: #ecf0f1;
     color: #2d3436;
 }

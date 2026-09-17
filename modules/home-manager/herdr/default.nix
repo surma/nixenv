@@ -31,6 +31,10 @@ let
   '';
 in
 {
+  imports = [
+    ./default-config.nix
+  ];
+
   options.programs.herdr = {
     enable = mkEnableOption "Herdr terminal workspace manager for coding agents";
     package = mkOption {

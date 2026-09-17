@@ -200,6 +200,23 @@
       enable = true;
       settings = {
         auth.fingerprint.enabled = true;
+        # Without widgets hyprlock renders nothing, so a locked session is
+        # just a black screen. One input field per output (`monitor = ""`)
+        # accepts both the password and the fingerprint sensor.
+        background = [
+          {
+            monitor = "";
+            color = "rgba(25, 20, 20, 1.0)";
+          }
+        ];
+        input-field = [
+          {
+            monitor = "";
+            size = "300, 50";
+            outline_thickness = 3;
+            placeholder_text = "Password or fingerprint";
+          }
+        ];
       };
     };
     # Framework-laptop-specific keyboard backlight controls (the
@@ -222,6 +239,9 @@
 
     services.blueman-applet.enable = true;
     services.dunst.enable = true;
+    # Notifications always target the built-in display.
+    services.dunst.settings.global.monitor = "eDP-1";
+
     services.hyprpolkitagent.enable = true;
 
     # Workaround: hyprpolkitagent has crashed on this AMD iGPU because Qt6
