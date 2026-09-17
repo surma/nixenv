@@ -1,6 +1,7 @@
 { config, ... }:
 let
   ports = import ./ports.nix;
+  ips = import ../../ips.nix;
 in
 {
   secrets.items.nexus-upsmon-password.target = "/var/lib/nut/upsmon.password";
@@ -12,10 +13,10 @@ in
   };
 
   # Citadel's secondary upsmon connects to upsd from its LAN address
-  # (user-confirmed: 10.0.0.3). Scoped to that exact source; never in
+  # (the registry's citadel.ip). Scoped to that exact source; never in
   # allowedTCPPorts.
   networking.firewall.extraInputRules = ''
-    ip saddr 10.0.0.3 tcp dport ${toString ports.nut} accept comment "NUT upsd for citadel"
+    ip saddr ${ips.hosts.citadel.ip} tcp dport ${toString ports.nut} accept comment "NUT upsd for citadel"
   '';
 
   power.ups = {

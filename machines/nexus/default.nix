@@ -4,6 +4,9 @@
   inputs,
   ...
 }:
+let
+  ips = import ../../ips.nix;
+in
 {
   imports = [
     ./hardware.nix
@@ -49,6 +52,7 @@
     ../../profiles/nixos/base.nix
     inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
+    ../../modules/services/adguardhome-static-dhcp
     ../../apps/hate
   ];
 
@@ -86,7 +90,7 @@
   networking.hostName = "nexus";
   networking.networkmanager = {
     enable = true;
-    settings.main.no-auto-default = "enp1s0";
+    settings.main.no-auto-default = "*";
     ensureProfiles.profiles.enp1s0 = {
       connection = {
         id = "enp1s0";
@@ -96,11 +100,11 @@
       };
       ipv4 = {
         method = "manual";
-        addresses = "10.0.0.2/16";
+        addresses = "${ips.hosts.nexus.ip}/16";
         gateway = "10.0.254.254";
         # T2: sole RA-learned resolver (fe80::1) caused tailscaled DNS
         # forward timeouts; AdGuardHome answers on this host.
-        dns = "10.0.0.2;";
+        dns = "${ips.hosts.nexus.ip};";
       };
       ipv6 = {
         method = "auto";
@@ -214,10 +218,10 @@
     in
     [
       # LAN address first, Tailscale as the fallback, for each host in turn.
-      (shopisurm "10.0.0.20")
-      (shopisurm "100.79.232.5")
-      (archon "10.0.0.30")
-      (archon "100.70.35.41")
+      (shopisurm ips.hosts.shopisurm.ip)
+      (shopisurm ips.hosts.shopisurm.tailscale)
+      (archon ips.hosts.archon.ip)
+      (archon ips.hosts.archon.tailscale)
     ];
 
   programs.mosh.enable = true;

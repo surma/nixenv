@@ -5,6 +5,9 @@
   inputs,
   ...
 }:
+let
+  ips = import ../../ips.nix;
+in
 {
   imports = [
     ../../scripts
@@ -25,7 +28,7 @@
     };
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND = "file";
     home.sessionVariables.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/var/lib/credentials/scout/gws-credentials.json";
-    home.sessionVariables.HASSIO_URL = "http://10.0.0.5:8123";
+    home.sessionVariables.HASSIO_URL = "http://${ips.hosts.homeassistant.ip}:8123";
     home.sessionVariables.RMAPI_CONFIG = "${config.home.homeDirectory}/.config/rmapi/rmapi.conf";
     home.sessionVariables.NETLIFY_AUTH_TOKEN_FILE = "/var/lib/credentials/scout/netlify-token";
 
@@ -87,18 +90,18 @@
         identitiesOnly = true;
       };
       matchBlocks."gitea.surma.technology" = {
-        hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
+        hostname = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
         port = 2222;
         user = "containeruser";
         identityFile = "~/.ssh/id_repo_scout";
         identitiesOnly = true;
         extraOptions = {
           StrictHostKeyChecking = "accept-new";
-          HostKeyAlias = "gitea.nexus.hosts.10.0.0.2.nip.io";
+          HostKeyAlias = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
         };
       };
-      matchBlocks."gitea.nexus.hosts.10.0.0.2.nip.io" = {
-        hostname = "gitea.nexus.hosts.10.0.0.2.nip.io";
+      matchBlocks."gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io" = {
+        hostname = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
         port = 2222;
         user = "containeruser";
         identityFile = "~/.ssh/id_repo_scout";
@@ -172,7 +175,7 @@
       if [ -f "$tokenFile" ]; then
         mkdir -p "${config.home.homeDirectory}/.hassio-cli"
         token="$(cat "$tokenFile")"
-        printf '{"url":"http://10.0.0.5:8123","token":"%s"}\n' "$token" \
+        printf '{"url":"http://${ips.hosts.homeassistant.ip}:8123","token":"%s"}\n' "$token" \
           > "${config.home.homeDirectory}/.hassio-cli/settings.json"
         chmod 0600 "${config.home.homeDirectory}/.hassio-cli/settings.json"
       fi

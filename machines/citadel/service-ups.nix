@@ -1,4 +1,7 @@
 { config, ... }:
+let
+  ips = import ../../ips.nix;
+in
 {
   secrets.items.citadel-upsmon-password.target = "/var/lib/nut/upsmon.password";
 
@@ -14,7 +17,7 @@
     mode = "netclient";
 
     upsmon.monitor.ske = {
-      system = "ske@10.0.0.2";
+      system = "ske@${ips.hosts.nexus.ip}";
       user = "citadel-upsmon";
       passwordFile = config.secrets.items.citadel-upsmon-password.target;
       type = "secondary";

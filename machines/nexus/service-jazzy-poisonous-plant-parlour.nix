@@ -1,5 +1,6 @@
 { pkgs, ... }:
 let
+  ips = import ../../ips.nix;
   app = pkgs.callPackage ./jazzy-poisonous-plant-parlour { };
 in
 {
@@ -31,7 +32,7 @@ in
           after = [ "network-online.target" ];
           environment = {
             LISTEN_ADDRESS = "0.0.0.0:8080";
-            HOME_ASSISTANT_URL = "http://10.0.0.5:8123";
+            HOME_ASSISTANT_URL = "http://${ips.hosts.homeassistant.ip}:8123";
             HOME_ASSISTANT_ENTITY_ID = "binary_sensor.bean_office_door";
             HOME_ASSISTANT_TOKEN_FILE = "/var/lib/credentials/hassio-token";
           };

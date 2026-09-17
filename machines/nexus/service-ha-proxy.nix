@@ -2,10 +2,13 @@
 #
 # Home Assistant keeps its own application login; the logical app is
 # `public`, so no surm-auth middleware is applied. The backend is the
-# existing Tailscale address of the Home Assistant instance, unchanged.
+# Tailscale address of the Home Assistant instance from the IP registry.
+let
+  ips = import ../../ips.nix;
+in
 {
   services.surmhosting.services.ha = {
-    backend.host = "100.97.65.42";
+    backend.host = ips.hosts.homeassistant.tailscale;
 
     expose.apps.ha = {
       access.mode = "public";

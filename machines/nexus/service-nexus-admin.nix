@@ -1,5 +1,6 @@
 { pkgs, inputs, ... }:
 let
+  ips = import ../../ips.nix;
   port = 8092;
   stateDir = "/var/lib/nixos-admin";
 
@@ -18,16 +19,16 @@ let
       Port 2222
       IdentitiesOnly yes
       User containeruser
-      HostName gitea.nexus.hosts.10.0.0.2.nip.io
+      HostName gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
       IdentityFile ${stateDir}/.ssh/id_repo_scout
-      HostKeyAlias gitea.nexus.hosts.10.0.0.2.nip.io
+      HostKeyAlias gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
       StrictHostKeyChecking accept-new
 
-    Host gitea.nexus.hosts.10.0.0.2.nip.io
+    Host gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
       Port 2222
       IdentitiesOnly yes
       User containeruser
-      HostName gitea.nexus.hosts.10.0.0.2.nip.io
+      HostName gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
       IdentityFile ${stateDir}/.ssh/id_repo_scout
       StrictHostKeyChecking accept-new
 
@@ -39,7 +40,7 @@ let
       StrictHostKeyChecking accept-new
 
     Host citadel
-      HostName 10.0.0.32
+      HostName ${ips.hosts.citadel.ip}
       User root
       IdentitiesOnly yes
       IdentityFile ${stateDir}/.ssh/id_deploy

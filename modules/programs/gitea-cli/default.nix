@@ -6,6 +6,7 @@
   ...
 }:
 let
+  ips = import ../../../ips.nix;
   cfg = config.programs.gitea-cli;
 in
 {
@@ -26,7 +27,7 @@ in
 
     serverUrl = lib.mkOption {
       type = lib.types.str;
-      default = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
+      default = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
       description = "Gitea server URL used by tea.";
     };
 
@@ -53,7 +54,7 @@ in
             url: ${cfg.serverUrl}
             token: $token
             default: true
-            ssh_host: gitea.nexus.hosts.10.0.0.2.nip.io
+            ssh_host: gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
             ssh_key: $HOME/.ssh/id_machine
             insecure: false
             ssh_certificate_principal: ""

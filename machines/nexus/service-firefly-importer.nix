@@ -1,5 +1,6 @@
 { lib, pkgs, ... }:
 let
+  ips = import ../../ips.nix;
   importConfigFile = ./firefly-import-config.json;
 
   fireflyImporter = pkgs.firefly-iii-data-importer;
@@ -12,7 +13,7 @@ let
     set -euo pipefail
     ${pkgs.coreutils}/bin/rm -f ${importCompletedMarker}
     set -a
-    FIREFLY_III_URL="http://firefly.nexus.hosts.10.0.0.2.nip.io:8081"
+    FIREFLY_III_URL="http://firefly.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081"
     VANITY_URL="https://firefly.apps.surma.technology"
     TRUSTED_PROXIES="**"
     FIREFLY_III_ACCESS_TOKEN="$(< /var/lib/credentials/firefly-importer/access-token.txt)"
@@ -77,9 +78,9 @@ in
       services.firefly-iii-data-importer = {
         enable = true;
         enableNginx = true;
-        virtualHost = "firefly-imp.nexus.hosts.10.0.0.2.nip.io";
+        virtualHost = "firefly-imp.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
         settings = {
-          FIREFLY_III_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
+          FIREFLY_III_URL = "http://firefly.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
           VANITY_URL = "https://firefly.apps.surma.technology";
           FIREFLY_III_ACCESS_TOKEN_FILE = "/var/lib/credentials/firefly-importer/access-token.txt";
           LUNCH_FLOW_API_KEY_FILE = "/var/lib/credentials/firefly-importer/lunchflow-api-key.txt";

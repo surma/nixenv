@@ -6,7 +6,16 @@
 }:
 let
   ports = import ./ports.nix;
-  inherit (import ./constants.nix) nexusTsV4 citadelTsV4 pylonPublicV4;
+  ips = import ../../ips.nix;
+
+  # Local aliases into the IP registry.
+  nexusTsV4 = ips.hosts.nexus.tailscale;
+  citadelTsV4 = ips.hosts.citadel.tailscale;
+  # Pylon's own public addresses (Hetzner, enp1s0). The v4 is also used
+  # for hairpin NAT reflection so hosts behind Pylon can reach the public
+  # edge address.
+  pylonPublicV4 = ips.hosts.pylon.ip;
+  pylonPublicV6 = ips.hosts.pylon.ipv6;
 in
 {
   imports = [
@@ -42,7 +51,7 @@ in
   networking.interfaces.enp1s0.useDHCP = true;
   networking.interfaces.enp1s0.ipv6.addresses = [
     {
-      address = "2a01:4f8:c17:731::1";
+      address = pylonPublicV6;
       prefixLength = 64;
     }
   ];

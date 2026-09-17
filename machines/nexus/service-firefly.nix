@@ -1,4 +1,7 @@
 { pkgs, ... }:
+let
+  ips = import ../../ips.nix;
+in
 {
   secrets.items.firefly-app-key = {
     target = "/var/lib/firefly/app-key.txt";
@@ -28,13 +31,13 @@
       services.firefly-iii = {
         enable = true;
         enableNginx = true;
-        virtualHost = "firefly.nexus.hosts.10.0.0.2.nip.io";
+        virtualHost = "firefly.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
         dataDir = "/var/lib/firefly-iii";
         settings = {
           APP_ENV = "production";
           APP_KEY_FILE = "/var/lib/credentials/firefly/app-key.txt";
           DB_CONNECTION = "sqlite";
-          APP_URL = "http://firefly.nexus.hosts.10.0.0.2.nip.io:8081";
+          APP_URL = "http://firefly.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
           TRUSTED_PROXIES = "**";
           USE_RUNNING_BALANCE = "true";
         };

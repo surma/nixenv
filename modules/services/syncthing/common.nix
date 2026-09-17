@@ -1,5 +1,6 @@
 { lib, pkgs }:
 let
+  ips = import ../../../ips.nix;
   relayPrefix = "relay://relay.sync.surma.technology:22067/";
 
   devices = {
@@ -7,7 +8,7 @@ let
       id = "EWY3UBE-CTNAGZQ-NTXKOP4-5XJQSE4-LB75KC4-SBRDB6D-5F3WHHM-CC5NYQB";
       addresses = [
         "dynamic"
-        "tcp://10.0.0.2:22000"
+        "tcp://${ips.hosts.nexus.ip}:22000"
       ];
     };
 

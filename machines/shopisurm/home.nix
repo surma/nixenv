@@ -5,6 +5,9 @@
   inputs,
   ...
 }:
+let
+  ips = import ../../ips.nix;
+in
 {
   imports = [
     # Program modules are auto-loaded from ../../modules/programs
@@ -27,7 +30,7 @@
 
   home.stateVersion = "24.05";
   home.sessionVariables = {
-    HASSIO_URL = "http://10.0.0.5:8123";
+    HASSIO_URL = "http://${ips.hosts.homeassistant.ip}:8123";
     SHOPIFY_AI_RTK = "0";
   };
   nix.settings.extra-experimental-features = "configurable-impure-env";
@@ -104,7 +107,7 @@
     config_dir="${config.home.homeDirectory}/.hassio-cli"
     install -d -m 0700 "$config_dir"
     token="$(cat)"
-    printf '{"url":"http://10.0.0.5:8123","token":"%s"}\n' "$token" > "$config_dir/settings.json"
+    printf '{"url":"http://${ips.hosts.homeassistant.ip}:8123","token":"%s"}\n' "$token" > "$config_dir/settings.json"
     chmod 0600 "$config_dir/settings.json"
   '';
   customScripts.denix.enable = true;

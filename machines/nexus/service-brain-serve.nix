@@ -6,19 +6,20 @@
 }:
 let
   system = pkgs.stdenv.hostPlatform.system;
+  ips = import ../../ips.nix;
   brainPkg = inputs.brain.packages.${system}.default;
   brainRepoUrl = "ssh://containeruser@gitea.surma.technology:2222/surma/brain.git";
   brainPath = "/var/lib/brain-serve/brain";
 
   sshConfig = pkgs.writeText "brain-serve-ssh-config" ''
     Host gitea.surma.technology
-      Hostname 10.0.0.2
+      Hostname ${ips.hosts.nexus.ip}
       Port 2222
       User containeruser
       IdentityFile /var/lib/brain-serve/.ssh/id_repo_scout
       IdentitiesOnly yes
       StrictHostKeyChecking accept-new
-      HostKeyAlias gitea.nexus.hosts.10.0.0.2.nip.io
+      HostKeyAlias gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
       UserKnownHostsFile /var/lib/brain-serve/.ssh/known_hosts
   '';
 

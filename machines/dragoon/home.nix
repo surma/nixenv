@@ -5,6 +5,7 @@
   ...
 }:
 let
+  ips = import ../../ips.nix;
   shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
   ollama = pkgs.ollama.overrideAttrs (old: {
     postPatch =
@@ -80,7 +81,7 @@ in
   customScripts.transcribe.enable = true;
 
   xdg.configFile = {
-    "dump/config.json".text = builtins.toJSON { server = "http://10.0.0.2:8123"; };
+    "dump/config.json".text = builtins.toJSON { server = "http://${ips.hosts.nexus.ip}:8123"; };
   };
 
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";

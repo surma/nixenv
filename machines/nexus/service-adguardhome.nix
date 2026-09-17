@@ -1,6 +1,9 @@
-{ ... }:
+{ lib, ... }:
 let
   ports = import ./ports.nix;
+  ips = import ../../ips.nix;
+  hosts = ips.hosts;
+  leases = lib.filterAttrs (_: v: v ? mac) hosts;
 in
 {
   # DNS (53) and DHCP (67) must not use the plain allowedTCPPorts/
@@ -21,25 +24,68 @@ in
   '';
 
   # allowDHCP grants CAP_NET_RAW unconditionally so the DHCP server can be
-  # enabled from the web UI during the cutover from the Deco. Nothing in the
-  # `dhcp` section is pinned here for the same reason: keys present in
-  # `settings` are re-applied on every start and would revert UI changes.
+  # enabled from the web UI during the cutover from the Deco.
+  #
+  # Registry-backed keys below are re-applied from ips.nix on every start;
+  # yaml-merge replaces pinned list values wholesale, so UI edits to
+  # exactly these keys (dhcpv4.options) revert on restart, and junk keys
+  # linger until AdGuardHome re-saves its config. The live custom-option
+  # list is provably empty (GET /control/dhcp/status: v4.options/v6.options
+  # null), so nothing is overwritten.
   services.adguardhome = {
     enable = true;
     allowDHCP = true;
     host = "0.0.0.0";
     port = ports.adguardHomeWeb;
     mutableSettings = true;
+
+    # Static DHCP reservations from the registry: every ips.nix host with a
+    # mac becomes a lease keyed by that MAC. The staticDHCP option and the
+    # reconcile units live in ../../modules/services/adguardhome-static-dhcp.
+    staticDHCP = builtins.listToAttrs (
+      lib.mapAttrsToList (name: v: {
+        name = v.mac;
+        value = {
+          ip = v.ip;
+          hostname = name;
+        };
+      }) leases
+    );
+
     settings = {
       # AdGuard must not claim port 53 on Podman bridge gateways.
       # Podman's Aardvark DNS provides service discovery on those networks.
       dns = {
-        bind_hosts = [ "10.0.0.2" ];
+        bind_hosts = [ hosts.nexus.ip ];
         bootstrap_dns = [
           "9.9.9.9"
           "149.112.112.112"
         ];
       };
+
+      # Native local-domain support: the DHCP server answers
+      # <lease-hostname>.<local_domain_name> for every lease (static and
+      # dynamic), so no per-host rewrites are needed. Note: this replaces
+      # the UI default suffix "lan" with the registry domain.
+      dhcp.local_domain_name = ips.domain;
+
+      # DHCP option 15 hands clients the search domain, so bare hostnames
+      # resolve. File schema: dhcpv4 (not v4), dnsmasq-style strings.
+      dhcp.dhcpv4.options = [
+        "15 text ${ips.domain}"
+      ];
+
+      # Exactly one rewrite: Nexus has no DHCP lease (static server
+      # address), so the native local-domain feature cannot serve it.
+      # Rewrites need enabled = true on this version (LegacyRewrite.Enabled
+      # defaults to false and disabled entries are skipped).
+      filtering.rewrites = [
+        {
+          domain = "nexus.${ips.domain}";
+          answer = hosts.nexus.ip;
+          enabled = true;
+        }
+      ];
     };
   };
 

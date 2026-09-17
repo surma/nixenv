@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 let
-  giteaUrl = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081";
+  ips = import ../../ips.nix;
+  giteaUrl = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
   syncRunnerUrl = pkgs.writeShellScript "sync-gitea-runner-url" ''
     set -euo pipefail
 
