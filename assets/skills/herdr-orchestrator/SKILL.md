@@ -47,9 +47,12 @@ source, no wide greps, no running suites in your own shell. You read the board, 
 files, and one-line status output. If you catch yourself opening a source file to answer a
 question, dispatch it instead.
 
-One exception: a single fast, read-only command (`git status`, `ls`, `git log -1`) is cheaper
-to run than to delegate. Anything that writes, builds, or takes more than a couple of seconds
-goes to an executor.
+Two exceptions. A single fast, read-only command (`git status`, `ls`, `git log -1`) is cheaper
+to run than to delegate; anything that writes, builds, or takes more than a couple of seconds
+goes to an executor. And when the user asks *you* something — what happened, what do you think,
+is this the right approach — answer it yourself. A dispatch costs a wait, a report, and a
+relay; if you would have to read the whole report to say the answer out loud, you spent more
+than you saved. Delegate production, not conversation.
 
 ## Setup, once per session
 
@@ -206,8 +209,8 @@ an approval or question dialog — read it before answering, and ask the user if
 rather than a formality. `working` means leave it alone; a quiet executor is not a stuck one.
 
 For anything that finished — the wake names it — read its report file, decide, update the board,
-dispatch what the completion unblocked, tell the user in one or two lines, and **end your
-turn**.
+dispatch what the completion unblocked, close the tab of any executor whose stream just ended,
+tell the user in one or two lines, and **end your turn**.
 
 Report outcomes, not activity. No play-by-play. Blockers and decisions go to the user
 immediately; everything else is a short summary at milestones.
@@ -296,15 +299,54 @@ Agents on an alternate screen lose scrollback, so panes are for diagnosis only �
 file is the channel that actually carries results. A dead agent is gone: read its pane for what
 it learned, then start a fresh one with that context.
 
+### After a disconnect
+
+The user's client can drop while the server keeps running, and they come back with "check in on
+your subagents and resume them". Sweep once, then reconcile the fleet against the board rather
+than against your memory of it: every `running` task whose executor now reads `idle` or `done`
+either finished, in which case its report is on disk, or lost its turn. Read the report where
+there is one; otherwise send a one-line continue naming the task id and what remains. Tell the
+user which executors you resumed and which had already finished while they were away.
+
+## Retiring an executor
+
+Cleanup is your job, not the user's. If they have to ask, you were already late.
+
+A stream ends when its last task is `done` and no remaining task on the board wants that
+executor's context. An accepted checker verdict ends the implementer's stream as well: after
+that, the rework you were holding the pane for cannot arrive. Work you might invent later is
+not a reason to keep a tab.
+
+When a stream ends, close its tab in the same turn you accept the last report:
+
+```bash
+herdr tab close w2:t3
+```
+
+The report file holds everything that executor knew, so closing costs nothing and the user's
+sidebar stops filling with finished work.
+
+Two habits keep the count down before it grows:
+
+- **Reuse before you create.** A new tab is a new *stream*, not a new task. An executor that
+  already read the area is better informed and cheaper than a fresh one — hand it the next task
+  there instead of starting a neighbour.
+- **Finish the plan empty.** When nothing is `running` or `ready`, close every tab you created
+  and say so in one line. A finished plan leaves the sidebar as you found it.
+
+Worktree workspaces are the expensive case, because they hold a checkout and can hold
+uncommitted work. Do not close those silently: have the executor report a clean tree, then ask
+the user once.
+
 ## Rules
 
 - Never steal focus. `--no-focus` on every tab and worktree you create. The user stays in your
   pane.
 - Split a pane only when the user asks for one, and don't resize or zoom to repair a layout you
   chose yourself.
-- Close only what you created, and only when its stream is finished or the user asks. Never
-  `herdr server stop`, never close the user's panes, never `workspace close --group` to get
-  past `workspace_group_close_required`.
+- Close every tab you created as soon as its stream ends — see *Retiring an executor*. Close
+  nothing you did not create: never `herdr server stop`, never the user's panes, never
+  `workspace close --group` to get past `workspace_group_close_required`.
 - Parse every id out of the JSON response with `jq`. Never predict or reuse a stale pane id;
   `pane move` changes it.
 - Never substitute the model or reasoning level the user named, for any role.
