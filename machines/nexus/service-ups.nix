@@ -11,10 +11,11 @@ in
     requires = [ "secrets.service" ];
   };
 
-  # Citadel's secondary upsmon connects to upsd from its established
-  # LAN address. Scoped to that exact source; never in allowedTCPPorts.
+  # Citadel's secondary upsmon connects to upsd from its LAN address
+  # (user-confirmed: 10.0.0.3). Scoped to that exact source; never in
+  # allowedTCPPorts.
   networking.firewall.extraInputRules = ''
-    ip saddr 10.0.0.32 tcp dport ${toString ports.nut} accept comment "NUT upsd for citadel"
+    ip saddr 10.0.0.3 tcp dport ${toString ports.nut} accept comment "NUT upsd for citadel"
   '';
 
   power.ups = {
