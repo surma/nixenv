@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -47,6 +49,22 @@ func newTestClient(t *testing.T, statusBody string, postHandler http.HandlerFunc
 	return &client{baseURL: server.URL, http: server.Client()}, &calls
 }
 
+// captureLogs redirects the standard logger into a buffer for the
+// duration of the test and returns the buffer for assertions.
+func captureLogs(t *testing.T) *bytes.Buffer {
+	t.Helper()
+	var buf bytes.Buffer
+	oldWriter := log.Writer()
+	oldFlags := log.Flags()
+	log.SetOutput(&buf)
+	log.SetFlags(0)
+	t.Cleanup(func() {
+		log.SetOutput(oldWriter)
+		log.SetFlags(oldFlags)
+	})
+	return &buf
+}
+
 const statusBodyWithDrift = `{
   "static_leases": [
     {"mac": "00:e0:4c:03:4b:03", "ip": "10.0.0.3", "hostname": "citadel"},
@@ -71,21 +89,24 @@ func TestEndpointOrderAndMerge(t *testing.T) {
 		t.Fatalf("reconcile: %v", err)
 	}
 
-	// Order: health GET, DHCP-status GET, removes, adds.
+	// Order and methods: health GET, DHCP-status GET, removes, adds.
 	if len(*calls) != 6 {
 		t.Fatalf("want 6 calls, got %d: %+v", len(*calls), *calls)
 	}
-	wantOrder := []string{
-		"/control/status",
-		"/control/dhcp/status",
-		"/control/dhcp/remove_static_lease",
-		"/control/dhcp/remove_static_lease",
-		"/control/dhcp/add_static_lease",
-		"/control/dhcp/add_static_lease",
+	wantOrder := []recordedCall{
+		{method: "GET", path: "/control/status"},
+		{method: "GET", path: "/control/dhcp/status"},
+		{method: "POST", path: "/control/dhcp/remove_static_lease"},
+		{method: "POST", path: "/control/dhcp/remove_static_lease"},
+		{method: "POST", path: "/control/dhcp/add_static_lease"},
+		{method: "POST", path: "/control/dhcp/add_static_lease"},
 	}
 	for i, want := range wantOrder {
-		if (*calls)[i].path != want {
-			t.Errorf("call %d: got %s, want %s", i, (*calls)[i].path, want)
+		if (*calls)[i].method != want.method {
+			t.Errorf("call %d: method %s, want %s", i, (*calls)[i].method, want.method)
+		}
+		if (*calls)[i].path != want.path {
+			t.Errorf("call %d: got %s, want %s", i, (*calls)[i].path, want.path)
 		}
 	}
 
@@ -152,6 +173,48 @@ func TestEndpointOrderAndMerge(t *testing.T) {
 	}
 }
 
+func TestSuccessLogging(t *testing.T) {
+	logs := captureLogs(t)
+
+	leases := map[string]staticLease{
+		"00:e0:4c:03:4b:03": {IP: "10.0.0.3", Hostname: "citadel"},
+		"36:8f:cc:d6:6f:ff": {IP: "10.0.1.1", Hostname: "dragoon"},
+	}
+	c, _ := newTestClient(t, statusBodyWithDrift, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	if err := c.reconcile(leases); err != nil {
+		t.Fatalf("reconcile: %v", err)
+	}
+
+	// Counts, one line per removal and addition, one final summary.
+	out := logs.String()
+	wantLines := []string{
+		"reconciling static leases: 2 configured, 3 current",
+		"removed static lease: mac=00:e0:4c:03:4b:03 ip=10.0.0.3 hostname=citadel",
+		"removed static lease: mac=36:8f:cc:d6:6f:ff ip=10.9.9.9 hostname=dragoon",
+		"added static lease: mac=00:e0:4c:03:4b:03 ip=10.0.0.3 hostname=citadel",
+		"added static lease: mac=36:8f:cc:d6:6f:ff ip=10.0.1.1 hostname=dragoon",
+		"reconciled static leases: 2 configured, 2 removed, 2 added",
+	}
+	for _, want := range wantLines {
+		if !strings.Contains(out, want) {
+			t.Errorf("log output missing %q, got:\n%s", want, out)
+		}
+	}
+	if n := strings.Count(out, "reconciled static leases:"); n != 1 {
+		t.Errorf("want exactly 1 summary line, got %d, log:\n%s", n, out)
+	}
+
+	// Dynamic and unmanaged lease details stay out of the log.
+	for _, leak := range []string{"p100", "aa:bb:cc:00:00:01", "10.0.255.1", "extra-device", "de:ad:be:ef:00:01", "10.0.255.50"} {
+		if strings.Contains(out, leak) {
+			t.Errorf("log output leaks unmanaged lease detail %q, log:\n%s", leak, out)
+		}
+	}
+}
+
 func TestReconcileEmptyConfig(t *testing.T) {
 	c, calls := newTestClient(t, `{"static_leases":[]}`, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -207,9 +270,47 @@ func TestMutationFailure(t *testing.T) {
 	defer server.Close()
 
 	c := &client{baseURL: server.URL, http: server.Client()}
-	if err := c.reconcile(map[string]staticLease{
+	err := c.reconcile(map[string]staticLease{
 		"00:e0:4c:03:4b:03": {IP: "10.0.0.3", Hostname: "citadel"},
-	}); err == nil {
+	})
+	if err == nil {
 		t.Fatal("want mutation failure to fail reconcile")
+	}
+	// The error main prints to stderr before the non-zero exit must carry
+	// the operation and the full lease context.
+	for _, want := range []string{"add lease", "mac=00:e0:4c:03:4b:03", "ip=10.0.0.3", "hostname=citadel", "status 500"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("failure error missing %q: %v", want, err)
+		}
+	}
+}
+
+func TestRemoveFailureContext(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/control/status", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/control/dhcp/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"static_leases":[{"mac":"00:e0:4c:03:4b:03","ip":"10.9.9.9","hostname":"dragoon"}]}`))
+	})
+	mux.HandleFunc("/control/dhcp/remove_static_lease", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	c := &client{baseURL: server.URL, http: server.Client()}
+	err := c.reconcile(map[string]staticLease{
+		"00:e0:4c:03:4b:03": {IP: "10.0.0.3", Hostname: "citadel"},
+	})
+	if err == nil {
+		t.Fatal("want remove failure to fail reconcile")
+	}
+	// The stored values of the lease that failed to go away are in the
+	// error main prints to stderr before the non-zero exit.
+	for _, want := range []string{"remove lease", "mac=00:e0:4c:03:4b:03", "ip=10.9.9.9", "hostname=dragoon", "status 500"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("failure error missing %q: %v", want, err)
+		}
 	}
 }

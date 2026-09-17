@@ -5,12 +5,14 @@
 // static lease whose MAC appears in the JSON, then one add per JSON lease.
 // Static leases with MACs absent from the JSON and all dynamic leases are
 // never touched. Any non-2xx response or transport error aborts with a
-// non-zero exit code.
+// non-zero exit code. Progress is logged to stderr, which systemd routes
+// to the journal.
 package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -85,7 +87,9 @@ func (c *client) reconcile(leases map[string]staticLease) error {
 	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
 		return fmt.Errorf("decode dhcp status: %w", err)
 	}
+	log.Printf("reconciling static leases: %d configured, %d current", len(leases), len(status.StaticLeases))
 
+	removed, added := 0, 0
 	for mac := range leases {
 		for _, current := range status.StaticLeases {
 			if !strings.EqualFold(current.Mac, mac) {
@@ -93,17 +97,22 @@ func (c *client) reconcile(leases map[string]staticLease) error {
 			}
 			stale := apiLease{Mac: current.Mac, IP: current.IP, Hostname: current.Hostname}
 			if err := c.post("/control/dhcp/remove_static_lease", stale); err != nil {
-				return fmt.Errorf("remove lease %s: %w", mac, err)
+				return fmt.Errorf("remove lease mac=%s ip=%s hostname=%s: %w", stale.Mac, stale.IP, stale.Hostname, err)
 			}
+			log.Printf("removed static lease: mac=%s ip=%s hostname=%s", stale.Mac, stale.IP, stale.Hostname)
+			removed++
 			break
 		}
 	}
 	for mac, lease := range leases {
 		desired := apiLease{Mac: mac, IP: lease.IP, Hostname: lease.Hostname}
 		if err := c.post("/control/dhcp/add_static_lease", desired); err != nil {
-			return fmt.Errorf("add lease %s: %w", mac, err)
+			return fmt.Errorf("add lease mac=%s ip=%s hostname=%s: %w", desired.Mac, desired.IP, desired.Hostname, err)
 		}
+		log.Printf("added static lease: mac=%s ip=%s hostname=%s", desired.Mac, desired.IP, desired.Hostname)
+		added++
 	}
+	log.Printf("reconciled static leases: %d configured, %d removed, %d added", len(leases), removed, added)
 	return nil
 }
 
