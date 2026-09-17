@@ -93,14 +93,6 @@
         "nexus"
       ];
     };
-    nexus-redis = {
-      contents = ../machines/nexus/redis/pw.age;
-      keys = [
-        "surma"
-        "nexus"
-        "shopisurm"
-      ];
-    };
     llm-proxy-secret = {
       contents = ../secrets/llm-proxy-secret.age;
       keys = [

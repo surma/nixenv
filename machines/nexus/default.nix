@@ -25,7 +25,6 @@
     ./service-jaeger.nix
     ./service-traefik-tracing.nix
     ./service-vsftpd.nix
-    ./service-redis.nix
     ./service-postgresql.nix
     ./service-ups.nix
     ./service-dump.nix
