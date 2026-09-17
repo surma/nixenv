@@ -13,10 +13,12 @@ in
   };
 
   # Citadel's secondary upsmon connects to upsd from its LAN address
-  # (the registry's citadel.ip). Scoped to that exact source; never in
-  # allowedTCPPorts.
+  # (the registry's citadel.ip), and Home Assistant's NUT integration
+  # reads it from the homeassistant.ip. Scoped to those exact sources;
+  # never in allowedTCPPorts.
   networking.firewall.extraInputRules = ''
     ip saddr ${ips.hosts.citadel.ip} tcp dport ${toString ports.nut} accept comment "NUT upsd for citadel"
+    ip saddr ${ips.hosts.homeassistant.ip} tcp dport ${toString ports.nut} accept comment "NUT upsd for homeassistant"
   '';
 
   power.ups = {
