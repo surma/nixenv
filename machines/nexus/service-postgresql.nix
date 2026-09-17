@@ -63,6 +63,14 @@ in
     '';
   };
 
+  # Crash recovery after an unclean shutdown fsyncs the whole data directory
+  # on /dump, which can exceed the module's default 120 s start timeout
+  # (systemd then kills PostgreSQL mid-recovery). Raise only the start
+  # timeout to 15 min: NixOS renders the module's TimeoutSec=120 before this
+  # key (Nix attrsets are sorted) and systemd applies unit-file assignments
+  # in order, so the stop timeout keeps the module's 120 s.
+  systemd.services.postgresql.serviceConfig.TimeoutStartSec = "15min";
+
   # The parent /dump/state is owned by surma, so systemd-tmpfiles refuses to
   # create postgres-owned subdirs under it ("unsafe path transition"). The
   # data directory must therefore be created out-of-band; this is a one-time

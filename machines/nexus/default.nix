@@ -98,8 +98,16 @@
         method = "manual";
         addresses = "10.0.0.2/16";
         gateway = "10.0.254.254";
+        # T2: sole RA-learned resolver (fe80::1) caused tailscaled DNS
+        # forward timeouts; AdGuardHome answers on this host.
+        dns = "10.0.0.2;";
       };
-      ipv6.method = "auto";
+      ipv6 = {
+        method = "auto";
+        # T2: ignore RA-provided DNS (the router's link-local address);
+        # RA addresses and routes are unaffected.
+        ignore-auto-dns = true;
+      };
     };
   };
   networking.nftables.enable = true;
