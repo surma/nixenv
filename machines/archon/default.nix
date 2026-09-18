@@ -209,6 +209,11 @@
     fprintAuth = false;
   };
 
+  # Secret Service (org.freedesktop.secrets) for ZapFast. GDM's
+  # gdm-password PAM service substacks `login`, whose keyring hook the
+  # module enables, so the keyring unlocks at login automatically.
+  services.gnome.gnome-keyring.enable = true;
+
   users.users.surma = {
     isNormalUser = true;
     description = "Surma";
