@@ -15,6 +15,7 @@
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/graphical.nix
+    ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/ai.nix
 
