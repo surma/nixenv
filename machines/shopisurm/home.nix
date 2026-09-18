@@ -21,7 +21,6 @@ in
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/javascript.nix
     ../../profiles/home-manager/dev.nix
-    ../../profiles/home-manager/experiments.nix
     ../../profiles/home-manager/ai.nix
 
   ];

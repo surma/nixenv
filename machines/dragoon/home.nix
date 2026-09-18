@@ -25,7 +25,6 @@ in
     ../../profiles/home-manager/graphical.nix
     ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/macos.nix
-    ../../profiles/home-manager/experiments.nix
     ../../profiles/home-manager/cloud.nix
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/ai.nix
@@ -58,8 +57,6 @@ in
   );
 
   defaultConfigs.pi.extensions.proxy.enable = true;
-  programs.ghostty.enable = true;
-  defaultConfigs.ghostty.enable = true;
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;
   programs.obsidian.enable = true;

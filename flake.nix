@@ -19,11 +19,6 @@
       url = "github:hyprwm/hyprland/v0.49.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-on-droid = {
-      url = "github:nix-community/nix-on-droid/release-24.05";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
     system-manager = {
       url = "github:numtide/system-manager";
       inputs.nixpkgs.follows = "nixpkgs";

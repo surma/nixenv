@@ -11,12 +11,10 @@
 
     ../../profiles/home-manager/base.nix
     ../../profiles/home-manager/dev.nix
-    ../../profiles/home-manager/gamedev.nix
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/graphical.nix
     ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/experiments.nix
     ../../profiles/home-manager/ai.nix
 
     ../../profiles/home-manager/webapps.nix

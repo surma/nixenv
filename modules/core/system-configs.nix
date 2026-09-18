@@ -92,16 +92,6 @@ in
       description = "Target system per home-manager configuration (e.g. aarch64-linux).";
     };
 
-    nixOnDroidConfigurations = mkOption {
-      type = types.lazyAttrsOf (
-        types.deferredModuleWith {
-          staticModules = [ ];
-        }
-      );
-      default = { };
-      description = "nix-on-droid configurations";
-    };
-
     systemConfigurations = mkOption {
       type = types.lazyAttrsOf (
         types.deferredModuleWith {
@@ -204,17 +194,6 @@ in
         };
       }
     ) config.homeConfigurations;
-
-    nixOnDroidConfigurations = lib.mapAttrs (
-      name: cfg:
-      inputs.nix-on-droid.lib.nixOnDroidConfiguration {
-        modules = [ cfg ];
-        extraSpecialArgs = {
-          inherit inputs;
-          systemManager = "nix-on-droid";
-        };
-      }
-    ) config.nixOnDroidConfigurations;
 
     systemConfigs = lib.mapAttrs (
       name: cfg:

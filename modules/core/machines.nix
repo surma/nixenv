@@ -44,11 +44,6 @@
       forge = "aarch64-linux";
       scout = "x86_64-linux";
     };
-
-    # Android configs
-    nixOnDroidConfigurations = {
-      generic-android.imports = [ ../../machines/generic-android ];
-    };
   };
 
   config.darwinConfigurations = {
