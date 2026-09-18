@@ -10,6 +10,7 @@
     nixosConfigurations =
       lib.optionalAttrs (builtins.pathExists /etc/nixos/hardware-configuration.nix) {
         generic-nixos.imports = [ ../../machines/generic-nixos ];
+        generic-nixos-laptop.imports = [ ../../machines/generic-nixos-laptop ];
       }
       // {
         archon.imports = [ ../../machines/archon ];
