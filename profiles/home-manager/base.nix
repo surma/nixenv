@@ -14,12 +14,11 @@ let
 
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
-  # Wrapper for pinentry-curses that fixes $TERM for Ghostty
+  # pinentry-curses takes over the alternate screen, which leaves full-screen
+  # TUIs like lazygit with a black pane in terminal multiplexers after the
+  # prompt closes. pinentry-tty prompts inline and avoids the screen swap.
   pinentry-curses-wrapped = pkgs.writeShellScriptBin "pinentry" ''
-    if [ "$TERM" = "xterm-ghostty" ]; then
-      export TERM=xterm
-    fi
-    exec ${pkgs.pinentry-curses}/bin/pinentry "$@"
+    exec ${pkgs.pinentry-curses}/bin/pinentry-tty "$@"
   '';
 in
 {
