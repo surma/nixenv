@@ -1,10 +1,6 @@
 { config, lib, ... }:
 let
   apps = {
-    whatsapp = {
-      url = "https://web.whatsapp.com";
-      title = "WhatsApp";
-    };
     squoosh = {
       url = "https://squoosh.app";
       title = "Squoosh";

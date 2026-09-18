@@ -15,6 +15,7 @@ in
     ../../profiles/home-manager/core.nix
     ../../profiles/home-manager/extras.nix
     ../../profiles/home-manager/graphical.nix
+    ../../profiles/home-manager/gui-apps.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/macos.nix

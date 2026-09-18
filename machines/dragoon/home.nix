@@ -24,6 +24,7 @@ in
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/graphical.nix
+    ../../profiles/home-manager/gui-apps.nix
     ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/macos.nix
     ../../profiles/home-manager/cloud.nix

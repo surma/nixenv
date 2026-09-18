@@ -15,6 +15,7 @@
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/graphical.nix
+    ../../profiles/home-manager/gui-apps.nix
     ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/hyprland.nix
     ../../profiles/home-manager/framework.nix
@@ -106,7 +107,6 @@
     programs.discord.enable = true;
     # programs.discord.platform = "wayland";
     programs.telegram.enable = true;
-    programs.whatsapp.enable = true;
     programs.squoosh.enable = true;
     programs.geforce-now.enable = true;
     programs.xbox-remote-play.enable = true;
