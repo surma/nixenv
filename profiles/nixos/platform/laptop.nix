@@ -3,7 +3,7 @@
   ...
 }:
 # Laptop hardware traits: a touchpad, a fingerprint reader, and a built-in
-# keyboard that needs my standard remap. Import it next to ./desktop.nix.
+# keyboard that needs my standard remap. Import it next to ../gui/desktop.nix.
 {
   services.libinput.touchpad.disableWhileTyping = true;
   services.fprintd.enable = true;

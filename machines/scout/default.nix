@@ -14,7 +14,7 @@ in
     ../../modules/home-manager/mutable-files
     ../../modules/defaultConfigs/npm
     ../../modules/home-manager/brain
-    ../../profiles/home-manager/ai.nix
+    ../../profiles/home-manager/roles/ai.nix
   ];
 
   config = {

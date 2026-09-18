@@ -5,7 +5,7 @@
 }:
 # My Wayland desktop shell: the compositor config, the bar, the lock screen,
 # notifications, the portal, and the input method. This is the user half of
-# profiles/nixos/hyprland.nix, so machines import both.
+# profiles/nixos/gui/hyprland.nix, so machines import both.
 {
   wayland.windowManager.hyprland.enable = true;
   defaultConfigs.hyprland.enable = true;
@@ -95,7 +95,7 @@
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
-      addons = [ (pkgs.callPackage ../../packages/mac-unicode-hex { }) ];
+      addons = [ (pkgs.callPackage ../../../packages/mac-unicode-hex { }) ];
       settings = {
         inputMethod = {
           GroupOrder."0" = "Default";

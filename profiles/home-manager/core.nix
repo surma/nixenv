@@ -7,7 +7,7 @@
 # The one home-manager baseline. Every configuration imports this, from a
 # headless server to a laptop. It carries the shell, the prompt, the editor,
 # the git identity, the SSH defaults, and the small tools that make a machine
-# usable over SSH. Anything heavier goes in ./extras.nix or a role profile.
+# usable over SSH. Anything heavier goes in ./extras.nix or ./roles/*.nix.
 #
 # This profile does not set `home.username` or `home.homeDirectory`. The
 # platform profiles own those.

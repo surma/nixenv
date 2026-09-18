@@ -10,8 +10,8 @@ let
 in
 {
   imports = [
-    ../../modules/defaultConfigs/aerospace
-    ../../modules/defaultConfigs/karabiner
+    ../../../modules/defaultConfigs/aerospace
+    ../../../modules/defaultConfigs/karabiner
   ];
 
   config = {

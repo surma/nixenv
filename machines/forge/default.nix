@@ -7,11 +7,11 @@
   imports = [
     ../../profiles/home-manager/core.nix
     ../../profiles/home-manager/extras.nix
-    ../../profiles/home-manager/ai.nix
-    ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/dev.nix
-    ../../profiles/home-manager/linger.nix
+    ../../profiles/home-manager/roles/ai.nix
+    ../../profiles/home-manager/platform/linux.nix
+    ../../profiles/home-manager/roles/workstation.nix
+    ../../profiles/home-manager/roles/dev.nix
+    ../../profiles/home-manager/services/linger.nix
   ];
 
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";

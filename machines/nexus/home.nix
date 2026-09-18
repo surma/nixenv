@@ -9,12 +9,12 @@
 
     ../../profiles/home-manager/core.nix
     ../../profiles/home-manager/extras.nix
-    ../../profiles/home-manager/dev.nix
-    ../../profiles/home-manager/nixdev.nix
-    ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/ai.nix
-    ../../profiles/home-manager/go.nix
+    ../../profiles/home-manager/roles/dev.nix
+    ../../profiles/home-manager/roles/nixdev.nix
+    ../../profiles/home-manager/platform/linux.nix
+    ../../profiles/home-manager/roles/workstation.nix
+    ../../profiles/home-manager/roles/ai.nix
+    ../../profiles/home-manager/roles/go.nix
 
   ];
 

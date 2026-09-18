@@ -8,7 +8,7 @@
   imports = [
     ./hardware.nix
     ../../profiles/nixos/base.nix
-    ../../profiles/nixos/headless.nix
+    ../../profiles/nixos/roles/headless.nix
 
     inputs.surmhosting.nixosModules.default
     ./service-nixos-admin.nix

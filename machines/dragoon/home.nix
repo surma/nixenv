@@ -21,21 +21,21 @@ in
 
     ../../profiles/home-manager/core.nix
     ../../profiles/home-manager/extras.nix
-    ../../profiles/home-manager/dev.nix
-    ../../profiles/home-manager/workstation.nix
-    ../../profiles/home-manager/fonts.nix
-    ../../profiles/home-manager/terminal.nix
-    ../../profiles/home-manager/gui-apps.nix
-    ../../profiles/home-manager/physical.nix
-    ../../profiles/home-manager/macos.nix
-    ../../profiles/home-manager/cloud.nix
-    ../../profiles/home-manager/nixdev.nix
-    ../../profiles/home-manager/ai.nix
-    ../../profiles/home-manager/javascript.nix
-    ../../profiles/home-manager/go.nix
-    ../../profiles/home-manager/godot.nix
-    ../../profiles/home-manager/syncthing-peer.nix
-    ../../profiles/home-manager/syncthing-vault.nix
+    ../../profiles/home-manager/roles/dev.nix
+    ../../profiles/home-manager/roles/workstation.nix
+    ../../profiles/home-manager/gui/fonts.nix
+    ../../profiles/home-manager/gui/terminal.nix
+    ../../profiles/home-manager/gui/gui-apps.nix
+    ../../profiles/home-manager/platform/physical.nix
+    ../../profiles/home-manager/platform/macos.nix
+    ../../profiles/home-manager/roles/cloud.nix
+    ../../profiles/home-manager/roles/nixdev.nix
+    ../../profiles/home-manager/roles/ai.nix
+    ../../profiles/home-manager/roles/javascript.nix
+    ../../profiles/home-manager/roles/go.nix
+    ../../profiles/home-manager/roles/godot.nix
+    ../../profiles/home-manager/services/syncthing-peer.nix
+    ../../profiles/home-manager/services/syncthing-vault.nix
   ];
 
   home.stateVersion = "24.05";

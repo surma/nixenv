@@ -7,7 +7,7 @@
 {
   imports = [
     ../../profiles/home-manager/core.nix
-    ../../profiles/home-manager/linux.nix
+    ../../profiles/home-manager/platform/linux.nix
     ../../modules/home-manager/ssh-keys
     ../../modules/home-manager/gpg-keys
   ];

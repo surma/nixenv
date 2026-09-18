@@ -5,7 +5,7 @@
 }:
 # Keeps my user services running after logout on hosts whose system config I do
 # not own. NixOS machines set users.users.surma.linger instead, see
-# profiles/nixos/headless.nix.
+# profiles/nixos/roles/headless.nix.
 {
   # Best-effort linger enablement for user services to survive logout.
   home.activation.enableLinger = lib.hm.dag.entryAfter [ "linkGeneration" ] ''

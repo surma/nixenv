@@ -7,8 +7,8 @@
   imports = [
     ../../profiles/home-manager/core.nix
     ../../profiles/home-manager/extras.nix
-    ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/linger.nix
+    ../../profiles/home-manager/platform/linux.nix
+    ../../profiles/home-manager/services/linger.nix
   ];
 
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";

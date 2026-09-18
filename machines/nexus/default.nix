@@ -64,7 +64,7 @@ in
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../profiles/nixos/headless.nix
+    ../../profiles/nixos/roles/headless.nix
     inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
     ../../modules/services/adguardhome-static-dhcp
@@ -199,7 +199,7 @@ in
 
   users.groups.podman.members = [ "surma" ];
 
-  # In addition to the keys from profiles/nixos/headless.nix: nexus pulls
+  # In addition to the keys from profiles/nixos/roles/headless.nix: nexus pulls
   # from these two hosts.
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
     dragoon

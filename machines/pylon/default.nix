@@ -23,7 +23,7 @@ in
     ./service-nixos-admin.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
-    ../../profiles/nixos/headless.nix
+    ../../profiles/nixos/roles/headless.nix
 
     # ../../apps/writing-prompt
   ];
@@ -36,7 +36,7 @@ in
 
   users.groups.podman.members = [ "surma" ];
 
-  # In addition to the keys from profiles/nixos/headless.nix.
+  # In addition to the keys from profiles/nixos/roles/headless.nix.
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
     surmbook
     shopisurm

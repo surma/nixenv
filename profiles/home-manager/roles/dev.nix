@@ -17,7 +17,7 @@ in
 {
   imports = [
     ./nixdev.nix
-    ../../modules/defaultConfigs/npm
+    ../../../modules/defaultConfigs/npm
   ];
 
   home.packages = with pkgs; [

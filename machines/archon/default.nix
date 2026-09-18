@@ -12,10 +12,10 @@
     ./hardware.nix
 
     ../../profiles/nixos/base.nix
-    ../../profiles/nixos/desktop.nix
-    ../../profiles/nixos/hyprland.nix
-    ../../profiles/nixos/laptop.nix
-    ../../profiles/nixos/framework.nix
+    ../../profiles/nixos/gui/desktop.nix
+    ../../profiles/nixos/gui/hyprland.nix
+    ../../profiles/nixos/platform/laptop.nix
+    ../../profiles/nixos/platform/framework.nix
 
     # Everything Shopify — WARP, Fleet/orbit, Chrome CBCM, Minerva TPM device
     # trust, Endpoint Verification, the FHS shims and the apt-get shim — now

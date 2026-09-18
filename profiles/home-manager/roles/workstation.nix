@@ -7,9 +7,9 @@
 }:
 {
   imports = [
-    ../../modules/home-manager/ssh-keys
-    ../../modules/home-manager/gpg-keys
-    ../../modules/home-manager/brain
+    ../../../modules/home-manager/ssh-keys
+    ../../../modules/home-manager/gpg-keys
+    ../../../modules/home-manager/brain
   ];
 
   config = {

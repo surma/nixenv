@@ -4,7 +4,7 @@
 # module, because that one names the exact model.
 {
   imports = [
-    ../../modules/nixos/framework/suspend-fix.nix
-    ../../modules/nixos/framework/wifi-fix.nix
+    ../../../modules/nixos/framework/suspend-fix.nix
+    ../../../modules/nixos/framework/wifi-fix.nix
   ];
 }

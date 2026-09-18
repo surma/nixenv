@@ -5,10 +5,10 @@
 # The system half of a Hyprland session: the compositor, the portal, the
 # greeter, and the session helpers. Import it next to ./desktop.nix.
 #
-# The user half is profiles/home-manager/hyprland.nix.
+# The user half is profiles/home-manager/gui/hyprland.nix.
 {
   imports = [
-    ../../modules/nixos/hyprland
+    ../../../modules/nixos/hyprland
   ];
 
   environment.systemPackages = with pkgs; [

@@ -4,7 +4,7 @@
 }:
 {
   imports = [
-    ../../modules/home-manager/herdr
+    ../../../modules/home-manager/herdr
   ];
 
   # Installs herdr and regenerates ~/.agents/skills/herdr/SKILL.md from
@@ -34,15 +34,15 @@
   defaultConfigs.pi.extraPackages = [ "npm:@sting8k/pi-vcc" ];
 
   agent.skills = [
-    # ../../assets/skills/brainstorming
-    # ../../assets/skills/planning
-    # ../../assets/skills/debugging
-    ../../assets/skills/simplify
-    ../../assets/skills/surma-writer
-    ../../assets/skills/rust
-    ../../assets/skills/triple-helix
-    ../../assets/skills/preact-signals
-    ../../assets/skills/web-development
-    ../../assets/skills/bro
+    # ../../../assets/skills/brainstorming
+    # ../../../assets/skills/planning
+    # ../../../assets/skills/debugging
+    ../../../assets/skills/simplify
+    ../../../assets/skills/surma-writer
+    ../../../assets/skills/rust
+    ../../../assets/skills/triple-helix
+    ../../../assets/skills/preact-signals
+    ../../../assets/skills/web-development
+    ../../../assets/skills/bro
   ];
 }
