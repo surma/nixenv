@@ -14,7 +14,8 @@
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix
-    ../../profiles/home-manager/graphical.nix
+    ../../profiles/home-manager/fonts.nix
+    ../../profiles/home-manager/terminal.nix
     ../../profiles/home-manager/gui-apps.nix
     ../../profiles/home-manager/physical.nix
     ../../profiles/home-manager/hyprland.nix
@@ -112,12 +113,8 @@
     programs.xbox-remote-play.enable = true;
     programs.obsidian.enable = false;
 
-    programs.wezterm.enable = true;
-    programs.wezterm.frontend = "OpenGL";
-    programs.wezterm.theme = "dark";
+    # The display is a 13 inch 2256x1504 panel.
     programs.wezterm.fontSize = 10;
-    programs.wezterm.window-decorations = null;
-    defaultConfigs.wezterm.enable = true;
 
     secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
     secrets.items.archon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";

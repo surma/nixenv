@@ -68,6 +68,10 @@
     Environment=QT_QUICK_BACKEND=software
   '';
 
+  # Wayland clipboard access for scripts and for anything that shells out to
+  # wl-copy or wl-paste.
+  home.packages = [ pkgs.wl-clipboard ];
+
   gtk = {
     enable = true;
     colorScheme = "dark";
