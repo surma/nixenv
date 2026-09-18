@@ -152,6 +152,9 @@
 
     # programs.opencode.enable = true;
     # defaultConfigs.opencode.enable = true;
+    programs.handy.enable = true;
+    defaultConfigs.handy.enable = true;
+
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
