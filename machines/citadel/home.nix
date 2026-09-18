@@ -15,6 +15,7 @@
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/ai.nix
+    ../../profiles/home-manager/go.nix
   ];
 
   config = {
@@ -39,11 +40,9 @@
       with pkgs;
       [
         inputs.gws.packages.${pkgs.stdenv.hostPlatform.system}.default
-        gopls
         gcc
       ]
     );
-    programs.go.enable = true;
 
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;

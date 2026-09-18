@@ -32,7 +32,10 @@ in
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/ai.nix
     ../../profiles/home-manager/javascript.nix
+    ../../profiles/home-manager/go.nix
     ../../profiles/home-manager/godot.nix
+    ../../profiles/home-manager/syncthing-peer.nix
+    ../../profiles/home-manager/syncthing-vault.nix
   ];
 
   home.stateVersion = "24.05";
@@ -54,7 +57,6 @@ in
       ollama
       qbittorrent
       jupyter
-      gopls
       bun
     ]
   );
@@ -65,8 +67,6 @@ in
   programs.obsidian.enable = true;
 
   programs.qmd.enable = true;
-
-  programs.go.enable = true;
 
   customScripts.denix.enable = true;
   programs.surma-noti.enable = true;
@@ -85,23 +85,9 @@ in
 
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
-  secrets.items.dragoon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
-  secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
-
-  services.syncthing.enable = true;
-  services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
-  services.syncthing.key = config.secrets.items.dragoon-syncthing.target;
   services.syncthing.settings.devices.arbiter = shared.devices.arbiter;
   services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault".devices = lib.mkForce [
     "nexus"
     "arbiter"
   ];
-  defaultConfigs.syncthing.enable = true;
-  defaultConfigs.syncthing.privateRelay.enable = true;
-  defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;
-  defaultConfigs.syncthing.knownFolders.scratch.enable = true;
-  defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
-  defaultConfigs.syncthing.knownFolders.surmvault.enable = true;
-  defaultConfigs.syncthing.knownFolders.surmvault.path = "${config.home.homeDirectory}/SurmVault";
-
 }

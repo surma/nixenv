@@ -14,6 +14,7 @@
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/ai.nix
+    ../../profiles/home-manager/go.nix
 
   ];
 
@@ -35,12 +36,10 @@
     home.packages = (
       with pkgs;
       [
-        gopls
         # clang
         gcc
       ]
     );
-    programs.go.enable = true;
 
     defaultConfigs.pi.extensions.proxy.enable = true;
     programs.opencode.enable = true;

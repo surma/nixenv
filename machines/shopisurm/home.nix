@@ -23,8 +23,11 @@ in
     ../../profiles/home-manager/cloud.nix
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/javascript.nix
+    ../../profiles/home-manager/go.nix
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/ai.nix
+    ../../profiles/home-manager/syncthing-peer.nix
+    ../../profiles/home-manager/syncthing-vault.nix
 
   ];
 
@@ -85,7 +88,6 @@ in
       # graphite-cli
       keycastr
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.jupyter
-      gopls
       bun
       (inputs.nixpkgs-unstable.legacyPackages.${stdenv.hostPlatform.system}.lima.override {
         withAdditionalGuestAgents = true;
@@ -121,23 +123,8 @@ in
   customScripts.ocq.enable = true;
   customScripts.transcribe.enable = true;
 
-  programs.go.enable = true;
-
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
-  secrets.items.shopisurm-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
-  secrets.items.syncthing-relay-token.target = "${config.home.homeDirectory}/.local/state/syncthing-relay/token";
-
-  services.syncthing.enable = true;
-  services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
-  services.syncthing.key = config.secrets.items.shopisurm-syncthing.target;
-  defaultConfigs.syncthing.enable = true;
-  defaultConfigs.syncthing.privateRelay.enable = true;
-  defaultConfigs.syncthing.privateRelay.tokenFile = config.secrets.items.syncthing-relay-token.target;
-  defaultConfigs.syncthing.knownFolders.scratch.enable = true;
-  defaultConfigs.syncthing.knownFolders.ebooks.enable = true;
-  defaultConfigs.syncthing.knownFolders.surmvault.enable = true;
-  defaultConfigs.syncthing.knownFolders.surmvault.path = "${config.home.homeDirectory}/SurmVault";
 
   home.activation.ensureNexusAuthorizedKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     auth_file="$HOME/.ssh/authorized_keys"

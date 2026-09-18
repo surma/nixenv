@@ -1,6 +1,5 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
@@ -12,6 +11,7 @@
     ../../profiles/home-manager/linux.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/dev.nix
+    ../../profiles/home-manager/linger.nix
   ];
 
   secrets.identity = "${config.home.homeDirectory}/.ssh/id_machine";
@@ -23,15 +23,6 @@
     picocom
     tio
   ];
-
-  # Best-effort linger enablement for user services to survive logout.
-  home.activation.enableLinger = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    if command -v loginctl >/dev/null 2>&1; then
-      if [ "$(loginctl show-user ${config.home.username} --property=Linger --value 2>/dev/null || true)" != "yes" ]; then
-        loginctl enable-linger ${config.home.username} >/dev/null 2>&1 || true
-      fi
-    fi
-  '';
 
   programs.pi.enable = true;
   defaultConfigs.pi.enable = true;

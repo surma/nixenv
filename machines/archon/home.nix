@@ -22,6 +22,7 @@
     ../../profiles/home-manager/framework.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/ai.nix
+    ../../profiles/home-manager/syncthing-peer.nix
 
     ../../profiles/home-manager/webapps.nix
   ];
@@ -117,12 +118,7 @@
     programs.wezterm.fontSize = 10;
 
     secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
-    secrets.items.archon-syncthing.target = "${config.home.homeDirectory}/.local/state/syncthing/key.pem";
 
-    services.syncthing.enable = true;
-    services.syncthing.cert = ./syncthing/cert.pem |> builtins.toString;
-    services.syncthing.key = config.secrets.items.archon-syncthing.target;
-    defaultConfigs.syncthing.enable = true;
     services.syncthing.tray.enable = true;
 
     # programs.opencode.enable = true;
