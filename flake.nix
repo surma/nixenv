@@ -29,6 +29,12 @@
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     flake-utils.url = "github:numtide/flake-utils";
+    # Rust toolchains that are newer than the nixpkgs rustc, for packages that
+    # pin a version in rust-toolchain.toml.
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     copyparty = {
       url = "github:9001/copyparty";
       inputs.nixpkgs.follows = "nixpkgs";

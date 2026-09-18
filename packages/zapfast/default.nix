@@ -7,12 +7,15 @@
   pkg-config,
   makeWrapper,
   makeRustPlatform,
-  pkgs,
+  inputs,
   alsa-lib,
   libGL,
   wayland,
   libxkbcommon,
-  xorg,
+  libx11,
+  libxcursor,
+  libxi,
+  libxrandr,
   ...
 }:
 let
@@ -27,10 +30,7 @@ let
 
   # rust-toolchain.toml pins 1.98.0, newer than any rustc in this nixpkgs.
   # Fenix provides the exact toolchain from that file.
-  fenix = import (builtins.fetchTarball {
-    url = "https://github.com/nix-community/fenix/archive/f8ac2cd5626cc565f546e1053ab4591cfe0b3ea9.tar.gz";
-    sha256 = "sha256-wt1Mee04mQYtOPolRGHbZFb3CyHKidFryurtWuOZOao=";
-  }) { inherit pkgs; };
+  fenix = inputs.fenix.packages.${stdenv.hostPlatform.system};
 
   toolchain = fenix.fromToolchainFile {
     file = src + "/rust-toolchain.toml";
@@ -104,10 +104,10 @@ rustPlatform.buildRustPackage {
     libGL
     wayland
     libxkbcommon
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXi
-    xorg.libXrandr
+    libx11
+    libxcursor
+    libxi
+    libxrandr
   ];
 
   doCheck = false;
@@ -125,10 +125,10 @@ rustPlatform.buildRustPackage {
           libGL
           wayland
           libxkbcommon
-          xorg.libX11
-          xorg.libXcursor
-          xorg.libXi
-          xorg.libXrandr
+          libx11
+          libxcursor
+          libxi
+          libxrandr
         ]
       }"
   '';
