@@ -80,33 +80,31 @@ in
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;
-      matchBlocks."*" = {
-        identityFile = "~/.ssh/id_repo_scout";
+      settings."*" = {
+        IdentityFile = "~/.ssh/id_repo_scout";
       };
-      matchBlocks."github.com" = {
-        hostname = "github.com";
-        user = "git";
-        identityFile = "~/.ssh/id_repo_scout";
-        identitiesOnly = true;
+      settings."github.com" = {
+        HostName = "github.com";
+        User = "git";
+        IdentityFile = "~/.ssh/id_repo_scout";
+        IdentitiesOnly = true;
       };
-      matchBlocks."gitea.surma.technology" = {
-        hostname = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
-        port = 2222;
-        user = "containeruser";
-        identityFile = "~/.ssh/id_repo_scout";
-        identitiesOnly = true;
-        extraOptions = {
-          StrictHostKeyChecking = "accept-new";
-          HostKeyAlias = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
-        };
+      settings."gitea.surma.technology" = {
+        HostName = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
+        Port = 2222;
+        User = "containeruser";
+        IdentityFile = "~/.ssh/id_repo_scout";
+        IdentitiesOnly = true;
+        StrictHostKeyChecking = "accept-new";
+        HostKeyAlias = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
       };
-      matchBlocks."gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io" = {
-        hostname = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
-        port = 2222;
-        user = "containeruser";
-        identityFile = "~/.ssh/id_repo_scout";
-        identitiesOnly = true;
-        extraOptions.StrictHostKeyChecking = "accept-new";
+      settings."gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io" = {
+        HostName = "gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
+        Port = 2222;
+        User = "containeruser";
+        IdentityFile = "~/.ssh/id_repo_scout";
+        IdentitiesOnly = true;
+        StrictHostKeyChecking = "accept-new";
       };
     };
 

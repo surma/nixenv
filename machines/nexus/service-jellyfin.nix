@@ -1,5 +1,7 @@
 { ... }:
 {
+  systemd.services.surmhosting-podman-jellyfin.unitConfig.RequiresMountsFor = [ "/dump" ];
+
   services.surmhosting.services.jellyfin = {
     backend.podman = {
       image = "jellyfin/jellyfin";

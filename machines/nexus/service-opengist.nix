@@ -17,7 +17,7 @@ let
 in
 {
   systemd.tmpfiles.rules = [
-    "d /dump/state/opengist 0750 surma users - -"
+    "d- /dump/state/opengist 0750 surma users - -"
   ];
 
   services.surmhosting.services.gist = {

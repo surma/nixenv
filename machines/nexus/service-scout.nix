@@ -19,6 +19,11 @@ let
 in
 {
   secrets.items.ssh-keys.command = ''
+    if ! ${pkgs.systemd}/bin/systemctl is-active --quiet dump.mount; then
+      cat > /dev/null
+      exit 0
+    fi
+
     mkdir -p /dump/state/scout/.ssh
     chown surma:users /dump/state/scout/.ssh
     chmod 0700 /dump/state/scout/.ssh
@@ -33,6 +38,19 @@ in
   secrets.items.scout-repo-ssh-key.command = ''
     key="$(cat)"
 
+    # NixOS Admin service (HOME=/var/lib/nixos-admin)
+    mkdir -p /var/lib/nixos-admin/.ssh
+    chmod 0700 /var/lib/nixos-admin/.ssh
+
+    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nixos-admin/.ssh/id_repo_scout.pub
+    printf '%s\n' "$key" > /var/lib/nixos-admin/.ssh/id_repo_scout
+    chmod 0600 /var/lib/nixos-admin/.ssh/id_repo_scout
+
+    # The dependent containers remain stopped when /dump is unavailable.
+    if ! ${pkgs.systemd}/bin/systemctl is-active --quiet dump.mount; then
+      exit 0
+    fi
+
     # Scout container (bind-mounted as /home/containeruser/.ssh inside the container)
     mkdir -p /dump/state/scout/.ssh
     chown surma:users /dump/state/scout/.ssh
@@ -43,14 +61,6 @@ in
     printf '%s\n' "$key" > /dump/state/scout/.ssh/id_repo_scout
     chown surma:users /dump/state/scout/.ssh/id_repo_scout
     chmod 0600 /dump/state/scout/.ssh/id_repo_scout
-
-    # NixOS Admin service (HOME=/var/lib/nixos-admin)
-    mkdir -p /var/lib/nixos-admin/.ssh
-    chmod 0700 /var/lib/nixos-admin/.ssh
-
-    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /var/lib/nixos-admin/.ssh/id_repo_scout.pub
-    printf '%s\n' "$key" > /var/lib/nixos-admin/.ssh/id_repo_scout
-    chmod 0600 /var/lib/nixos-admin/.ssh/id_repo_scout
 
     # Brain serve container
     mkdir -p /dump/state/brain-serve/.ssh
@@ -208,7 +218,7 @@ in
   '';
 
   systemd.tmpfiles.rules = [
-    "d /dump/state/scout 0755 surma users - -"
+    "d- /dump/state/scout 0755 surma users - -"
   ];
 
   services.surmhosting.services.scout.backend."nixos-container".service = {

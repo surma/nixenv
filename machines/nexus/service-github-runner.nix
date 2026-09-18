@@ -14,7 +14,7 @@ in
   };
 
   systemd.tmpfiles.rules = [
-    "d /dump/state/github-runner 0755 root root - -"
+    "d- /dump/state/github-runner 0755 root root - -"
   ];
 
   services.surmhosting.services.github-runner.backend."nixos-container".service = {

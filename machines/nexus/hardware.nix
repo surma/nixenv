@@ -4,11 +4,17 @@
 {
   config,
   lib,
-  pkgs,
   modulesPath,
   ...
 }:
 
+let
+  optionalDataMountOptions = [
+    "nofail"
+    "x-systemd.automount"
+    "x-systemd.device-timeout=90s"
+  ];
+in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -28,15 +34,24 @@
     "sdhci_pci"
   ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
-  # NixOS 26.05 defaults boot.initrd.systemd.enable to true, but systemd
-  # stage 1 does not support boot.initrd.postDeviceCommands (below). Opt back
-  # into scripted stage 1 to preserve the known-good boot path on this remote
-  # machine.
-  boot.initrd.systemd.enable = false;
-  # For some reason, the first LVM group gets activated successfully.
-  # The second group does not and requires this manual command
-  # so that booting can succeed.
-  boot.initrd.postDeviceCommands = "lvm vgchange -ay raid";
+
+  # The storage stack uses LVM slices, MD RAID, and an outer LVM group.
+  # Activate the outer group after MD creates its device.
+  boot.initrd.systemd = {
+    enable = true;
+    services.activate-raid-vg = {
+      description = "Activate the outer RAID LVM group";
+      wantedBy = [ "initrd.target" ];
+      before = [ "initrd.target" ];
+      requires = [ "dev-md-surmlinux:0.device" ];
+      after = [ "dev-md-surmlinux:0.device" ];
+      unitConfig.JobTimeoutSec = "90s";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "/bin/lvm vgchange -ay raid";
+      };
+    };
+  };
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
@@ -48,6 +63,7 @@
   fileSystems."/dumpdump" = {
     device = "/dev/disk/by-uuid/069483d8-8f1f-412f-90e7-4d86e23d8dbd";
     fsType = "ext4";
+    options = optionalDataMountOptions;
   };
 
   fileSystems."/boot" = {
@@ -62,6 +78,7 @@
   fileSystems."/dump" = {
     device = "/dev/disk/by-uuid/f2201068-c6cc-4179-be7f-2aa0b0e8c861";
     fsType = "ext4";
+    options = optionalDataMountOptions;
   };
 
   swapDevices = [

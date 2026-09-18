@@ -62,6 +62,8 @@ in
     ];
   };
 
+  systemd.services.syncthing.unitConfig.RequiresMountsFor = [ "/dump" ];
+  systemd.services.syncthing-init.unitConfig.RequiresMountsFor = [ "/dump" ];
   systemd.services.syncthing-init.serviceConfig.ExecStartPre =
     let
       waitForApi = pkgs.writeShellScript "wait-for-syncthing-api" ''
@@ -96,6 +98,7 @@ in
       "secrets.service"
     ];
     wantedBy = [ "multi-user.target" ];
+    unitConfig.RequiresMountsFor = [ "/dump" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart =

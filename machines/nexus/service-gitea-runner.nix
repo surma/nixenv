@@ -25,7 +25,7 @@ in
   };
 
   systemd.tmpfiles.rules = [
-    "d /dump/state/gitea-runner 0755 root root - -"
+    "d- /dump/state/gitea-runner 0755 root root - -"
     "d /var/lib/gitea-runner 0755 root root - -"
   ];
 

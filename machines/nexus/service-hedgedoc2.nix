@@ -71,7 +71,7 @@ in
   '';
 
   systemd.tmpfiles.rules = [
-    "d /dump/state/hedgedoc2 0750 surma users - -"
+    "d- /dump/state/hedgedoc2 0750 surma users - -"
   ];
 
   services.surmhosting.services.hedgedoc2 = {

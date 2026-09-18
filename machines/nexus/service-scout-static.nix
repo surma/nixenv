@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   systemd.tmpfiles.rules = [
-    "d /dump/state/scout-static 0755 surma users - -"
+    "d- /dump/state/scout-static 0755 surma users - -"
   ];
 
   services.surmhosting.services.scout-static = {
@@ -24,6 +24,7 @@
         systemd.services.scout-static = {
           description = "Scout static file server";
           wantedBy = [ "multi-user.target" ];
+          wants = [ "network-online.target" ];
           after = [ "network-online.target" ];
           serviceConfig = {
             ExecStart = "${pkgs.simple-http-server}/bin/simple-http-server -i -p 8080 /var/lib/scout-static";

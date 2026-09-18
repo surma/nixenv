@@ -115,7 +115,7 @@ let
 in
 {
   systemd.tmpfiles.rules = [
-    "d /dump/state/brain-serve 0755 surma users - -"
+    "d- /dump/state/brain-serve 0755 surma users - -"
   ];
 
   services.surmhosting.services.brain-serve.backend."nixos-container".service = {
