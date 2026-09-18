@@ -57,6 +57,7 @@
   programs.git.enable = true;
   programs.zsh.enable = true;
   services.openssh.enable = true;
+  services.tailscale.enable = true;
   programs.mosh.enable = true;
   services.openssh.settings.AcceptEnv = [
     "COLORTERM"

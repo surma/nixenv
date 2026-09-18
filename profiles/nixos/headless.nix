@@ -20,8 +20,6 @@
   # Nobody logs in to start user services, so the user manager must stay up.
   users.users.surma.linger = lib.mkDefault true;
 
-  services.tailscale.enable = true;
-
   # Remote administration: my own key, plus the unattended deploy key.
   users.users.root.openssh.authorizedKeys.keys = [
     config.secrets.keys.surma

@@ -2,7 +2,6 @@
   config,
   pkgs,
   inputs,
-  lib,
   ...
 }:
 {
@@ -13,12 +12,10 @@
     ./hardware.nix
 
     ../../profiles/nixos/base.nix
-    ../../modules/nixos/hyprland
-
-    ../../modules/nixos/framework/suspend-fix.nix
-    ../../modules/nixos/framework/wifi-fix.nix
-
-    ../../modules/nixos/1password-wrapper
+    ../../profiles/nixos/desktop.nix
+    ../../profiles/nixos/hyprland.nix
+    ../../profiles/nixos/laptop.nix
+    ../../profiles/nixos/framework.nix
 
     # Everything Shopify — WARP, Fleet/orbit, Chrome CBCM, Minerva TPM device
     # trust, Endpoint Verification, the FHS shims and the apt-get shim — now
@@ -34,22 +31,6 @@
     "kernel.dmesg_restrict" = 0;
   };
 
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
-  services.blueman.enable = true;
-
-  services.libinput.touchpad.disableWhileTyping = true;
-
-  networking.networkmanager.enable = true;
-  programs.nm-applet.enable = true;
-  services.pulseaudio.enable = false;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
-
   services.sunshine = {
     enable = true;
     # The NixOS module's generic graphical-session.target also runs in the
@@ -60,24 +41,6 @@
     settings = {
       capture = "wlr";
       origin_web_ui_allowed = "wan";
-    };
-  };
-
-  services.seatd.enable = true;
-
-  services.keyd = {
-    enable = true;
-    treat-as-internal-keyboard = true;
-    keyboards."internal" = {
-      ids = [ "0001:0001" ];
-      settings = {
-        main = {
-          capslock = "overload(meh, escape)";
-          leftalt = "leftmeta";
-          leftmeta = "leftalt";
-        };
-        "meh:C-A-M" = { };
-      };
     };
   };
 
@@ -163,29 +126,16 @@
   #   mode = "0600";
   # };
   allowedUnfreeApps = [
-    "1password"
-    "1password-cli"
     "cloudflare-warp"
     "google-chrome"
     "slack"
     "endpoint-verification"
   ];
   environment.systemPackages = with pkgs; [
-    hyprpolkitagent
-    keyd
-    hyprlock
-    tailscale
-    pavucontrol
-    hyprsunset
     pciutils
     usbutils
   ];
 
-  services.tailscale.enable = true;
-
-  programs._1password.enable = true;
-  programs._1password-gui.enable = true;
-  programs._1password-gui.polkitPolicyOwners = [ "surma" ];
   programs.obs-studio.enable = true;
 
   # Firefox picks the first capture-capable V4L2 device. Reserve video0 for
@@ -197,32 +147,10 @@
     options v4l2loopback devices=1 video_nr=0 card_label="OBS Cam" exclusive_caps=1
   '';
 
-  programs.firefox.enable = true;
   programs.signal.enable = true;
 
-  security.polkit.enable = true;
-  security.pam.services.hyprlock = {
-    fprintAuth = false;
-  };
-
-  # Secret Service (org.freedesktop.secrets) for ZapFast. GDM's
-  # gdm-password PAM service substacks `login`, whose keyring hook the
-  # module enables, so the keyring unlocks at login automatically.
-  services.gnome.gnome-keyring.enable = true;
-
   users.users.surma = {
-    isNormalUser = true;
     description = "Surma";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "input"
-      "video"
-      "audio"
-      "seat"
-      "uinput"
-    ];
-    shell = pkgs.zsh;
 
     # nexus runs services.key-poller and SSHes in as surma to read the
     # Shopify key when shopisurm is unreachable. Merges with the `surma`
@@ -233,9 +161,6 @@
   };
 
   home-manager.users.surma = import ./home.nix;
-
-  services.fprintd.enable = true;
-  services.udisks2.enable = true;
 
   system.stateVersion = "25.05"; # Did you read the comment?
 }
