@@ -7,7 +7,8 @@
   imports = [
     ../../scripts
 
-    ../../profiles/home-manager/base.nix
+    ../../profiles/home-manager/core.nix
+    ../../profiles/home-manager/extras.nix
     ../../profiles/home-manager/dev.nix
     ../../profiles/home-manager/nixdev.nix
     ../../profiles/home-manager/linux.nix

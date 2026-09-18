@@ -12,7 +12,8 @@ in
   imports = [
     # Program modules are auto-loaded from ../../modules/programs
 
-    ../../profiles/home-manager/base.nix
+    ../../profiles/home-manager/core.nix
+    ../../profiles/home-manager/extras.nix
     ../../profiles/home-manager/graphical.nix
     ../../profiles/home-manager/workstation.nix
     ../../profiles/home-manager/physical.nix

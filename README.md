@@ -30,11 +30,6 @@ sudo nixos-rebuild switch \
   --impure \
   --extra-experimental-features 'nix-command flakes pipe-operators' \
   --flake 'github:surma/nixenv#generic-nixos'
-
-# Android (Termux)
-nix --extra-experimental-features 'nix-command flakes pipe-operators' \
-  run 'github:nix-community/nix-on-droid' -- \
-  switch --flake 'github:surma/nixenv#generic-android'
 ```
 
 The `--impure` flag makes the generic output available and imports the generated local hardware file.
@@ -56,10 +51,9 @@ nixenv/
 │   └── defaultConfigs/ # Default configurations (zsh, helix, etc.)
 │
 ├── profiles/          # Configuration bundles
-│   ├── home-manager/  # Home Manager profiles
+│   ├── home-manager/  # Home Manager profiles (core.nix is the baseline)
 │   ├── darwin/        # Darwin system profiles
-│   ├── nixos/         # NixOS system profiles
-│   └── nix-on-droid/  # Android/Termux profiles
+│   └── nixos/         # NixOS system profiles
 │
 ├── packages/          # Custom packages
 │

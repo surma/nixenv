@@ -6,7 +6,8 @@
 }:
 {
   imports = [
-    ../../profiles/home-manager/minimal.nix
+    ../../profiles/home-manager/core.nix
+    ../../profiles/home-manager/linux.nix
     ../../modules/home-manager/ssh-keys
     ../../modules/home-manager/gpg-keys
   ];

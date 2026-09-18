@@ -2,21 +2,25 @@
   config,
   pkgs,
   lib,
-  inputs,
   ...
 }:
+# The one home-manager baseline. Every configuration imports this, from a
+# headless server to a laptop. It carries the shell, the prompt, the editor,
+# the git identity, the SSH defaults, and the small tools that make a machine
+# usable over SSH. Anything heavier goes in ./extras.nix or a role profile.
+#
+# This profile does not set `home.username` or `home.homeDirectory`. The
+# platform profiles own those.
 let
+  forwardedAgentMatch = ''Match host *,!gitea.surma.technology,!gitea-brain exec "test -n \"$SSH_CONNECTION\" && test -S \"$SSH_AUTH_SOCK\""'';
+
+  # pinentry-curses takes over the alternate screen, which leaves full-screen
+  # TUIs like lazygit with a black pane in terminal multiplexers after the
+  # prompt closes. pinentry-tty prompts inline and avoids the screen swap.
   pinentry-curses-wrapped = pkgs.writeShellScriptBin "pinentry" ''
-    if [ "$TERM" = "xterm-ghostty" ]; then
-      export TERM=xterm
-    fi
-    exec ${pkgs.pinentry-curses}/bin/pinentry "$@"
+    exec ${pkgs.pinentry-curses}/bin/pinentry-tty "$@"
   '';
 in
-# A trimmed home-manager profile for headless servers / low-disk machines.
-# Sibling to (not layered on top of) `base.nix`, which is the fuller workstation
-# baseline. Drops desktop/dev-heavy bits: yazi, chafa, tailscale (system-level
-# instead), nodejs/ts-language-server, wl-clipboard, GUI tooling, etc.
 {
   imports = [
     ../../scripts
@@ -24,9 +28,6 @@ in
     ../../modules/defaultConfigs/zsh
     ../../modules/defaultConfigs/helix
   ];
-
-  home.username = lib.mkDefault "surma";
-  home.homeDirectory = lib.mkDefault "/home/surma";
 
   nix = {
     package = lib.mkDefault pkgs.nix;
@@ -90,14 +91,23 @@ in
     git = true;
   };
   programs.ripgrep.enable = true;
+  programs.gpg.enable = true;
+
+  defaultConfigs.zsh.enable = true;
+  defaultConfigs.helix.enable = true;
+
   programs.starship.enable = true;
   programs.starship.enableNushellIntegration = true;
   programs.starship.settings = {
     add_newline = true;
+
     format = "${"$"}{custom.cwd} ${"$"}{custom.branch} $hostname $command_duration ${"\n"}$character";
+
     hostname.style = "bold red";
     hostname.format = "[$ssh_symbol$hostname]($style)";
-    command_duration.min_time = 0;
+    command_duration = {
+      min_time = 0;
+    };
     custom.cwd = {
       command = "ssw_path";
       when = "true";
@@ -119,7 +129,6 @@ in
       ignore_timeout = true;
     };
   };
-  programs.gpg.enable = true;
 
   programs.diff-so-fancy.enable = true;
   programs.diff-so-fancy.enableGitIntegration = true;
@@ -149,24 +158,26 @@ in
       |> (x: !x)
     );
 
-  defaultConfigs.zsh.enable = true;
-  defaultConfigs.helix.enable = true;
-
-  services.ssh-agent.enable = true;
-
   programs.ssh = {
     enableDefaultConfig = false;
     enable = true;
     settings = {
-      "*" = {
+      "${forwardedAgentMatch}" = lib.hm.dag.entryBefore [ "*" ] {
+        IdentityAgent = "SSH_AUTH_SOCK";
+      };
+
+      "* !gitea.surma.technology !gitea-brain" = {
         AddKeysToAgent = "yes";
         ForwardAgent = true;
+        SendEnv = [
+          "COLORTERM"
+          "TERM_PROGRAM"
+        ];
         IdentityFile = [
           "${config.home.homeDirectory}/.ssh/id_surma"
           "${config.home.homeDirectory}/.ssh/id_machine"
         ];
       };
-      "gitea.surma.technology".IdentityAgent = "/run/user/%i/ssh-agent";
     };
   };
 }

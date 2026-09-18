@@ -43,21 +43,7 @@ in
     })
   ];
 
-  programs.diff-so-fancy.enable = true;
-  programs.diff-so-fancy.enableGitIntegration = true;
-  programs.git = {
-    enable = true;
-    settings = {
-      include.path = "${config.home.homeDirectory}/.config/dev/gitconfig";
-      user.name = "Surma";
-      user.email = "surma@surma.dev";
-      init = {
-        defaultBranch = "main";
-      };
-    };
-    signing = {
-      key = "0xE46E2194CAC89068";
-      signByDefault = true;
-    };
-  };
+  # Identity, signing and diff-so-fancy live in core.nix. This is the
+  # developer-machine addition only.
+  programs.git.settings.include.path = "${config.home.homeDirectory}/.config/dev/gitconfig";
 }
