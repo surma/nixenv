@@ -2,14 +2,8 @@
 
 def nix-update-args [pkg] {
   let name = $pkg.name
-  let version = ($pkg | get -o version)
   let extra_args = ($pkg | get -o nix_update_args | default [])
-  let args = if $version == null {
-    [ "--flake" $name ]
-  } else {
-    [ "--flake" $name "--version" $version ]
-  }
-  $args | append $extra_args
+  [ "--flake" $name ] | append $extra_args
 }
 
 def main [] {
@@ -43,30 +37,9 @@ def main [] {
     ^rm -f .git/fsmonitor--daemon.ipc
   }
 
-  let claude_version = (try {
-    let claude_cask = (http get --raw https://raw.githubusercontent.com/Homebrew/homebrew-cask/HEAD/Casks/c/claude-code.rb | into string)
-    let claude_version_lines = (
-      $claude_cask
-      | lines
-      | where { |line| $line | str contains 'version "' }
-    )
-    if ($claude_version_lines | is-empty) {
-      null
-    } else {
-      $claude_version_lines
-      | first
-      | parse -r 'version "(?<version>[^"]+)"'
-      | get 0.version
-    }
-  } catch { null })
-  if $claude_version == null {
-    print "Warning: could not determine claude-code version from Homebrew cask."
-  }
-
   let packages = [
     { name: "pi-coding-agent" nix_update_args: [ "--custom-dep" "modelData" ] }
     { name: "handy" }
-    { name: "claude-code" version: $claude_version requires_version: true }
     { name: "agent-browser" }
     { name: "pi-acp" }
     { name: "tinycast" }
@@ -79,13 +52,6 @@ def main [] {
 
     let name = $pkg.name
     print $"Updating ($name)..."
-
-    let version = ($pkg | get -o version)
-    let requires_version = ($pkg | get -o requires_version | default false)
-    if $requires_version and $version == null {
-      print $"Warning: skipping ($name) update because version could not be determined."
-      continue
-    }
 
     let args = (nix-update-args $pkg)
     try {

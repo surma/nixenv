@@ -33,7 +33,6 @@
       "spotify"
       "slack"
       "discord"
-      "claude-code"
       "obsidian"
     ];
 
@@ -158,8 +157,6 @@
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
-    # programs.claude-code.enable = true;
-    # defaultConfigs.claude-code.enable = true;
 
     wayland.windowManager.hyprland.enable = true;
     defaultConfigs.hyprland.enable = true;

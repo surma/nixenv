@@ -46,10 +46,6 @@
       ];
 
       config = {
-        allowedUnfreeApps = [
-          "claude-code"
-        ];
-
         home.packages = (
           with pkgs;
           [

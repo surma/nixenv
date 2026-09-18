@@ -17,10 +17,6 @@
   ];
 
   config = {
-    allowedUnfreeApps = [
-      "claude-code"
-    ];
-
     secrets.items.llm-proxy-client-key.target = "${config.home.homeDirectory}/.local/state/llm-proxy-client-key";
     secrets.items.scout-gws-credentials.target = "${config.home.homeDirectory}/.local/state/gws-credentials";
     secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";

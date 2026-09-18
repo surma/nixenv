@@ -41,7 +41,6 @@ in
   ];
 
   allowedUnfreeApps = [
-    "claude-code"
     "obsidian"
   ];
 

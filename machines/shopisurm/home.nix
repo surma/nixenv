@@ -94,8 +94,6 @@ in
     ]
   );
 
-  defaultConfigs.claude-code.enable = true;
-
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;
 

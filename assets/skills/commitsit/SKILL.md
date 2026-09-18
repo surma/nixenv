@@ -125,7 +125,7 @@ Stop and ask the user if:
   - Project-specific `create-*-pull-request` and `create-*-commit-message` skills.
   - `dev check` / `fastcheck` for local pre-push validation.
 - Run pre-push validation locally before each push when the project provides a fast checker — catching a lint error locally is one round-trip cheaper than catching it in CI.
-- Respect repo-level rules in `CLAUDE.md` (no `[skip ci]`, no agent-authored DB migrations, no git config edits, etc.).
+- Respect repository-level instruction files such as `CLAUDE.md` (no `[skip ci]`, no agent-authored DB migrations, no git config edits, etc.).
 - Parallelize independent reads (status, log, PR check, Binks comments) — they don't depend on each other.
 
 ## What success looks like in your final message
