@@ -39,12 +39,32 @@ type dhcpStatus struct {
 }
 
 type client struct {
-	baseURL string
-	http    *http.Client
+	baseURL  string
+	http     *http.Client
+	username string
+	password string
+}
+
+func (c *client) newRequest(method, path, body string) (*http.Request, error) {
+	req, err := http.NewRequest(method, c.baseURL+path, strings.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	if body != "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if c.username != "" || c.password != "" {
+		req.SetBasicAuth(c.username, c.password)
+	}
+	return req, nil
 }
 
 func (c *client) get(path string) (*http.Response, error) {
-	resp, err := c.http.Get(c.baseURL + path)
+	req, err := c.newRequest(http.MethodGet, path, "")
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +80,11 @@ func (c *client) post(path string, body any) error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.http.Post(c.baseURL+path, "application/json", strings.NewReader(string(payload)))
+	req, err := c.newRequest(http.MethodPost, path, string(payload))
+	if err != nil {
+		return err
+	}
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return err
 	}
@@ -116,6 +140,26 @@ func (c *client) reconcile(leases map[string]staticLease) error {
 	return nil
 }
 
+func loadCredentials() (string, string, error) {
+	username := strings.TrimSpace(os.Getenv("ADGUARD_USERNAME"))
+	if username == "" {
+		return "", "", fmt.Errorf("ADGUARD_USERNAME is empty")
+	}
+	passwordFile := strings.TrimSpace(os.Getenv("ADGUARD_PASSWORD_FILE"))
+	if passwordFile == "" {
+		return "", "", fmt.Errorf("ADGUARD_PASSWORD_FILE is empty")
+	}
+	raw, err := os.ReadFile(passwordFile)
+	if err != nil {
+		return "", "", fmt.Errorf("read ADGUARD_PASSWORD_FILE: %w", err)
+	}
+	password := strings.TrimSpace(string(raw))
+	if password == "" {
+		return "", "", fmt.Errorf("ADGUARD_PASSWORD_FILE contains an empty password")
+	}
+	return username, password, nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Fprintln(os.Stderr, "usage: adguardhome-reconciler <static-leases.json>")
@@ -131,13 +175,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "decode %s: %v\n", os.Args[1], err)
 		os.Exit(1)
 	}
+	username, password, err := loadCredentials()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load AdGuardHome credentials: %v\n", err)
+		os.Exit(1)
+	}
 	baseURL := os.Getenv("ADGUARD_URL")
 	if baseURL == "" {
 		baseURL = defaultURL
 	}
 	c := &client{
-		baseURL: baseURL,
-		http:    &http.Client{Timeout: 10 * time.Second},
+		baseURL:  baseURL,
+		http:     &http.Client{Timeout: 10 * time.Second},
+		username: username,
+		password: password,
 	}
 	if err := c.reconcile(leases); err != nil {
 		fmt.Fprintf(os.Stderr, "adguardhome-reconciler: %v\n", err)

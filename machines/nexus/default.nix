@@ -6,6 +6,20 @@
 }:
 let
   ips = import ../../ips.nix;
+  smartdNotifier =
+    let
+      noti = pkgs.callPackage ../../packages/noti { defaultMobileDevice = "surmpixel"; };
+    in
+    pkgs.writeShellApplication {
+      name = "smartd-hassio-notify";
+      text = ''
+        ${pkgs.coreutils}/bin/cat > /dev/null
+        export HOME=/var/lib/smartd
+        device="''${SMARTD_DEVICESTRING:-unknown disk}"
+        message="''${SMARTD_MESSAGE:-SMART reported a problem.}"
+        exec ${noti}/bin/noti mobile "$device: $message" --name "SMART on nexus"
+      '';
+    };
 in
 {
   imports = [
@@ -62,6 +76,21 @@ in
   };
 
   secrets.identity = "/home/surma/.ssh/id_machine";
+
+  # Scout and the SMART notifier share one Home Assistant token. Each
+  # consumer receives only the runtime file format that it needs.
+  secrets.items.hassio-token.command = ''
+    token="$(cat)"
+    mkdir -p /var/lib/scout /var/lib/smartd/.hassio-cli
+    printf '%s\n' "$token" > /var/lib/scout/hassio-token
+    chown surma:users /var/lib/scout/hassio-token
+    chmod 0600 /var/lib/scout/hassio-token
+    printf '{"url":"http://${ips.hosts.homeassistant.ip}:8123","token":"%s"}\n' "$token" \
+      > /var/lib/smartd/.hassio-cli/settings.json
+    chown -R root:root /var/lib/smartd
+    chmod 0700 /var/lib/smartd /var/lib/smartd/.hassio-cli
+    chmod 0600 /var/lib/smartd/.hassio-cli/settings.json
+  '';
 
   # The receiver secret is consumed by two services with different
   # ownership contracts: the root-only poller state (0400) and the
@@ -126,6 +155,52 @@ in
     smartmontools
     e2fsprogs
   ];
+
+  services.smartd = {
+    enable = true;
+    autodetect = false;
+
+    # Short tests run daily. Each RAID disk runs one long test per month,
+    # and the dates keep the long tests separate.
+    devices = [
+      {
+        device = "/dev/disk/by-id/ata-WDC_WD60EFAX-68JH4N1_WD-WX12D81ACR0X";
+        options = "-s (S/../.././01|L/../01/./05)";
+      }
+      {
+        device = "/dev/disk/by-id/ata-WDC_WD60EFAX-68JH4N1_WD-WX12D81ACSP4";
+        options = "-s (S/../.././02|L/../08/./05)";
+      }
+      {
+        device = "/dev/disk/by-id/ata-WDC_WD60EFAX-68JH4N1_WD-WX12D81R4CCU";
+        options = "-s (S/../.././03|L/../15/./05)";
+      }
+      {
+        device = "/dev/disk/by-id/ata-WDC_WD60EFAX-68JH4N1_WD-WX12D8135LXT";
+        options = "-s (S/../.././04|L/../22/./05)";
+      }
+      { device = "/dev/disk/by-id/nvme-TEAM_TM8FP6512G_TPBF2509080060200784"; }
+    ];
+
+    notifications = {
+      wall.enable = false;
+      mail = {
+        enable = true;
+        sender = "smartd@nexus";
+        recipient = "surma";
+        mailer = "${smartdNotifier}/bin/smartd-hassio-notify";
+      };
+    };
+  };
+
+  systemd.services.smartd = {
+    wants = [ "network-online.target" ];
+    after = [
+      "network-online.target"
+      "secrets.service"
+    ];
+    requires = [ "secrets.service" ];
+  };
 
   users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];

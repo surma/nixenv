@@ -214,6 +214,13 @@
         "dragoon"
       ];
     };
+    adguardhome-admin-password = {
+      contents = ../secrets/adguardhome-admin-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     nexus-upsmon-password = {
       contents = ../machines/nexus/ups/upsmon.password.age;
       keys = [
@@ -267,8 +274,8 @@
         "citadel"
       ];
     };
-    scout-hassio-token = {
-      contents = ../secrets/scout-hassio-token.age;
+    hassio-token = {
+      contents = ../secrets/hassio-token.age;
       keys = [
         "surma"
         "nexus"

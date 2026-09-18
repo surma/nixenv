@@ -103,7 +103,7 @@ in
   defaultConfigs.opencode.enable = true;
 
   programs.surma-noti.enable = true;
-  secrets.items.scout-hassio-token.command = ''
+  secrets.items.hassio-token.command = ''
     config_dir="${config.home.homeDirectory}/.hassio-cli"
     install -d -m 0700 "$config_dir"
     token="$(cat)"

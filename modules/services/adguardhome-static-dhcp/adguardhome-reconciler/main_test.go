@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -225,6 +226,68 @@ func TestReconcileEmptyConfig(t *testing.T) {
 	}
 	if len(*calls) != 2 {
 		t.Fatalf("want 2 calls (health + status), got %d: %+v", len(*calls), *calls)
+	}
+}
+
+func TestBasicAuthentication(t *testing.T) {
+	const username = "surma"
+	const password = "correct horse battery staple"
+	var calls int
+	checkAuth := func(r *http.Request) {
+		t.Helper()
+		gotUsername, gotPassword, ok := r.BasicAuth()
+		if !ok || gotUsername != username || gotPassword != password {
+			t.Errorf("request %s %s has Basic auth %q/%q, want %q/%q", r.Method, r.URL.Path, gotUsername, gotPassword, username, password)
+		}
+		calls++
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/control/status", func(w http.ResponseWriter, r *http.Request) {
+		checkAuth(r)
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/control/dhcp/status", func(w http.ResponseWriter, r *http.Request) {
+		checkAuth(r)
+		w.Write([]byte(`{"static_leases":[]}`))
+	})
+	mux.HandleFunc("/control/dhcp/add_static_lease", func(w http.ResponseWriter, r *http.Request) {
+		checkAuth(r)
+		w.WriteHeader(http.StatusOK)
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	c := &client{
+		baseURL:  server.URL,
+		http:     server.Client(),
+		username: username,
+		password: password,
+	}
+	if err := c.reconcile(map[string]staticLease{
+		"00:e0:4c:03:4b:03": {IP: "10.0.0.3", Hostname: "citadel"},
+	}); err != nil {
+		t.Fatalf("reconcile: %v", err)
+	}
+	if calls != 3 {
+		t.Fatalf("got %d authenticated requests, want 3", calls)
+	}
+}
+
+func TestLoadCredentials(t *testing.T) {
+	passwordFile := t.TempDir() + "/password"
+	if err := os.WriteFile(passwordFile, []byte("secret-password\n"), 0o600); err != nil {
+		t.Fatalf("write password: %v", err)
+	}
+	t.Setenv("ADGUARD_USERNAME", " surma ")
+	t.Setenv("ADGUARD_PASSWORD_FILE", passwordFile)
+
+	username, password, err := loadCredentials()
+	if err != nil {
+		t.Fatalf("load credentials: %v", err)
+	}
+	if username != "surma" || password != "secret-password" {
+		t.Fatalf("got credentials %q/%q, want %q/%q", username, password, "surma", "secret-password")
 	}
 }
 

@@ -4,8 +4,30 @@ let
   ips = import ../../ips.nix;
   hosts = ips.hosts;
   leases = lib.filterAttrs (_: v: v ? mac) hosts;
+  adminPasswordFile = "/var/lib/adguardhome-reconciler/admin-password";
 in
 {
+  secrets.items.adguardhome-admin-password = {
+    target = adminPasswordFile;
+    mode = "0400";
+  };
+
+  # AdGuard binds the static LAN address, so it must wait until
+  # NetworkManager has configured that address.
+  systemd.services.adguardhome = {
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+  };
+
+  systemd.services.adguardhome-reconcile-leases = {
+    after = [ "secrets.service" ];
+    requires = [ "secrets.service" ];
+    environment = {
+      ADGUARD_USERNAME = "surma";
+      ADGUARD_PASSWORD_FILE = adminPasswordFile;
+    };
+  };
+
   # DNS (53) and DHCP (67) must not use the plain allowedTCPPorts/
   # allowedUDPPorts lists: Nexus is the public edge, so a global allow rule
   # would publish an open resolver and the admin UI to the internet.
@@ -53,11 +75,22 @@ in
     );
 
     settings = {
+      users = [
+        {
+          name = "surma";
+          password = "$2y$12$deFi7bZwEwqSjZLv6qW/Xuur41dFOUKc7G28gAZFT2zAJgZFXW8ui";
+        }
+      ];
+
       # AdGuard must not claim port 53 on Podman bridge gateways.
       # Podman's Aardvark DNS provides service discovery on those networks.
       dns = {
         bind_hosts = [ hosts.nexus.ip ];
         bootstrap_dns = [
+          "9.9.9.9"
+          "149.112.112.112"
+        ];
+        fallback_dns = [
           "9.9.9.9"
           "149.112.112.112"
         ];
