@@ -25,8 +25,6 @@
   ];
 
   config = {
-    programs.brain.enable = lib.mkForce false;
-
     agent.skills = [
       ../../assets/skills/herdr-orchestrator
     ];
