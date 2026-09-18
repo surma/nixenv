@@ -7,6 +7,8 @@
   pkg-config,
   makeWrapper,
   makeRustPlatform,
+  icnsify,
+  rcodesign,
   inputs,
   alsa-lib,
   libGL,
@@ -45,8 +47,7 @@ let
   version = (builtins.fromTOML (builtins.readFile (src + "/Cargo.toml"))).package.version;
 
   # Mirrors packaging/macos/bundle.sh: build ZapFast.app around the built
-  # binary with the bundle assets from the fetched source. sips, iconutil,
-  # and codesign come from the host's /usr/bin in the Darwin stdenv.
+  # binary with the bundle assets from the fetched source.
   darwinBundle = ''
     app="$out/Applications/ZapFast.app"
     mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
@@ -57,19 +58,8 @@ let
     sed "s/__VERSION__/${version}/g" "$src/packaging/macos/Info.plist" \
       > "$app/Contents/Info.plist"
 
-    iconset="$(mktemp -d)/zapfast.iconset"
-    mkdir -p "$iconset"
-    for size in 16 32 128 256 512; do
-      sips -z $size $size "$src/packaging/macos/icon-1024.png" \
-        --out "$iconset/icon_''${size}x''${size}.png" >/dev/null
-      double=$((size * 2))
-      sips -z $double $double "$src/packaging/macos/icon-1024.png" \
-        --out "$iconset/icon_''${size}x''${size}@2x.png" >/dev/null
-    done
-    iconutil -c icns "$iconset" -o "$app/Contents/Resources/zapfast.icns"
-
-    codesign --force \
-      --entitlements "$src/packaging/macos/entitlements.plist" --sign - "$app"
+    icnsify "$src/packaging/macos/icon-1024.png" \
+      --output "$app/Contents/Resources/zapfast.icns"
   '';
 in
 rustPlatform.buildRustPackage {
@@ -96,6 +86,10 @@ rustPlatform.buildRustPackage {
     perl
     pkg-config
   ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    icnsify
+    rcodesign
+  ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [ makeWrapper ];
 
   # Linux libraries only; on Darwin the app links the system frameworks.
@@ -116,22 +110,29 @@ rustPlatform.buildRustPackage {
   # packaging/check-runtime-libs.c), so linking rpaths alone is not enough.
   # The final binary links with an empty RUNPATH, so the standard library
   # from the C++ toolchain (openh264) rides along too.
-  postFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
-    wrapProgram "$out/bin/zapfast" \
-      --prefix LD_LIBRARY_PATH : "${
-        lib.makeLibraryPath [
-          stdenv.cc.cc.lib
-          alsa-lib
-          libGL
-          wayland
-          libxkbcommon
-          libx11
-          libxcursor
-          libxi
-          libxrandr
-        ]
-      }"
-  '';
+  postFixup =
+    lib.optionalString stdenv.hostPlatform.isLinux ''
+      wrapProgram "$out/bin/zapfast" \
+        --prefix LD_LIBRARY_PATH : "${
+          lib.makeLibraryPath [
+            stdenv.cc.cc.lib
+            alsa-lib
+            libGL
+            wayland
+            libxkbcommon
+            libx11
+            libxcursor
+            libxi
+            libxrandr
+          ]
+        }"
+    ''
+    # The Darwin signature must follow the generic strip hook.
+    + lib.optionalString stdenv.hostPlatform.isDarwin ''
+      rcodesign sign \
+        --entitlements-xml-file "$src/packaging/macos/entitlements.plist" \
+        "$out/Applications/ZapFast.app"
+    '';
 
   postInstall = lib.optionalString stdenv.hostPlatform.isDarwin darwinBundle;
 

@@ -80,6 +80,8 @@ let
 
     src = fetchurl source;
 
+    nativeBuildInputs = [ undmg ];
+
     unpackPhase = ''
       runHook preUnpack;
 
