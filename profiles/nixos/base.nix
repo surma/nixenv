@@ -23,6 +23,11 @@
     options = "--delete-older-than 14d";
   };
 
+  # The NixOS secrets service runs as root, so the module default of
+  # `~/.ssh/id_machine` would expand to /root/.ssh/id_machine. Name the real
+  # key instead.
+  secrets.identity = lib.mkDefault "/home/surma/.ssh/id_machine";
+
   time.timeZone = "Europe/London";
 
   i18n.defaultLocale = "en_GB.UTF-8";

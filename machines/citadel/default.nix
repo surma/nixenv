@@ -8,6 +8,7 @@
   imports = [
     ./hardware.nix
     ../../profiles/nixos/base.nix
+    ../../profiles/nixos/headless.nix
 
     inputs.surmhosting.nixosModules.default
     ./service-nixos-admin.nix
@@ -18,11 +19,9 @@
 
   networking.hostName = "citadel";
 
-  nix.settings.require-sigs = false;
   # No nix.settings.max-jobs/cores caps: with mainline U-Boot 2025.10 in SPI
   # negotiating a 100W PD contract, the EDK2-era 15W cap is no longer needed.
   # See Brain: 7awkp1jk (stress test 2026-04-30, 22 stressors, 0 brownouts).
-  secrets.identity = "/home/surma/.ssh/id_machine";
 
   # SPI flash holds mainline U-Boot 2025.10 (flashed 2026-04-30), which boots
   # via extlinux.conf -- not systemd-boot. See Brain: xbkzm7fk, 7awkp1jk.
@@ -35,8 +34,6 @@
   boot.loader.generic-extlinux-compatible.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = false;
   hardware.deviceTree.name = "rockchip/rk3588-rock-5b.dtb";
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernel.sysctl = {
     "kernel.dmesg_restrict" = 0;
@@ -63,13 +60,6 @@
 
   networking.firewall.enable = false;
 
-  services.openssh.enable = true;
-
-  users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
-    surma
-    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
-  ];
-
   hardware.graphics.enable = true;
 
   environment.systemPackages = with pkgs; [
@@ -85,7 +75,6 @@
   ];
 
   services.udisks2.enable = true;
-  services.tailscale.enable = true;
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "citadel";

@@ -12,8 +12,6 @@
     ../../profiles/nixos/base.nix
   ];
 
-  secrets.identity = "/home/surma/.ssh/id_machine";
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 

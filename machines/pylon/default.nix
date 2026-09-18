@@ -1,6 +1,5 @@
 {
   config,
-  pkgs,
   inputs,
   ...
 }:
@@ -24,28 +23,24 @@ in
     ./service-nixos-admin.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
+    ../../profiles/nixos/headless.nix
 
     # ../../apps/writing-prompt
   ];
 
-  nix.settings.require-sigs = false;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "pylon";
   networking.networkmanager.enable = true;
 
-  users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
+  # In addition to the keys from profiles/nixos/headless.nix.
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
-    surma
     surmbook
     shopisurm
     citadel
-    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
 
   networking.interfaces.enp1s0.useDHCP = true;
@@ -61,8 +56,6 @@ in
     interface = "enp1s0";
   };
 
-  secrets.identity = "/home/surma/.ssh/id_machine";
-
   home-manager.users.surma = import ./home.nix;
 
   # Pylon is now a packet forwarder only: no TLS termination, no HTTP
@@ -77,7 +70,6 @@ in
     dockerSocket.enable = true;
   };
 
-  services.tailscale.enable = true;
   networking.firewall.enable = true;
   networking.firewall.allowedTCPPorts = [
     22
@@ -85,7 +77,6 @@ in
     443
   ];
   networking.nftables.enable = true;
-  services.openssh.enable = true;
 
   # Forward the public web ports, Gitea SSH, and Minecraft to their
   # backend hosts over Tailscale. No HTTP parsing happens here; a public

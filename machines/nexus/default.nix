@@ -64,18 +64,14 @@ in
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
+    ../../profiles/nixos/headless.nix
     inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
     ../../modules/services/adguardhome-static-dhcp
     ../../apps/hate
   ];
 
-  nix.settings = {
-    require-sigs = false;
-    trusted-users = [ "@wheel" ];
-  };
-
-  secrets.identity = "/home/surma/.ssh/id_machine";
+  nix.settings.trusted-users = [ "@wheel" ];
 
   # Scout and the SMART notifier share one Home Assistant token. Each
   # consumer receives only the runtime file format that it needs.
@@ -112,7 +108,6 @@ in
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware.graphics.enable = true;
 
@@ -202,17 +197,14 @@ in
     requires = [ "secrets.service" ];
   };
 
-  users.users.surma.linger = true;
   users.groups.podman.members = [ "surma" ];
 
+  # In addition to the keys from profiles/nixos/headless.nix: nexus pulls
+  # from these two hosts.
   users.users.root.openssh.authorizedKeys.keys = with config.secrets.keys; [
-    surma
     dragoon
     archon
-    (builtins.readFile ../../assets/ssh-keys/id_deploy.pub)
   ];
-
-  services.tailscale.enable = true;
 
   services.surmhosting.enable = true;
   services.surmhosting.hostname = "nexus";
@@ -266,8 +258,6 @@ in
   networking.firewall.extraInputRules = ''
     ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport 8081 accept comment "surmhosting internal HTTP"
   '';
-
-  services.openssh.enable = true;
 
   services.key-poller.enable = true;
   systemd.services.key-poller = {
