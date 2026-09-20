@@ -12,7 +12,9 @@ let
   # in-container owner across restarts.
   nextcloudUid = 2001;
   adminPasswordFile = "${stateDirectory}/secrets/admin-pass";
+  databasePasswordDirectory = "/var/lib/postgres-nextcloud";
   containerAdminPasswordFile = "/var/lib/nextcloud-secrets/admin-pass";
+  containerDatabasePasswordFile = "/var/lib/nextcloud-database/password";
 in
 {
   systemd.services.nextcloud-state = {
@@ -30,8 +32,6 @@ in
         ${stateDirectory}/home \
         ${stateDirectory}/redis
       ${pkgs.coreutils}/bin/install -d -m 0700 ${stateDirectory}/secrets
-      ${pkgs.coreutils}/bin/install -d -m 0700 -o postgres -g postgres \
-        ${stateDirectory}/postgresql
 
       if [ ! -s ${adminPasswordFile} ]; then
         temporaryPassword="$(${pkgs.coreutils}/bin/mktemp ${adminPasswordFile}.tmp.XXXXXX)"
@@ -53,8 +53,14 @@ in
       name = "lc-nextcloud";
 
       service = {
-        requires = [ "nextcloud-state.service" ];
-        after = [ "nextcloud-state.service" ];
+        requires = [
+          "nextcloud-state.service"
+          "postgres-nextcloud-setup.service"
+        ];
+        after = [
+          "nextcloud-state.service"
+          "postgres-nextcloud-setup.service"
+        ];
         serviceConfig.MemoryMax = "8G";
       };
 
@@ -64,10 +70,10 @@ in
           hostPath = "${stateDirectory}/home";
           isReadOnly = false;
         };
-        postgresql = {
-          mountPoint = "/var/lib/postgresql";
-          hostPath = "${stateDirectory}/postgresql";
-          isReadOnly = false;
+        database-password = {
+          mountPoint = "/var/lib/nextcloud-database";
+          hostPath = databasePasswordDirectory;
+          isReadOnly = true;
         };
         redis = {
           mountPoint = "/var/lib/redis-nextcloud";
@@ -93,9 +99,13 @@ in
           hostName = domain;
           https = true;
 
-          database.createLocally = true;
+          database.createLocally = false;
           config = {
             dbtype = "pgsql";
+            dbhost = "_gateway:5432";
+            dbname = "nextcloud";
+            dbuser = "nextcloud";
+            dbpassFile = containerDatabasePasswordFile;
             adminuser = "surma";
             adminpassFile = containerAdminPasswordFile;
           };
