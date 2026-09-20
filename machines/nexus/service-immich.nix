@@ -27,7 +27,7 @@ in
     '';
   };
 
-  # Keep this service last in Surmhosting's lexical address allocation.
+  # Keep new service keys after this key in Surmhosting's lexical allocation.
   # This name prevents changes to existing container and Podman addresses.
   services.surmhosting.services."zz-immich" = {
     backend."nixos-container" = {
