@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ pkgs, ... }:
 let
   ips = import ../../ips.nix;
   domain = "nextcloud.apps.surma.technology";
@@ -92,7 +92,6 @@ in
           package = pkgs.nextcloud33;
           hostName = domain;
           https = true;
-          maxUploadSize = "16G";
 
           database.createLocally = true;
           config = {
@@ -110,7 +109,6 @@ in
               ;
           };
 
-          phpOptions.memory_limit = lib.mkForce "1G";
           settings = {
             overwriteprotocol = "https";
             "overwrite.cli.url" = "https://${domain}";
