@@ -61,6 +61,15 @@ let
     icnsify "$src/packaging/macos/icon-1024.png" \
       --output "$app/Contents/Resources/zapfast.icns"
   '';
+
+  # Launchers such as wofi --show drun list XDG desktop entries, not bare
+  # binaries, so install the entry and icon that upstream ships.
+  linuxDesktopEntry = ''
+    install -Dm644 "$src/packaging/applications/zapfast.desktop" \
+      "$out/share/applications/zapfast.desktop"
+    install -Dm644 "$src/packaging/icons/zapfast.svg" \
+      "$out/share/icons/hicolor/scalable/apps/zapfast.svg"
+  '';
 in
 rustPlatform.buildRustPackage {
   pname = "zapfast";
@@ -134,7 +143,9 @@ rustPlatform.buildRustPackage {
         "$out/Applications/ZapFast.app"
     '';
 
-  postInstall = lib.optionalString stdenv.hostPlatform.isDarwin darwinBundle;
+  postInstall =
+    lib.optionalString stdenv.hostPlatform.isDarwin darwinBundle
+    + lib.optionalString stdenv.hostPlatform.isLinux linuxDesktopEntry;
 
   meta = {
     description = "A native WhatsApp client built with Rust and egui";
