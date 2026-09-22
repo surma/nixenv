@@ -56,19 +56,45 @@ than you saved. Delegate production, not conversation.
 
 ## Setup, once per session
 
-Name yourself so the user's sidebar is legible, and create the board:
+Name yourself so executors can reach you, and create the board:
 
 ```bash
-herdr agent rename "$HERDR_PANE_ID" orchestrator
+herdr agent rename "$HERDR_PANE_ID" "orch-$HERDR_WORKSPACE_ID"
 herdr pane rename "$HERDR_PANE_ID" "orchestrator"
 
 BOARD_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.board"
 mkdir -p "$BOARD_DIR"
 
+# the standing reporting rule, given to every executor as system prompt; name yourself literally
+cat > "$BOARD_DIR/wake.md" <<'EOF'
+## Reporting to the orchestrator
+
+When a task of yours ends — finished, blocked, or abandoned — your last act is to run this
+command, with the real task id, status, and absolute report path:
+
+    herdr agent prompt orch-w2 "<id> READY_FOR_REVIEW|BLOCKED|NEEDS_INPUT · <report path>"
+
+Run it as a command and show its JSON result. Writing that line into your answer sends nothing:
+the orchestrator never reads your answer, only what this command types into its pane. Your turn
+is not finished until the result says `agent_prompted`. If it says `agent_not_found`, find the
+orchestrator in `herdr agent list` and send it once more. Never hide the error with `2>/dev/null`,
+and never chain this command to the report write with `&&` — a failed wake would be reported as a
+failed report.
+EOF
+
 # ignore it once per repository; info/exclude is shared by every worktree and never committed
 EXCLUDE="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)/info/exclude"
 [ -d "${EXCLUDE%/*}" ] && ! grep -qxF '.board' "$EXCLUDE" 2>/dev/null && echo '.board' >> "$EXCLUDE"
 ```
+
+Agent names are unique across the whole Herdr server, not per workspace, so the bare word
+`orchestrator` belongs to whichever session claimed it first — on some other project, possibly
+days ago. Asking for it a second time fails with `agent_name_taken`, and the error names the pane
+that holds it. Derive your name from the workspace instead: one workspace is one orchestrator, so
+`orch-$HERDR_WORKSPACE_ID` cannot collide, and you can recompute it in any later turn. That
+string is your wake target, and every assignment you send must carry it literally. The pane label
+is cosmetic and may say whatever the user wants. Put the name in the board header too, so it
+stays visible: `orchestrator: orch-w2`.
 
 The board is plain Markdown and belongs to the work, not to Herdr — nothing in it depends on
 this tool. It sits at the root of the worktree it describes, so one checkout is one plan: in a
@@ -152,9 +178,18 @@ herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "T3 docs
 Then start the agent and label the pane for the human:
 
 ```bash
-herdr agent start exec-docs --kind pi --pane w2:p1 -- --model <model> --thinking <level>
+herdr agent start exec-docs --kind pi --pane w2:p1 -- \
+  --model <model> --thinking <level> --append-system-prompt "$BOARD_DIR/wake.md"
 herdr pane rename w2:p1 "exec-docs · T3 docs sweep"
 ```
+
+The wake rule goes into the executor's **system prompt**, not only into its assignment. An
+assignment is a message, and messages are what compaction rewrites: on a long task the closing
+instruction is the first thing summarized away, and a rework prompt hours later rarely repeats it.
+The system prompt sits outside that history and applies to every turn the executor ever takes.
+`pi` and `claude` accept `--append-system-prompt` with text or a file path; check `herdr agent` for
+the flags of the kind the user chose, and if it has no equivalent, repeat the wake rule in every
+prompt you send that executor.
 
 Agent names match `[a-z][a-z0-9_-]{0,31}` and must be unique; name them for their stream
 (`exec-docs`, `exec-pub`, `checker`), not `agent1`. `agent start` blocks until the agent is
@@ -176,6 +211,11 @@ herdr agent wait exec-docs --until working --timeout 10000
 Send the prompt **without `--wait`**, then confirm the turn started with the bounded wait. A
 timeout there means "verify", not "failed": check `herdr agent get exec-docs` before ever
 resending a prompt, because a delivered prompt that you send twice does the work twice.
+
+Always pass the assignment through the quoted heredoc above. In a plain double-quoted string your
+own shell expands everything inside it first: backticked paths run as commands, `$(...)` is
+substituted, and the executor receives the text with those fragments replaced by error output or
+by nothing at all. The damage is silent — `agent prompt` reports success on the mutilated text.
 
 Never run: `agent prompt --wait`, `agent wait` without `--timeout`, `pane wait-output` without
 `--timeout`, `sleep`, or any loop that re-checks status. You must be able to answer the user
@@ -208,9 +248,17 @@ field on an agent; the human-readable label lives on the pane.
 an approval or question dialog — read it before answering, and ask the user if it is a decision
 rather than a formality. `working` means leave it alone; a quiet executor is not a stuck one.
 
-For anything that finished — the wake names it — read its report file, decide, update the board,
-dispatch what the completion unblocked, close the tab of any executor whose stream just ended,
-tell the user in one or two lines, and **end your turn**.
+Read the sweep against the board, not against your memory of it. An executor that reads `idle` or
+`done` while its task says `running` is finished, whether or not a wake ever arrived: its report
+is on disk, or it lost its turn before writing one. Both cases are yours to resolve now.
+
+For anything that finished — a wake names it, or the sweep does — read its report file, decide,
+update the board, dispatch what the completion unblocked, close the tab of any executor whose
+stream just ended, tell the user in one or two lines, and **end your turn**.
+
+Finish every wake in the turn it arrives. Nothing prompts you a second time, so a wake you
+acknowledge without reading its report is a completion lost until the user notices — an executor
+reporting `NEEDS_INPUT` will wait days for an answer you never sent.
 
 Report outcomes, not activity. No play-by-play. Blockers and decisions go to the user
 immediately; everything else is a short summary at milestones.
@@ -225,18 +273,35 @@ say what it is waiting for.
 
 You only run when something prompts you. A finished executor must therefore wake you, and the
 only mechanism for that is a prompt into your pane — `agent wait` takes a single target, so it
-cannot cover several executors, and `notification show` reaches the user, not you. End every
-assignment with the wake:
+cannot cover several executors, and `notification show` reaches the user, not you. The wake is
+addressed to the name you took at setup, and every executor gets it twice: as the standing rule in
+its system prompt, and again in each assignment with the concrete id and path filled in:
 
 ```bash
-herdr agent prompt orchestrator "T3 READY_FOR_REVIEW · <report path>"
+herdr agent prompt orch-w2 "T3 READY_FOR_REVIEW · /abs/path/.board/T3.report.md"
 ```
 
+Substitute your own name before you send the assignment. Never ship the literal word
+`orchestrator`: either no such agent exists and the executor gets
+`{"error":{"code":"agent_not_found"}}`, or a stranger's session claimed that name and your
+completion is typed into another project's pane. Your pane id works as a target too, so it is the
+fallback to hand an executor that cannot find you by name — expanded to its value (`w2:p1`), never
+as `$HERDR_PANE_ID`, which in the executor's shell means the executor's own pane.
+
+The wake is a command the executor **runs**, and that is where it fails most often. An executor
+that writes its report and then ends the turn with the wake line as its answer looks, in the
+transcript, exactly like one that sent it — and delivers nothing. So both copies of the rule demand
+the CLI's JSON result as proof, and treat the turn as unfinished until it reads `agent_prompted`.
+Both also demand the wake as its own command: chained onto the report write with `&&`, a failed
+wake is reported as a failed report, and the truth on disk goes unnoticed.
+
 That line arrives as your next user message, so keep it to the task id, the status, and the
-report path — you read the report yourself. The executor sends it without `--wait` and does not
-retry: if you are mid-turn it queues until your next step, and if you are sitting on an approval
-dialog Herdr rejects it as `agent_blocked`, in which case the report on disk is still the truth
-and your next sweep finds it.
+report path — you read the report yourself. The executor sends it without `--wait`. `agent_prompted`
+in the result means delivered, and a second send does the work twice, so that is the end of it.
+`agent_not_found` or `pane_not_found` means the target was wrong, not that you are busy: the
+executor resolves you with `herdr agent list` and sends once more. If you are mid-turn the prompt
+queues until your next step, and if you are sitting on an approval dialog Herdr rejects it as
+`agent_blocked` — there the report on disk is still the truth and your next sweep finds it.
 
 It types into your pane, so it can land in a line the user is composing there. That is the price
 of a loop that closes by itself — mention at setup that executors will wake you. Put
@@ -245,7 +310,9 @@ also wants an audible ding.
 
 ## Assignment template
 
-Send this as the prompt and nothing else.
+Send this as the prompt and nothing else. Fill in every field first, including `$BOARD_DIR` and
+your own agent name — a placeholder reaches the executor verbatim, and it will wake a name that
+does not exist.
 
 > You are an executor in a Herdr session. You do not delegate, and you never talk to the user.
 >
@@ -266,8 +333,15 @@ Send this as the prompt and nothing else.
 > When done, write `$BOARD_DIR/<id>.report.md` containing: status
 > (`READY_FOR_REVIEW` | `BLOCKED` | `NEEDS_INPUT`), a summary of at most five sentences, the
 > changed files, the exact commands you ran with their results, and remaining gaps. Write no
-> other file under `$BOARD_DIR`. Then wake the orchestrator with:
-> `herdr agent prompt orchestrator "<id> <status> · <report path>"`
+> other file under `$BOARD_DIR`.
+>
+> Then, as a separate command and as the last thing you do, **run** this — printing or
+> paraphrasing it sends nothing, and I never read your answer:
+> `herdr agent prompt <your-orchestrator-name> "<id> <status> · $BOARD_DIR/<id>.report.md"`
+> Show its JSON result. Your turn is not finished until that result says `agent_prompted`, and one
+> `agent_prompted` is enough — do not send it twice. If it says `agent_not_found`, find me in
+> `herdr agent list` and send it once more. Do not discard the error with `2>/dev/null`, and do not
+> chain this command to the report write with `&&`.
 
 Keep assignments short. A long, heavily qualified assignment is an oversized task: split it and
 send the first piece. Three acceptance criteria is the ceiling; over that, split.
