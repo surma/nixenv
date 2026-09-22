@@ -424,6 +424,13 @@
         "nexus"
       ];
     };
+    nextcloud-postgres-password = {
+      contents = ../secrets/nextcloud-postgres-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     hetzner-cloud-api-token = {
       contents = ../secrets/hetzner-cloud-api-token.age;
       keys = [
