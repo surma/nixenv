@@ -270,7 +270,7 @@ in
                   SCOUT_API_PORT = toString scoutApiPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
-                  SCOUT_DEFAULT_MODEL = "openai/gpt-5.6-luna";
+                  SCOUT_DEFAULT_MODEL = "fireworks/accounts/fireworks/models/glm-5p3-flash";
                   SCOUT_DEFAULT_REASONING_LEVEL = "max";
                   SCOUT_LOG = "scout=debug";
                 };
