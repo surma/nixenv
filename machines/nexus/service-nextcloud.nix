@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   ips = import ../../ips.nix;
   domain = "nextcloud.apps.surma.technology";
@@ -46,6 +46,18 @@ in
     '';
   };
 
+  # NixOS configures the host side of the veth in the container post-start.
+  # Start setup and the web stack only after that gateway exists.
+  systemd.services."container@lc-nextcloud" = {
+    postStart = lib.mkAfter ''
+      ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nextcloud-setup.service
+      ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nextcloud-update-db.service
+      ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start phpfpm-nextcloud.service
+      ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nginx.service nextcloud-cron.timer
+    '';
+    serviceConfig.TimeoutStartSec = lib.mkForce "10min";
+  };
+
   # This key follows zz-immich, which preserves every existing Surmhosting
   # container and Podman address.
   services.surmhosting.services."zz-nextcloud" = {
@@ -90,22 +102,40 @@ in
       config = {
         system.stateVersion = "25.05";
 
-        # The NixOS module starts initial setup without a network dependency.
-        # Wait until this container installs its address and gateway route.
-        systemd.services.nextcloud-setup = {
-          after = [ "network-addresses-eth0.service" ];
-          requires = [ "network-addresses-eth0.service" ];
-          preStart = ''
-            # A failed first install leaves a nonempty config that blocks retries.
-            # Preserve every completed installation and remove only partial config.
-            partialConfig=/var/lib/nextcloud/config/config.php
-            if [[ -s "$partialConfig" ]] &&
-              ! ${pkgs.gnugrep}/bin/grep -Eq "['\"]installed['\"][[:space:]]*=>[[:space:]]*true" "$partialConfig"
-            then
-              ${pkgs.coreutils}/bin/rm -- "$partialConfig"
-            fi
-          '';
+        systemd.services = {
+          nginx.wantedBy = lib.mkForce [ ];
+          phpfpm-nextcloud.wantedBy = lib.mkForce [ ];
+          nextcloud-setup = {
+            wantedBy = lib.mkForce [ ];
+            preStart = ''
+              # A failed first install leaves a nonempty config that blocks retries.
+              # Preserve every completed installation and remove only partial config.
+              partialConfig=/var/lib/nextcloud/config/config.php
+              if [[ -s "$partialConfig" ]] &&
+                ! ${pkgs.gnugrep}/bin/grep -Eq "['\"]installed['\"][[:space:]]*=>[[:space:]]*true" "$partialConfig"
+              then
+                ${pkgs.coreutils}/bin/rm -- "$partialConfig"
+              fi
+
+              for attempt in {1..30}; do
+                if ${pkgs.postgresql_17}/bin/pg_isready -h _gateway -p 5432 -t 1; then
+                  break
+                fi
+                if [[ "$attempt" = 30 ]]; then
+                  echo "PostgreSQL is not reachable through the container gateway" >&2
+                  exit 1
+                fi
+                ${pkgs.coreutils}/bin/sleep 1
+              done
+
+              PGPASSWORD="$(<"$CREDENTIALS_DIRECTORY/dbpass")" \
+                ${pkgs.postgresql_17}/bin/psql --no-password \
+                  --host=_gateway --port=5432 --username=nextcloud --dbname=nextcloud \
+                  --command='SELECT 1' >/dev/null
+            '';
+          };
         };
+        systemd.timers.nextcloud-cron.wantedBy = lib.mkForce [ ];
 
         users.users.nextcloud.uid = nextcloudUid;
         users.groups.nextcloud.gid = nextcloudUid;
