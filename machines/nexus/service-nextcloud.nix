@@ -90,6 +90,23 @@ in
       config = {
         system.stateVersion = "25.05";
 
+        # The NixOS module starts initial setup without a network dependency.
+        # Wait until this container installs its address and gateway route.
+        systemd.services.nextcloud-setup = {
+          after = [ "network-addresses-eth0.service" ];
+          requires = [ "network-addresses-eth0.service" ];
+          preStart = ''
+            # A failed first install leaves a nonempty config that blocks retries.
+            # Preserve every completed installation and remove only partial config.
+            partialConfig=/var/lib/nextcloud/config/config.php
+            if [[ -s "$partialConfig" ]] &&
+              ! ${pkgs.gnugrep}/bin/grep -Eq "['\"]installed['\"][[:space:]]*=>[[:space:]]*true" "$partialConfig"
+            then
+              ${pkgs.coreutils}/bin/rm -- "$partialConfig"
+            fi
+          '';
+        };
+
         users.users.nextcloud.uid = nextcloudUid;
         users.groups.nextcloud.gid = nextcloudUid;
 

@@ -160,6 +160,11 @@ in
   # The password is hexadecimal, which makes this SQL interpolation safe.
   systemd.services.postgres-nextcloud-setup = {
     description = "Set the password for the Nextcloud PostgreSQL role";
+    restartTriggers = [
+      (builtins.hashFile "sha256" ../../secrets/nextcloud-postgres-password.age)
+    ];
+    # Restart in one transaction so the required container is not left stopped.
+    stopIfChanged = false;
     after = [
       "postgresql.service"
       "postgresql-setup.service"
