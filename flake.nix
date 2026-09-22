@@ -139,6 +139,14 @@
               type = "app";
               program = "${config.packages.secrets}/bin/secrets";
             };
+            tailscale-ips-update = {
+              type = "app";
+              program = "${config.packages.tailscale-ips-update}/bin/tailscale-ips-update";
+            };
+            tailscale-cf-dns = {
+              type = "app";
+              program = "${config.packages.tailscale-cf-dns}/bin/tailscale-cf-dns";
+            };
           };
         };
     };

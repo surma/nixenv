@@ -62,6 +62,14 @@ def main [] {
     }
   }
 
+  print "Updating tailscale addresses in ips.nix..."
+  try {
+    ^nix run $".#tailscale-ips-update" -- --ips-file ips.nix
+  } catch { |err|
+    let message = ($err.msg? | default "unknown error")
+    print $"Warning: tailscale address update failed: ($message)"
+  }
+
   if $fsmonitor_was_set {
     ^git config --local core.fsmonitor $fsmonitor_value
   } else {
