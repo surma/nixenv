@@ -83,6 +83,27 @@ in
   # in order, so the stop timeout keeps the module's 120 s.
   systemd.services.postgresql.serviceConfig.TimeoutStartSec = "15min";
 
+  # NixOS creates databases before roles. PostgreSQL refuses to clone
+  # template1 after the system collation version changes, so repair the
+  # template before the generated database setup runs.
+  systemd.services.postgresql-setup.preStart = ''
+    set -eu
+    if [[ -f /dump/state/postgres/17/standby.signal ]]; then
+      exit 0
+    fi
+
+    if [ "$(
+      ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -A -t -d postgres \
+        -c "SELECT datcollversion IS DISTINCT FROM pg_database_collation_actual_version(oid) FROM pg_database WHERE datname = 'template1'"
+    )" = "t" ]; then
+      echo "Rebuilding template1 indexes for the current collation version"
+      ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -d template1 \
+        -c 'REINDEX DATABASE template1;'
+      ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -d postgres \
+        -c 'ALTER DATABASE template1 REFRESH COLLATION VERSION;'
+    fi
+  '';
+
   # The parent /dump/state is owned by surma, so systemd-tmpfiles refuses to
   # create postgres-owned subdirs under it ("unsafe path transition"). The
   # data directory must therefore be created out-of-band; this is a one-time
@@ -117,7 +138,9 @@ in
     };
     script = ''
       set -eu
-      PSQL='${pkgs.postgresql_16}/bin/psql -v ON_ERROR_STOP=1 -X'
+      # Keep role passwords out of PostgreSQL statement logs on SQL errors.
+      export PGOPTIONS='-c log_statement=none -c log_min_error_statement=panic'
+      PSQL='${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X'
       ${lib.concatMapStringsSep "\n" (app: ''
         # Extract the raw password from "<APP>__POSTGRES__PASSWORD=<value>".
         PW=$(${pkgs.gnused}/bin/sed -n 's/^[A-Z]*__POSTGRES__PASSWORD=//p' /var/lib/postgres-arr/${app}/env)
@@ -125,7 +148,8 @@ in
           echo "no password found in /var/lib/postgres-arr/${app}/env" >&2
           exit 1
         fi
-        $PSQL -c "ALTER USER \"${app}\" WITH PASSWORD '$PW';"
+        builtin printf '%s\n%s\n' "$PW" "$PW" |
+          $PSQL -d postgres -c '\password ${app}'
         $PSQL -c "ALTER DATABASE \"${app}-main\" OWNER TO \"${app}\";"
         $PSQL -c "ALTER DATABASE \"${app}-log\"  OWNER TO \"${app}\";"
       '') apps}
@@ -157,14 +181,16 @@ in
     };
     script = ''
       set -eu
+      # Keep the role password out of PostgreSQL statement logs on SQL errors.
+      export PGOPTIONS='-c log_statement=none -c log_min_error_statement=panic'
       PASSWORD="$(${pkgs.coreutils}/bin/cat ${nextcloudPasswordFile})"
       if [[ ! "$PASSWORD" =~ ^[0-9a-f]{64}$ ]]; then
         echo "invalid password in ${nextcloudPasswordFile}" >&2
         exit 1
       fi
-      ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X <<SQL
-      ALTER USER "${nextcloudDatabase}" WITH PASSWORD '$PASSWORD';
-      SQL
+      builtin printf '%s\n%s\n' "$PASSWORD" "$PASSWORD" |
+        ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -d postgres \
+          -c '\password ${nextcloudDatabase}'
     '';
   };
 
