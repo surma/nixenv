@@ -424,24 +424,25 @@ in
         hostPath = "/dump/state/scout-static";
         isReadOnly = false;
       };
-      # Syncthing shared folders — read-write overlays on top of the
-      # read-only /dump mount so Scout can manage files in them.
-      syncthing-audiobooks = {
+      # Shared document folders — read-write overlays on top of the
+      # read-only /dump mount so Scout can manage files in them. Nextcloud
+      # surfaces the same trees as external storage.
+      shared-audiobooks = {
         mountPoint = "/dump/audiobooks";
         hostPath = "/dump/audiobooks";
         isReadOnly = false;
       };
-      syncthing-ebooks = {
+      shared-ebooks = {
         mountPoint = "/dump/ebooks";
         hostPath = "/dump/ebooks";
         isReadOnly = false;
       };
-      syncthing-scratch = {
+      shared-scratch = {
         mountPoint = "/dump/scratch";
         hostPath = "/dump/scratch";
         isReadOnly = false;
       };
-      syncthing-surmvault = {
+      shared-surmvault = {
         mountPoint = "/dump/surmvault";
         hostPath = "/dump/surmvault";
         isReadOnly = false;

@@ -22,7 +22,6 @@
     ../../profiles/home-manager/platform/framework.nix
     ../../profiles/home-manager/roles/workstation.nix
     ../../profiles/home-manager/roles/ai.nix
-    ../../profiles/home-manager/services/syncthing-peer.nix
 
     ../../profiles/home-manager/gui/webapps.nix
   ];
@@ -118,8 +117,6 @@
     programs.wezterm.fontSize = 10;
 
     secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
-
-    services.syncthing.tray.enable = true;
 
     # programs.opencode.enable = true;
     # defaultConfigs.opencode.enable = true;

@@ -26,8 +26,6 @@ in
     ../../profiles/home-manager/roles/go.nix
     ../../profiles/home-manager/roles/dev.nix
     ../../profiles/home-manager/roles/ai.nix
-    ../../profiles/home-manager/services/syncthing-peer.nix
-    ../../profiles/home-manager/services/syncthing-vault.nix
 
   ];
 

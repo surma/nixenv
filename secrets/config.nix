@@ -64,34 +64,6 @@
         "nexus"
       ];
     };
-    dragoon-syncthing = {
-      contents = ../machines/dragoon/syncthing/key.pem.age;
-      keys = [
-        "surma"
-        "dragoon"
-      ];
-    };
-    archon-syncthing = {
-      contents = ../machines/archon/syncthing/key.pem.age;
-      keys = [
-        "surma"
-        "archon"
-      ];
-    };
-    shopisurm-syncthing = {
-      contents = ../machines/shopisurm/syncthing/key.pem.age;
-      keys = [
-        "surma"
-        "shopisurm"
-      ];
-    };
-    nexus-syncthing = {
-      contents = ../machines/nexus/syncthing/key.pem.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
     nexus-copyparty = {
       contents = ../machines/nexus/copyparty/surma.passwd.age;
       keys = [
@@ -242,16 +214,6 @@
         "surma"
         "nexus"
         "citadel"
-      ];
-    };
-    syncthing-relay-token = {
-      contents = ../secrets/syncthing-relay-token.age;
-      keys = [
-        "surma"
-        "dragoon"
-        "nexus"
-        "pylon"
-        "shopisurm"
       ];
     };
     scout-repo-ssh-key = {

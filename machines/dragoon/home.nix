@@ -6,7 +6,6 @@
 }:
 let
   ips = import ../../ips.nix;
-  shared = import ../../modules/services/syncthing/common.nix { inherit lib pkgs; };
   ollama = pkgs.ollama.overrideAttrs (old: {
     postPatch =
       builtins.replaceStrings
@@ -34,8 +33,6 @@ in
     ../../profiles/home-manager/roles/javascript.nix
     ../../profiles/home-manager/roles/go.nix
     ../../profiles/home-manager/roles/godot.nix
-    ../../profiles/home-manager/services/syncthing-peer.nix
-    ../../profiles/home-manager/services/syncthing-vault.nix
   ];
 
   home.stateVersion = "24.05";
@@ -85,9 +82,4 @@ in
 
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
-  services.syncthing.settings.devices.arbiter = shared.devices.arbiter;
-  services.syncthing.settings.folders."${config.home.homeDirectory}/SurmVault".devices = lib.mkForce [
-    "nexus"
-    "arbiter"
-  ];
 }

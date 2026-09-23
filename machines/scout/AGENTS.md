@@ -111,22 +111,24 @@ Combined with the `nixenv` repo (which defines all NixOS container and service c
 - Inspect media organization and service runtime state
 
 **Constraints:**
-- The mount is **read-only** by default. Scout cannot modify anything under `/dump` except for the Syncthing shared folders listed below.
+- The mount is **read-only** by default. Scout cannot modify anything under `/dump` except for the shared document folders listed below.
 - Do not attempt to read large binary files (media, disk images) — use metadata/directory listings instead.
 - The "never delete user data" rule still applies even for inspection — do not recommend deletions without asking.
 
-## Syncthing shared folders — read-write
+## Shared document folders — read-write
 
-The following Syncthing-managed directories are bind-mounted **read-write** into the container, overlaying the read-only `/dump` mount at their respective paths. Scout can create, modify, move, and delete files in these directories.
+The following directories are bind-mounted **read-write** into the container, overlaying the read-only `/dump` mount at their respective paths. Scout can create, modify, move, and delete files in these directories.
 
-- `/dump/audiobooks/` — audiobook library (synced to multiple devices)
-- `/dump/ebooks/` — eBook collection (synced to multiple devices)
-- `/dump/scratch/` — general-purpose scratch/transfer space
-- `/dump/surmvault/` — personal vault (Markdown notes, synced via Syncthing)
+Nextcloud on Nexus surfaces the same trees as external storage, so they reach phones, tablets, and other machines through Nextcloud clients.
+
+- `/dump/audiobooks/` — audiobook library (Nextcloud external storage, read-only there)
+- `/dump/ebooks/` — eBook collection (Nextcloud external storage, read-only there)
+- `/dump/scratch/` — general-purpose scratch/transfer space (read-write in Nextcloud)
+- `/dump/surmvault/` — personal vault (Markdown notes; Nextcloud external storage, read-only there)
 
 **Constraints:**
-- Changes here propagate to all synced devices via Syncthing. Treat writes as production changes.
-- **Never delete, rename, or overwrite files without explicit user approval.** These folders sync to phones, tablets, and other machines — accidental data loss is hard to undo.
+- Changes here are visible to every Nextcloud client. Treat writes as production changes.
+- **Never delete, rename, or overwrite files without explicit user approval.** These folders reach phones, tablets, and other machines — accidental data loss is hard to undo.
 - Avoid writing temporary or working files here. Use the CWD or `/tmp` for scratch work.
 - Do not read large binary files (audiobooks, EPUBs) into context — use metadata, directory listings, or `file` commands instead.
 - When managing eBooks or audiobooks, prefer organizing into subdirectories by author or topic, consistent with the existing structure.

@@ -24,7 +24,6 @@ in
 {
   imports = [
     ./hardware.nix
-    ./service-syncthing.nix
     ./service-mosquitto.nix
     ./service-adguardhome.nix
     ./service-scout.nix
