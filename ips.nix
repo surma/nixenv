@@ -7,7 +7,14 @@
 # Host keys are the exact DHCP hostnames AdGuardHome knows. `mac`+`ip`
 # describe a static DHCP reservation; `ip` without `mac` is a host with no
 # lease (nexus, the DHCP server itself, and pylon, the edge VPS, whose `ip`
-# is its stable public address). `tailscale` is the optional Tailscale IPv4.
+# is its stable public address). `tailscale` is the optional Tailscale IPv4
+# and `tailscale6` the optional Tailscale IPv6.
+#
+# Every host with a `tailscale` address is published as
+# <host>.vpn.surma.technology by the tailscale-cf-dns service on nexus, with
+# an AAAA record when `tailscale6` is also set. Refresh both fields from the
+# live tailnet with `nix run .#tailscale-ips-update` (also part of
+# update-all), then commit and deploy.
 {
   domain = "home.arpa";
 

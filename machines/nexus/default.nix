@@ -61,6 +61,7 @@ in
     ./service-surm-auth.nix
     ./service-llm-proxy.nix
     ./service-ha-proxy.nix
+    ./service-tailscale-cf-dns.nix
     # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
