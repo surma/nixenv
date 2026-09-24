@@ -11,7 +11,7 @@
     # DUMMY key. Replace with dark-archon's real `~/.ssh/id_machine.pub`
     # (`nix run .#secrets -- genkey` on the machine), then re-encrypt:
     # `nix run .#secrets -- recrypt --machine dark-archon`.
-    dark-archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL8N+535c1RaIZkxrCxZv4EB7vlD2ZdLwe1jZMZxVDN6 dark-archon dummy";
+    dark-archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJPzxL3GcTBMadXlg+/ViYRE8mIB9rzGtVVXd5SrEsN";
     surmturntable = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBb7S7oe5a61I0TH+2xmI68rGVflyftTvjQlVinJgFOr";
     nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW";
     forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILrXa3Rnz2M+BtpydthCXDsQfeZbmu4cDtxxCtMpxvG6";
