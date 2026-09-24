@@ -15,6 +15,7 @@
       // {
         archon.imports = [ ../../machines/archon ];
         citadel.imports = [ ../../machines/citadel ];
+        dark-archon.imports = [ ../../machines/dark-archon ];
         nexus.imports = [ ../../machines/nexus ];
         pylon.imports = [ ../../machines/pylon ];
         testcontainer.imports = [ ../../machines/testcontainer ];
