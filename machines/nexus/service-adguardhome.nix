@@ -82,6 +82,13 @@ in
         }
       ];
 
+      # No login lockout: a few wrong passwords used to block the admin UI for
+      # block_auth_min (default 15) minutes. The UI is already reachable only
+      # from the LAN and the tailnet (see the firewall rules above), and the
+      # public route sits behind surm-auth, so AdGuard's own brute-force
+      # counter adds little and locks me out instead.
+      auth_attempts = 1000000;
+
       # AdGuard must not claim port 53 on Podman bridge gateways.
       # Podman's Aardvark DNS provides service discovery on those networks.
       dns = {
