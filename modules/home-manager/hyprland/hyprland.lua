@@ -178,7 +178,9 @@ for i = 1, #letterKeys do
     end
 end
 
-hl.bind(meh .. " + SHIFT + W", hl.dsp.window.close())
+-- No SHIFT: this keyboard cannot report CapsLock+LeftShift+W together (matrix
+-- blocking), so the W never reaches keyd. W is reserved above, so meh+W is free.
+hl.bind(meh .. " + W", hl.dsp.window.close())
 hl.bind(meh .. " + SHIFT + Q", hl.dsp.exit())
 
 hl.bind(meh .. " + left", hl.dsp.focus({ direction = "left" }))
