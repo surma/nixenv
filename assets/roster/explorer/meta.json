@@ -1,0 +1,5 @@
+{
+  "description": "Finds code and maps an area of the codebase. Reports files with line ranges, key code, and where to start. Changes no project files. Use it for open-ended searches that you cannot target yourself.",
+  "model": "glm-5p3-flash",
+  "thinking": "max"
+}

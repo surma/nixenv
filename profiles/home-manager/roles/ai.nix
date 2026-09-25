@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   ...
 }:
 {
@@ -45,4 +46,14 @@
     ../../../assets/skills/web-development
     ../../../assets/skills/bro
   ];
+
+  # Every role directory in assets/roster, so a new role needs no change here.
+  agent.roster =
+    let
+      rosterDir = ../../../assets/roster;
+    in
+    builtins.readDir rosterDir
+    |> lib.filterAttrs (_: type: type == "directory")
+    |> lib.attrNames
+    |> map (name: rosterDir + "/${name}");
 }

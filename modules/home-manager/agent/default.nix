@@ -29,6 +29,12 @@ with lib;
         default = [ ];
         description = "List of skill directories (each containing a SKILL.md) to symlink into ~/.agents/skills/";
       };
+
+      roster = mkOption {
+        type = types.listOf types.path;
+        default = [ ];
+        description = "List of role directories (each containing a meta.json and a system_prompt.md) for the herdr-orchestrator skill to symlink into ~/.agents/roster/";
+      };
     };
 
     defaultConfigs.agents = {
@@ -62,6 +68,18 @@ with lib;
           value.source = skillPath;
         }) cfg.skills
       );
+    })
+
+    (mkIf (cfg.roster != [ ]) {
+      home.file =
+        cfg.roster
+        |> map (rolePath: {
+          # An entry inside a store path, such as "${pkg}/roster/x", carries string context,
+          # and attribute names must not have context.
+          name = ".agents/roster/${builtins.unsafeDiscardStringContext (baseNameOf rolePath)}";
+          value.source = rolePath;
+        })
+        |> listToAttrs;
     })
 
     (mkIf defaultCfg.enable {

@@ -1,0 +1,5 @@
+{
+  "description": "Reviews a change adversarially and reports findings with file and line evidence. Changes no project files.",
+  "model": "gpt-6-astra",
+  "thinking": "xhigh"
+}

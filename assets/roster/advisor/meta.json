@@ -1,0 +1,5 @@
+{
+  "description": "Answers one specific design question, or audits a plan or an implementation against its acceptance criteria. Changes no project files.",
+  "model": "claude-opus-5-5",
+  "thinking": "high"
+}

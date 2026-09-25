@@ -1,0 +1,5 @@
+{
+  "description": "Implements focused changes and bounded refactors from a clear brief with acceptance criteria. It can also debug a failure that the brief reproduces. Edits only the files that it owns.",
+  "model": "glm-5p3-flash",
+  "thinking": "max"
+}

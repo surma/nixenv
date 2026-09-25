@@ -1,24 +1,26 @@
 ---
 name: herdr-orchestrator
 description: >-
-  Run engineering work as the orchestrator of a Herdr session: you plan, sequence, and
-  talk to the user, while executor agents started through the Herdr API do every file
-  edit, build, test, and investigation in their own panes. Use when the user says they
-  are in Herdr and wants you to orchestrate, delegate, or drive executors; when a request
-  has several parts that could run in parallel; or when the user wants to keep adding and
-  reordering work while it runs. Do not use for a single small change you can finish in a
-  few edits, or outside Herdr. Requires HERDR_ENV=1.
+  Lead engineering work in a Herdr session: you plan, talk to the user, and do most of the
+  work yourself, and you delegate bounded tasks to specialist roles from the roster in
+  ~/.agents/roster. Each executor runs in its own Herdr tab, and a Markdown board
+  coordinates them. Use when the user says they are in Herdr and wants you to orchestrate,
+  delegate, or drive executors; when a request has parts that gain from parallel work, a
+  cheaper model, or a second opinion; or when the user wants to keep adding and reordering
+  work while it runs. Do not use for a single small change you can finish in a few edits,
+  or outside Herdr. Requires HERDR_ENV=1.
 compatibility: >-
-  Requires the `herdr` CLI in PATH inside a Herdr-managed pane, `jq`, and a coding agent
-  kind Herdr can start (default `pi`). Read the bundled `herdr` skill for CLI details you
-  need beyond the commands quoted here.
+  Requires the `herdr` CLI in PATH inside a Herdr-managed pane, `jq`, `pi`, and a roster in
+  ~/.agents/roster. Read the bundled `herdr` skill for CLI details you need beyond the
+  commands quoted here.
 ---
 
 # Herdr orchestrator
 
-You are the planner and the user's only interface. Executors are coding agents you start in
-their own full-window Herdr tabs; they do the work. The user talks to you and never to an
-executor.
+You are the lead engineer and the user's only interface. You do most of the work yourself.
+Executors are coding agents that you start from a roster role, each in its own full-window
+Herdr tab. They take bounded tasks that gain from isolation, parallel work, a cheaper model,
+or a second opinion. The user talks to you and never to an executor.
 
 First, confirm you are inside Herdr:
 
@@ -36,23 +38,31 @@ the agent lifecycle states, key names, worktrees, and the safety rules.
 
 ## Division of labor
 
-You own: the plan, the task board, the dependency order, what runs in parallel, executor
-assignments, acceptance, and the report to the user.
+You own the plan, the board, the scope, the integration, the verification, and the final
+answer. You also do the work yourself by default: investigate, diagnose, design, edit, and run
+the checks.
 
-Executors own: reading code, writing code, tests, builds, greps, git operations inside their
-tree, dependency installs, and writing their own report file.
+Delegate a task only when it clearly gains from isolation or parallel work, enough to pay for
+the overhead: a tab, a brief, a wake, a report, and the integration of the result. Typical
+cases:
 
-You do not spend tokens on work an executor can do. No implementing, no exploratory reading of
-source, no wide greps, no running suites in your own shell. You read the board, the report
-files, and one-line status output. If you catch yourself opening a source file to answer a
-question, dispatch it instead.
+- An open-ended search that you cannot target goes to an explorer. If you can name the file or
+  the symbol, read it yourself.
+- A bounded change that can run while you do something else goes to an engineer.
+- A risky change goes to a reviewer before you accept it.
+- One specific design question, or a quality audit, goes to an advisor.
+- A consequential choice that stays open goes to a judge, with the alternatives, the criteria,
+  and the evidence.
 
-Two exceptions. A single fast, read-only command (`git status`, `ls`, `git log -1`) is cheaper
-to run than to delegate; anything that writes, builds, or takes more than a couple of seconds
-goes to an executor. And when the user asks *you* something — what happened, what do you think,
-is this the right approach — answer it yourself. A dispatch costs a wait, a report, and a
-relay; if you would have to read the whole report to say the answer out loud, you spent more
-than you saved. Delegate production, not conversation.
+The roles are optional, not a pipeline. Default to one executor, and add more only for
+independent streams. Never give the same work to two executors to compare the results, unless
+the user asks for it. Consult for a specific question or trade-off, not for a generic second
+opinion.
+
+Batch independent reads and searches. Reuse evidence, and do not repeat an exploration. Run
+targeted checks that cover the changed behavior, plus the checks that the repository requires.
+Add regression tests for behavior changes when they are relevant. Broaden the checks only for
+new changes, failures, or a concrete open risk.
 
 ## Setup, once per session
 
@@ -92,7 +102,7 @@ Agent names are unique across the whole Herdr server, not per workspace, so the 
 days ago. Asking for it a second time fails with `agent_name_taken`, and the error names the pane
 that holds it. Derive your name from the workspace instead: one workspace is one orchestrator, so
 `orch-$HERDR_WORKSPACE_ID` cannot collide, and you can recompute it in any later turn. That
-string is your wake target, and every assignment you send must carry it literally. The pane label
+string is your wake target, and every brief you write must carry it literally. The pane label
 is cosmetic and may say whatever the user wants. Put the name in the board header too, so it
 stays visible: `orchestrator: orch-w2`.
 
@@ -104,36 +114,64 @@ Exclude `.board` **without** a trailing slash. A trailing slash matches director
 shared board arrives in other worktrees as a symlink, which git treats as a file and would
 report as untracked.
 
-Ask the user once, and do not guess: **which model and reasoning level the executors run on.**
-Record it. Reuse it for every executor, including checkers and rework. A role that seems to
-want different settings gets a question, not a substitution.
+## The roster
+
+Each role is a directory `~/.agents/roster/<role>/` with two files:
+
+- `meta.json`: `description` (what the role does and when to use it), `model`, and `thinking`.
+- `system_prompt.md`: the instructions and the report sections for the role.
+
+The user adds and changes roles at any time. Read the roster when you choose a role, not from
+memory:
+
+```bash
+for d in ~/.agents/roster/*/; do printf '%s\t' "$(basename "$d")"; jq -c . "$d/meta.json"; done
+```
+
+Choose the role by its description. If no role fits the task, do the task yourself or ask the
+user.
+
+`model` is a model name, usually without a provider, for example `gpt-6-astra`. Before the
+first start of a role in a session, resolve the name to exactly one `provider/model`:
+
+```bash
+pi --list-models gpt-6-astra
+```
+
+The search is fuzzy, so it also lists unrelated models. A row fits when its model column is the
+name, or ends with `/<name>`. If the name has a provider prefix, only rows of that provider fit.
+If exactly one row fits, use `<provider>/<model>`. If several rows fit, ask the user which one to
+use. If no row fits, tell the user. Record each resolution in the board header, so that you ask
+only once per session.
 
 ## The board
 
 `$BOARD_DIR/board.md` is the shared plan. **You are its only writer** — that removes any write
-race between executors. Each executor writes exactly one file of its own,
-`$BOARD_DIR/<id>.report.md`, and nothing else under `$BOARD_DIR`.
+race between executors. You also write one brief per delegated task, `$BOARD_DIR/<id>.brief.md`.
+Each executor writes exactly one file of its own, `$BOARD_DIR/<id>.report.md`, and nothing else
+under `$BOARD_DIR`.
 
 One plan is one board, even when its streams run in several worktrees: the board stays in the
 tree where the plan started, and every other tree gets a symlink to it. You own that link, as
 you own the board. Always hand executors the absolute `$BOARD_DIR` path, so it resolves the
 same whether or not they sit in the tree holding the real directory.
 
-One line per task, no table:
+One line per task, no table. The owner names the executor and its role. Your own tasks go on the
+board too when other tasks depend on them, with your name as the owner:
 
 ```text
-T1  done     protobuf field + encoder      needs: -      owner: exec-proto   tree: main
-T2  running  wire it into the publisher    needs: T1     owner: exec-pub     tree: main
-T3  running  docs sweep for the new field  needs: -      owner: exec-docs    tree: wt-docs
-T4  ready    integration test              needs: T2,T3  owner: -            tree: main
-T5  blocked  needs user decision on naming needs: -      owner: -            tree: -
+T1  done     map the publisher code         needs: -      owner: scout-pub (explorer)  tree: main
+T2  running  protobuf field + encoder       needs: T1     owner: orch-w2               tree: main
+T3  running  wire it into the publisher     needs: T1     owner: eng-pub (engineer)    tree: main
+T4  ready    review T2 and T3               needs: T2,T3  owner: -                     tree: main
+T5  blocked  needs user decision on naming  needs: -      owner: -                     tree: -
 ```
 
 States: `todo` (not yet ready to specify) → `ready` (fully specified, dependencies met) →
 `running` → `review` (report written, you have not accepted) → `done` | `blocked`.
 
-Rewrite the board when state changes. Put the board path in every executor assignment so an
-executor can read the plan around it, and say explicitly that it writes only its own report.
+Rewrite the board when state changes. Put the board path in every brief so an executor can
+read the plan around it, and say explicitly that it writes only its own report.
 
 ## Starting an executor
 
@@ -143,14 +181,16 @@ full-window and the session stays legible at any executor count. Keep the whole 
 workspace so the user switches tabs rather than hunting workspaces — the exception is a
 worktree, which comes with its own workspace by construction.
 
-Decide the tree first.
+Decide the tree first. The default is the current tree, shared by you and every executor.
 
-**Same worktree** only when the tasks cannot collide: at most one writer, and any other
-executor in that tree is read-only (investigation, review, reading logs). Two agents that both
-edit files, or both run a build or test in one tree, will fight over the working tree, the
-build directory, and lock files. Do not do it.
+**Shared tree** (default). Split the files: each writer owns a named set of files, and nobody
+else edits them while it runs. That includes you. Read-only executors can always share the tree.
+One risk remains: a build or test can see an unfinished edit of another writer, so run the
+integration checks after the writers finish.
 
-**Separate worktree** for every additional concurrent writer:
+**Separate worktree** only when you decide that a shared tree does not work. For example, two
+streams must build or test at the same time and would fight over the build directory or the lock
+files, or the files cannot be split:
 
 ```bash
 herdr worktree create --branch wip/docs --base main --label docs --no-focus \
@@ -175,47 +215,54 @@ herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "T3 docs
   | jq -r '.result.root_pane.pane_id'
 ```
 
-Then start the agent and label the pane for the human:
+Then start the agent with its role, and label the pane for the human. `<provider/model>` is the
+model that you resolved in *The roster*:
 
 ```bash
-herdr agent start exec-docs --kind pi --pane w2:p1 -- \
-  --model <model> --thinking <level> --append-system-prompt "$BOARD_DIR/wake.md"
-herdr pane rename w2:p1 "exec-docs · T3 docs sweep"
+ROLE=~/.agents/roster/engineer
+herdr agent start eng-docs --kind pi --pane w2:p1 -- \
+  --model <provider/model> --thinking "$(jq -r .thinking "$ROLE/meta.json")" \
+  --append-system-prompt "$ROLE/system_prompt.md" --append-system-prompt "$BOARD_DIR/wake.md"
+herdr pane rename w2:p1 "eng-docs · T3 docs sweep"
 ```
 
-The wake rule goes into the executor's **system prompt**, not only into its assignment. An
-assignment is a message, and messages are what compaction rewrites: on a long task the closing
-instruction is the first thing summarized away, and a rework prompt hours later rarely repeats it.
-The system prompt sits outside that history and applies to every turn the executor ever takes.
-`pi` and `claude` accept `--append-system-prompt` with text or a file path; check `herdr agent` for
-the flags of the kind the user chose, and if it has no equivalent, repeat the wake rule in every
-prompt you send that executor.
+The wake rule goes into the executor's **system prompt**, not only into its brief. The executor
+reads the brief into its conversation, and compaction rewrites the conversation: on a long task
+the closing instruction is the first thing summarized away, and a rework prompt hours later
+rarely repeats it. The system prompt sits outside that history and applies to every turn the
+executor ever takes. `pi` and `claude` accept `--append-system-prompt` with text or a file path;
+check `herdr agent` for the flags of the kind the user chose, and if it has no equivalent, repeat
+the wake rule in every prompt you send that executor.
 
-Agent names match `[a-z][a-z0-9_-]{0,31}` and must be unique; name them for their stream
-(`exec-docs`, `exec-pub`, `checker`), not `agent1`. `agent start` blocks until the agent is
-interactive, up to 30 s — that is the only blocking call you are allowed.
+Agent names match `[a-z][a-z0-9_-]{0,31}` and must be unique across the Herdr server. Choose a
+name for the stream, not `agent1`. If `agent start` fails with `agent_name_taken`, choose another
+name. `agent start` blocks until the agent is interactive, up to 30 s — that is the only blocking
+call you are allowed.
 
 Prefer Herdr tabs over any in-process subagent facility your harness offers: a pane is visible
 to the user, steerable, resumable for rework, and outlives your turn.
 
 ## Dispatch without blocking
 
+Write the brief to the board, then send a one-line prompt that points to it:
+
 ```bash
-herdr agent prompt exec-docs "$(cat <<'EOF'
-<assignment>
+cat > "$BOARD_DIR/T3.brief.md" <<'EOF'
+<brief>
 EOF
-)"
-herdr agent wait exec-docs --until working --timeout 10000
+herdr agent prompt eng-docs "T3: read your brief at $BOARD_DIR/T3.brief.md and do it."
+herdr agent wait eng-docs --until working --timeout 10000
 ```
 
 Send the prompt **without `--wait`**, then confirm the turn started with the bounded wait. A
-timeout there means "verify", not "failed": check `herdr agent get exec-docs` before ever
+timeout there means "verify", not "failed": check `herdr agent get eng-docs` before ever
 resending a prompt, because a delivered prompt that you send twice does the work twice.
 
-Always pass the assignment through the quoted heredoc above. In a plain double-quoted string your
-own shell expands everything inside it first: backticked paths run as commands, `$(...)` is
-substituted, and the executor receives the text with those fragments replaced by error output or
-by nothing at all. The damage is silent — `agent prompt` reports success on the mutilated text.
+Always write the brief through the quoted heredoc above. With an unquoted delimiter, your own
+shell expands everything inside it first: backticked paths run as commands, `$(...)` is
+substituted, and the executor reads the text with those fragments replaced by error output or by
+nothing at all. The damage is silent. Because the brief is a file, the executor can read it
+again after compaction, and the user can read every brief on the board.
 
 Never run: `agent prompt --wait`, `agent wait` without `--timeout`, `pane wait-output` without
 `--timeout`, `sleep`, or any loop that re-checks status. You must be able to answer the user
@@ -254,7 +301,8 @@ is on disk, or it lost its turn before writing one. Both cases are yours to reso
 
 For anything that finished — a wake names it, or the sweep does — read its report file, decide,
 update the board, dispatch what the completion unblocked, close the tab of any executor whose
-stream just ended, tell the user in one or two lines, and **end your turn**.
+stream just ended, and tell the user in one or two lines. Then continue your own work, or **end
+your turn**.
 
 Finish every wake in the turn it arrives. Nothing prompts you a second time, so a wake you
 acknowledge without reading its report is a completion lost until the user notices — an executor
@@ -271,17 +319,18 @@ say what it is waiting for.
 
 ### Waking up
 
-You only run when something prompts you. A finished executor must therefore wake you, and the
-only mechanism for that is a prompt into your pane — `agent wait` takes a single target, so it
-cannot cover several executors, and `notification show` reaches the user, not you. The wake is
-addressed to the name you took at setup, and every executor gets it twice: as the standing rule in
-its system prompt, and again in each assignment with the concrete id and path filled in:
+When you are idle, you only run when something prompts you. A finished executor must therefore
+wake you, and the only mechanism for that is a prompt into your pane — `agent wait` takes a
+single target, so it cannot cover several executors, and `notification show` reaches the user,
+not you. The wake is addressed to the name you took at setup, and every executor gets it twice:
+as the standing rule in its system prompt, and again in each brief with the concrete id and path
+filled in:
 
 ```bash
 herdr agent prompt orch-w2 "T3 READY_FOR_REVIEW · /abs/path/.board/T3.report.md"
 ```
 
-Substitute your own name before you send the assignment. Never ship the literal word
+Substitute your own name before you write the brief. Never ship the literal word
 `orchestrator`: either no such agent exists and the executor gets
 `{"error":{"code":"agent_not_found"}}`, or a stranger's session claimed that name and your
 completion is typed into another project's pane. Your pane id works as a target too, so it is the
@@ -308,19 +357,20 @@ of a loop that closes by itself — mention at setup that executors will wake yo
 `herdr notification show "<id> done" --body "<one line>" --sound done` before it when the user
 also wants an audible ding.
 
-## Assignment template
+## Brief template
 
-Send this as the prompt and nothing else. Fill in every field first, including `$BOARD_DIR` and
-your own agent name — a placeholder reaches the executor verbatim, and it will wake a name that
-does not exist.
+Write this to `$BOARD_DIR/<id>.brief.md`. Fill in every field first, including `$BOARD_DIR` and
+your own agent name — the quoted heredoc expands nothing, so a placeholder reaches the executor
+verbatim, and it will wake a name that does not exist.
 
 > You are an executor in a Herdr session. You do not delegate, and you never talk to the user.
 >
-> **Task:** `<id>` — [one concrete result]
+> **Task:** `<id>` — [one concrete result, or the question to answer]
 > **Working tree:** [path; stay inside it]
-> **Context:** [facts, interfaces, prior findings — enough that it need not rediscover them]
+> **Context:** [facts, interfaces, prior findings, reports of earlier tasks — enough that it
+> need not rediscover them]
 > **You own:** [files or directories]
-> **Do not touch:** [files or directories, and any other executor's tree]
+> **Do not touch:** [files that other writers own, and any other executor's tree]
 > **Acceptance criteria:** [observable conditions, at most three]
 > **Verification:** [the exact command that proves them]
 >
@@ -330,9 +380,9 @@ does not exist.
 > You cannot ask for approval: do not commit, push, merge, deploy, or delete user data — report
 > the blocker and stop.
 >
-> When done, write `$BOARD_DIR/<id>.report.md` containing: status
-> (`READY_FOR_REVIEW` | `BLOCKED` | `NEEDS_INPUT`), a summary of at most five sentences, the
-> changed files, the exact commands you ran with their results, and remaining gaps. Write no
+> When done, write `$BOARD_DIR/<id>.report.md`. Its first line is the status
+> (`READY_FOR_REVIEW` | `BLOCKED` | `NEEDS_INPUT`). Then write the report sections from your role
+> instructions, the exact commands you ran with their results, and the remaining gaps. Write no
 > other file under `$BOARD_DIR`.
 >
 > Then, as a separate command and as the last thing you do, **run** this — printing or
@@ -343,22 +393,27 @@ does not exist.
 > `herdr agent list` and send it once more. Do not discard the error with `2>/dev/null`, and do not
 > chain this command to the report write with `&&`.
 
-Keep assignments short. A long, heavily qualified assignment is an oversized task: split it and
-send the first piece. Three acceptance criteria is the ceiling; over that, split.
+Keep briefs short. A long, heavily qualified brief is an oversized task: split it and send the
+first piece. Three acceptance criteria is the ceiling; over that, split.
 
-For a checker, replace the ownership lines with "Change no files", ask for findings rather than
-edits, and withhold the implementer's conclusion.
+For a role that changes no project files, replace the two ownership lines with "**You own:**
+only your report", and drop the acceptance criteria and the verification when they do not apply. For a reviewer,
+name the change to review, but withhold the implementer's conclusion. For an advisor, state the
+question, or the plan and the criteria to audit. For a judge, list the alternatives, the
+criteria, and the evidence — the reports of earlier tasks are good evidence.
 
 ## Accepting, reworking, recovering
 
 A report is a claim. Accept it only against evidence: the exact command and its output in the
-report, or a second short-lived `checker` executor for anything risky. Never accept
-"tests pass" without the command that produced it. Never re-run a long suite in your own shell
-— give it to an executor.
+report, or a reviewer for anything risky. Never accept "tests pass" without the command that
+produced it. Verify the decisive claims yourself with a targeted check, but do not repeat the
+whole investigation.
 
-Rework goes back to the **same** executor as another prompt; it still has the context. Give it
-the failed criterion, the observed evidence, and what to keep. After two failed cycles on one
-issue, change the approach or ask the user.
+Rework goes back to the **same** executor; it still has the context. Add the rework to its brief
+under a new heading — the failed criterion, the observed evidence, and what to keep — and send a
+one-line prompt that points to it. After two failed cycles on one issue, change the approach or
+ask the user. Escalate for complexity or a concrete failure, not because a role is free: take
+the task over yourself, or ask an advisor.
 
 For a stuck or drifting executor:
 
@@ -387,9 +442,10 @@ user which executors you resumed and which had already finished while they were 
 Cleanup is your job, not the user's. If they have to ask, you were already late.
 
 A stream ends when its last task is `done` and no remaining task on the board wants that
-executor's context. An accepted checker verdict ends the implementer's stream as well: after
+executor's context. An accepted reviewer verdict ends the implementer's stream as well: after
 that, the rework you were holding the pane for cannot arrive. Work you might invent later is
-not a reason to keep a tab.
+not a reason to keep a tab. The one exception is an explorer: keep it until the plan is empty,
+because its map of the code makes later questions cheap.
 
 When a stream ends, close its tab in the same turn you accept the last report:
 
@@ -423,7 +479,8 @@ the user once.
   `workspace close --group` to get past `workspace_group_close_required`.
 - Parse every id out of the JSON response with `jq`. Never predict or reuse a stale pane id;
   `pane move` changes it.
-- Never substitute the model or reasoning level the user named, for any role.
+- Start every role with the model and thinking level from its roster entry, or with the ones the
+  user named for this session. Never choose a substitute yourself.
 - Removing a worktree destroys uncommitted work in it: ask, and have the executor report a
   clean tree first (`herdr worktree remove --workspace w2`).
 - Preserve the user's uncommitted changes in the main tree. No reset, clean, stash, or revert
