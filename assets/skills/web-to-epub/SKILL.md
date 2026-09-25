@@ -67,7 +67,7 @@ percollate html -o /tmp/article.html "https://..."
 
 When saving EPUBs for the user's collection:
 
-1. **Always save to Syncthing** at `/dump/ebooks/Blog posts/<Title>.epub` — this is the canonical ebook storage location. Use a human-readable filename based on the article title.
+1. **Always save to the ebook library** at `/dump/ebooks/Blog posts/<Title>.epub` — this is the canonical ebook storage location. Use a human-readable filename based on the article title.
 2. **Use `/tmp/` for intermediate files** — do not write working files to `/dump/ebooks/`.
 3. **Never overwrite existing files** in `/dump/ebooks/` without asking.
 

@@ -19,7 +19,6 @@ in
 {
   imports = [
     ./hardware.nix
-    ./service-syncthing-relay.nix
     ./service-nixos-admin.nix
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix

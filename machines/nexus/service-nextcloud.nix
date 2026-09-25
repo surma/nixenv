@@ -15,6 +15,90 @@ let
   databasePasswordDirectory = "/var/lib/postgres-nextcloud";
   containerAdminPasswordFile = "/var/lib/nextcloud-secrets/admin-pass";
   containerDatabasePasswordFile = "/var/lib/nextcloud-database/password";
+
+  # The /dump trees are owned by uid/gid 1000 on the host. These containers
+  # share the host uid space, so a group with that exact gid is what grants
+  # write access. The name is arbitrary; only the number matters.
+  dumpGid = 1000;
+
+  # Folders surfaced in Nextcloud as external storage rather than as entries
+  # in the data directory. Nextcloud trusts its own index, not the
+  # filesystem, so anything written to the data directory out of band stays
+  # invisible. External storage is the supported path for trees that other
+  # things also touch.
+  externalStorage = {
+    ebooks = {
+      hostPath = "/dump/ebooks";
+      readOnly = true;
+    };
+    audiobooks = {
+      hostPath = "/dump/audiobooks";
+      readOnly = true;
+    };
+    surmvault = {
+      hostPath = "/dump/surmvault";
+      readOnly = true;
+    };
+    scratch = {
+      hostPath = "/dump/scratch";
+      readOnly = false;
+    };
+  };
+
+  containerMountPoint = name: "/mnt/${name}";
+
+  externalStorageBindMounts = lib.mapAttrs' (
+    name: mount:
+    lib.nameValuePair "external-${name}" {
+      mountPoint = containerMountPoint name;
+      hostPath = mount.hostPath;
+      isReadOnly = mount.readOnly;
+    }
+  ) externalStorage;
+
+  # Idempotent: every step is a no-op once the mount exists, so the unit can
+  # run on every container start.
+  registerExternalStorage = pkgs.writeShellScript "nextcloud-register-external-storage" ''
+    set -euo pipefail
+    occ=/run/current-system/sw/bin/nextcloud-occ
+
+    "$occ" app:enable files_external
+
+    register() {
+      local mountPoint="$1" dataDir="$2" readOnly="$3" id
+
+      id="$("$occ" files_external:list --output=json \
+        | ${pkgs.jq}/bin/jq -r --arg mp "$mountPoint" \
+            '.[] | select(.mount_point == $mp) | .mount_id' \
+        | ${pkgs.coreutils}/bin/head -n1)"
+
+      if [ -z "$id" ]; then
+        echo "creating external storage $mountPoint -> $dataDir"
+        "$occ" files_external:create "$mountPoint" local null::null -c datadir="$dataDir"
+        id="$("$occ" files_external:list --output=json \
+          | ${pkgs.jq}/bin/jq -r --arg mp "$mountPoint" \
+              '.[] | select(.mount_point == $mp) | .mount_id' \
+          | ${pkgs.coreutils}/bin/head -n1)"
+      fi
+
+      if [ -z "$id" ]; then
+        echo "failed to resolve a mount id for $mountPoint" >&2
+        return 1
+      fi
+
+      "$occ" files_external:option "$id" readonly "$readOnly"
+      # Notice edits made outside Nextcloud. Without this the index only
+      # updates for changes Nextcloud itself made.
+      "$occ" files_external:option "$id" filesystem_check_changes 1
+    }
+
+    ${lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (
+        name: mount:
+        "register /${name} ${containerMountPoint name} ${if mount.readOnly then "true" else "false"}"
+      ) externalStorage
+    )}
+  '';
 in
 {
   systemd.services.nextcloud-state = {
@@ -54,6 +138,7 @@ in
       ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nextcloud-update-db.service
       ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start phpfpm-nextcloud.service
       ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nginx.service nextcloud-cron.timer
+      ${pkgs.systemd}/bin/systemctl --machine=lc-nextcloud start nextcloud-external-storage.service
     '';
     serviceConfig.TimeoutStartSec = lib.mkForce "10min";
   };
@@ -97,7 +182,8 @@ in
           hostPath = "${stateDirectory}/secrets";
           isReadOnly = true;
         };
-      };
+      }
+      // externalStorageBindMounts;
 
       config = {
         system.stateVersion = "25.05";
@@ -105,6 +191,21 @@ in
         systemd.services = {
           nginx.wantedBy = lib.mkForce [ ];
           phpfpm-nextcloud.wantedBy = lib.mkForce [ ];
+          # Registers the /dump bind mounts as external storage. Kept out of
+          # multi-user.target like the rest of the stack; the host starts it
+          # once the container gateway exists. A failure here leaves
+          # Nextcloud itself running.
+          nextcloud-external-storage = {
+            description = "Register /dump folders as Nextcloud external storage";
+            wantedBy = lib.mkForce [ ];
+            after = [ "nextcloud-setup.service" ];
+            requires = [ "nextcloud-setup.service" ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = "${registerExternalStorage}";
+            };
+          };
           nextcloud-setup = {
             wantedBy = lib.mkForce [ ];
             preStart = ''
@@ -139,6 +240,12 @@ in
 
         users.users.nextcloud.uid = nextcloudUid;
         users.groups.nextcloud.gid = nextcloudUid;
+
+        # Write access to /dump/scratch comes from the group, not from
+        # changing any ownership on the host. The read-only trees are 0755
+        # and need nothing.
+        users.groups.dump-shared.gid = dumpGid;
+        users.users.nextcloud.extraGroups = [ "dump-shared" ];
 
         services.nextcloud = {
           enable = true;

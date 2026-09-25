@@ -43,7 +43,6 @@ let
     ../home-manager/nixenv
     ../features/hyprland.nix
     ../features/screenshot.nix
-    ../services/syncthing
   ];
 
   systemModules = sharedFeatureModules ++ systemFeatureModules ++ systemProgramModules;
