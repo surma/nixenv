@@ -110,6 +110,12 @@ hl.config({
         touchpad = {
             natural_scroll = true,
             disable_while_typing = true,
+            -- Only a real press counts as a click. Hyprland defaults this to
+            -- true, which fires clicks from resting fingers and stray
+            -- brushes. Note the Lua schema spells it with underscores; the
+            -- hyphenated `tap-to-click` from hyprctl/the classic config is
+            -- rejected here.
+            tap_to_click = false,
         },
 
         natural_scroll = true,

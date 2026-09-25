@@ -72,6 +72,11 @@ with lib;
           config.macos_window_background_blur = 0
           config.send_composed_key_when_left_alt_is_pressed = true
           config.enable_tab_bar = false
+          -- One line per wheel event in full-screen TUIs. The default of 3
+          -- makes a high-resolution touchpad scroll far too fast in pi,
+          -- herdr and pagers, while GUI apps that handle smooth scrolling
+          -- themselves are unaffected.
+          config.alternate_buffer_wheel_scroll_speed = 1
           config.window_padding = {
             top = "0.5cell",
             bottom = "0.5cell",
