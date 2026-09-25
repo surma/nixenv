@@ -40,6 +40,15 @@
     "kernel.dmesg_restrict" = 0;
   };
 
+  # Dell ships PD, Thunderbolt and BIOS firmware through LVFS. Plugging in
+  # external monitors hard-powers this machine off, and the kernel blames the
+  # firmware outright:
+  #   ucsi_acpi USBC000:00: con1: Firmware bug: duplicate partner altmode
+  #   SVID 0xff01 ... please contact the BIOS vendor to fix this issue
+  # followed by GET_CONNECTOR_STATUS timing out and the power going. BIOS was
+  # 1.8.2 (2026-05-22) when that happened.
+  services.fwupd.enable = true;
+
   services.sunshine = {
     enable = true;
     # The NixOS module's generic graphical-session.target also runs in the
