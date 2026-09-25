@@ -156,6 +156,9 @@
   users.users.surma = {
     description = "Surma";
 
+    # For flashing ESP32 boards over USB serial (e.g. the XIAO C6).
+    extraGroups = [ "dialout" ];
+
     # nexus runs services.key-poller and SSHes in as surma to read the
     # Shopify key when shopisurm and archon are unreachable. Merges with the
     # `surma` key that profiles/nixos/base.nix already installs.

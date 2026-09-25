@@ -49,6 +49,7 @@
         kdePackages.dolphin
         vlc
         qview
+        picocom
       ]
     );
 
