@@ -79,11 +79,8 @@
     fleet.enrollSecretFile = "/etc/orbit/enroll-secret";
     fleet.enrollSecretUnits = [ "secrets.service" ];
 
-    # Safe preparation only: this names an externally managed runtime path
-    # for nix-daemon; it does not read or materialise credentials.
     developerTools = {
       enable = true;
-      credentialFile = "/etc/nix/aws/credentials";
     };
   };
 

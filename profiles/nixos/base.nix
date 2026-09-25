@@ -28,6 +28,10 @@
   # key instead.
   secrets.identity = lib.mkDefault "/home/surma/.ssh/id_machine";
 
+  # One kernel everywhere: the laptops (archon, dark-archon) set no kernel and
+  # silently ran the NixOS default while the servers got the latest.
+  boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
+
   time.timeZone = "Europe/London";
 
   i18n.defaultLocale = "en_GB.UTF-8";

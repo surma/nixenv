@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   inputs,
   ...
 }:
@@ -78,11 +79,8 @@
     # it never did anything on this platform.
     chrome.enrollmentMandatory = false;
 
-    # Safe preparation only: this names an externally managed runtime path
-    # for nix-daemon; it does not read or materialise credentials.
     developerTools = {
       enable = true;
-      credentialFile = "/etc/nix/aws/credentials";
     };
   };
 
@@ -120,7 +118,9 @@
     "slack"
     "endpoint-verification"
   ];
+  # programs.firefox.enable = lib.mkForce false;
   environment.systemPackages = with pkgs; [
+     (pkgs.writeShellScriptBin "x-www-browser" ''exec ${lib.getExe pkgs.google-chrome} "$@"'')
     pciutils
     usbutils
   ];

@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 # A machine that runs without a display, and that I never sit at: nexus,
@@ -10,9 +9,6 @@
 # Everything here answers one question: "is this box remote?". Hardware,
 # hosted services and network topology stay in the machine.
 {
-  # Recent kernels for recent server hardware (Odroid H4, Rock 5B, Hetzner).
-  boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
-
   # Closures get built on a workstation and pushed here, so they carry no
   # cache signature.
   nix.settings.require-sigs = false;
