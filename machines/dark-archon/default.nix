@@ -49,6 +49,10 @@
   # 1.8.2 (2026-05-22) when that happened.
   services.fwupd.enable = true;
 
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", TAG+="uaccess"
+  '';
+
   services.sunshine = {
     enable = true;
     # The NixOS module's generic graphical-session.target also runs in the
