@@ -148,6 +148,14 @@ find .git -name fsmonitor--daemon.ipc -type s -delete
 nix run nixpkgs#nix-update -- --flake <package> [--version X]
 ```
 
+Pi also needs a separate model-data hash. The generic command does not update it. Use the dedicated app, which also builds Pi to verify the update:
+
+```sh
+nix run .#update-pi
+# Pin a specific version:
+nix run .#update-pi -- --version 0.87.1
+```
+
 To update everything (flake inputs + all package hashes):
 
 ```sh

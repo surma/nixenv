@@ -45,6 +45,7 @@ def main [] {
     { name: "tinycast" }
   ]
 
+  mut failed_packages = []
   for pkg in $packages {
     if (".git/fsmonitor--daemon.ipc" | path exists) {
       ^rm -f .git/fsmonitor--daemon.ipc
@@ -54,11 +55,20 @@ def main [] {
     print $"Updating ($name)..."
 
     let args = (nix-update-args $pkg)
-    try {
+    let updated = (try {
       ^nix run nixpkgs#nix-update -- ...$args
+      if $name == "pi-coding-agent" {
+        print "Building pi-coding-agent..."
+        ^nix build ".#pi-coding-agent" --no-link
+      }
+      true
     } catch { |err|
       let message = ($err.msg? | default "unknown error")
       print $"Warning: update for ($name) failed: ($message)"
+      false
+    })
+    if not $updated {
+      $failed_packages = ($failed_packages | append $name)
     }
   }
 
@@ -74,5 +84,9 @@ def main [] {
     ^git config --local core.fsmonitor $fsmonitor_value
   } else {
     try { ^git config --local --unset core.fsmonitor } catch { }
+  }
+
+  if not ($failed_packages | is-empty) {
+    error make { msg: $"Package updates failed: ($failed_packages | str join ', ')" }
   }
 }

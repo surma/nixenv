@@ -147,6 +147,10 @@
               type = "app";
               program = "${config.packages.tailscale-cf-dns}/bin/tailscale-cf-dns";
             };
+            update-pi = {
+              type = "app";
+              program = "${config.packages.update-pi}/bin/update-pi";
+            };
           };
         };
     };

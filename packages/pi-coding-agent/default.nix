@@ -1,4 +1,4 @@
-# To update: nix run nixpkgs#nix-update -- --flake --custom-dep modelData pi-coding-agent
+# To update: nix run .#update-pi
 {
   lib,
   buildNpmPackage,
@@ -21,8 +21,9 @@ let
   npmDepsHash = "sha256-JBIYoP2vvRNz1HONNvDJ1U3c+nmCJ7/VgNthRTkrkIA=";
 
   modelData = fetchzip {
+    name = "pi-ai-model-data-${version}";
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-KzewhtP1DRFDIOrJ4wN9bKwG3EioQW7eTsipK5AJ2z8=";
+    hash = "sha256-TC0jNS8xJj9aHfpFWgRi3eoz3eHz1m0+FoDYeQTo2iY=";
   };
 in
 buildNpmPackage rec {
@@ -69,6 +70,7 @@ buildNpmPackage rec {
         "--flake"
         "--custom-dep"
         "modelData"
+        "--build"
       ];
     };
   };
