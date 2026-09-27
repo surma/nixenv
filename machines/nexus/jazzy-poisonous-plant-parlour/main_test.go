@@ -17,8 +17,8 @@ func TestDoorStateFor(t *testing.T) {
 	tests := map[string]doorState{
 		"on":          doorOpen,
 		"off":         doorClosed,
-		"unknown":     doorClosed,
-		"unavailable": doorClosed,
+		"unknown":     doorSilent,
+		"unavailable": doorSilent,
 	}
 
 	for state, want := range tests {
@@ -43,6 +43,8 @@ func TestVerdict(t *testing.T) {
 		{"one unreadable, other closed", []doorState{doorUnknown, doorClosed}, "UNKNOWN"},
 		{"one unreadable, other open", []doorState{doorUnknown, doorOpen}, "NO"},
 		{"both unreadable", []doorState{doorUnknown, doorUnknown}, "UNKNOWN"},
+		{"one silent, other closed", []doorState{doorClosed, doorSilent}, "UNKNOWN"},
+		{"one silent, other open", []doorState{doorSilent, doorOpen}, "NO"},
 	}
 
 	for _, tc := range tests {
@@ -202,6 +204,31 @@ func TestServeHTTPShowsUnknownWhenHomeAssistantFails(t *testing.T) {
 	}
 	if got := strings.Count(body, `class="door door--unknown"`); got != 2 {
 		t.Fatalf("unknown door count = %d, want 2:\n%s", got, body)
+	}
+	if !strings.Contains(body, "Home Assistant is unavailable.") {
+		t.Fatalf("response does not say Home Assistant is unavailable:\n%s", body)
+	}
+}
+
+func TestServeHTTPRefusesAnAllClearFromADeadSensor(t *testing.T) {
+	homeAssistant := fakeHomeAssistant(t, map[string]string{
+		testOfficeDoor: "off",
+		testGardenDoor: "unavailable",
+	}, nil)
+
+	body := render(t, homeAssistant)
+
+	if !strings.Contains(body, ">UNKNOWN<") {
+		t.Fatalf("a dead sensor must not produce an all-clear:\n%s", body)
+	}
+	if strings.Contains(body, `class="confetti"`) {
+		t.Fatalf("a dead sensor must not produce confetti:\n%s", body)
+	}
+	if !strings.Contains(body, `class="door door--silent"><strong>Garden door:</strong> No idea. The sensor has stopped reporting.`) {
+		t.Fatalf("response does not blame the garden door sensor:\n%s", body)
+	}
+	if strings.Contains(body, "Home Assistant is unavailable.") {
+		t.Fatalf("Home Assistant answered, so the page must not blame it:\n%s", body)
 	}
 }
 
