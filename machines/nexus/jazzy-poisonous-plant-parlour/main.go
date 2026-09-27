@@ -15,20 +15,72 @@ import (
 )
 
 const (
-	defaultHomeAssistantURL = "http://10.0.0.5:8123"
-	defaultEntityID         = "binary_sensor.bean_office_door"
-	defaultListenAddress    = "0.0.0.0:8080"
-	confettiPieceCount      = 600
-	confettiBurstWaves      = 20
-	glitterPieceCount       = 120
-	glitterBurstWaves       = 20
+	defaultHomeAssistantURL   = "http://10.0.0.5:8123"
+	defaultOfficeDoorEntityID = "binary_sensor.bean_office_door"
+	defaultGardenDoorEntityID = "binary_sensor.garden_door_sensor"
+	defaultListenAddress      = "0.0.0.0:8080"
+	confettiPieceCount        = 600
+	confettiBurstWaves        = 20
+	glitterPieceCount         = 120
+	glitterBurstWaves         = 20
 )
 
 type application struct {
 	homeAssistantURL string
-	entityID         string
+	doors            []door
 	token            string
 	httpClient       *http.Client
+}
+
+type doorState string
+
+const (
+	doorClosed  doorState = "closed"
+	doorOpen    doorState = "open"
+	doorUnknown doorState = "unknown"
+)
+
+// door is one way Jazz could come to harm, with the line the page shows for
+// each state.
+type door struct {
+	name     string
+	entityID string
+	closed   string
+	open     string
+}
+
+type doorReport struct {
+	Name  string
+	State doorState
+	Text  string
+}
+
+func officeAndGardenDoors(officeDoorEntityID, gardenDoorEntityID string) []door {
+	return []door{
+		{
+			name:     "Office door",
+			entityID: officeDoorEntityID,
+			closed:   "Closed. The Poisonous Plant Parlour is shut, and the plants remain unnibbled.",
+			open:     "OPEN. The Poisonous Plant Parlour is open for business.",
+		},
+		{
+			name:     "Garden door",
+			entityID: gardenDoorEntityID,
+			closed:   "Closed. The outdoors remains strictly theoretical.",
+			open:     "OPEN. Jazz is one bad decision away from a career as an outdoor cat.",
+		},
+	}
+}
+
+func (d door) report(state doorState) doorReport {
+	text := "No idea. Home Assistant is not taking questions."
+	switch state {
+	case doorOpen:
+		text = d.open
+	case doorClosed:
+		text = d.closed
+	}
+	return doorReport{Name: d.name, State: state, Text: text}
 }
 
 type homeAssistantState struct {
@@ -47,17 +99,20 @@ type pageData struct {
 	ShowConfetti   bool
 	ConfettiPieces []effectPiece
 	GlitterPieces  []effectPiece
+	Doors          []doorReport
 	Status         string
 }
 
-func pageClassForAnswer(answer string) string {
+// toneForAnswer drives both the page and the answer styling. The headline
+// asks whether Jazz is safe, so YES is the good outcome.
+func toneForAnswer(answer string) string {
 	switch answer {
 	case "YES":
-		return "page--bad"
+		return "good"
 	case "NO":
-		return "page--good"
+		return "bad"
 	default:
-		return "page--unknown"
+		return "unknown"
 	}
 }
 
@@ -81,7 +136,7 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Can Jazz poison himself?</title>
+  <title>Is Jazz safe?</title>
   <style>
     :root {
       color-scheme: dark;
@@ -134,16 +189,40 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
       text-transform: uppercase;
     }
 
-    .answer-yes {
+    .answer-bad {
       color: #ff4d4d;
     }
 
-    .answer-no {
+    .answer-good {
       color: #4dff88;
     }
 
     .answer-unknown {
       color: #ffd24d;
+    }
+
+    .doors {
+      display: grid;
+      gap: 0.6rem;
+      max-width: 40ch;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: clamp(1rem, 3.6vw, 1.35rem);
+      line-height: 1.35;
+    }
+
+    .door--closed {
+      color: #b8f5cb;
+    }
+
+    .door--open {
+      color: #ff8a8a;
+    }
+
+    .door--unknown {
+      color: #ffe08a;
     }
 
     .status {
@@ -384,8 +463,13 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
   </div>
   {{end}}
   <main>
-    <h1>Can Jazz poison himself?</h1>
+    <h1>Is Jazz safe?</h1>
     <div class="answer {{.AnswerClass}}">{{.Answer}}</div>
+    <ul class="doors">
+      {{range .Doors}}
+      <li class="door door--{{.State}}"><strong>{{.Name}}:</strong> {{.Text}}</li>
+      {{end}}
+    </ul>
     <p class="status">{{.Status}}</p>
   </main>
 </body>
@@ -426,9 +510,12 @@ func newApplicationFromEnvironment() (*application, error) {
 
 	return &application{
 		homeAssistantURL: environmentOrDefault("HOME_ASSISTANT_URL", defaultHomeAssistantURL),
-		entityID:         environmentOrDefault("HOME_ASSISTANT_ENTITY_ID", defaultEntityID),
-		token:            tokenValue,
-		httpClient:       &http.Client{Timeout: 5 * time.Second},
+		doors: officeAndGardenDoors(
+			environmentOrDefault("HOME_ASSISTANT_OFFICE_DOOR_ENTITY_ID", defaultOfficeDoorEntityID),
+			environmentOrDefault("HOME_ASSISTANT_GARDEN_DOOR_ENTITY_ID", defaultGardenDoorEntityID),
+		),
+		token:      tokenValue,
+		httpClient: &http.Client{Timeout: 5 * time.Second},
 	}, nil
 }
 
@@ -451,31 +538,40 @@ func (a *application) serveHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *application) pageData(ctx context.Context) pageData {
-	state, err := a.fetchState(ctx)
-	if err != nil {
-		log.Printf("read Home Assistant state: %v", err)
-		return pageData{
-			Answer:      "UNKNOWN",
-			AnswerClass: "answer-unknown",
-			PageClass:   "page--unknown",
-			Status:      "Home Assistant is unavailable. Refresh to try again.",
+	states := make([]doorState, len(a.doors))
+	reports := make([]doorReport, len(a.doors))
+	for i, d := range a.doors {
+		state := doorUnknown
+		haState, err := a.fetchState(ctx, d.entityID)
+		if err != nil {
+			log.Printf("read Home Assistant state of %s: %v", d.entityID, err)
+		} else {
+			state = doorStateFor(haState)
 		}
+		states[i] = state
+		reports[i] = d.report(state)
 	}
 
-	answer := answerForState(state)
+	answer := verdict(states)
+	tone := toneForAnswer(answer)
+	status := "Refresh to check again."
+	if answer == "UNKNOWN" {
+		status = "Home Assistant is unavailable. Refresh to try again."
+	}
 	return pageData{
 		Answer:         answer,
-		AnswerClass:    "answer-" + strings.ToLower(answer),
-		PageClass:      pageClassForAnswer(answer),
-		ShowConfetti:   answer == "NO",
+		AnswerClass:    "answer-" + tone,
+		PageClass:      "page--" + tone,
+		ShowConfetti:   answer == "YES",
 		ConfettiPieces: effectPieces(confettiPieceCount, confettiBurstWaves),
 		GlitterPieces:  effectPieces(glitterPieceCount, glitterBurstWaves),
-		Status:         "Refresh to check again.",
+		Doors:          reports,
+		Status:         status,
 	}
 }
 
-func (a *application) fetchState(ctx context.Context) (string, error) {
-	endpoint, err := url.JoinPath(a.homeAssistantURL, "api", "states", a.entityID)
+func (a *application) fetchState(ctx context.Context, entityID string) (string, error) {
+	endpoint, err := url.JoinPath(a.homeAssistantURL, "api", "states", entityID)
 	if err != nil {
 		return "", fmt.Errorf("build Home Assistant URL: %w", err)
 	}
@@ -512,11 +608,34 @@ func (a *application) fetchState(ctx context.Context) (string, error) {
 	return state.State, nil
 }
 
-func answerForState(state string) string {
-	if state == "on" {
-		return "YES"
+// doorStateFor maps a Home Assistant opening sensor to a door state. Only
+// "on" means open. Every other value, "unavailable" included, counts as
+// closed. That is how the page treated the office door before the garden
+// door existed.
+func doorStateFor(haState string) doorState {
+	if haState == "on" {
+		return doorOpen
 	}
-	return "NO"
+	return doorClosed
+}
+
+// verdict answers the headline. One open door makes Jazz unsafe, even when
+// the other door cannot be read. A door that cannot be read stops the page
+// from declaring Jazz safe.
+func verdict(states []doorState) string {
+	unknown := false
+	for _, state := range states {
+		switch state {
+		case doorOpen:
+			return "NO"
+		case doorUnknown:
+			unknown = true
+		}
+	}
+	if unknown {
+		return "UNKNOWN"
+	}
+	return "YES"
 }
 
 func environmentOrDefault(name, fallback string) string {

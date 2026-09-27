@@ -26,14 +26,15 @@ in
         system.stateVersion = "25.05";
 
         systemd.services.jazzy-poisonous-plant-parlour = {
-          description = "Jazz poison question page";
+          description = "Jazz safety question page";
           wantedBy = [ "multi-user.target" ];
           wants = [ "network-online.target" ];
           after = [ "network-online.target" ];
           environment = {
             LISTEN_ADDRESS = "0.0.0.0:8080";
             HOME_ASSISTANT_URL = "http://${ips.hosts.homeassistant.ip}:8123";
-            HOME_ASSISTANT_ENTITY_ID = "binary_sensor.bean_office_door";
+            HOME_ASSISTANT_OFFICE_DOOR_ENTITY_ID = "binary_sensor.bean_office_door";
+            HOME_ASSISTANT_GARDEN_DOOR_ENTITY_ID = "binary_sensor.garden_door_sensor";
             HOME_ASSISTANT_TOKEN_FILE = "/var/lib/credentials/hassio-token";
           };
           serviceConfig = {

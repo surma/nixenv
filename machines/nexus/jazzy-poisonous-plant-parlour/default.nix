@@ -7,7 +7,7 @@ buildGoModule {
   vendorHash = null;
 
   meta = with lib; {
-    description = "Novelty page based on the Bean office door sensor";
+    description = "Novelty page based on the office and garden door sensors";
     license = licenses.mit;
     mainProgram = "jazzy-poisonous-plant-parlour";
   };
