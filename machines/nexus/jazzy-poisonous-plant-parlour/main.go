@@ -35,8 +35,12 @@ type application struct {
 type doorState string
 
 const (
-	doorClosed  doorState = "closed"
-	doorOpen    doorState = "open"
+	doorClosed doorState = "closed"
+	doorOpen   doorState = "open"
+	// doorSilent means Home Assistant answered, but the sensor itself
+	// reports no usable state, for example because its battery is flat.
+	doorSilent doorState = "silent"
+	// doorUnknown means Home Assistant did not answer at all.
 	doorUnknown doorState = "unknown"
 )
 
@@ -79,6 +83,8 @@ func (d door) report(state doorState) doorReport {
 		text = d.open
 	case doorClosed:
 		text = d.closed
+	case doorSilent:
+		text = "No idea. The sensor has stopped reporting. Its battery may be flat."
 	}
 	return doorReport{Name: d.name, State: state, Text: text}
 }
@@ -199,6 +205,8 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
 
     .answer-unknown {
       color: #ffd24d;
+      /* Seven letters do not fit on a phone at the size of YES and NO. */
+      font-size: clamp(3rem, 18vw, 14rem);
     }
 
     .doors {
@@ -221,6 +229,7 @@ var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
       color: #ff8a8a;
     }
 
+    .door--silent,
     .door--unknown {
       color: #ffe08a;
     }
@@ -547,6 +556,9 @@ func (a *application) pageData(ctx context.Context) pageData {
 			log.Printf("read Home Assistant state of %s: %v", d.entityID, err)
 		} else {
 			state = doorStateFor(haState)
+			if state == doorSilent {
+				log.Printf("%s reports %q", d.entityID, haState)
+			}
 		}
 		states[i] = state
 		reports[i] = d.report(state)
@@ -555,8 +567,10 @@ func (a *application) pageData(ctx context.Context) pageData {
 	answer := verdict(states)
 	tone := toneForAnswer(answer)
 	status := "Refresh to check again."
-	if answer == "UNKNOWN" {
-		status = "Home Assistant is unavailable. Refresh to try again."
+	for _, state := range states {
+		if state == doorUnknown {
+			status = "Home Assistant is unavailable. Refresh to try again."
+		}
 	}
 	return pageData{
 		Answer:         answer,
@@ -608,15 +622,19 @@ func (a *application) fetchState(ctx context.Context, entityID string) (string, 
 	return state.State, nil
 }
 
-// doorStateFor maps a Home Assistant opening sensor to a door state. Only
-// "on" means open. Every other value, "unavailable" included, counts as
-// closed. That is how the page treated the office door before the garden
-// door existed.
+// doorStateFor maps a Home Assistant opening sensor to a door state. "on"
+// means open and "off" means closed. Anything else, such as "unavailable"
+// from a sensor with a flat battery, is silent. It must never count as
+// closed, or a dead sensor would show a false all-clear.
 func doorStateFor(haState string) doorState {
-	if haState == "on" {
+	switch haState {
+	case "on":
 		return doorOpen
+	case "off":
+		return doorClosed
+	default:
+		return doorSilent
 	}
-	return doorClosed
 }
 
 // verdict answers the headline. One open door makes Jazz unsafe, even when
@@ -628,7 +646,7 @@ func verdict(states []doorState) string {
 		switch state {
 		case doorOpen:
 			return "NO"
-		case doorUnknown:
+		case doorSilent, doorUnknown:
 			unknown = true
 		}
 	}
