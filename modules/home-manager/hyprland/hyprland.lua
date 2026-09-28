@@ -10,8 +10,8 @@ hl.monitor({
 })
 hl.monitor({
     output = "desc:Visitech AS VITURE Beast",
-    mode = "3840x1080@60",
-    position = "-2840x-1080",
+    mode = "1920x1080@60",
+    position = "760x360",
     scale = 1,
 })
 hl.monitor({
@@ -23,6 +23,12 @@ hl.monitor({
 hl.monitor({
     output = "desc:BOE NE135A1M-NY1",
     mode = "2880x1920@120",
+    position = "1000x1440",
+    scale = 2,
+})
+hl.monitor({
+    output = "desc:LG Display 0x07C6",
+    mode = "2880x1800@120",
     position = "1000x1440",
     scale = 2,
 })
