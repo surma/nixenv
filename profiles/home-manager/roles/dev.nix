@@ -6,6 +6,8 @@
 }:
 with lib;
 let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+
   lazygitConfig = ''
     git:
       autoFetch: false
@@ -20,17 +22,17 @@ in
     ../../../modules/defaultConfigs/npm
   ];
 
-  home.packages = with pkgs; [
+  home.packages = (with pkgs; [
     gh
     git
-    lazygit
     git-lfs
-    tig
     typescript-language-server
-    dprint
     just
     nodejs_24
-  ];
+  ]) ++ (with pkgs-unstable; [
+    lazygit
+    dprint
+  ]);
 
   defaultConfigs.npm.enable = true;
 
