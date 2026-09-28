@@ -50,6 +50,7 @@
 
   environment.systemPackages = with pkgs; [
     pavucontrol
+    seahorse
   ];
 
   # Seat, input and media access for the interactive user.
