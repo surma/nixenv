@@ -33,25 +33,6 @@ hl.monitor({
     scale = 2,
 })
 
--- Clamshell mode: when the lid closes and another monitor is on, turn off the
--- laptop panel. The runtime eDP-1 rule comes last, so it overrides the panel
--- rules above. When the lid opens, reload the config to turn the panel back
--- on. A runtime hl.monitor() change applies only on the next rendered frame.
--- If the other monitor is gone by then, no frame renders. A reload applies
--- at once.
-local lidTurnedPanelOff = false
-hl.bind("switch:on:Lid Switch", function()
-    if #hl.get_monitors() > 1 then
-        hl.monitor({ output = "eDP-1", disabled = true })
-        lidTurnedPanelOff = true
-    end
-end, { locked = true })
-hl.bind("switch:off:Lid Switch", function()
-    if lidTurnedPanelOff then
-        hl.exec_cmd("hyprctl reload")
-    end
-end, { locked = true })
-
 -- Environment
 hl.env("XCURSOR_THEME", "@cursor-theme@")
 hl.env("XCURSOR_SIZE", "@cursor-size@")
