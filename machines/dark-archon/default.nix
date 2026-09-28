@@ -60,7 +60,6 @@
 
   networking.hostName = "dark-archon"; # Define your hostname.
 
-  programs.firefox.enable = lib.mkForce false;
   environment.systemPackages = with pkgs; [
     pciutils
     usbutils
