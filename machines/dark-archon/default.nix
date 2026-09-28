@@ -18,14 +18,6 @@
     ../../profiles/nixos/gui/desktop.nix
     ../../profiles/nixos/gui/hyprland.nix
     ../../profiles/nixos/platform/laptop.nix
-    # NOTE(surma): Framework-specific fixes. Re-add
-    # ../../profiles/nixos/platform/framework.nix if this is a Framework laptop.
-
-    # Everything Shopify — WARP, Fleet/orbit, Chrome CBCM, Minerva TPM device
-    # trust, Endpoint Verification, the FHS shims and the apt-get shim — now
-    # lives in one self-contained module. See machines/archon for the full
-    # story.
-    inputs.shopify-framework.nixosModules.default
   ];
 
   # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
@@ -68,78 +60,8 @@
 
   networking.hostName = "dark-archon"; # Define your hostname.
 
-  ####################################################################
-  # Shopify developer laptop
-  ####################################################################
-  # Everything else — endpoints, CA common names, TPM handles, PKCS#11
-  # labels, the orbit PATH, the FHS shims — has correct defaults in the
-  # module. See `inputs.shopify-framework`'s README for the full option
-  # table.
-  shopify-framework = {
-    enable = true;
-    user = "surma";
-    idpUsername = "surma@shopify.com";
-
-    # PATHS, never values. The module reads these at activation time as
-    # root; nothing about them reaches the world-readable Nix store. Both
-    # are produced by the `secrets.items` entries below.
-    chrome.enrollmentTokenFile = "/run/shopify-framework/chrome-enrollment-token";
-    chrome.enrollmentTokenUnits = [ "secrets.service" ];
-
-    # The Nix option renders the Chrome policy key
-    # `CloudManagementEnrollmentOptions`, which is NOT a valid managed-policy
-    # key on Linux: `chrome://policy` reports it as Status Error, while the
-    # sibling token key reports OK. The Windows equivalent
-    # (`CloudManagementEnrollmentMandatory`) is a registry value; on Linux
-    # Chrome documents the equivalent as a *file* at
-    # `/etc/opt/chrome/policies/enrollment/CloudManagementEnrollmentOptions`
-    # containing the text `Mandatory`, not a JSON policy key. Setting this
-    # false just removes a key Chrome rejects here — nothing is lost, since
-    # it never did anything on this platform.
-    chrome.enrollmentMandatory = false;
-
-    developerTools = {
-      enable = true;
-    };
-  };
-
-  # TODO(surma): the Chrome CBCM enrolment token.
-  #
-  # Until this exists, `shopify-chrome-enrollment-token.service` finds no
-  # source file, says so, and exits 0 — so the build and the boot are fine,
-  # the browser simply is not enrolled.
-  #
-  # It cannot be added from here: the token has to be encrypted with your
-  # age key. Once you have a fresh token from the CBCM admin console:
-  #
-  #   printf %s '<new-token>' \
-  #     | nix run nixpkgs#age -- --encrypt \
-  #         -r "$(cat secrets/config.nix | grep -A0 'surma =' ...)" ... \
-  #     > secrets/chrome-enrollment-token.age
-  #
-  # (in practice: use the same recipe as the other entries in
-  # secrets/config.nix, recipients `surma` and `dark-archon`), add
-  #
-  #   chrome-enrollment-token = {
-  #     contents = ../secrets/chrome-enrollment-token.age;
-  #     keys = [ "surma" "dark-archon" ];
-  #   };
-  #
-  # to `secrets.secrets` in secrets/config.nix, and uncomment:
-  #
-  # secrets.items.chrome-enrollment-token = {
-  #   target = "/run/shopify-framework/chrome-enrollment-token";
-  #   mode = "0600";
-  # };
-  allowedUnfreeApps = [
-    "cloudflare-warp"
-    "google-chrome"
-    "slack"
-    "endpoint-verification"
-  ];
-  # programs.firefox.enable = lib.mkForce false;
+  programs.firefox.enable = lib.mkForce false;
   environment.systemPackages = with pkgs; [
-     (pkgs.writeShellScriptBin "x-www-browser" ''exec ${lib.getExe pkgs.google-chrome} "$@"'')
     pciutils
     usbutils
   ];

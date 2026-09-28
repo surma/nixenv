@@ -13,27 +13,24 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
+  boot.initrd.luks.devices."luks-e011772c-7675-4059-bc05-4738152f9db6".device = "/dev/disk/by-uuid/e011772c-7675-4059-bc05-4738152f9db6";
+  boot.initrd.luks.devices."luks-3b6e924c-df1f-434d-ab50-735e91bba361".device = "/dev/disk/by-uuid/3b6e924c-df1f-434d-ab50-735e91bba361";
+
+  boot.resumeDevice = "/dev/disk/by-uuid/3b6e924c-df1f-434d-ab50-735e91bba361";
+    
   fileSystems."/" =
-    { device = "/dev/mapper/luks-061250de-4f0b-4523-9771-b963bb27f3d2";
+    { device = "/dev/mapper/luks-e011772c-7675-4059-bc05-4738152f9db6";
       fsType = "ext4";
     };
 
-  boot.initrd.luks.devices."luks-061250de-4f0b-4523-9771-b963bb27f3d2".device = "/dev/disk/by-uuid/061250de-4f0b-4523-9771-b963bb27f3d2";
-  boot.initrd.luks.devices."luks-ccabdde5-d2c5-4f38-8b08-56e3098301da".device = "/dev/disk/by-uuid/ccabdde5-d2c5-4f38-8b08-56e3098301da";
-
-  # Hibernation target. This is the swap UUID *inside* the LUKS container
-  # above, not the container's own UUID. 68.5G of swap against 62G of RAM,
-  # so a full image fits.
-  boot.resumeDevice = "/dev/disk/by-uuid/d43764fe-1ff2-4311-90c4-84c0eb1ff55f";
-
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/4140-8248";
+    { device = "/dev/disk/by-uuid/FE07-A91E";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
   swapDevices =
-    [ { device = "/dev/mapper/luks-ccabdde5-d2c5-4f38-8b08-56e3098301da"; }
+    [ { device = "/dev/mapper/luks-3b6e924c-df1f-434d-ab50-735e91bba361"; }
     ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
