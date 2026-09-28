@@ -16,7 +16,7 @@
   boot.initrd.luks.devices."luks-e011772c-7675-4059-bc05-4738152f9db6".device = "/dev/disk/by-uuid/e011772c-7675-4059-bc05-4738152f9db6";
   boot.initrd.luks.devices."luks-3b6e924c-df1f-434d-ab50-735e91bba361".device = "/dev/disk/by-uuid/3b6e924c-df1f-434d-ab50-735e91bba361";
 
-  boot.resumeDevice = "/dev/disk/by-uuid/3b6e924c-df1f-434d-ab50-735e91bba361";
+  boot.resumeDevice = "/dev/mapper/luks-3b6e924c-df1f-434d-ab50-735e91bba361";
     
   fileSystems."/" =
     { device = "/dev/mapper/luks-e011772c-7675-4059-bc05-4738152f9db6";

@@ -35,7 +35,7 @@
     archon        = { mac = "d8:b3:2f:bd:df:07";   ip = "10.0.2.1";   tailscale = "100.70.35.41"; tailscale6 = "fd7a:115c:a1e0::fc32:232a"; };
     shopisurm     = { mac = "1a:18:ac:32:24:6c";   ip = "10.0.2.2";   tailscale = "100.79.232.5"; tailscale6 = "fd7a:115c:a1e0::5637:e805"; };
     dragoon       = { mac = "36:8f:cc:d6:6f:ff";   ip = "10.0.1.1";   tailscale = "100.95.6.31"; tailscale6 = "fd7a:115c:a1e0::1d1f:61f"; };
-    dark-archon   = { mac = "84:08:3a:a1:8b:b4";   ip = "10.0.1.2";   tailscale = "100.107.230.104"; tailscale6 = "fd7a:115c:a1e0::7932:e669"; };
+    dark-archon   = { mac = "84:08:3a:a1:8b:b4";   ip = "10.0.1.2";   tailscale = "100.102.242.63"; tailscale6 = "fd7a:115c:a1e0::8132:f240"; };
     pixel-8a      = { mac = "c6:25:ac:a2:6d:cf";   ip = "10.0.1.11";  tailscale = "100.112.175.25"; tailscale6 = "fd7a:115c:a1e0::9401:af19"; };
     wiz-dbb832    = { mac = "98:77:d5:db:b8:32";   ip = "10.0.255.7"; };
     wiz-7e1cba    = { mac = "cc:40:85:7e:1c:ba";   ip = "10.0.255.10"; };
