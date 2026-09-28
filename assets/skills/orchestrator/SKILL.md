@@ -9,8 +9,7 @@ description: >-
   adding and reordering work while it runs. Do not use for a single small change you can
   finish in a few edits.
 compatibility: >-
-  Requires a way to start subagents, `jq`, `pi`, and a roster in ~/.agents/roster. Read the
-  `subagent` skill for how subagents start, report, and close in this environment.
+  Requires a way to start subagents, `jq`, `pi`, and a roster in ~/.agents/roster.
 ---
 
 # Orchestrator
@@ -22,10 +21,9 @@ opinion. The user talks to you and never to an executor.
 
 This skill covers the orchestration: the plan, the roles, the board, the briefs, and the
 acceptance. It does not say how an executor runs. **Load the `subagent` skill before you start
-the first executor.** It defines the delegation mechanism: how you start an executor, prompt
-it, learn that it finished, inspect it, stop it, and close it. Wherever this skill tells you to
-do one of those things, do it the way the `subagent` skill says. If no `subagent` skill is
-available, use the subagent facility of your harness.
+the first executor.** It names the tool that runs subagents here. Use that tool to start,
+prompt, inspect, stop, and close executors. If no `subagent` skill is available, use the
+subagent facility of your harness.
 
 ## Division of labor
 
@@ -57,7 +55,7 @@ new changes, failures, or a concrete open risk.
 
 ## Setup, once per session
 
-Create the board, then run the setup that the `subagent` skill asks for, if any:
+Create the board:
 
 ```bash
 BOARD_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.board"
@@ -147,8 +145,8 @@ integration checks after the writers finish.
 
 **Separate worktree** only when you decide that a shared tree does not work. For example, two
 streams must build or test at the same time and would fight over the build directory or the lock
-files, or the files cannot be split. Create the worktree yourself, the way the `subagent` skill
-says, and link the board into the new tree before dispatching:
+files, or the files cannot be split. Create the worktree yourself, and link the board into the
+new tree before dispatching:
 
 ```bash
 ln -s "$BOARD_DIR" /path/to/the/new/worktree/.board
@@ -180,9 +178,9 @@ EOF
 T3: read your brief at /abs/path/.board/T3.brief.md and do it.
 ```
 
-Send the prompt the way the `subagent` skill says, and do not wait for the turn to end. If you
-cannot tell whether a prompt arrived, check before you send it again: a delivered prompt that
-you send twice does the work twice.
+Send the prompt, and do not wait for the turn to end. If you cannot tell whether a prompt
+arrived, check before you send it again: a delivered prompt that you send twice does the work
+twice.
 
 Always write the brief through the quoted heredoc above. With an unquoted delimiter, your own
 shell expands everything inside it first: backticked paths run as commands, `$(...)` is
@@ -196,8 +194,9 @@ re-checks status. You must be able to answer the user at any moment.
 ## Every turn
 
 When you are idle, you only run when something prompts you, so a finished executor must wake
-you. The `subagent` skill says how that wake reaches you. Completions arrive as wakes, so you do
-not go looking for them. Sweep only when you actually need the fleet's state:
+you. If the subagent tool does not wake you on its own, the last step of every brief must wake
+you. Completions arrive as wakes, so you do not go looking for them. Sweep only when you
+actually need the fleet's state:
 
 - before dispatching, to see which executors and trees are free;
 - when a wake arrives, to catch anything that landed alongside it;
@@ -206,8 +205,7 @@ not go looking for them. Sweep only when you actually need the fleet's state:
 
 At most one sweep per turn, and none at all on a turn that is only conversation — answering a
 question, discussing a design, being told something. A sweep is a lookup you needed, never an
-opening ritual. It lists every executor with its state, and the `subagent` skill has the
-command.
+opening ritual. It lists every executor with its state.
 
 An executor is working, ready for input, or waiting on an approval or question dialog. Read a
 dialog before you answer it, and ask the user if it is a decision rather than a formality.
@@ -262,7 +260,8 @@ the quoted heredoc expands nothing, so a placeholder reaches the executor verbat
 > instructions, the exact commands you ran with their results, and the remaining gaps. Write no
 > other file under `$BOARD_DIR`.
 >
-> [The wake step from the `subagent` skill, if it has one.]
+> [If the subagent tool does not wake you on its own: the command that the executor runs last
+> to wake you.]
 
 Keep briefs short. A long, heavily qualified brief is an oversized task: split it and send the
 first piece. Three acceptance criteria is the ceiling; over that, split.
@@ -287,7 +286,7 @@ ask the user. Escalate for complexity or a concrete failure, not because a role 
 the task over yourself, or ask an advisor.
 
 For a stuck or drifting executor, read its recent output first. Then dismiss the dialog it waits
-on, stop its current turn, or send it a correction. The `subagent` skill has the commands.
+on, stop its current turn, or send it a correction.
 
 An executor's screen is for diagnosis only — the report file is the channel that actually
 carries results. A dead executor is gone: read what it left for what it learned, then start a
