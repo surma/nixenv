@@ -20,12 +20,20 @@
   networking.networkmanager.enable = true;
   programs.nm-applet.enable = true;
 
+  # Discover AirPlay speakers as PipeWire output devices.
+  services.avahi.enable = true;
   services.pulseaudio.enable = false;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    raopOpenFirewall = true;
+    extraConfig.pipewire."50-raop" = {
+      "context.modules" = [
+        { name = "libpipewire-module-raop-discover"; }
+      ];
+    };
   };
 
   services.seatd.enable = true;
