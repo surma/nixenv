@@ -116,9 +116,9 @@ in
     # bro, rust) are inherited via the
     # import above.  Only Scout-specific skills are listed here.
     agent.skills = [
-      # The generic orchestrator skill used to live in the AI profile. Scout
-      # has no herdr session to orchestrate, so it keeps the harness-agnostic
-      # original while the interactive machines use herdr-orchestrator.
+      # Scout has no herdr session, so it gets the orchestrator without the
+      # herdr-backed subagent skill. It delegates through the subagent
+      # extension instead.
       ../../assets/skills/orchestrator
       ../../assets/skills/cloudflare
       ../../assets/skills/gws

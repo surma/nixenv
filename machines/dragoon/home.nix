@@ -39,7 +39,8 @@ in
   programs.gitea-cli.enable = true;
 
   agent.skills = [
-    ../../assets/skills/herdr-orchestrator
+    ../../assets/skills/orchestrator
+    ../../assets/skills/subagent
   ];
 
   allowedUnfreeApps = [

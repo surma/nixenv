@@ -28,7 +28,8 @@
 
   config = {
     agent.skills = [
-      ../../assets/skills/herdr-orchestrator
+      ../../assets/skills/orchestrator
+      ../../assets/skills/subagent
     ];
 
     allowedUnfreeApps = [
