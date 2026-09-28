@@ -14,12 +14,6 @@
   system.stateVersion = 5;
   networking.hostName = "dragoon";
 
-  homebrew = {
-    casks = [
-      "magicavoxel"
-    ];
-  };
-
   nix.gc = {
     automatic = true;
     interval = {
