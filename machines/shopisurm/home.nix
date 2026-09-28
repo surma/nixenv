@@ -87,7 +87,6 @@ in
       # graphite-cli
       keycastr
       inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.jupyter
-      bun
       (inputs.nixpkgs-unstable.legacyPackages.${stdenv.hostPlatform.system}.lima.override {
         withAdditionalGuestAgents = true;
       })
@@ -100,9 +99,6 @@ in
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;
 
-  programs.opencode.enable = true;
-  defaultConfigs.opencode.enable = true;
-
   programs.surma-noti.enable = true;
   secrets.items.hassio-token.command = ''
     config_dir="${config.home.homeDirectory}/.hassio-cli"
@@ -114,12 +110,9 @@ in
   customScripts.denix.enable = true;
   customScripts.ghapprove.enable = true;
   customScripts.ghclone.enable = true;
-  customScripts.ccp.enable = true;
   customScripts.wallpaper-shuffle.enable = true;
   customScripts.wallpaper-shuffle.asDesktopItem = true;
   customScripts.llm-proxy.enable = true;
-  customScripts.oc.enable = true;
-  customScripts.ocq.enable = true;
   customScripts.transcribe.enable = true;
 
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";

@@ -57,11 +57,6 @@ nixenv/
 │
 ├── packages/          # Custom packages
 │
-├── apps/              # Custom applications
-│   ├── hate/          # Home automation (source fetched via git)
-│   ├── writing-prompt/ # Writing prompt app (source fetched via git)
-│   └── surmturntable/ # Vinyl forwarding script
-│
 ├── scripts/           # Standalone utility scripts
 ├── assets/            # Static files (SSH keys, wallpapers, etc.)
 ├── secrets/           # Encrypted secrets (.age files)

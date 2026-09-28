@@ -59,8 +59,6 @@
 
     secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
 
-    # programs.opencode.enable = true;
-    # defaultConfigs.opencode.enable = true;
     programs.handy.enable = true;
     defaultConfigs.handy.enable = true;
 

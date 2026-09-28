@@ -23,16 +23,12 @@
     home.packages = (
       with pkgs;
       [
-        binaryen
-        rustup
-        brotli
         cmake
         simple-http-server
         jwt-cli
         # Graphviz ships its own `gc`, which collides with the `gc` git-commit
         # wrapper from `customScripts`. Let the wrapper win.
         (lib.lowPrio graphviz)
-        hyperfine
         uv
         mprocs
         dua

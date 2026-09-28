@@ -25,8 +25,6 @@
     home.stateVersion = "25.05";
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;
-    customScripts.oc.enable = true;
-    customScripts.ocq.enable = true;
     customScripts.transcribe.enable = true;
 
     agent.skills = [
@@ -43,7 +41,5 @@
     );
 
     defaultConfigs.pi.extensions.proxy.enable = true;
-    programs.opencode.enable = true;
-    defaultConfigs.opencode.enable = true;
   };
 }

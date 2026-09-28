@@ -374,7 +374,6 @@ in
           ../../modules/home-manager/brain
           ../../modules/programs/web-search-cli
           ../../modules/programs/agent-browser
-          ../../modules/programs/opencode
           ../../modules/programs/pi
           ../../modules/programs/surma-noti
         ];

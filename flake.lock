@@ -1128,27 +1128,6 @@
         "type": "github"
       }
     },
-    "opencode": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1783363839,
-        "narHash": "sha256-Xm6PXDzRqHS66ERKTlhEfD9enrHOsZUaQPrfGD3/WqU=",
-        "owner": "anomalyco",
-        "repo": "opencode",
-        "rev": "0ed10fbd62423d86f9ef8d39e49b167d70be541d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "anomalyco",
-        "ref": "v1.17.14",
-        "repo": "opencode",
-        "type": "github"
-      }
-    },
     "pi-acp": {
       "inputs": {
         "flake-utils": [
@@ -1246,7 +1225,6 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_6",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "opencode": "opencode",
         "pi-acp": "pi-acp",
         "scout": "scout",
         "shopify-framework": "shopify-framework",

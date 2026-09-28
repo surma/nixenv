@@ -32,8 +32,6 @@
     programs.gitea-cli.enable = true;
     customScripts.llm-proxy.enable = true;
     customScripts.flacsplit.enable = true;
-    customScripts.oc.enable = true;
-    customScripts.ocq.enable = true;
     customScripts.transcribe.enable = true;
 
     home.packages = (
@@ -47,8 +45,5 @@
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
-
-    programs.opencode.enable = true;
-    defaultConfigs.opencode.enable = true;
   };
 }

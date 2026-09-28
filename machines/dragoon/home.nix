@@ -6,13 +6,6 @@
 }:
 let
   ips = import ../../ips.nix;
-  ollama = pkgs.ollama.overrideAttrs (old: {
-    postPatch =
-      builtins.replaceStrings
-        [ "rm model/models/nemotronh/model_omni_test.go" ]
-        [ "rm -f model/models/nemotronh/model_omni_test.go" ]
-        old.postPatch;
-  });
 in
 {
   imports = [
@@ -47,11 +40,7 @@ in
     with pkgs;
     [
       openscad
-      jqp
-      ollama
-      qbittorrent
       jupyter
-      bun
     ]
   );
 
@@ -65,11 +54,8 @@ in
   programs.surma-noti.enable = true;
   customScripts.llm-proxy.enable = true;
   customScripts.ghclone.enable = true;
-  customScripts.ccp.enable = true;
   customScripts.wallpaper-shuffle.enable = true;
   customScripts.wallpaper-shuffle.asDesktopItem = true;
-  customScripts.oc.enable = true;
-  customScripts.ocq.enable = true;
   customScripts.transcribe.enable = true;
 
   xdg.configFile = {

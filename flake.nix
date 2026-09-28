@@ -45,10 +45,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
-    opencode = {
-      url = "github:anomalyco/opencode?ref=v1.17.14";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     herdr = {
       url = "github:herdrdev/herdr";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -12,11 +12,8 @@
     # (`nix run .#secrets -- genkey` on the machine), then re-encrypt:
     # `nix run .#secrets -- recrypt --machine dark-archon`.
     dark-archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJPzxL3GcTBMadXlg+/ViYRE8mIB9rzGtVVXd5SrEsN";
-    surmturntable = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBb7S7oe5a61I0TH+2xmI68rGVflyftTvjQlVinJgFOr";
     nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW";
-    forge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILrXa3Rnz2M+BtpydthCXDsQfeZbmu4cDtxxCtMpxvG6";
     scout = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ/0OJdh2REKlxM7Ybfl+5a9XlqWuvkDowwnvpHfBd4W";
-    assimilator = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGik93gxEtWYJWxMOU/lgyAok9U9vIJQkfZBqQP4lRl7";
   };
   secrets = {
     ssh-keys = {
@@ -30,8 +27,6 @@
         "dark-archon"
         "nexus"
         "shopisurm"
-        "forge"
-        "assimilator"
       ];
     };
     gpg-keys = {
@@ -45,23 +40,6 @@
         "dark-archon"
         "citadel"
         "shopisurm"
-        "forge"
-        "assimilator"
-      ];
-    };
-    writing-prompt = {
-      contents = ../apps/writing-prompt/env.age;
-      keys = [
-        "surma"
-        "surmedge"
-        "nexus"
-      ];
-    };
-    hate = {
-      contents = ../apps/hate/env.age;
-      keys = [
-        "surma"
-        "nexus"
       ];
     };
     nexus-copyparty = {
@@ -90,10 +68,8 @@
         "dragoon"
         "archon"
         "dark-archon"
-        "forge"
         "scout"
         "citadel"
-        "assimilator"
       ];
     };
     scout-telegram-bot-token = {
@@ -127,7 +103,6 @@
         "dark-archon"
         "citadel"
         "nexus"
-        "forge"
         "pylon"
       ];
     };

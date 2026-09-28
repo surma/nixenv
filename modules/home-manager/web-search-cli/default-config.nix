@@ -8,7 +8,7 @@
 let
   isEnabled = config.defaultConfigs.web-search-cli.enable;
   cfg = config.defaultConfigs.web-search-cli.llmProxy;
-  defaultTokenPath = "${config.home.homeDirectory}/.local/state/opencode/api-key";
+  defaultTokenPath = "${config.home.homeDirectory}/.local/state/web-search-cli/api-key";
 
   wrappedPackage = import ./package.nix {
     inherit pkgs lib inputs;

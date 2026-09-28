@@ -61,7 +61,6 @@ in
     ./service-llm-proxy.nix
     ./service-ha-proxy.nix
     ./service-tailscale-cf-dns.nix
-    # ./service-hate.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
@@ -70,7 +69,6 @@ in
     inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
     ../../modules/services/adguardhome-static-dhcp
-    ../../apps/hate
   ];
 
   nix.settings.trusted-users = [ "@wheel" ];

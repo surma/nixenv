@@ -15,9 +15,8 @@ POST <base_url>/v1/audio/speech
 ```
 
 The base URL and API key depend on the environment. Check for
-`OPENAI_BASE_URL`, `OPENCODE_PROXY_BASE_URL`, or similar environment
-variables. The API key is typically in `OPENAI_API_KEY` or
-`OPENCODE_API_KEY`.
+`OPENAI_BASE_URL` or similar environment variables. The API key is
+typically in `OPENAI_API_KEY`.
 
 ## Model
 

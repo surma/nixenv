@@ -260,7 +260,7 @@ Returns `502` if the container is unreachable, `500` for other failures.
 curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=sshd.service'
 
 # Inside a container:
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=scout.service&container=scout'
 
 # With options:
 curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=sshd.service&lines=200&boot=true&since=-1h'
@@ -319,13 +319,13 @@ curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout
 
 ```bash
 # 1. Check the unit status
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout' | jq '.units[] | select(.unit == "opencode.service")'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/units?container=scout' | jq '.units[] | select(.unit == "scout.service")'
 
 # 2. Fetch recent logs
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout&lines=200'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=scout.service&container=scout&lines=200'
 
 # 3. Fetch logs from the last hour only
-curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=opencode.service&container=scout&since=-1h'
+curl -s 'http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/logs?unit=scout.service&container=scout&since=-1h'
 ```
 
 ### List and trigger timers

@@ -23,8 +23,6 @@ in
     inputs.home-manager.nixosModules.home-manager
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/roles/headless.nix
-
-    # ../../apps/writing-prompt
   ];
 
   boot.loader.systemd-boot.enable = true;
