@@ -30,7 +30,7 @@
     customScripts.transcribe.enable = true;
 
     agent.skills = [
-      ../../assets/skills/herdr-orchestrator
+      ../../assets/skills/orchestrator
     ];
 
     home.packages = (

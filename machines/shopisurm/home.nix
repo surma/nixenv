@@ -72,7 +72,7 @@ in
   agent.skills = [
     ../../assets/skills/agent-slack-write
     ../../assets/skills/commitsit
-    ../../assets/skills/herdr-orchestrator
+    ../../assets/skills/orchestrator
     ../../assets/skills/wcb
   ];
 

@@ -1,5 +1,5 @@
 ---
-name: herdr-orchestrator
+name: orchestrator
 description: >-
   Lead engineering work in a Herdr session: you plan, talk to the user, and do most of the
   work yourself, and you delegate bounded tasks to specialist roles from the roster in

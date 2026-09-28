@@ -33,7 +33,7 @@ with lib;
       roster = mkOption {
         type = types.listOf types.path;
         default = [ ];
-        description = "List of role directories (each containing a meta.json and a system_prompt.md) for the herdr-orchestrator skill to symlink into ~/.agents/roster/";
+        description = "List of role directories (each containing a meta.json and a system_prompt.md) for the orchestrator skill to symlink into ~/.agents/roster/";
       };
     };
 
