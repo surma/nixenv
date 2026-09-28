@@ -73,6 +73,7 @@ in
     ../../assets/skills/agent-slack-write
     ../../assets/skills/commitsit
     ../../assets/skills/orchestrator
+    ../../assets/skills/subagent
     ../../assets/skills/wcb
   ];
 

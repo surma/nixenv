@@ -31,6 +31,7 @@
 
     agent.skills = [
       ../../assets/skills/orchestrator
+      ../../assets/skills/subagent
     ];
 
     home.packages = (

@@ -29,6 +29,7 @@
   config = {
     agent.skills = [
       ../../assets/skills/orchestrator
+      ../../assets/skills/subagent
     ];
 
     allowedUnfreeApps = [
