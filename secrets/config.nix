@@ -219,6 +219,13 @@
         "citadel"
       ];
     };
+    scout-spond-credentials = {
+      contents = ../secrets/scout-spond-credentials.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     hassio-token = {
       contents = ../secrets/hassio-token.age;
       keys = [
