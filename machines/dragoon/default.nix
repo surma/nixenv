@@ -16,7 +16,6 @@
 
   homebrew = {
     casks = [
-      "nvidia-geforce-now"
       "magicavoxel"
     ];
   };

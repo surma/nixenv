@@ -22,8 +22,6 @@
     ../../profiles/home-manager/platform/framework.nix
     ../../profiles/home-manager/roles/workstation.nix
     ../../profiles/home-manager/roles/ai.nix
-
-    ../../profiles/home-manager/gui/webapps.nix
   ];
 
   config = {
@@ -33,10 +31,8 @@
     ];
 
     allowedUnfreeApps = [
-      "spotify"
       "slack"
       "discord"
-      "obsidian"
     ];
 
     home.packages = (
@@ -104,15 +100,9 @@
           ''
         );
 
-    programs.spotify.enable = true;
-    # programs.spotify.platform = "wayland";
     programs.discord.enable = true;
     # programs.discord.platform = "wayland";
     programs.telegram.enable = true;
-    programs.squoosh.enable = true;
-    programs.geforce-now.enable = true;
-    programs.xbox-remote-play.enable = true;
-    programs.obsidian.enable = false;
 
     # The display is a 13 inch 2256x1504 panel.
     programs.wezterm.fontSize = 10;

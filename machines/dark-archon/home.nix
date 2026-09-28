@@ -21,8 +21,6 @@
     ../../profiles/home-manager/gui/hyprland.nix
     ../../profiles/home-manager/roles/workstation.nix
     ../../profiles/home-manager/roles/ai.nix
-
-    ../../profiles/home-manager/gui/webapps.nix
   ];
 
   config = {
@@ -32,10 +30,8 @@
     ];
 
     allowedUnfreeApps = [
-      "spotify"
       "slack"
       "discord"
-      "obsidian"
     ];
 
     home.packages = (
@@ -53,15 +49,9 @@
 
     home.stateVersion = "26.05";
 
-    programs.spotify.enable = true;
-    # programs.spotify.platform = "wayland";
     programs.discord.enable = true;
     # programs.discord.platform = "wayland";
     programs.telegram.enable = true;
-    programs.squoosh.enable = true;
-    programs.geforce-now.enable = true;
-    programs.xbox-remote-play.enable = true;
-    programs.obsidian.enable = false;
 
     # TODO(surma): Tune for dark-archon's actual display once known. This is
     # archon's 13 inch 2256x1504 panel.

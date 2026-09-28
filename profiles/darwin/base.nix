@@ -26,7 +26,6 @@
     casks = [
       "arc"
       "barrier"
-      # "nvidia-geforce-now"
       "slack"
       "zulip"
       "android-file-transfer"

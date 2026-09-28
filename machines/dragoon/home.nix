@@ -43,10 +43,6 @@ in
     ../../assets/skills/subagent
   ];
 
-  allowedUnfreeApps = [
-    "obsidian"
-  ];
-
   home.packages = (
     with pkgs;
     [
@@ -62,7 +58,6 @@ in
   defaultConfigs.pi.extensions.proxy.enable = true;
   programs.handy.enable = true;
   defaultConfigs.handy.enable = true;
-  programs.obsidian.enable = true;
 
   programs.qmd.enable = true;
 
