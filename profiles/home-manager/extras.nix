@@ -12,7 +12,6 @@ in
   home.packages = with pkgs; [
     btop
     chafa
-    dprint
     tailscale
   ];
 

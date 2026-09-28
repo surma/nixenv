@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  inputs,
   ...
 }:
 with lib;
@@ -29,6 +30,8 @@ in
     typescript-language-server
     just
     nodejs_24
+    rlwrap
+    socat
   ]) ++ (with pkgs-unstable; [
     lazygit
     dprint
