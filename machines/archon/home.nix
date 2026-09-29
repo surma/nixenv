@@ -26,6 +26,7 @@
 
   config = {
     agent.skills = [
+      ../../assets/skills/fix-binks
       ../../assets/skills/orchestrator
       ../../assets/skills/subagent
     ];

@@ -14,9 +14,9 @@ let
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
 
   defaultSettings = {
-    defaultProvider = "openai";
-    defaultModel = "gpt-5.6-sol";
-    defaultThinkingLevel = "max";
+    defaultProvider = "anthropic";
+    defaultModel = "claude-opus-5-5";
+    defaultThinkingLevel = "xhigh";
     steeringMode = "all";
     compaction = {
       enabled = true;

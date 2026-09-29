@@ -27,6 +27,7 @@
   programs.agent-browser.enable = true;
 
   defaultConfigs.pi.settings.enableSkillCommands = true;
+  defaultConfigs.pi.extensions.skillAliases.enable = true;
 
   # Compaction. Replaces the hand-off pipeline that used to live in pi-config:
   # pi-vcc builds its summary by extraction rather than asking the model to
