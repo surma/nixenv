@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   ...
 }:
 # Laptop hardware traits: a touchpad, a fingerprint reader, and a built-in
@@ -20,8 +21,8 @@
   # least as large as RAM, and its LUKS container has to be opened by the
   # initrd. Without that the image is written but never restored.
   services.logind = {
-    lidSwitch = "suspend-then-hibernate";
-    lidSwitchExternalPower = "suspend";
+    lidSwitch = lib.mkDefault "suspend-then-hibernate";
+    lidSwitchExternalPower = lib.mkDefault "suspend";
   };
 
   systemd.sleep.settings.Sleep.HibernateDelaySec = "30min";

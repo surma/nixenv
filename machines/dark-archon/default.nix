@@ -44,6 +44,9 @@ in
   # 1.8.2 (2026-05-22) when that happened.
   services.fwupd.enable = true;
 
+  # TODO: Skip hibernation until we have fixed the touchpad problem.
+  services.logind.lidSwitch = "suspend";
+
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", TAG+="uaccess"
   '';
