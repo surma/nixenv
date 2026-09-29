@@ -116,6 +116,7 @@
 
   customScripts.toggle-sunset.enable = true;
   customScripts.toggle-sunset.asDesktopItem = true;
+  customScripts.stay-awake.enable = true;
   customScripts.bluetooth-fix.enable = true;
   customScripts.bluetooth-fix.asDesktopItem = true;
   customScripts.audio-output.enable = true;

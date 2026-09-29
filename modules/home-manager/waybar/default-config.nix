@@ -24,6 +24,23 @@ let
       } toggle-sunset";
     };
   };
+  stayAwakeEnabled = lib.attrByPath [ "customScripts" "stay-awake" "enable" ] false config;
+  stayAwakeScript =
+    if stayAwakeEnabled then
+      lib.attrByPath [ "customScripts" "stay-awake" "package" ] null config
+    else
+      null;
+  stayAwakePath = lib.makeBinPath [
+    stayAwakeScript
+    pkgs.procps
+    pkgs.systemd
+  ];
+  stayAwakeConfig = lib.optionalAttrs (stayAwakeScript != null) {
+    "custom/stay-awake" = waybarConfig."custom/stay-awake" // {
+      "exec" = "PATH=${stayAwakePath} stay-awake status";
+      "on-click" = "PATH=${stayAwakePath} stay-awake toggle";
+    };
+  };
 in
 {
   options = {
@@ -37,6 +54,7 @@ in
       settings.mainBar =
         waybarConfig
         // sunsetConfig
+        // stayAwakeConfig
         // {
           # The systemd unit has a restricted PATH, so pin the click command.
           "pulseaudio" = waybarConfig."pulseaudio" // {

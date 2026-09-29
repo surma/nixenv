@@ -1,0 +1,36 @@
+#!/usr/bin/env nu
+
+# The "stay awake" button in Waybar. It holds a logind idle inhibitor in a
+# transient user unit, which hypridle respects. The unit is the state, so the
+# button survives Waybar reloads. Waybar's own idle_inhibitor module does not:
+# after a reload, Hyprland ignores its Wayland inhibitor.
+
+const unit = "stay-awake.service"
+# Must match "signal" of custom/stay-awake in the Waybar config.
+const signal = 8
+
+def is-active [] {
+  (^systemctl --user --quiet is-active $unit | complete).exit_code == 0
+}
+
+def main [] {
+  error make { msg: "usage: stay-awake status|toggle" }
+}
+
+def "main status" [] {
+  let state = if (is-active) { "activated" } else { "deactivated" }
+  { alt: $state, class: $state, tooltip: $"Stay awake: ($state)" } | to json --raw
+}
+
+def "main toggle" [] {
+  if (is-active) {
+    ^systemctl --user stop $unit
+  } else {
+    # --collect unloads the unit even if it fails, so the name stays free.
+    (^systemd-run --user --quiet --collect $"--unit=($unit)" "--description=Stay awake"
+      systemd-inhibit --what=idle --who=stay-awake "--why=Stay awake button"
+      sleep infinity)
+  }
+  # Refresh the button on every bar. No bar runs if called from a shell.
+  ^pkill $"-RTMIN+($signal)" --uid $env.USER waybar | complete | ignore
+}

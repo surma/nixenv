@@ -89,7 +89,7 @@ button:hover {
 #custom-media,
 #tray,
 #mode,
-#idle_inhibitor,
+#custom-stay-awake,
 #scratchpad,
 #power-profiles-daemon,
 #mpd {
@@ -242,11 +242,11 @@ label:focus {
     background-color: #eb4d4b;
 }
 
-#idle_inhibitor {
+#custom-stay-awake {
     background-color: #2d3436;
 }
 
-#idle_inhibitor.activated {
+#custom-stay-awake.activated {
     background-color: #ecf0f1;
     color: #2d3436;
 }

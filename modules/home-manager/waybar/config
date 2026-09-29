@@ -77,12 +77,17 @@
     "on-scroll-down": "hyprctl dispatch workspace e-1",
     "on-scroll-up": "hyprctl dispatch workspace e+1"
   },
-  "idle_inhibitor": {
+  "custom/stay-awake": {
+    "exec": "stay-awake status",
     "format": "{icon}",
     "format-icons": {
       "activated": "",
       "deactivated": ""
-    }
+    },
+    "interval": "once",
+    "on-click": "stay-awake toggle",
+    "return-type": "json",
+    "signal": 8
   },
   "memory": {
     "format": "{}% "
@@ -94,7 +99,7 @@
     "hyprland/workspaces"
   ],
   "modules-right": [
-    "idle_inhibitor",
+    "custom/stay-awake",
     "custom/sunset",
     "pulseaudio",
     "power-profiles-daemon",
