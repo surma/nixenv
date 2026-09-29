@@ -46,15 +46,13 @@
   };
 
   # rkvm shares this keyboard and mouse with dark-archon. The server grabs
-  # every input device and forwards the events to the active machine. Press
-  # both Ctrl keys together to switch machines.
+  # every input device and forwards the events to the active machine. F24
+  # switches machines and reaches no application.
   services.rkvm.server = {
     enable = true;
     settings = {
-      switch-keys = [
-        "left-ctrl"
-        "right-ctrl"
-      ];
+      switch-keys = [ "f24" ];
+      propagate-switch-keys = false;
       certificate = ./rkvm-certificate.pem;
       # rkvm reads the password only from its config file. The placeholder
       # keeps the real value out of the Nix store. ExecStartPre below
@@ -63,6 +61,9 @@
     };
   };
   networking.firewall.allowedTCPPorts = [ 5258 ];
+
+  # The rkvm switch key on the built-in keyboard.
+  services.keyd.keyboards."internal".settings.main.rightcontrol = "f24";
 
   secrets.items.rkvm-key = {
     target = "/etc/rkvm/key.pem";
