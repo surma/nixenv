@@ -8,9 +8,6 @@
     surmedge = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRS1TLlaWODfefGUvk0mYZEx6pE6Gr2xhsVGbsn91Uh";
     pylon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRS1TLlaWODfefGUvk0mYZEx6pE6Gr2xhsVGbsn91Uh";
     archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG4OwfJU7j0tmHFvWeXeZHKlfyNA9sVucIUXxAVwWJnA";
-    # DUMMY key. Replace with dark-archon's real `~/.ssh/id_machine.pub`
-    # (`nix run .#secrets -- genkey` on the machine), then re-encrypt:
-    # `nix run .#secrets -- recrypt --machine dark-archon`.
     dark-archon = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJPzxL3GcTBMadXlg+/ViYRE8mIB9rzGtVVXd5SrEsN";
     nexus = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFSKtxq/1aLxos5lZTWzROCqMLkiVlxKd1jJF0XKGCrW";
     scout = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ/0OJdh2REKlxM7Ybfl+5a9XlqWuvkDowwnvpHfBd4W";
