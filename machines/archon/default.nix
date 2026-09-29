@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
@@ -41,6 +42,55 @@
     settings = {
       capture = "wlr";
       origin_web_ui_allowed = "wan";
+    };
+  };
+
+  # rkvm shares this keyboard and mouse with dark-archon. The server grabs
+  # every input device and forwards the events to the active machine. Press
+  # both Ctrl keys together to switch machines.
+  services.rkvm.server = {
+    enable = true;
+    settings = {
+      switch-keys = [
+        "left-ctrl"
+        "right-ctrl"
+      ];
+      certificate = ./rkvm-certificate.pem;
+      # rkvm reads the password only from its config file. The placeholder
+      # keeps the real value out of the Nix store. ExecStartPre below
+      # replaces it.
+      password = "@RKVM_PASSWORD@";
+    };
+  };
+  networking.firewall.allowedTCPPorts = [ 5258 ];
+
+  secrets.items.rkvm-key = {
+    target = "/etc/rkvm/key.pem";
+    mode = "0600";
+  };
+  secrets.items.rkvm-password = {
+    target = "/etc/rkvm/password";
+    mode = "0600";
+  };
+
+  systemd.services.rkvm-server = {
+    requires = [ "secrets.service" ];
+    # keyd must grab the built-in keyboard first. Otherwise rkvm takes the raw
+    # keyboard, and the keyd remap does not reach dark-archon.
+    after = [
+      "secrets.service"
+      "keyd.service"
+    ];
+    serviceConfig = {
+      RuntimeDirectory = "rkvm";
+      RuntimeDirectoryMode = "0700";
+      ExecStartPre = pkgs.writeShellScript "rkvm-server-config" ''
+        ${pkgs.coreutils}/bin/install -m 0600 ${
+          (pkgs.formats.toml { }).generate "rkvm-server.toml" config.services.rkvm.server.settings
+        } /run/rkvm/server.toml
+        ${pkgs.replace-secret}/bin/replace-secret @RKVM_PASSWORD@ /etc/rkvm/password /run/rkvm/server.toml
+      '';
+      ExecStart = lib.mkForce "${config.services.rkvm.package}/bin/rkvm-server /run/rkvm/server.toml";
     };
   };
 

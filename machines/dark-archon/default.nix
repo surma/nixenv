@@ -5,6 +5,9 @@
   inputs,
   ...
 }:
+let
+  ips = import ../../ips.nix;
+in
 {
   imports = [
     # NOTE(surma): dark-archon has different hardware than archon. Re-add the
@@ -55,6 +58,41 @@
     settings = {
       capture = "wlr";
       origin_web_ui_allowed = "wan";
+    };
+  };
+
+  # rkvm receives the keyboard and mouse of archon. The server side and the
+  # switch keys are in machines/archon/default.nix.
+  services.rkvm.client = {
+    enable = true;
+    settings = {
+      server = "${ips.hosts.archon.ip}:5258";
+      certificate = ../archon/rkvm-certificate.pem;
+      # rkvm reads the password only from its config file. The placeholder
+      # keeps the real value out of the Nix store. ExecStartPre below
+      # replaces it.
+      password = "@RKVM_PASSWORD@";
+    };
+  };
+
+  secrets.items.rkvm-password = {
+    target = "/etc/rkvm/password";
+    mode = "0600";
+  };
+
+  systemd.services.rkvm-client = {
+    requires = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+    serviceConfig = {
+      RuntimeDirectory = "rkvm";
+      RuntimeDirectoryMode = "0700";
+      ExecStartPre = pkgs.writeShellScript "rkvm-client-config" ''
+        ${pkgs.coreutils}/bin/install -m 0600 ${
+          (pkgs.formats.toml { }).generate "rkvm-client.toml" config.services.rkvm.client.settings
+        } /run/rkvm/client.toml
+        ${pkgs.replace-secret}/bin/replace-secret @RKVM_PASSWORD@ /etc/rkvm/password /run/rkvm/client.toml
+      '';
+      ExecStart = lib.mkForce "${config.services.rkvm.package}/bin/rkvm-client /run/rkvm/client.toml";
     };
   };
 

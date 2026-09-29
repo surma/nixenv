@@ -398,5 +398,20 @@
         "archon"
       ];
     };
+    rkvm-key = {
+      contents = ../secrets/rkvm-key.age;
+      keys = [
+        "surma"
+        "archon"
+      ];
+    };
+    rkvm-password = {
+      contents = ../secrets/rkvm-password.age;
+      keys = [
+        "surma"
+        "archon"
+        "dark-archon"
+      ];
+    };
   };
 }
