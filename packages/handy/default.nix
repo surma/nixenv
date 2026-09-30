@@ -111,6 +111,14 @@ let
         pname = "handy";
         inherit version;
         src = fetchurl source;
+        # The Tauri GTK hook forces the X11 backend to avoid a GSettings schema
+        # crash (tauri-apps/tauri#8541) that needs host schemas in /usr/share.
+        # NixOS has none, so let GTK pick Wayland when WAYLAND_DISPLAY is set.
+        postExtract = ''
+          chmod u+w $out/apprun-hooks/linuxdeploy-plugin-gtk.sh
+          substituteInPlace $out/apprun-hooks/linuxdeploy-plugin-gtk.sh \
+            --replace-fail 'export GDK_BACKEND=x11' '# export GDK_BACKEND=x11'
+        '';
       };
     in
     runCommand "handy-${version}"

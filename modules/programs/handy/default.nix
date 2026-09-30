@@ -28,5 +28,20 @@ in
 
   config = mkIf (systemManager == "home-manager" && cfg.enable) {
     home.packages = [ cfg.package ];
+
+    # Start Handy with the Hyprland session. --start-hidden keeps it in the
+    # tray instead of opening the main window on every login.
+    systemd.user.services.handy = mkIf pkgs.stdenv.isLinux {
+      Unit = {
+        Description = "Handy speech-to-text";
+        PartOf = [ "graphical-session.target" ];
+      };
+      Install = {
+        WantedBy = [ "hyprland-session.target" ];
+      };
+      Service = {
+        ExecStart = "${getExe cfg.package} --start-hidden";
+      };
+    };
   };
 }
