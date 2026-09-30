@@ -410,5 +410,13 @@
         "dark-archon"
       ];
     };
+    sunshine-password = {
+      contents = ../secrets/sunshine-password.age;
+      keys = [
+        "surma"
+        "archon"
+        "dark-archon"
+      ];
+    };
   };
 }

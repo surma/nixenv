@@ -15,6 +15,7 @@
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/gui/desktop.nix
     ../../profiles/nixos/gui/hyprland.nix
+    ../../profiles/nixos/gui/sunshine.nix
     ../../profiles/nixos/platform/laptop.nix
     ../../profiles/nixos/platform/framework.nix
 
@@ -30,19 +31,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernel.sysctl = {
     "kernel.dmesg_restrict" = 0;
-  };
-
-  services.sunshine = {
-    enable = true;
-    # The NixOS module's generic graphical-session.target also runs in the
-    # GDM greeter's user manager. Start Sunshine from the Hyprland-only target
-    # in machines/archon/home.nix instead.
-    autoStart = false;
-    openFirewall = true;
-    settings = {
-      capture = "wlr";
-      origin_web_ui_allowed = "wan";
-    };
   };
 
   # rkvm shares this keyboard and mouse with dark-archon. The server grabs

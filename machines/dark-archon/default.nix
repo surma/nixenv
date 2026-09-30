@@ -20,6 +20,7 @@ in
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/gui/desktop.nix
     ../../profiles/nixos/gui/hyprland.nix
+    ../../profiles/nixos/gui/sunshine.nix
     ../../profiles/nixos/platform/laptop.nix
   ];
 
@@ -50,19 +51,6 @@ in
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", TAG+="uaccess"
   '';
-
-  services.sunshine = {
-    enable = true;
-    # The NixOS module's generic graphical-session.target also runs in the
-    # GDM greeter's user manager. Start Sunshine from the Hyprland-only target
-    # in machines/dark-archon/home.nix instead.
-    autoStart = false;
-    openFirewall = true;
-    settings = {
-      capture = "wlr";
-      origin_web_ui_allowed = "wan";
-    };
-  };
 
   # rkvm receives the keyboard and mouse of archon. The server side and the
   # switch keys are in machines/archon/default.nix.
