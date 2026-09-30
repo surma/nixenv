@@ -48,6 +48,11 @@
   # rkvm shares this keyboard and mouse with dark-archon. The server grabs
   # every input device and forwards the events to the active machine. F24
   # switches machines and reaches no application.
+  # rkvm 0.6.1 assumes that its client slab keys have no gaps. After a
+  # reconnect or a probe connection, the switch key then never leaves archon.
+  services.rkvm.package = pkgs.rkvm.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./rkvm-switch-slab-keys.patch ];
+  });
   services.rkvm.server = {
     enable = true;
     settings = {

@@ -95,7 +95,21 @@ in
         } /run/rkvm/client.toml
         ${pkgs.replace-secret}/bin/replace-secret @RKVM_PASSWORD@ /etc/rkvm/password /run/rkvm/client.toml
       '';
-      ExecStart = lib.mkForce "${config.services.rkvm.package}/bin/rkvm-client /run/rkvm/client.toml";
+      # rkvm-client exits when it cannot reach the server, and a switch to a
+      # new configuration then reports the unit as failed. This happens when
+      # archon is down or this laptop is away from home. So wait until the
+      # server port answers. Other rkvm errors still make the unit fail.
+      ExecStart = lib.mkForce (
+        pkgs.writeShellScript "rkvm-client-start" ''
+          until ${pkgs.coreutils}/bin/timeout 3 ${pkgs.runtimeShell} -c \
+            '</dev/tcp/${
+              lib.replaceStrings [ ":" ] [ "/" ] config.services.rkvm.client.settings.server
+            }' 2>/dev/null; do
+            ${pkgs.coreutils}/bin/sleep 5
+          done
+          exec ${config.services.rkvm.package}/bin/rkvm-client /run/rkvm/client.toml
+        ''
+      );
     };
   };
 

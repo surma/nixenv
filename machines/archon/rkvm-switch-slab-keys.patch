@@ -1,0 +1,33 @@
+--- a/rkvm-server/src/server.rs
++++ b/rkvm-server/src/server.rs
+@@ -64,7 +64,8 @@
+ 
+                 // Remove dead clients.
+                 clients.retain(|_, (client, _)| !client.is_closed());
+-                if !clients.contains(current) {
++                // `current` is a slab key plus one. Index 0 is the server itself.
++                if current != 0 && !clients.contains(current - 1) {
+                     current = 0;
+                 }
+ 
+@@ -204,9 +205,18 @@
+ 
+                     if press {
+                         if pressed_keys.len() == switch_keys.len() {
+-                            let exists = |idx| idx == 0 || clients.contains(idx - 1);
++                            // Slab keys can have gaps after reconnects, so walk every
++                            // index up to the highest key and skip vacant and closed
++                            // entries instead of assuming keys 0..len.
++                            let exists = |idx: usize| {
++                                idx == 0
++                                    || clients
++                                        .get(idx - 1)
++                                        .is_some_and(|(sender, _)| !sender.is_closed())
++                            };
++                            let end = clients.iter().map(|(key, _)| key + 2).max().unwrap_or(1);
+                             loop {
+-                                current = (current + 1) % (clients.len() + 1);
++                                current = (current + 1) % end;
+                                 if exists(current) {
+                                     break;
+                                 }
