@@ -21,13 +21,13 @@
   ...
 }:
 let
-  revision = "2e8987bc954d8a3263ab1b519eef2df3a810d4bf";
+  revision = "76d07895a8aa5e4faaa0aa623262ddd6cefa7ecd"; # v0.17.0
 
   src = fetchFromGitHub {
     owner = "crmne";
     repo = "zapfast";
     rev = revision;
-    hash = "sha256-5GvR1f+XSpyxn1rW32ExWi6MW72kAnVHibwUS23+Fc4=";
+    hash = "sha256-8ZdS8Y4YTjcOmAdDTSn2RSyf0NReYbsPIraNPV5doO4=";
   };
 
   # rust-toolchain.toml pins 1.98.0, newer than any rustc in this nixpkgs.
@@ -79,13 +79,43 @@ rustPlatform.buildRustPackage {
 
   cargoLock = {
     lockFile = src + "/Cargo.lock";
-    # whatsapp-rust is a git dependency pinned to a commit; the lockfile
-    # names it, so the vendor step fetches it and needs a pinned hash.
+    # Git dependencies pinned in Cargo.lock; the vendored checkouts need
+    # pinned hashes. Crates from the same repo revision share one hash.
     outputHashes = {
-      "whatsapp-rust-0.7.0" = "sha256-BivXjeyjeRkZqMVpNF/pF2JY1dfA4m7+a/gOa2QPlEE=";
-      "whatsapp-rust-sqlite-storage-0.7.0" = "sha256-BivXjeyjeRkZqMVpNF/pF2JY1dfA4m7+a/gOa2QPlEE=";
-      "whatsapp-rust-tokio-transport-0.7.0" = "sha256-BivXjeyjeRkZqMVpNF/pF2JY1dfA4m7+a/gOa2QPlEE=";
-      "whatsapp-rust-ureq-http-client-0.7.0" = "sha256-BivXjeyjeRkZqMVpNF/pF2JY1dfA4m7+a/gOa2QPlEE=";
+      "dpi-0.1.1" = "sha256-x93WYXGAA6SifvOrayIQtyc7N8jT+atScx/R1YRT06k=";
+      "eframe-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "ecolor-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "egui-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "egui-wgpu-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "egui-winit-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "egui_extras-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "egui_glow-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "emath-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "epaint-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "epaint_default_fonts-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
+      "fastframe-fonts-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-i18n-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-icons-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-log-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-macos-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-shell-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-text-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-theme-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-tray-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "fastframe-update-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "rodio-0.22.2" = "sha256-snwSU8P9iZeMSKJcX80FWl0IL32dCQqWGjNispeKlps=";
+      "wacore-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "wacore-appstate-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "wacore-binary-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "wacore-derive-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "wacore-libsignal-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "wacore-noise-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "waproto-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "whatsapp-rust-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "whatsapp-rust-sqlite-storage-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "whatsapp-rust-tokio-transport-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "whatsapp-rust-ureq-http-client-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
+      "winit-0.30.13" = "sha256-x93WYXGAA6SifvOrayIQtyc7N8jT+atScx/R1YRT06k=";
     };
   };
 
