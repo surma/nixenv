@@ -2,17 +2,20 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 # Remote desktop between my Hyprland machines. Sunshine streams the desktop
 # of this machine, and Moonlight shows the desktop of another machine.
 # Import it next to ./hyprland.nix.
 let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   sunshine = lib.getExe config.services.sunshine.package;
 in
 {
   services.sunshine = {
     enable = true;
+    package = pkgs-unstable.sunshine;
     # The NixOS module's generic graphical-session.target also runs in the
     # GDM greeter's user manager. Start Sunshine from the Hyprland-only target
     # below instead.
