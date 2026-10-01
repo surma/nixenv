@@ -151,6 +151,13 @@
         "nexus"
       ];
     };
+    nexus-cache-signing-key = {
+      contents = ../secrets/nexus-cache-signing-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     gitea-web-search-cli-runner-token = {
       contents = ../secrets/gitea-web-search-cli-runner-token.age;
       keys = [

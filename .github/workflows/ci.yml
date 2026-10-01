@@ -1,0 +1,78 @@
+name: CI
+
+# Runs on the self-hosted runner in the github-runner container on Nexus
+# (machines/nexus/service-github-runner.nix).
+#
+# - Pull requests: `nix flake check`.
+# - Pushes to main: build every x86_64 machine and pin the results as GC
+#   roots. The runner shares the Nexus Nix store, so Harmonia
+#   (machines/nexus/service-nix-cache.nix) serves the builds at once.
+#
+# This repository is public and the runner is self-hosted. Pull requests from
+# forks never run here: the check job skips them, and the repository setting
+# "Require approval for all outside collaborators" must stay on, because a
+# fork can change this file.
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Nix flake check
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, nix, nixenv]
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run flake checks
+        run: nix flake check --print-build-logs
+
+  build:
+    name: Build x86_64 machines
+    if: github.event_name == 'push'
+    runs-on: [self-hosted, nix, nixenv]
+    timeout-minutes: 240
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build and pin
+        run: |
+          set -euo pipefail
+
+          # name=installable. Keep this list to the x86_64 machines in
+          # modules/core/machines.nix (aliases excluded).
+          targets=(
+            "nexus=.#nixosConfigurations.nexus.config.system.build.toplevel"
+            "archon=.#nixosConfigurations.archon.config.system.build.toplevel"
+            "dark-archon=.#nixosConfigurations.dark-archon.config.system.build.toplevel"
+            "home-scout=.#homeConfigurations.scout.activationPackage"
+            "home-generic-linux=.#homeConfigurations.generic-linux.activationPackage"
+          )
+
+          # The host GC scans this directory (see service-github-runner.nix).
+          # --no-link: a result symlink would be an indirect root to a
+          # container path, which the host GC drops.
+          roots=/nix/var/nix/gcroots/nixenv-ci
+          for target in "${targets[@]}"; do
+            name="${target%%=*}"
+            installable="${target#*=}"
+            echo "::group::Build ${name}"
+            out="$(nix build --no-link --print-out-paths --print-build-logs "${installable}")"
+            echo "::endgroup::"
+            ln -sfn "${out}" "${roots}/${name}"
+            echo "${name}: ${out}"
+          done
