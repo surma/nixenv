@@ -107,8 +107,6 @@ with lib;
 
       extensions.proxy.enable = mkEnableOption "the machine-local Pi proxy extension";
 
-      extensions.dotenv.enable = mkEnableOption "the dotenv extension (loads .env from cwd + HM session vars)";
-
       extensions.contextUsage.enable = mkEnableOption "the context-usage awareness extension (injects usage warnings into prompts)";
 
       extensions.subagent.enable = mkEnableOption "the subagent extension (persistent child Pi processes via RPC)";
@@ -152,9 +150,6 @@ with lib;
             source = ./extension/proxy.ts;
             force = true;
           };
-        }
-        // optionalAttrs piCfg.extensions.dotenv.enable {
-          ".pi/agent/extensions/dotenv.ts".source = ./extension/dotenv.ts;
         }
         // optionalAttrs piCfg.extensions.contextUsage.enable {
           ".pi/agent/extensions/context-usage.ts".source = ./extension/context-usage.ts;
