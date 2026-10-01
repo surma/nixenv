@@ -224,6 +224,13 @@
         "shopisurm"
       ];
     };
+    scout-hue-api-key = {
+      contents = ../secrets/scout-hue-api-key.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     scout-lidarr-api-key = {
       contents = ../secrets/lidarr-api-key.age;
       keys = [
