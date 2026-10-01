@@ -300,6 +300,8 @@ in
                   SCOUT_MATRIX_USER = "@scout:matrix.surma.technology";
                   SCOUT_MATRIX_PASSWORD_FILE = "/var/lib/credentials/scout/matrix-password";
                   SCOUT_MATRIX_ALLOWED_USERS = "@surma:matrix.surma.technology";
+                  # The "Scout" Space. Scout acts only in rooms of this Space.
+                  SCOUT_MATRIX_SPACE = "!vy1niBPRrx4gqowId1:matrix.surma.technology";
                 };
                 serviceConfig = {
                   EnvironmentFile = [
