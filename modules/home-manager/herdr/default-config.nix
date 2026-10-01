@@ -7,6 +7,37 @@
 }:
 let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+
+  # Zellij-style cycle: step through every pane of the workspace, tab by tab,
+  # and wrap around at the end. `pane list --workspace` already returns the
+  # panes in tab order, then split order. `pane.focus` also switches the tab.
+  # The CLI cannot focus a non-agent pane by id, so the script talks to the
+  # socket directly.
+  cyclePane = pkgs.writeShellScript "herdr-cycle-pane" ''
+    set -euo pipefail
+    export PATH=${
+      lib.makeBinPath [
+        config.programs.herdr.package
+        pkgs.jq
+        pkgs.socat
+      ]
+    }:$PATH
+
+    step=1
+    if [ "''${1:-next}" = prev ]; then step=-1; fi
+
+    target="$(herdr pane list --workspace "$HERDR_ACTIVE_WORKSPACE_ID" \
+      | jq -r --arg cur "$HERDR_ACTIVE_PANE_ID" --argjson step "$step" '
+          [.result.panes[].pane_id] as $ids
+          | ($ids | index($cur)) as $i
+          | if $i == null then empty
+            else $ids[($i + $step + ($ids | length)) % ($ids | length)] end')"
+    [ -n "$target" ] || exit 0
+
+    jq -cn --arg id "$target" \
+      '{id: "cycle-pane", method: "pane.focus", params: {pane_id: $id}}' \
+      | socat - "UNIX-CONNECT:$HERDR_SOCKET_PATH" > /dev/null
+  '';
 in
 with lib;
 {
@@ -32,8 +63,23 @@ with lib;
         prefix = "ctrl+p";
         previous_workspace = "alt+left";
         next_workspace = "alt+right";
-        previous_tab = "ctrl+shift+tab";
-        next_tab = "ctrl+tab";
+        # ctrl+tab and ctrl+shift+tab belong to the pane cycle below.
+        previous_tab = "";
+        next_tab = "";
+        command = [
+          {
+            key = "ctrl+tab";
+            type = "shell";
+            command = "${cyclePane} next";
+            description = "next pane, then next tab";
+          }
+          {
+            key = "ctrl+shift+tab";
+            type = "shell";
+            command = "${cyclePane} prev";
+            description = "previous pane, then previous tab";
+          }
+        ];
         detach = "prefix+q";
         new_tab = "prefix+t";
         rename_tab = "prefix+shift+t";
