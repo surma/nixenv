@@ -129,7 +129,6 @@ in
       ../../assets/skills/cloudflare
       ../../assets/skills/gws
       ../../assets/skills/hetzner
-      ../../assets/skills/hedgedoc
       ../../assets/skills/homeassistant
       ../../assets/skills/music
       ../../assets/skills/netlify

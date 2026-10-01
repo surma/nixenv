@@ -28,10 +28,8 @@ in
     ./service-adguardhome.nix
     ./service-scout.nix
     ./service-gitea.nix
-    ./service-hedgedoc2.nix
     ./service-immich.nix
     ./service-nextcloud.nix
-    ./service-opengist.nix
     ./service-lidarr.nix
     ./service-radarr.nix
     ./service-sonarr.nix
