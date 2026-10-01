@@ -339,6 +339,13 @@
         "nexus"
       ];
     };
+    matrix-registration-token = {
+      contents = ../secrets/matrix-registration-token.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     lidarr-postgres-env = {
       contents = ../secrets/lidarr-postgres-env.age;
       keys = [

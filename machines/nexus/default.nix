@@ -61,6 +61,7 @@ in
     ./service-llm-proxy.nix
     ./service-ha-proxy.nix
     ./service-tailscale-cf-dns.nix
+    ./service-matrix.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
