@@ -18,6 +18,7 @@
   libgpg-error,
   libxcb,
   wayland,
+  wtype,
   xkeyboard_config,
   xorg,
   zlib,
@@ -105,6 +106,9 @@ let
   # libraries and finds them via $ORIGIN rpaths; the wrapper supplies the few
   # host libraries it does not bundle plus the xkb data, then hands over to
   # the AppImage's own AppRun so all APPDIR-relative paths stay intact.
+  # Handy types the transcript with an external tool that it looks up on
+  # PATH. Without one, it falls back to X11 XTest, which reaches only
+  # XWayland windows, so the wrapper puts wtype on PATH for Wayland.
   handy-linux =
     let
       extracted = appimageTools.extract {
@@ -133,7 +137,8 @@ let
         APPDIR=${extracted}
         XKB_CONFIG_ROOT="${xkeyboard_config}/share/X11/xkb"
         LD_LIBRARY_PATH="${lib.makeLibraryPath runtimeLibs}:\$APPDIR/usr/lib\''${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
-        export APPDIR XKB_CONFIG_ROOT LD_LIBRARY_PATH
+        PATH="${wtype}/bin\''${PATH:+:\$PATH}"
+        export APPDIR XKB_CONFIG_ROOT LD_LIBRARY_PATH PATH
         exec "\$APPDIR/AppRun" "\$@"
         EOF
         chmod +x $out/bin/handy
