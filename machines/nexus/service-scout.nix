@@ -209,6 +209,15 @@ in
     chmod 0600 /var/lib/scout/netlify-token
   '';
 
+  # Application key for the Philips Hue bridge. Home Assistant uses the
+  # same key, so Scout can edit scenes and switch setups on the bridge.
+  secrets.items.scout-hue-api-key.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/hue-api-key
+    chown surma:users /var/lib/scout/hue-api-key
+    chmod 0600 /var/lib/scout/hue-api-key
+  '';
+
   secrets.items.scout-rmapi-config.command = ''
     mkdir -p /var/lib/scout/rmapi
     cat > /var/lib/scout/rmapi/rmapi.conf

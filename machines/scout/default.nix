@@ -133,6 +133,7 @@ in
       ../../assets/skills/music
       ../../assets/skills/netlify
       ../../assets/skills/nexus-admin
+      ../../assets/skills/philips-hue
       ../../assets/skills/remarkable
       ../../assets/skills/signal
       ../../assets/skills/tts
