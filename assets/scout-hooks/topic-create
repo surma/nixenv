@@ -38,7 +38,8 @@ if [ ! -f "$BRAIN_WORKTREE/.brain.db" ] && [ -f "$BRAIN_MAIN/.brain.db" ]; then
   sqlite3 "$BRAIN_MAIN/.brain.db" ".backup '$BRAIN_WORKTREE/.brain.db'"
 fi
 
-# Write BRAIN_PATH to .env for the dotenv plugin, exactly once.
+# Write BRAIN_PATH to .env, exactly once. Scout passes the topic .env to
+# pi when it starts the session, and this hook runs before that.
 if ! grep -qs "^BRAIN_PATH=" "$TOPIC_DIR/.env"; then
   echo "BRAIN_PATH=$BRAIN_WORKTREE" >> "$TOPIC_DIR/.env"
 fi

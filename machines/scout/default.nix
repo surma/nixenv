@@ -32,6 +32,12 @@ in
     home.sessionVariables.RMAPI_CONFIG = "${config.home.homeDirectory}/.config/rmapi/rmapi.conf";
     home.sessionVariables.NETLIFY_AUTH_TOKEN_FILE = "/var/lib/credentials/scout/netlify-token";
 
+    # Login shells load the session variables above through ~/.profile.
+    # Agent tool shells run as `bash -lc`, so every tool call gets them.
+    # Home Manager writes the path itself, so it cannot drift when the
+    # profile location moves (see #134).
+    programs.bash.enable = true;
+
     fonts.fontconfig.enable = true;
 
     # Scout has no terminal to multiplex. The subagent extension used to drive
@@ -142,7 +148,6 @@ in
       };
       openRouter.keyFile = lib.mkForce "/var/lib/credentials/scout/openrouter-api-key";
       extensions.proxy.enable = true;
-      extensions.dotenv.enable = true;
       extensions.contextUsage.enable = true;
       # Migrated from the pi-config repo. Only Scout gets these from nixenv.
       extensions.subagent.enable = true;
