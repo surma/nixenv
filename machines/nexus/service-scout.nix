@@ -395,6 +395,11 @@ in
         modifier = "rw";
         node = "/dev/dri/card0";
       }
+      # KVM acceleration for QEMU guests.
+      {
+        modifier = "rw";
+        node = "/dev/kvm";
+      }
     ];
 
     bindMounts = {
@@ -411,6 +416,11 @@ in
       dri = {
         mountPoint = "/dev/dri";
         hostPath = "/dev/dri";
+        isReadOnly = false;
+      };
+      kvm = {
+        mountPoint = "/dev/kvm";
+        hostPath = "/dev/kvm";
         isReadOnly = false;
       };
       dump = {
