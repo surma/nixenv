@@ -6,6 +6,7 @@
 }:
 let
   system = pkgs.stdenv.hostPlatform.system;
+  ips = import ../../ips.nix;
   scoutApiPort = 32445;
 
   # Hook scripts for Scout topic lifecycle. Copied into the Nix store
@@ -173,6 +174,15 @@ in
     chmod 0600 /var/lib/scout/cloudflare-api-token
   '';
 
+  # Password of the @scout Matrix account. Scout reads it for the first login
+  # and for the cross-signing setup.
+  secrets.items.scout-matrix-password.command = ''
+    mkdir -p /var/lib/scout
+    cat > /var/lib/scout/matrix-password
+    chown surma:users /var/lib/scout/matrix-password
+    chmod 0600 /var/lib/scout/matrix-password
+  '';
+
   secrets.items.hetzner-cloud-api-token.command = ''
     mkdir -p /var/lib/scout
     cat > /var/lib/scout/hetzner-cloud-api-token
@@ -282,6 +292,14 @@ in
                   SCOUT_DEFAULT_MODEL = "fireworks/accounts/fireworks/models/glm-5p3-flash";
                   SCOUT_DEFAULT_REASONING_LEVEL = "max";
                   SCOUT_LOG = "scout=debug";
+                  # Matrix backend settings. They take effect only when
+                  # SCOUT_CHAT_BACKEND is "matrix". The default stays "telegram".
+                  # The homeserver URL uses the internal Traefik entrypoint,
+                  # so traffic stays on Nexus.
+                  SCOUT_MATRIX_HOMESERVER = "http://matrix.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
+                  SCOUT_MATRIX_USER = "@scout:matrix.surma.technology";
+                  SCOUT_MATRIX_PASSWORD_FILE = "/var/lib/credentials/scout/matrix-password";
+                  SCOUT_MATRIX_ALLOWED_USERS = "@surma:matrix.surma.technology";
                 };
                 serviceConfig = {
                   EnvironmentFile = [

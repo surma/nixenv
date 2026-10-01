@@ -296,6 +296,13 @@
         "nexus"
       ];
     };
+    scout-matrix-password = {
+      contents = ../secrets/scout-matrix-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     scout-firefly-access-token = {
       contents = ../secrets/firefly-access-token.age;
       keys = [
