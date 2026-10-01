@@ -2,6 +2,7 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }:
 with lib;
@@ -51,6 +52,7 @@ in
   config = mkIf (config.defaultConfigs.waybar.enable) {
     home.packages = with pkgs; [ pavucontrol ];
     programs.waybar = {
+      package = inputs.waybar.packages.${pkgs.stdenv.hostPlatform.system}.waybar;
       settings.mainBar =
         waybarConfig
         // sunsetConfig
@@ -59,6 +61,11 @@ in
           # The systemd unit has a restricted PATH, so pin the click command.
           "pulseaudio" = waybarConfig."pulseaudio" // {
             "on-click" = lib.getExe pkgs.pavucontrol;
+          };
+          # Hyprland with a Lua config only accepts Lua dispatch expressions.
+          "hyprland/workspaces" = waybarConfig."hyprland/workspaces" // {
+            "on-scroll-down" = "${lib.getExe' pkgs.hyprland "hyprctl"} dispatch 'hl.dsp.focus({ workspace = \"e-1\" })'";
+            "on-scroll-up" = "${lib.getExe' pkgs.hyprland "hyprctl"} dispatch 'hl.dsp.focus({ workspace = \"e+1\" })'";
           };
         };
       style = lib.readFile ./style.css;
