@@ -18,16 +18,27 @@ Use this skill whenever you need to interact with Google Workspace services (Gma
 - The user asks to search for places, restaurants, or businesses
 - The user asks for directions, place details, or ratings from Google Maps
 
+## Load the session variables first
+
+`gws` finds its credentials through the `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` environment variable. Home Manager sets it as a session variable. Only login shells load session variables, and agent tool shells are usually not login shells. Without the variable, `gws` reports "No credentials provided". That error is a false alarm.
+
+Load the session variables at the start of **every** shell command that calls `gws`. Each tool call can start a new shell, so one load per session is not enough:
+
+```bash
+. "/etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh"
+```
+
 ## Verify the CLI
 
 Before first use in a session, confirm the CLI is available and authenticated:
 
 ```bash
+. "/etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh"
 command -v gws
 gws gmail users messages list --params '{"userId": "me", "maxResults": 1}'
 ```
 
-If the second command returns an auth error, report it to the user — authentication is managed outside this session.
+If the command still returns an auth error after you load the variables, check that the file in `$GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` exists. Then report the result to the user. Do not run `gws auth login`. The credentials come from a managed secret, and a manual login creates a second, competing set of credentials.
 
 ## Usage
 
