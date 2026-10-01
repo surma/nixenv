@@ -48,6 +48,7 @@ in
     ./service-dump.nix
     ./service-overview.nix
     ./service-github-runner.nix
+    ./service-nix-cache.nix
     ./service-gitea-runner.nix
     ./service-nexus-admin.nix
     ./service-brain-serve.nix

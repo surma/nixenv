@@ -6,4 +6,5 @@
   jaegerOtlpHttp = 4318;
   adguardHomeWeb = 8083;
   nut = 3493;
+  nixCache = 5000;
 }

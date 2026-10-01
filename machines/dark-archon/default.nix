@@ -18,6 +18,7 @@ in
     ./hardware.nix
 
     ../../profiles/nixos/base.nix
+    ../../profiles/nixos/nexus-cache.nix
     ../../profiles/nixos/gui/desktop.nix
     ../../profiles/nixos/gui/hyprland.nix
     ../../profiles/nixos/gui/sunshine.nix

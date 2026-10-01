@@ -46,6 +46,13 @@ in
     printf '%s\n' "$key" > /var/lib/nixos-admin/.ssh/id_repo_scout
     chmod 0600 /var/lib/nixos-admin/.ssh/id_repo_scout
 
+    # GitHub runner container, nixenv runner only (bind-mounted as
+    # /var/lib/credentials/github-runner inside the container). The
+    # containeruser UID is surma's UID.
+    mkdir -p /var/lib/github-runner
+    install -m 0600 -o surma -g users /dev/null /var/lib/github-runner/id_repo_scout
+    printf '%s\n' "$key" > /var/lib/github-runner/id_repo_scout
+
     # The dependent containers remain stopped when /dump is unavailable.
     if ! ${pkgs.systemd}/bin/systemctl is-active --quiet dump.mount; then
       exit 0
