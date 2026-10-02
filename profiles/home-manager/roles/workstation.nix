@@ -5,6 +5,9 @@
   inputs,
   ...
 }:
+let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+in
 {
   imports = [
     ../../../modules/home-manager/ssh-keys
@@ -43,6 +46,7 @@
 
     programs.iamb = {
       enable = true;
+      package = pkgs-unstable.iamb;
       settings.profiles.user.user_id = "@surma:matrix.surma.technology";
     };
   };
