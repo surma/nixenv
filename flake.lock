@@ -959,15 +959,18 @@
           "flake-utils"
         ],
         "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-rust": [
           "nixpkgs-unstable"
         ]
       },
       "locked": {
-        "lastModified": 1790919752,
-        "narHash": "sha256-WnmFUisGJneKsHXufLDwaRO0fLAuHlX35nDAxlck1os=",
+        "lastModified": 1790928786,
+        "narHash": "sha256-rNlMLCnr7IzolL71SUEAk7e/vRLhCfvqay89OV2qeYU=",
         "ref": "main",
-        "rev": "dd3227139cfc904fc3349bc64f93cd55a759a61d",
-        "revCount": 168,
+        "rev": "4b319c5dfaa312411181e95ec7a87dfbb43a9ac2",
+        "revCount": 172,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
       },
