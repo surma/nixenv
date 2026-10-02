@@ -40,5 +40,10 @@
     # Default-enabled on every workstation. A machine where brain does not
     # build can turn it off with a plain `programs.brain.enable = false`.
     programs.brain.enable = lib.mkDefault true;
+
+    programs.iamb = {
+      enable = true;
+      settings.profiles.user.user_id = "@surma:matrix.surma.technology";
+    };
   };
 }
