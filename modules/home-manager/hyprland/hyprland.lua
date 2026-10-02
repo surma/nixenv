@@ -210,7 +210,7 @@ hl.bind(meh .. " + SHIFT + equal", hl.dsp.window.fullscreen())
 hl.bind(meh .. " + grave", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(meh .. " + SHIFT + grave", hl.dsp.window.move({ workspace = "special:magic" }))
 
-hl.bind("SUPER + space", hl.dsp.exec_cmd("@wofi@ --show drun --matching=fuzzy --insensitive"))
+hl.bind("SUPER + space", hl.dsp.exec_cmd("@fuzzel@"))
 
 -- With no workspace selector, workspace.move moves the active workspace.
 hl.bind(meh .. " + period", hl.dsp.workspace.move({ monitor = "+1" }))

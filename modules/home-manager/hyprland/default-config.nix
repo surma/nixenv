@@ -27,8 +27,8 @@ in
       # values that must agree with Home Manager's generated configuration.
       extraConfig =
         builtins.replaceStrings
-          [ "@wofi@" "@cursor-theme@" "@cursor-size@" ]
-          [ "${pkgs.wofi}/bin/wofi" cursorTheme (toString cursorSize) ]
+          [ "@fuzzel@" "@cursor-theme@" "@cursor-size@" ]
+          [ "${pkgs.fuzzel}/bin/fuzzel" cursorTheme (toString cursorSize) ]
           (lib.readFile ./hyprland.lua);
     };
 

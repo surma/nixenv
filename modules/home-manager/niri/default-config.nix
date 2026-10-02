@@ -11,9 +11,9 @@ let
   cursorSize = 32;
   niriConfig = pkgs.writeText "niri-config.kdl" (
     builtins.replaceStrings
-      [ "@wofi@" "@cursor-theme@" "@cursor-size@" "@binds@" "@extraConfig@" ]
+      [ "@fuzzel@" "@cursor-theme@" "@cursor-size@" "@binds@" "@extraConfig@" ]
       [
-        "${pkgs.wofi}/bin/wofi"
+        "${pkgs.fuzzel}/bin/fuzzel"
         cursorTheme
         (toString cursorSize)
         config.defaultConfigs.niri.binds
