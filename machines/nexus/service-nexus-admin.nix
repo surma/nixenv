@@ -63,24 +63,6 @@ in
     listenAddress = "127.0.0.1:${toString port}";
     flakeURL = "github:surma/nixenv#nexus";
     sshConfigFile = "${stateDir}/.ssh/config";
-
-    runtimeEnv.targets.scout = {
-      displayName = "Scout";
-      container = "lc-scout";
-      service = "scout.service";
-
-      variables.SCOUT_DEFAULT_MODEL = {
-        label = "Default model";
-        description = "Default model used by Scout for new conversations/topics.";
-        defaultValue = "openai/gpt-5.6-luna";
-        presetValues = [
-          "openai/gpt-5.6-luna"
-          "anthropic/claude-sonnet-4-20250514"
-          "anthropic/claude-opus-4-20250901"
-        ];
-        presetValuesOnly = false;
-      };
-    };
   };
 
   # Overlay: SSH key + config deployment for git+ssh:// flake inputs.
