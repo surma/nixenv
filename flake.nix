@@ -57,7 +57,8 @@
     };
     scout = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/scout?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs";
+      # matrix-sdk needs rustc 1.96 or newer. nixos-26.05 ships 1.95.
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.flake-utils.follows = "flake-utils";
     };
     surmhosting = {

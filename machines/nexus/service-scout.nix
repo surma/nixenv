@@ -292,8 +292,10 @@ in
                   SCOUT_DEFAULT_MODEL = "fireworks/accounts/fireworks/models/glm-5p3-flash";
                   SCOUT_DEFAULT_REASONING_LEVEL = "max";
                   SCOUT_LOG = "scout=debug";
-                  # Matrix backend settings. They take effect only when
-                  # SCOUT_CHAT_BACKEND is "matrix". The default stays "telegram".
+                  # Scout talks to Surma through the Matrix homeserver on
+                  # Nexus. Set this to "telegram" to roll back. The Telegram
+                  # settings above stay in place for that case.
+                  SCOUT_CHAT_BACKEND = "matrix";
                   # The homeserver URL uses the internal Traefik entrypoint,
                   # so traffic stays on Nexus.
                   SCOUT_MATRIX_HOMESERVER = "http://matrix.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
