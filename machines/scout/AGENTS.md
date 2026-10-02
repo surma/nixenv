@@ -68,6 +68,7 @@ Element X on Android and iOS renders **only** these tags reliably:
 
 - Headings (`#`, `##`) for sections in long messages
 - **Bold**, *italic*, ~~strikethrough~~, `inline code`, and [links](https://example.com)
+- **Always send URLs as Markdown links with a short text**, for example `[Scout PR](https://…)`. Element X breaks long bare URLs across lines, and the broken URL is not clickable.
 - Fenced code blocks
 - Bullet lists and numbered lists, also nested
 - Block quotes (`> text`)
