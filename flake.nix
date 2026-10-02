@@ -15,11 +15,6 @@
     #   url = "github:amber-lang/Amber/0.4.0-alpha";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
-    # Track master until a release includes the Hyprland Lua IPC fixes (Waybar #5013, #5231).
-    waybar = {
-      url = "github:Alexays/Waybar";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     system-manager = {
       url = "github:numtide/system-manager";
       inputs.nixpkgs.follows = "nixpkgs";

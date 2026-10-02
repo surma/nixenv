@@ -2,21 +2,12 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 # The system half of a Wayland session: the greeter and compositor-neutral
 # helpers. Import it next to ./desktop.nix.
 #
 # The user half is profiles/home-manager/gui/wayland.nix.
-let
-  # The NixOS module applies `.override { systemdSupport = true; }`. The Waybar flake
-  # package does not accept that argument. systemdSupport is already on by default on Linux.
-  waybarPackage = inputs.waybar.packages.${pkgs.stdenv.hostPlatform.system}.waybar;
-  waybarPackageForNixos = waybarPackage // {
-    override = _: waybarPackage;
-  };
-in
 {
   imports = [
     ./hyprland.nix
@@ -49,8 +40,6 @@ in
 
     xdg.portal.enable = true;
 
-    programs.waybar.enable = true;
-    programs.waybar.package = waybarPackageForNixos;
     services.displayManager.gdm.enable = true;
   };
 }

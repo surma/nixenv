@@ -8,8 +8,11 @@
     ./niri.nix
   ];
 
-  programs.waybar.enable = true;
-  defaultConfigs.waybar.enable = true;
+  programs.eww = {
+    enable = true;
+    systemd.enable = true;
+  };
+  defaultConfigs.eww.enable = true;
 
   programs.hyprlock = {
     enable = true;

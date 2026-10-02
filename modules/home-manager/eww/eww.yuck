@@ -1,0 +1,46 @@
+(deflisten workspaces :initial "[]" "@WORKSPACES@")
+(defpoll volume :interval "2s" "@VOLUME@")
+(defpoll battery :interval "60s" "@BATTERY@")
+(defpoll stay_awake :interval "60s" "PATH=@STAY_AWAKE_PATH@ stay-awake status")
+
+(defwidget stay_awake_button []
+  (button
+    :class {stay_awake == "activated" ? "stay-awake active" : "stay-awake"}
+    :tooltip "Stay awake"
+    :onclick "PATH=@STAY_AWAKE_PATH@ stay-awake toggle"
+    (label :text {stay_awake == "activated" ? "" : ""})))
+
+(defwidget workspace_list [screen]
+  (box :class "workspaces"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (for workspace in workspaces
+      (button
+        :class {workspace.active ? "workspace active" : "workspace"}
+        :visible {workspace.output == screen}
+        :onclick "@FOCUS_WORKSPACE@ ${workspace.output} ${workspace.index}"
+        (label :text {workspace.label})))))
+
+(defwidget bar_content [screen]
+  (centerbox :class "bar" :orientation "h"
+    (workspace_list :screen screen)
+    (label :class "clock" :text {formattime(EWW_TIME, "%a, %F %H:%M")})
+    (box :class "status" :orientation "h" :space-evenly false :spacing 0
+      (button :class "volume" :onclick "@PAVUCONTROL@"
+        (label :text volume))
+      (label :class "battery" :text battery)
+      (systray :class "tray" :icon-size 16 :spacing 8)
+      (stay_awake_button)
+      @SUNSET_WIDGET@)))
+
+(defwindow bar [screen]
+  :monitor screen
+  :exclusive true
+  :geometry (geometry
+    :x "0%"
+    :y "0px"
+    :width "100%"
+    :height "30px"
+    :anchor "top center")
+  (bar_content :screen screen))
