@@ -5,14 +5,12 @@
   inputs,
   ...
 }:
-let
-  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-in
 {
   imports = [
     ../../../modules/home-manager/ssh-keys
     ../../../modules/home-manager/gpg-keys
     ../../../modules/home-manager/brain
+    ../../../modules/home-manager/iamb/default-config.nix
   ];
 
   config = {
@@ -44,10 +42,7 @@ in
     # build can turn it off with a plain `programs.brain.enable = false`.
     programs.brain.enable = lib.mkDefault true;
 
-    programs.iamb = {
-      enable = true;
-      package = pkgs-unstable.iamb;
-      settings.profiles.user.user_id = "@surma:matrix.surma.technology";
-    };
+    programs.iamb.enable = true;
+    defaultConfigs.iamb.enable = true;
   };
 }
