@@ -55,7 +55,7 @@ Scout exposes MCP tools named `send_message` and `send_file`. Use those names wh
 ### send_message format options
 
 - `format: "markdown"` (default) — Scout renders your Markdown to the HTML subset that Element X shows. Use this for almost every message.
-- `format: "html"` — your text is HTML in which newlines are line breaks. Scout keeps only the tags in the list below. Use it only when you need precise formatting control. `telegram_html` is an older name for the same format.
+- `format: "html"` — your text is HTML in which newlines are line breaks. Scout keeps only the tags in the list below. Use it only when you need precise formatting control.
 
 ### Element X formatting constraints — IMPORTANT
 
