@@ -1,6 +1,6 @@
 ---
 name: rust
-description: Use whenever creating, scaffolding, or modifying Rust projects; choosing Rust dependencies; designing Rust CLIs; setting up logging/tracing; handling Rust errors and diagnostics; or working with Cargo workspaces/crates.
+description: Use whenever creating, scaffolding, or modifying Rust projects; building Rust projects with Nix; choosing Rust dependencies; designing Rust CLIs; setting up logging/tracing; handling Rust errors and diagnostics; or working with Cargo workspaces/crates.
 ---
 
 # Rust Project Defaults
@@ -137,6 +137,16 @@ cargo test --all-targets --all-features
 ```
 
 If the repo has a different command set (`just`, `xtask`, Nix checks), follow the repo convention.
+
+## Nix builds
+
+When a repository builds a Rust project with Nix, use [Crane](https://github.com/ipetkov/crane). Crane builds the dependencies in a separate derivation, so a source change does not recompile every dependency.
+
+- Build the dependencies once with `craneLib.buildDepsOnly`.
+- Pass the result as `cargoArtifacts` to every derivation that compiles the crate: the package, `cargoClippy`, and `cargoTest` or `cargoNextest`.
+- Pass the same `commonArgs` (`src`, `strictDeps`, build inputs, Cargo features) to `buildDepsOnly` and to every derivation that uses its artifacts. If the arguments differ, Cargo recompiles the dependencies.
+- Use `craneLib.cleanCargoSource` for `src`, so that changes to files outside the Cargo sources do not trigger a rebuild.
+- Do not use `rustPlatform.buildRustPackage` for new setups. It recompiles all dependencies on every change.
 
 ## Dependency discipline
 
