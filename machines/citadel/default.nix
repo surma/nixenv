@@ -34,6 +34,9 @@
   boot.loader.generic-extlinux-compatible.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = false;
   hardware.deviceTree.name = "rockchip/rk3588-rock-5b.dtb";
+  # Copy only our DTB to /boot. The kernel's full dtbs dir is ~144M per kernel,
+  # so two distinct kernels (~230M each) overflowed the 500M ESP (2026-10-02).
+  hardware.deviceTree.filter = "rk3588-rock-5b.dtb";
 
   boot.kernel.sysctl = {
     "kernel.dmesg_restrict" = 0;
