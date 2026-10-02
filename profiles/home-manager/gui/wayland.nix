@@ -3,7 +3,10 @@
 # portal, and the input method. This is the user half of
 # profiles/nixos/gui/wayland.nix, so machines import both.
 {
-  imports = [ ./hyprland.nix ];
+  imports = [
+    ./hyprland.nix
+    ./niri.nix
+  ];
 
   programs.waybar.enable = true;
   defaultConfigs.waybar.enable = true;

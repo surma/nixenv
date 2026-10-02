@@ -29,5 +29,9 @@ in
           hl.exec_cmd("${onepasswordCommand} --silent")
         end)
       '';
+
+      defaultConfigs.niri.extraConfig = lib.mkIf config.defaultConfigs.niri.enable ''
+        spawn-sh-at-startup "${onepasswordCommand} --silent"
+      '';
     };
 }

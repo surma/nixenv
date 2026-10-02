@@ -25,6 +25,8 @@ in
     ../../profiles/nixos/platform/laptop.nix
   ];
 
+  gui.compositor = "niri";
+
   # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
   # four CS35L57 speaker amps need for their spk-id-gpios, so the amps fail to
   # probe. The upstream fix is not in 7.2.y yet, so blacklist the module; the

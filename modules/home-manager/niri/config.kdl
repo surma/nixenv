@@ -1,0 +1,156 @@
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+        repeat-delay 225
+        repeat-rate 25
+    }
+
+    touchpad {
+        natural-scroll
+        dwt
+    }
+
+    mouse {
+        natural-scroll
+    }
+
+    focus-follows-mouse
+}
+
+// Niri uses "Unknown" when output metadata does not include a serial.
+output "Dell Inc. DELL U3419W 809V5T2" {
+    mode "3440x1440@59.97"
+    position x=0 y=0
+    scale 1
+}
+
+output "Visitech AS VITURE Beast Unknown" {
+    mode "1920x1080@60"
+    position x=760 y=360
+    scale 1
+}
+
+output "Samsung Electric Company Display Unknown" {
+    mode "3840x2160@60"
+    position x=-920 y=1440
+    scale 2
+}
+
+output "BOE NE135A1M-NY1 Unknown" {
+    mode "2880x1920@120"
+    position x=1000 y=1440
+    scale 2
+}
+
+output "LG Display 0x07C6 Unknown" {
+    mode "2880x1800@120"
+    position x=1000 y=1440
+    scale 2
+}
+
+environment {
+    QT_QPA_PLATFORM "wayland"
+    ELECTRON_OZONE_PLATFORM_HINT "wayland"
+    GDK_BACKEND "wayland"
+}
+
+cursor {
+    xcursor-theme "@cursor-theme@"
+    xcursor-size @cursor-size@
+}
+
+xwayland-satellite {
+    path "xwayland-satellite"
+}
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+layout {
+    gaps 4
+
+    focus-ring {
+        off
+    }
+
+    border {
+        on
+        width 2
+        active-gradient from="#33ccffee" to="#00ff99ee" angle=45
+        inactive-color "#595959aa"
+    }
+
+    default-column-width { proportion 0.66; }
+}
+
+window-rule {
+    geometry-corner-radius 4
+    clip-to-geometry true
+}
+
+binds {
+    Super+Alt+Ctrl+1 { focus-workspace 1; }
+    Super+Alt+Ctrl+2 { focus-workspace 2; }
+    Super+Alt+Ctrl+3 { focus-workspace 3; }
+    Super+Alt+Ctrl+4 { focus-workspace 4; }
+    Super+Alt+Ctrl+5 { focus-workspace 5; }
+    Super+Alt+Ctrl+6 { focus-workspace 6; }
+    Super+Alt+Ctrl+7 { focus-workspace 7; }
+    Super+Alt+Ctrl+8 { focus-workspace 8; }
+    Super+Alt+Ctrl+9 { focus-workspace 9; }
+
+    Super+Alt+Ctrl+Shift+1 { move-column-to-workspace 1; }
+    Super+Alt+Ctrl+Shift+2 { move-column-to-workspace 2; }
+    Super+Alt+Ctrl+Shift+3 { move-column-to-workspace 3; }
+    Super+Alt+Ctrl+Shift+4 { move-column-to-workspace 4; }
+    Super+Alt+Ctrl+Shift+5 { move-column-to-workspace 5; }
+    Super+Alt+Ctrl+Shift+6 { move-column-to-workspace 6; }
+    Super+Alt+Ctrl+Shift+7 { move-column-to-workspace 7; }
+    Super+Alt+Ctrl+Shift+8 { move-column-to-workspace 8; }
+    Super+Alt+Ctrl+Shift+9 { move-column-to-workspace 9; }
+
+    Super+Alt+Ctrl+W { close-window; }
+    Super+Alt+Ctrl+Shift+Q { quit; }
+
+    Super+Alt+Ctrl+Left { focus-column-or-monitor-left; }
+    Super+Alt+Ctrl+Right { focus-column-or-monitor-right; }
+    Super+Alt+Ctrl+Up { focus-window-or-monitor-up; }
+    Super+Alt+Ctrl+Down { focus-window-or-monitor-down; }
+
+    Super+Alt+Ctrl+Shift+Left { move-column-left-or-to-monitor-left; }
+    Super+Alt+Ctrl+Shift+Right { move-column-right-or-to-monitor-right; }
+    Super+Alt+Ctrl+Shift+Up { move-window-up; }
+    Super+Alt+Ctrl+Shift+Down { move-window-down; }
+
+    Super+Alt+Ctrl+Return { move-column-to-first; }
+    Super+Alt+Ctrl+Minus { set-column-width "-1%"; }
+    Super+Alt+Ctrl+Equal { set-column-width "+1%"; }
+    Super+Alt+Ctrl+BracketLeft { consume-or-expel-window-left; }
+    Super+Alt+Ctrl+BracketRight { consume-or-expel-window-right; }
+    Super+Alt+Ctrl+Shift+Slash { toggle-window-floating; }
+    Super+Alt+Ctrl+Shift+Equal { fullscreen-window; }
+    Super+Alt+Ctrl+grave { toggle-overview; }
+    Super+Alt+Ctrl+Period { move-workspace-to-monitor-next; }
+    Super+Alt+Ctrl+Comma { move-workspace-to-monitor-previous; }
+
+    Super+Space { spawn "@wofi@" "--show" "drun" "--matching=fuzzy" "--insensitive"; }
+
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-"; }
+    XF86AudioMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+    XF86MonBrightnessUp allow-when-locked=true { spawn-sh "brightnessctl -e4 -n2 set 5%+"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn-sh "brightnessctl -e4 -n2 set 5%-"; }
+
+    XF86AudioNext allow-when-locked=true repeat=false { spawn-sh "playerctl next"; }
+    XF86AudioPause allow-when-locked=true repeat=false { spawn-sh "playerctl play-pause"; }
+    XF86AudioPlay allow-when-locked=true repeat=false { spawn-sh "playerctl play-pause"; }
+    XF86AudioPrev allow-when-locked=true repeat=false { spawn-sh "playerctl previous"; }
+
+@binds@
+}
+
+@extraConfig@

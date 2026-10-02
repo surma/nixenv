@@ -20,5 +20,9 @@ with lib;
     wayland.windowManager.hyprland.extraConfig = mkIf config.wayland.windowManager.hyprland.enable (mkAfter ''
       hl.bind("SUPER + ALT + space", hl.dsp.exec_cmd("${getExe config.programs.handy.package} --toggle-transcription"))
     '');
+
+    defaultConfigs.niri.binds = mkIf config.defaultConfigs.niri.enable (mkAfter ''
+      Super+Alt+Space { spawn-sh "${getExe config.programs.handy.package} --toggle-transcription"; }
+    '');
   };
 }

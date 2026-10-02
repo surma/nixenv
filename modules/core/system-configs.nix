@@ -42,6 +42,7 @@ let
     ../home-manager/agent
     ../home-manager/nixenv
     ../features/hyprland.nix
+    ../features/niri.nix
     ../features/screenshot.nix
   ];
 

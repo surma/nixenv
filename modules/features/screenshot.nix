@@ -9,7 +9,11 @@ let
   screenshotHelper = pkgs.makeDesktopItem {
     name = "screenshot";
     desktopName = "Take screenshot";
-    exec = "${pkgs.grimblast}/bin/grimblast save area ${config.home.homeDirectory}/Downloads/screenshot.png";
+    exec =
+      if config.defaultConfigs.niri.enable then
+        "${pkgs.niri}/bin/niri msg action screenshot"
+      else
+        "${pkgs.grimblast}/bin/grimblast save area ${config.home.homeDirectory}/Downloads/screenshot.png";
   };
 in
 {
@@ -19,5 +23,9 @@ in
       grimblast
       screenshotHelper
     ];
+
+    defaultConfigs.niri.extraConfig = lib.mkIf config.defaultConfigs.niri.enable ''
+      screenshot-path "~/Downloads/screenshot.png"
+    '';
   };
 }

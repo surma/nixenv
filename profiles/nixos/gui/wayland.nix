@@ -18,7 +18,10 @@ let
   };
 in
 {
-  imports = [ ./hyprland.nix ];
+  imports = [
+    ./hyprland.nix
+    ./niri.nix
+  ];
 
   options.gui.compositor = lib.mkOption {
     type = lib.types.enum [

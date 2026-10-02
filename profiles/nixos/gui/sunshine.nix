@@ -5,7 +5,7 @@
   inputs,
   ...
 }:
-# Remote desktop between my Hyprland machines. Sunshine streams the desktop
+# Remote desktop between my Wayland machines. Sunshine streams the desktop
 # of this machine, and Moonlight shows the desktop of another machine.
 # Import it next to ./wayland.nix.
 let
@@ -17,8 +17,8 @@ in
     enable = true;
     package = pkgs-unstable.sunshine;
     # The NixOS module's generic graphical-session.target also runs in the
-    # GDM greeter's user manager. Start Sunshine from the Hyprland-only target
-    # below instead.
+    # GDM greeter's user manager. Start Sunshine from compositor-specific
+    # targets instead.
     autoStart = false;
     openFirewall = true;
     settings = {
@@ -35,6 +35,10 @@ in
     pkgs.writeShellScript "sunshine-credentials" ''
       exec ${sunshine} --creds surma "$(< "$HOME/.config/sunshine/password")"
     '';
+
+  systemd.user.services.sunshine.wantedBy = lib.mkIf (config.gui.compositor == "niri") [
+    "niri.service"
+  ];
 
   environment.systemPackages = [ pkgs.moonlight-qt ];
 
