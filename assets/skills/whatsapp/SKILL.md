@@ -176,11 +176,11 @@ The connection frequently drops with `failed to read frame header: EOF`. This is
 
 ## Re-authentication (QR code rescan)
 
-Sessions last ~20 days. When expired, the CLI will fail to connect. Since Scout runs in a container without a display, QR code pairing must be relayed to the user via Telegram.
+Sessions last ~20 days. When expired, the CLI will fail to connect. Since Scout runs in a container without a display, QR code pairing must be relayed to the user through the chat (`send_file`).
 
 ### Procedure
 
-**IMPORTANT:** The user must be able to scan a QR code on their phone. If they are only on mobile, this will not work — they need a second device to view the QR image from Telegram while scanning with their phone's WhatsApp.
+**IMPORTANT:** The user must be able to scan a QR code on their phone. If they are only on mobile, this will not work — they need a second device to view the QR image in the chat while scanning with their phone's WhatsApp.
 
 #### Option A: Pair from the container (preferred)
 
@@ -194,7 +194,7 @@ If pairing from the container fails repeatedly, ask the user to run on their own
 nix run 'git+ssh://git@github.com/surma/nixenv#whatsapp-cli' -- auth login --store ~/wa-store
 ```
 
-Then have them send the resulting `~/wa-store` directory (tar it up) via Telegram.
+Then have them send the resulting `~/wa-store` directory (tar it up) in the chat.
 Extract and copy to `~/.config/whatsapp-cli/`:
 
 ```bash
@@ -207,7 +207,7 @@ nix shell nixpkgs#gnutar nixpkgs#gzip -c bash -c \
 
 Verify with `whatsapp-cli chats --store ~/.config/whatsapp-cli`.
 
-#### Option C: QR via Telegram (for container pairing)
+#### Option C: QR via the chat (for container pairing)
 
 This is the QR capture procedure used by Option A. It can be fragile because:
 - QR codes expire in ~30 seconds and regenerate
@@ -221,7 +221,7 @@ Steps:
    QR2PNG="$(dirname "$(readlink -f ~/.agents/skills/whatsapp/SKILL.md)")/qr2png.py"
    ```
 
-2. Start auth, capture QR, convert to PNG, send via Telegram — all in quick succession:
+2. Start auth, capture QR, convert to PNG, send it with `send_file` — all in quick succession:
    ```bash
    rm -rf /tmp/wa-auth-store /tmp/wa-qr.txt /tmp/wa-qr.png
    mkdir -p /tmp/wa-auth-store
