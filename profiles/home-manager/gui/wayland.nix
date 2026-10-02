@@ -36,9 +36,9 @@
   };
 
   services.blueman-applet.enable = true;
-  services.dunst.enable = true;
+  services.mako.enable = true;
   # Notifications always target the built-in display.
-  services.dunst.settings.global.monitor = lib.mkDefault "eDP-1";
+  services.mako.settings.output = lib.mkDefault "eDP-1";
 
   services.hyprpolkitagent.enable = true;
 
