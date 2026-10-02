@@ -28,7 +28,7 @@ in
       "hyprland"
       "niri"
     ];
-    default = "hyprland";
+    default = "niri";
     description = "The Wayland compositor to use.";
   };
 
