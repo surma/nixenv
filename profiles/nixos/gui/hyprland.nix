@@ -1,25 +1,22 @@
 {
+  config,
+  lib,
   pkgs,
   ...
 }:
-# The system half of a Hyprland session: the compositor, the portal, the
-# greeter, and the session helpers. Import it next to ./desktop.nix.
-#
-# The user half is profiles/home-manager/gui/hyprland.nix.
+# Hyprland-specific system settings for profiles/nixos/gui/wayland.nix.
+let
+  hyprlandPackage = pkgs.hyprland;
+  hyprlandPortalPackage = pkgs.xdg-desktop-portal-hyprland;
+in
 {
-  imports = [
-    ../../../modules/nixos/hyprland
-  ];
+  config = lib.mkIf (config.gui.compositor == "hyprland") {
+    programs.hyprland.enable = true;
+    programs.hyprland.package = hyprlandPackage;
+    programs.hyprland.portalPackage = hyprlandPortalPackage;
 
-  environment.systemPackages = with pkgs; [
-    hyprpolkitagent
-    hyprlock
-    hyprsunset
-  ];
+    xdg.portal.extraPortals = [ hyprlandPortalPackage ];
 
-  # hyprlock talks to fprintd itself, so its PAM stack must not prompt for a
-  # fingerprint a second time.
-  security.pam.services.hyprlock = {
-    fprintAuth = false;
+    environment.systemPackages = [ pkgs.hyprsunset ];
   };
 }

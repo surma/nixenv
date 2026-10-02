@@ -26,7 +26,7 @@
 
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/gui/desktop.nix
-    ../../profiles/nixos/gui/hyprland.nix
+    ../../profiles/nixos/gui/wayland.nix
     ../../profiles/nixos/platform/laptop.nix
     # ../../profiles/nixos/platform/framework.nix
   ];
@@ -52,7 +52,7 @@
       ../../profiles/home-manager/gui/terminal.nix
       ../../profiles/home-manager/gui/gui-apps.nix
       ../../profiles/home-manager/platform/physical.nix
-      ../../profiles/home-manager/gui/hyprland.nix
+      ../../profiles/home-manager/gui/wayland.nix
       # ../../profiles/home-manager/platform/framework.nix
       ../../profiles/home-manager/roles/workstation.nix
       ../../profiles/home-manager/roles/dev.nix

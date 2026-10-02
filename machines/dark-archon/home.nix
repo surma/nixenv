@@ -18,7 +18,7 @@
     ../../profiles/home-manager/gui/terminal.nix
     ../../profiles/home-manager/gui/gui-apps.nix
     ../../profiles/home-manager/platform/physical.nix
-    ../../profiles/home-manager/gui/hyprland.nix
+    ../../profiles/home-manager/gui/wayland.nix
     ../../profiles/home-manager/roles/workstation.nix
     ../../profiles/home-manager/roles/ai.nix
   ];

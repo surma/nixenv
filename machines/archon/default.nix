@@ -15,7 +15,7 @@
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/nexus-cache.nix
     ../../profiles/nixos/gui/desktop.nix
-    ../../profiles/nixos/gui/hyprland.nix
+    ../../profiles/nixos/gui/wayland.nix
     ../../profiles/nixos/gui/sunshine.nix
     ../../profiles/nixos/platform/laptop.nix
     ../../profiles/nixos/platform/framework.nix

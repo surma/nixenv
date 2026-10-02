@@ -7,7 +7,7 @@
 }:
 # Remote desktop between my Hyprland machines. Sunshine streams the desktop
 # of this machine, and Moonlight shows the desktop of another machine.
-# Import it next to ./hyprland.nix.
+# Import it next to ./wayland.nix.
 let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   sunshine = lib.getExe config.services.sunshine.package;
@@ -39,7 +39,7 @@ in
   environment.systemPackages = [ pkgs.moonlight-qt ];
 
   home-manager.users.surma =
-    { config, ... }:
+    { config, osConfig, ... }:
     {
       secrets.items.sunshine-password.target = "${config.home.homeDirectory}/.config/sunshine/password";
 
@@ -47,8 +47,8 @@ in
       # graphical-session.target that GDM also exposes to its greeter user.
       # The NixOS Sunshine unit remains the single service definition; this
       # target dependency supplies the Hyprland-only autostart edge.
-      systemd.user.targets."hyprland-session".Unit.Wants = [
-        "sunshine.service"
-      ];
+      systemd.user.targets."hyprland-session" = lib.mkIf (osConfig.gui.compositor == "hyprland") {
+        Unit.Wants = [ "sunshine.service" ];
+      };
     };
 }

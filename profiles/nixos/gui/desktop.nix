@@ -4,7 +4,7 @@
 }:
 # A NixOS machine with a graphical seat that I sit at. Everything here is
 # independent of the window manager. The Wayland compositor lives in
-# ./hyprland.nix, laptop hardware in ../platform/laptop.nix.
+# ./wayland.nix, laptop hardware in ../platform/laptop.nix.
 #
 # The home-manager counterpart is profiles/home-manager/gui/{fonts,terminal,
 # gui-apps}.nix plus a desktop shell profile. Machines import both halves.
