@@ -69,6 +69,13 @@ hotkey-overlay {
     skip-at-startup
 }
 
+// No overview when the pointer hits the top-left corner.
+gestures {
+    hot-corners {
+        off
+    }
+}
+
 // Every window opens as one full-width column. Without gaps and borders, a
 // full-width column looks the same as a maximized window.
 layout {

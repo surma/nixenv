@@ -19,6 +19,7 @@
     ../../profiles/nixos/gui/sunshine.nix
     ../../profiles/nixos/platform/laptop.nix
     ../../profiles/nixos/platform/framework.nix
+    ../../profiles/nixos/home-printer.nix
 
     # Everything Shopify — WARP, Fleet/orbit, Chrome CBCM, Minerva TPM device
     # trust, Endpoint Verification, the FHS shims and the apt-get shim — now

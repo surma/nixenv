@@ -23,6 +23,7 @@ in
     ../../profiles/nixos/gui/wayland.nix
     ../../profiles/nixos/gui/sunshine.nix
     ../../profiles/nixos/platform/laptop.nix
+    ../../profiles/nixos/home-printer.nix
   ];
 
   # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
