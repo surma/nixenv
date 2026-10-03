@@ -9,11 +9,28 @@ let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   cursorTheme = "Bibata-Modern-Ice";
   cursorSize = 32;
+  windowSwitcher = pkgs.writeShellApplication {
+    name = "niri-window-switcher";
+    runtimeInputs = [
+      pkgs.fuzzel
+      pkgs.jq
+      pkgs.niri
+    ];
+    text = lib.readFile ./window-switcher.sh;
+  };
   niriConfig = pkgs.writeText "niri-config.kdl" (
     builtins.replaceStrings
-      [ "@fuzzel@" "@cursor-theme@" "@cursor-size@" "@binds@" "@extraConfig@" ]
+      [
+        "@fuzzel@"
+        "@window-switcher@"
+        "@cursor-theme@"
+        "@cursor-size@"
+        "@binds@"
+        "@extraConfig@"
+      ]
       [
         "${pkgs.fuzzel}/bin/fuzzel"
+        (lib.getExe windowSwitcher)
         cursorTheme
         (toString cursorSize)
         config.defaultConfigs.niri.binds
