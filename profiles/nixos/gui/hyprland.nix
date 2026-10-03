@@ -14,6 +14,8 @@ in
     programs.hyprland.enable = true;
     programs.hyprland.package = hyprlandPackage;
     programs.hyprland.portalPackage = hyprlandPortalPackage;
+    # See the same setting in ./niri.nix.
+    services.displayManager.defaultSession = "hyprland";
 
     xdg.portal.extraPortals = [ hyprlandPortalPackage ];
 

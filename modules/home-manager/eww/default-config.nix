@@ -161,7 +161,12 @@ in
     systemd.user.services.eww-bar = {
       Unit = {
         Description = "Open the Eww bar on each output";
-        After = [ "eww.service" ];
+        # Without the explicit order after the target, systemd orders the
+        # target after this unit, which makes a cycle through eww.service.
+        After = [
+          "eww.service"
+          config.wayland.systemd.target
+        ];
         Requires = [ "eww.service" ];
         PartOf = [ config.wayland.systemd.target ];
       };
