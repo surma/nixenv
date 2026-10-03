@@ -93,26 +93,32 @@ window-rule {
     open-maximized-to-edges false
 }
 
-binds {
-    Super+Alt+Ctrl+1 { focus-workspace 1; }
-    Super+Alt+Ctrl+2 { focus-workspace 2; }
-    Super+Alt+Ctrl+3 { focus-workspace 3; }
-    Super+Alt+Ctrl+4 { focus-workspace 4; }
-    Super+Alt+Ctrl+5 { focus-workspace 5; }
-    Super+Alt+Ctrl+6 { focus-workspace 6; }
-    Super+Alt+Ctrl+7 { focus-workspace 7; }
-    Super+Alt+Ctrl+8 { focus-workspace 8; }
-    Super+Alt+Ctrl+9 { focus-workspace 9; }
+// Fixed workspaces. niri keeps named workspaces even when they are empty, and
+// puts them at the top of the output, in this order.
+workspace "U"
+workspace "I"
+workspace "O"
+workspace "P"
+workspace "J"
+workspace "K"
+workspace "L"
 
-    Super+Alt+Ctrl+Shift+1 { move-column-to-workspace 1; }
-    Super+Alt+Ctrl+Shift+2 { move-column-to-workspace 2; }
-    Super+Alt+Ctrl+Shift+3 { move-column-to-workspace 3; }
-    Super+Alt+Ctrl+Shift+4 { move-column-to-workspace 4; }
-    Super+Alt+Ctrl+Shift+5 { move-column-to-workspace 5; }
-    Super+Alt+Ctrl+Shift+6 { move-column-to-workspace 6; }
-    Super+Alt+Ctrl+Shift+7 { move-column-to-workspace 7; }
-    Super+Alt+Ctrl+Shift+8 { move-column-to-workspace 8; }
-    Super+Alt+Ctrl+Shift+9 { move-column-to-workspace 9; }
+binds {
+    Super+Alt+Ctrl+U { focus-workspace "U"; }
+    Super+Alt+Ctrl+I { focus-workspace "I"; }
+    Super+Alt+Ctrl+O { focus-workspace "O"; }
+    Super+Alt+Ctrl+P { focus-workspace "P"; }
+    Super+Alt+Ctrl+J { focus-workspace "J"; }
+    Super+Alt+Ctrl+K { focus-workspace "K"; }
+    Super+Alt+Ctrl+L { focus-workspace "L"; }
+
+    Super+Alt+Ctrl+Shift+U { move-column-to-workspace "U"; }
+    Super+Alt+Ctrl+Shift+I { move-column-to-workspace "I"; }
+    Super+Alt+Ctrl+Shift+O { move-column-to-workspace "O"; }
+    Super+Alt+Ctrl+Shift+P { move-column-to-workspace "P"; }
+    Super+Alt+Ctrl+Shift+J { move-column-to-workspace "J"; }
+    Super+Alt+Ctrl+Shift+K { move-column-to-workspace "K"; }
+    Super+Alt+Ctrl+Shift+L { move-column-to-workspace "L"; }
 
     Super+Alt+Ctrl+W { close-window; }
     Super+Alt+Ctrl+Shift+Q { quit; }
