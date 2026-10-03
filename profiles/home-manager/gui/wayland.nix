@@ -7,6 +7,12 @@
 # My Wayland desktop shell: the bar, the lock screen, notifications, the
 # portal, and the input method. This is the user half of
 # profiles/nixos/gui/wayland.nix, so machines import both.
+let
+  # The same default wallpaper as swaybg (./niri.nix) and hyprpaper.
+  wallpapers = ../../../assets/wallpapers;
+  defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
+  defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
+in
 {
   imports = [
     ./hyprland.nix
@@ -37,10 +43,12 @@
       auth.fingerprint.enabled = true;
       # Without widgets hyprlock renders nothing, so a locked session is
       # just a black screen. One input field per output (`monitor = ""`)
-      # accepts both the password and the fingerprint sensor.
+      # accepts both the password and the fingerprint sensor. The color
+      # shows if the wallpaper cannot load.
       background = [
         {
           monitor = "";
+          path = defaultWallpaperPath;
           color = "rgba(25, 20, 20, 1.0)";
         }
       ];
@@ -57,8 +65,27 @@
 
   services.blueman-applet.enable = true;
   services.mako.enable = true;
-  # Notifications always target the built-in display.
-  services.mako.settings.output = lib.mkDefault "eDP-1";
+  # Notifications always target the built-in display, with the bar's colors
+  # and font. mako keeps notifications forever by default, so they time out
+  # after 10 s, like dunst did. Critical ones stay.
+  services.mako.settings = {
+    output = lib.mkDefault "eDP-1";
+    font = "Roboto Condensed 11";
+    background-color = "#2b303be6";
+    text-color = "#ffffff";
+    border-color = "#64727d";
+    border-size = 2;
+    border-radius = 0;
+    padding = "10";
+    margin = "10";
+    width = 350;
+    max-icon-size = 48;
+    default-timeout = 10000;
+    "urgency=critical" = {
+      border-color = "#f53c3c";
+      default-timeout = 0;
+    };
+  };
 
   services.hyprpolkitagent.enable = true;
 
