@@ -29,16 +29,24 @@
 
   # Caps lock becomes escape on tap and meh on hold. Alt and meta swap, so the
   # thumb key matches macOS.
+  #
+  # Both shift keys are one-shot: a tap shifts the next key, and a hold works
+  # as usual. This keyboard cannot report caps lock, left shift, and a third
+  # key at the same time, so a tap avoids that combination. A tap expires
+  # after one second.
   services.keyd = {
     enable = true;
     treat-as-internal-keyboard = true;
     keyboards."internal" = {
       ids = [ "0001:0001" ];
       settings = {
+        global.oneshot_timeout = 1000;
         main = {
           capslock = "overload(meh, escape)";
           leftalt = "leftmeta";
           leftmeta = "leftalt";
+          leftshift = "oneshot(shift)";
+          rightshift = "oneshot(shift)";
         };
         "meh:C-A-M" = { };
       };
