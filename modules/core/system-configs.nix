@@ -43,6 +43,7 @@ let
     ../home-manager/nixenv
     ../features/hyprland.nix
     ../features/niri.nix
+    ../features/sxwm.nix
     ../features/screenshot.nix
   ];
 

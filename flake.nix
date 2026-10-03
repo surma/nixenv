@@ -95,6 +95,12 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     shopify-framework.url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git?ref=main";
+    sxwm = {
+      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git?ref=main";
+      # SXWM builds and tests against nixos-unstable.
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs =
