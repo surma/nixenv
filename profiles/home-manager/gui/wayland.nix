@@ -8,7 +8,7 @@
 # portal, and the input method. This is the user half of
 # profiles/nixos/gui/wayland.nix, so machines import both.
 let
-  # The same default wallpaper as swaybg (./niri.nix) and hyprpaper.
+  # The same default wallpaper as swaybg (./niri.nix, ./sxwm.nix) and hyprpaper.
   wallpapers = ../../../assets/wallpapers;
   defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
   defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
@@ -17,6 +17,7 @@ in
   imports = [
     ./hyprland.nix
     ./niri.nix
+    ./sxwm.nix
   ];
 
   programs.eww = {
@@ -26,7 +27,7 @@ in
   defaultConfigs.eww.enable = true;
 
   # The sunset button (toggle-sunset) starts and stops this unit. wlsunset
-  # uses wlr-gamma-control, which niri and Hyprland both implement. With
+  # uses wlr-gamma-control, which niri, Hyprland, and SXWM implement. With
   # sunrise and sunset both at 00:00 the day has zero length, so wlsunset
   # holds the low temperature all day. It needs -T > -t, hence 4001.
   systemd.user.services.night-light = {

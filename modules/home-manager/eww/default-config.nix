@@ -2,10 +2,13 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 let
   niriEnabled = config.defaultConfigs.niri.enable;
+  sxwmEnabled = config.defaultConfigs.sxwm.enable;
+  sxwm = inputs.sxwm.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
 
   hyprlandWorkspaces = pkgs.writeShellApplication {
     name = "eww-hyprland-workspaces";
@@ -24,13 +27,47 @@ let
     ];
     text = builtins.readFile ./niri-workspaces.sh;
   };
-  workspaceScript = if niriEnabled then niriWorkspaces else hyprlandWorkspaces;
+  sxwmWorkspaces = pkgs.writeShellApplication {
+    name = "eww-sxwm-workspaces";
+    runtimeInputs = [
+      pkgs.jq
+      sxwm
+    ];
+    text = builtins.readFile ./sxwm-workspaces.sh;
+  };
+  workspaceScript =
+    if sxwmEnabled then
+      sxwmWorkspaces
+    else if niriEnabled then
+      niriWorkspaces
+    else
+      hyprlandWorkspaces;
 
   focusWorkspace = pkgs.writeShellApplication {
     name = "eww-focus-workspace";
-    runtimeInputs = if niriEnabled then [ pkgs.niri ] else [ pkgs.hyprland ];
+    runtimeInputs =
+      if sxwmEnabled then
+        [
+          pkgs.jq
+          sxwm
+        ]
+      else if niriEnabled then
+        [ pkgs.niri ]
+      else
+        [ pkgs.hyprland ];
     text =
-      if niriEnabled then
+      # A tag that is active on the bar's screen gets focus. Any other tag
+      # becomes active on the bar's screen.
+      if sxwmEnabled then
+        ''
+          tag_screen="$(sxwmctl state.get | jq -r --arg tag "$2" '.tags[] | select(.id == $tag) | .screen // ""')"
+          if [[ "$tag_screen" == "$1" ]]; then
+            sxwmctl tags.focus "$(jq -cn --arg tag "$2" '{tag: $tag}')"
+          else
+            sxwmctl tags.toggle "$(jq -cn --arg tag "$2" --arg screen "$1" '{tag: $tag, screen: $screen}')"
+          fi
+        ''
+      else if niriEnabled then
         ''
           niri msg action focus-monitor "$1"
           niri msg action focus-workspace "$2"
@@ -44,7 +81,9 @@ let
   setsidPath = lib.getExe' pkgs.util-linux "setsid";
 
   outputListCommand =
-    if niriEnabled then
+    if sxwmEnabled then
+      "sxwmctl state.get | jq -r '.screens[].id'"
+    else if niriEnabled then
       "niri msg --json outputs | jq -r 'to_entries[] | select(.value.logical != null) | .key'"
     else
       "hyprctl -j monitors | jq -r '.[] | select(.disabled != true) | .name'";
@@ -56,7 +95,14 @@ let
       pkgs.jq
       pkgs.systemd
     ]
-    ++ (if niriEnabled then [ pkgs.niri ] else [ pkgs.hyprland ]);
+    ++ (
+      if sxwmEnabled then
+        [ sxwm ]
+      else if niriEnabled then
+        [ pkgs.niri ]
+      else
+        [ pkgs.hyprland ]
+    );
     text = ''
       # eww.service is Type=simple, so wait up to 5 s for the daemon socket.
       for attempt in {1..25}; do

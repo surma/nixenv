@@ -12,12 +12,14 @@
   imports = [
     ./hyprland.nix
     ./niri.nix
+    ./sxwm.nix
   ];
 
   options.gui.compositor = lib.mkOption {
     type = lib.types.enum [
       "hyprland"
       "niri"
+      "sxwm"
     ];
     default = "niri";
     description = "The Wayland compositor to use.";
