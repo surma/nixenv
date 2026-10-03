@@ -1,0 +1,4 @@
+#!/usr/bin/env nu
+
+# Lock the session. hypridle runs hyprlock when logind sends the lock signal.
+^loginctl lock-session

@@ -1,0 +1,4 @@
+#!/usr/bin/env nu
+
+# Hibernate to disk. hypridle locks the session before the machine sleeps.
+^systemctl hibernate

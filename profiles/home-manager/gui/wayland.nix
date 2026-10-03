@@ -154,4 +154,10 @@ in
   customScripts.bluetooth-fix.enable = true;
   customScripts.bluetooth-fix.asDesktopItem = true;
   customScripts.audio-output.enable = true;
+  customScripts.sx-lock.enable = true;
+  customScripts.sx-lock.asDesktopItem = true;
+  customScripts.sx-suspend.enable = true;
+  customScripts.sx-suspend.asDesktopItem = true;
+  customScripts.sx-hibernate.enable = true;
+  customScripts.sx-hibernate.asDesktopItem = true;
 }
