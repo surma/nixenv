@@ -272,15 +272,20 @@ let
   sunsetPath = lib.makeBinPath (
     lib.optionals (sunsetScript != null) [
       sunsetScript
-      pkgs.hyprland
+      pkgs.eww
       pkgs.systemd
     ]
   );
+  sunsetPoll =
+    if sunsetScript == null then
+      ""
+    else
+      ''(defpoll sunset_state :interval "60s" "PATH=${sunsetPath} toggle-sunset status")'';
   sunsetWidget =
     if sunsetScript == null then
       ""
     else
-      ''(button :class "sunset" :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
+      ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
 
   yuckConfig =
     builtins.replaceStrings
@@ -297,6 +302,7 @@ let
         "@POWER_PROFILE@"
         "@POWER_PROFILE_TOOLTIP@"
         "@POWER_PROFILE_CYCLE@"
+        "@SUNSET_POLL@"
         "@SUNSET_WIDGET@"
       ]
       [
@@ -312,6 +318,7 @@ let
         (lib.getExe powerProfile)
         "${lib.getExe powerProfile} --tooltip"
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
+        sunsetPoll
         sunsetWidget
       ]
       (builtins.readFile ./eww.yuck);

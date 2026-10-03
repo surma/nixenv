@@ -1,4 +1,9 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 # My Wayland desktop shell: the bar, the lock screen, notifications, the
 # portal, and the input method. This is the user half of
 # profiles/nixos/gui/wayland.nix, so machines import both.
@@ -13,6 +18,18 @@
     systemd.enable = true;
   };
   defaultConfigs.eww.enable = true;
+
+  # The sunset button (toggle-sunset) starts and stops this unit. wlsunset
+  # uses wlr-gamma-control, which niri and Hyprland both implement. With
+  # sunrise and sunset both at 00:00 the day has zero length, so wlsunset
+  # holds the low temperature all day. It needs -T > -t, hence 4001.
+  systemd.user.services.night-light = {
+    Unit = {
+      Description = "Night light";
+      PartOf = [ config.wayland.systemd.target ];
+    };
+    Service.ExecStart = "${pkgs.wlsunset}/bin/wlsunset -t 4000 -T 4001 -S 00:00 -s 00:00";
+  };
 
   programs.hyprlock = {
     enable = true;
@@ -105,6 +122,8 @@
   xdg.configFile.fcitx5.recursive = true;
 
   customScripts.stay-awake.enable = true;
+  customScripts.toggle-sunset.enable = true;
+  customScripts.toggle-sunset.asDesktopItem = true;
   customScripts.bluetooth-fix.enable = true;
   customScripts.bluetooth-fix.asDesktopItem = true;
   customScripts.audio-output.enable = true;

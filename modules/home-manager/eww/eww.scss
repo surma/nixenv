@@ -98,13 +98,15 @@ button.volume.muted:hover {
   color: #ffffff;
 }
 
-button.stay-awake {
+button.stay-awake,
+button.sunset {
   padding: 0 10px;
   background-color: #2d3436;
   color: #ffffff;
 }
 
-button.stay-awake.active {
+button.stay-awake.active,
+button.sunset.active {
   background-color: #ecf0f1;
   color: #2d3436;
 }

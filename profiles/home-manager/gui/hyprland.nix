@@ -18,12 +18,9 @@
       })
     '';
 
-    programs.hyprsunset.enable = true;
     programs.hyprpaper.enable = true;
     defaultConfigs.hyprpaper.enable = true;
 
-    customScripts.toggle-sunset.enable = true;
-    customScripts.toggle-sunset.asDesktopItem = true;
     customScripts.wallpaper-shuffle.enable = true;
     customScripts.wallpaper-shuffle.asDesktopItem = true;
   };

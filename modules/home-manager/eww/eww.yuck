@@ -6,6 +6,7 @@
 (defpoll power_profile :interval "5s" "@POWER_PROFILE@")
 (defpoll power_profile_tooltip :interval "5s" "@POWER_PROFILE_TOOLTIP@")
 (defpoll stay_awake :interval "60s" "PATH=@STAY_AWAKE_PATH@ stay-awake status")
+@SUNSET_POLL@
 
 (defwidget stay_awake_button []
   (button

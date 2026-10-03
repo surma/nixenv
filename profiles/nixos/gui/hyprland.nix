@@ -18,7 +18,5 @@ in
     services.displayManager.defaultSession = "hyprland";
 
     xdg.portal.extraPortals = [ hyprlandPortalPackage ];
-
-    environment.systemPackages = [ pkgs.hyprsunset ];
   };
 }
