@@ -1,20 +1,38 @@
 (deflisten workspaces :initial "[]" "@WORKSPACES@")
 (defpoll volume :interval "2s" "@VOLUME@")
+(defpoll volume_state :interval "2s" "@VOLUME_STATE@")
 (defpoll battery :interval "60s" "@BATTERY@")
+(defpoll battery_class :interval "60s" "@BATTERY_CLASS@")
+(defpoll power_profile :interval "5s" "@POWER_PROFILE@")
+(defpoll power_profile_tooltip :interval "5s" "@POWER_PROFILE_TOOLTIP@")
 (defpoll stay_awake :interval "60s" "PATH=@STAY_AWAKE_PATH@ stay-awake status")
 
 (defwidget stay_awake_button []
   (button
     :class {stay_awake == "activated" ? "stay-awake active" : "stay-awake"}
     :tooltip "Stay awake"
-    :onclick "PATH=@STAY_AWAKE_PATH@ stay-awake toggle"
+    :onclick "@STAY_AWAKE_CLICK@"
     (label :text {stay_awake == "activated" ? "" : ""})))
+
+(defwidget volume_button []
+  (button
+    :class {volume_state == "muted" ? "volume muted" : "volume"}
+    :onclick "@PAVUCONTROL@"
+    (label :text volume)))
+
+(defwidget power_profile_button []
+  (button
+    :class {power_profile == "performance" ? "power-profile performance" : power_profile == "balanced" ? "power-profile balanced" : power_profile == "power-saver" ? "power-profile power-saver" : "power-profile"}
+    :visible {power_profile != ""}
+    :tooltip {power_profile_tooltip}
+    :onclick "@POWER_PROFILE_CYCLE@"
+    (label :text {power_profile == "balanced" ? "" : power_profile == "power-saver" ? "" : ""})))
 
 (defwidget workspace_list [screen]
   (box :class "workspaces"
        :orientation "h"
        :space-evenly false
-       :spacing 4
+       :spacing 0
     (for workspace in workspaces
       (button
         :class {workspace.active ? "workspace active" : "workspace"}
@@ -23,16 +41,16 @@
         (label :text {workspace.label})))))
 
 (defwidget bar_content [screen]
-  (centerbox :class "bar" :orientation "h"
+  (centerbox :class "bar" :orientation "h" :hexpand true
     (workspace_list :screen screen)
     (label :class "clock" :text {formattime(EWW_TIME, "%a, %F %H:%M")})
-    (box :class "status" :orientation "h" :space-evenly false :spacing 0
-      (button :class "volume" :onclick "@PAVUCONTROL@"
-        (label :text volume))
-      (label :class "battery" :text battery)
-      (systray :class "tray" :icon-size 16 :spacing 8)
+    (box :class "status" :orientation "h" :halign "end" :space-evenly false :spacing 4
       (stay_awake_button)
-      @SUNSET_WIDGET@)))
+      @SUNSET_WIDGET@
+      (volume_button)
+      (power_profile_button)
+      (label :class {battery_class} :text battery :visible {battery != ""})
+      (systray :class "tray" :icon-size 16 :spacing 10))))
 
 (defwindow bar [screen]
   :monitor screen

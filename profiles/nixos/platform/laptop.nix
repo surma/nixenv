@@ -8,6 +8,7 @@
 {
   services.libinput.touchpad.disableWhileTyping = true;
   services.fprintd.enable = true;
+  services.power-profiles-daemon.enable = true;
 
   # Closing the lid suspends to RAM, then hibernates after 30 minutes. Recent
   # laptops only offer s2idle (`cat /sys/power/mem_sleep`), not S3, so a closed
