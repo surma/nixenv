@@ -86,7 +86,7 @@ layout {
 }
 
 window-rule {
-    geometry-corner-radius 4
+    // Without gaps, client-side shadows would draw over neighbors and the bar.
     clip-to-geometry true
     // Apps such as Signal ask to open maximized. Open them as normal
     // columns, so that a manual resize works the same for every window.
