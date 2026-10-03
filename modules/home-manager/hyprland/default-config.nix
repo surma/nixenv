@@ -2,9 +2,11 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }:
 let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   cursorTheme = "Bibata-Modern-Ice";
   cursorSize = 32;
 in
@@ -32,6 +34,10 @@ in
 
     services.hypridle = {
       enable = true;
+      # hypridle 0.1.7 leaks an inhibit lock when an app with two D-Bus
+      # inhibits disconnects, and then it never locks the screen. 0.1.8
+      # fixes this (upstream commit f3d1f3b2).
+      package = pkgs-unstable.hypridle;
       # Start after Hyprland has imported its Wayland/systemd environment.
       systemdTarget = "hyprland-session.target";
       settings = {
