@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  lib,
   ...
 }:
 let
@@ -22,16 +21,20 @@ in
     {
       programs.ssh.settings."*".IdentityAgent = ''"${config.home.homeDirectory}/.1password/agent.sock"'';
 
-      # Autostart 1Password (patched) on Hyprland login. --silent keeps it
-      # in the tray instead of popping a window on every login.
-      wayland.windowManager.hyprland.extraConfig = ''
-        hl.on("hyprland.start", function()
-          hl.exec_cmd("${onepasswordCommand} --silent")
-        end)
-      '';
-
-      defaultConfigs.niri.extraConfig = lib.mkIf config.defaultConfigs.niri.enable ''
-        spawn-sh-at-startup "${onepasswordCommand} --silent"
-      '';
+      # 1Password creates its tray icon only once, at start. Start it after
+      # the bar, so that the tray exists. --silent keeps it in the tray
+      # instead of popping a window on every login.
+      systemd.user.services."1password" = {
+        Unit = {
+          Description = "1Password";
+          After = [
+            "eww-bar.service"
+            config.wayland.systemd.target
+          ];
+          PartOf = [ config.wayland.systemd.target ];
+        };
+        Service.ExecStart = "${onepasswordCommand} --silent";
+        Install.WantedBy = [ config.wayland.systemd.target ];
+      };
     };
 }

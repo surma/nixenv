@@ -54,6 +54,7 @@ let
       pkgs.coreutils
       pkgs.eww
       pkgs.jq
+      pkgs.systemd
     ]
     ++ (if niriEnabled then [ pkgs.niri ] else [ pkgs.hyprland ]);
     text = ''
@@ -70,6 +71,13 @@ let
       ${outputListCommand} | while IFS= read -r output; do
         eww open --id "bar-$output" --arg "screen=$output" bar
       done
+      for _ in {1..25}; do
+        if busctl --user status org.kde.StatusNotifierWatcher >/dev/null 2>/dev/null; then
+          exit 0
+        fi
+        sleep 0.2
+      done
+      exit 1
     '';
   };
 

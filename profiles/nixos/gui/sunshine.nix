@@ -36,6 +36,10 @@ in
       exec ${sunshine} --creds surma "$(< "$HOME/.config/sunshine/password")"
     '';
 
+  # Sunshine creates its tray icon only once, at start, so start it after the
+  # bar and its tray.
+  systemd.user.services.sunshine.after = [ "eww-bar.service" ];
+
   systemd.user.services.sunshine.wantedBy = lib.mkIf (config.gui.compositor == "niri") [
     "niri.service"
   ];
