@@ -82,20 +82,6 @@ in
     chmod 0600 /dump/state/brain-serve/.ssh/id_repo_scout
   '';
 
-  secrets.items.scout-telegram-bot-token.command = ''
-    mkdir -p /var/lib/scout
-    token="$(cat)"
-    printf 'SCOUT_TELEGRAM_BOT_TOKEN=%s\n' "$token" > /var/lib/scout/telegram-bot-token.env
-    chmod 0600 /var/lib/scout/telegram-bot-token.env
-  '';
-
-  secrets.items.scout-telegram-chat-id.command = ''
-    mkdir -p /var/lib/scout
-    chat_id="$(cat)"
-    printf 'SCOUT_TELEGRAM_CHAT_ID=%s\n' "$chat_id" > /var/lib/scout/scout.env
-    chmod 0600 /var/lib/scout/scout.env
-  '';
-
   # Read stdin once, then write both consumers: the Scout container key
   # (existing contract) and the LLM receiver's credential copy
   # (auth-rework section 6.5). No competing target declarations.
@@ -261,7 +247,7 @@ in
                 pi = config.home-manager.users.containeruser.programs.pi.package;
               in
               {
-                description = "Scout Telegram bridge";
+                description = "Scout Matrix bridge";
                 wantedBy = [ "multi-user.target" ];
                 wants = [ "network-online.target" ];
                 requires = [ "home-manager-containeruser.service" ];
@@ -289,13 +275,10 @@ in
                   SCOUT_API_PORT = toString scoutApiPort;
                   SCOUT_STATE_DIR = "/home/containeruser/.local/state/scout";
                   SCOUT_HOOKS_DIR = "${scoutHooksDir}";
-                  SCOUT_DEFAULT_MODEL = "fireworks/accounts/fireworks/models/glm-5p3-flash";
-                  SCOUT_DEFAULT_REASONING_LEVEL = "max";
                   SCOUT_LOG = "scout=debug";
                   # Scout talks to Surma through the Matrix homeserver on
-                  # Nexus. Set this to "telegram" to roll back. The Telegram
-                  # settings above stay in place for that case.
-                  SCOUT_CHAT_BACKEND = "matrix";
+                  # Nexus. The default model lives in Scout's state.db; set it
+                  # with `!model default` in the "Scout status" room.
                   # The homeserver URL uses the internal Traefik entrypoint,
                   # so traffic stays on Nexus.
                   SCOUT_MATRIX_HOMESERVER = "http://matrix.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081";
@@ -306,10 +289,6 @@ in
                   SCOUT_MATRIX_SPACE = "!vy1niBPRrx4gqowId1:matrix.surma.technology";
                 };
                 serviceConfig = {
-                  EnvironmentFile = [
-                    "/var/lib/credentials/scout/telegram-bot-token.env"
-                    "/var/lib/credentials/scout/scout.env"
-                  ];
                   User = "containeruser";
                   Group = "users";
                   WorkingDirectory = "/home/containeruser";
