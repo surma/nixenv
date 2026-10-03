@@ -16,8 +16,13 @@ in
     mode = "0400";
   };
 
+  # Create the bind mount source, but never change an existing directory.
+  # Tuwunel runs as a DynamicUser, and systemd in the container gives this
+  # directory to that user at each start (mode 0700). A rule with an owner
+  # or a mode resets the directory at each host activation. Tuwunel then
+  # cannot open files in its own state directory.
   systemd.tmpfiles.rules = [
-    "d- ${stateDirectory} 0700 root root - -"
+    "d ${stateDirectory} - - - -"
   ];
 
   # This key sorts after zz-nextcloud, which preserves every existing
