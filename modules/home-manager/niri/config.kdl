@@ -69,26 +69,28 @@ hotkey-overlay {
     skip-at-startup
 }
 
+// Every window opens as one full-width column. Without gaps and borders, a
+// full-width column looks the same as a maximized window.
 layout {
-    gaps 4
+    gaps 0
 
     focus-ring {
         off
     }
 
     border {
-        on
-        width 2
-        active-gradient from="#33ccffee" to="#00ff99ee" angle=45
-        inactive-color "#595959aa"
+        off
     }
 
-    default-column-width { proportion 0.66; }
+    default-column-width { proportion 1.0; }
 }
 
 window-rule {
     geometry-corner-radius 4
     clip-to-geometry true
+    // Apps such as Signal ask to open maximized. Open them as normal
+    // columns, so that a manual resize works the same for every window.
+    open-maximized-to-edges false
 }
 
 binds {
