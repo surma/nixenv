@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 {
@@ -11,6 +12,10 @@
   # Installs herdr and regenerates ~/.agents/skills/herdr/SKILL.md from
   # `herdr --skill` on every switch, so the skill matches the binary.
   programs.herdr.enable = true;
+
+  # The native herdr client, on Linux machines with a desktop. The flake has
+  # no macOS build, and headless machines cannot open it.
+  programs.herdr.gui.enable = lib.mkDefault (pkgs.stdenv.hostPlatform.isLinux && config.nixenv.gui);
 
   defaultConfigs.herdr.enable = true;
 

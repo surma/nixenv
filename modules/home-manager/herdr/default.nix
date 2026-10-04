@@ -42,6 +42,15 @@ in
       default = inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default;
       description = "The herdr package to use";
     };
+    gui = {
+      enable = mkEnableOption "Herdr GPUI, the native desktop client for herdr (Linux only)";
+      package = mkOption {
+        type = types.package;
+        default = inputs.herdr-gpui.packages.${pkgs.stdenv.hostPlatform.system}.default;
+        defaultText = literalExpression "inputs.herdr-gpui.packages.\${system}.default";
+        description = "The herdr-gpui package to use";
+      };
+    };
     settings = mkOption {
       type = types.attrsOf types.anything;
       default = { };
@@ -52,7 +61,14 @@ in
   };
 
   config = mkIf (systemManager == "home-manager" && cfg.enable) {
-    home.packages = [ cfg.package ];
+    assertions = [
+      {
+        assertion = cfg.gui.enable -> pkgs.stdenv.hostPlatform.isLinux;
+        message = "programs.herdr.gui: the herdr-gpui flake builds only for Linux. On macOS, use the Homebrew cask.";
+      }
+    ];
+
+    home.packages = [ cfg.package ] ++ optional cfg.gui.enable cfg.gui.package;
 
     home.file = mkIf (cfg.settings != { }) {
       ".config/herdr/config.toml" = {

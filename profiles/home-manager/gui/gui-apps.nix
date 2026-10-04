@@ -7,6 +7,8 @@
 # macOS. Fonts live in ./fonts.nix, the terminal in ./terminal.nix.
 {
   config = {
+    nixenv.gui = true;
+
     allowedUnfreeApps = [
       "vscode"
     ];
