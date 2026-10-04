@@ -70,6 +70,12 @@ in
             registration_token_file = "/run/credentials/tuwunel.service/registration-token";
             new_user_displayname_suffix = "";
             well_known.client = "https://${domain}";
+            # lk-jwt-service checks Matrix OpenID tokens through this
+            # server address, because federation (port 8448) is off.
+            well_known.server = "${domain}:443";
+            # Element Call and Element X find the MatrixRTC transport here
+            # (MSC4143). See service-matrix-rtc.nix.
+            well_known.livekit_url = "https://matrix-rtc.surma.technology";
             # File uploads up to 200 MiB (209715200 bytes). The NixOS
             # module default is 20000000 bytes (~19 MiB). Element X reads
             # this limit from the server.

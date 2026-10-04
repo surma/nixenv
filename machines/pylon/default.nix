@@ -5,6 +5,9 @@
 }:
 let
   ports = import ./ports.nix;
+  # LiveKit (MatrixRTC media) runs on Nexus. Pylon forwards its ports.
+  nexusPorts = import ../nexus/ports.nix;
+  livekitUdpRange = "${toString nexusPorts.livekitRtcUdpStart}:${toString nexusPorts.livekitRtcUdpEnd}";
   ips = import ../../ips.nix;
 
   # Local aliases into the IP registry.
@@ -121,6 +124,19 @@ in
       proto = "tcp";
       loopbackIPs = [ pylonPublicV4 ];
     }
+    # MatrixRTC media for Element Call (LiveKit on Nexus).
+    {
+      sourcePort = livekitUdpRange;
+      destination = "${nexusTsV4}:${toString nexusPorts.livekitRtcUdpStart}-${toString nexusPorts.livekitRtcUdpEnd}";
+      proto = "udp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
+    {
+      sourcePort = nexusPorts.livekitRtcTcp;
+      destination = "${nexusTsV4}:${toString nexusPorts.livekitRtcTcp}";
+      proto = "tcp";
+      loopbackIPs = [ pylonPublicV4 ];
+    }
   ];
 
   # Narrow source NAT for the forwarded destinations: replies to
@@ -135,8 +151,8 @@ in
     content = ''
       chain post {
         type nat hook postrouting priority srcnat; policy accept;
-        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} tcp dport { 80, 443, ${toString ports.giteaSsh} } masquerade
-        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} udp dport { 80, 443 } masquerade
+        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} tcp dport { 80, 443, ${toString ports.giteaSsh}, ${toString nexusPorts.livekitRtcTcp} } masquerade
+        ct status dnat oifname "tailscale0" ip daddr ${nexusTsV4} udp dport { 80, 443, ${toString nexusPorts.livekitRtcUdpStart}-${toString nexusPorts.livekitRtcUdpEnd} } masquerade
         ct status dnat oifname "tailscale0" ip daddr ${citadelTsV4} tcp dport ${toString ports.minecraft} masquerade
       }
     '';
