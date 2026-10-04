@@ -12,9 +12,15 @@
 #   poller's root-only copy.
 # - llm-proxy-client-key and openrouter-api-key (service-scout.nix)
 #   write the Scout copies plus the files in the credential directory.
+let
+  llmProxyId = 999;
+in
 {
   systemd.tmpfiles.rules = [
-    "d /var/lib/llm-proxy 0755 root root -"
+    # The container uses host UIDs and GIDs. Align this bind mount with the
+    # receiver account.
+    "d /var/lib/llm-proxy 0755 ${toString llmProxyId} ${toString llmProxyId} -"
+    "z /var/lib/llm-proxy 0755 ${toString llmProxyId} ${toString llmProxyId} -"
     "d /var/lib/llm-proxy-credentials 0755 root root -"
   ];
 
@@ -78,6 +84,9 @@
         imports = [ ../../modules/services/llm-proxy ];
 
         system.stateVersion = "25.05";
+
+        users.groups.llm-proxy.gid = llmProxyId;
+        users.users.llm-proxy.uid = llmProxyId;
 
         services.llm-proxy.enable = true;
         services.llm-proxy.keyReceiver.enable = true;
