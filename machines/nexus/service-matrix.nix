@@ -70,6 +70,10 @@ in
             registration_token_file = "/run/credentials/tuwunel.service/registration-token";
             new_user_displayname_suffix = "";
             well_known.client = "https://${domain}";
+            # File uploads up to 200 MiB (209715200 bytes). The NixOS
+            # module default is 20000000 bytes (~19 MiB). Element X reads
+            # this limit from the server.
+            max_request_size = 209715200;
           };
         };
 
