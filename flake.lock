@@ -116,6 +116,21 @@
         "type": "github"
       }
     },
+    "crane_2": {
+      "locked": {
+        "lastModified": 1789760033,
+        "narHash": "sha256-jtT4yxZpR8seYnlCMMWSSPlFN92zO6ICuZ8pJrmi86k=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "73b980519cefc727a5f6cc8e5c0947a2f9be6edd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "dashboard": {
       "inputs": {
         "flake-utils": [
@@ -862,6 +877,7 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "pi-acp": "pi-acp",
         "scout": "scout",
+        "scout-dev": "scout-dev",
         "shopify-framework": "shopify-framework",
         "surmhosting": "surmhosting",
         "system-manager": "system-manager",
@@ -1002,6 +1018,34 @@
       },
       "original": {
         "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
+      }
+    },
+    "scout-dev": {
+      "inputs": {
+        "crane": "crane_2",
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-rust": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791123923,
+        "narHash": "sha256-eMvPnlftyxRC5br4mSBEYOd5eUrDZnrwgLIln78W+y8=",
+        "ref": "dev",
+        "rev": "99066e2a1abda72d4bcf4f1264a25ab0b2e4a382",
+        "revCount": 212,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
+      },
+      "original": {
+        "ref": "dev",
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/scout"
       }
