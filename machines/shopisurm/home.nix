@@ -51,6 +51,8 @@ in
     ''
   ];
   programs.gitea-cli.enable = true;
+  # The herdr-gpui flake has no macOS build.
+  programs.herdr.gui.enable = false;
   customScripts.ai.package = pkgs.writeTextFile {
     name = "ai";
     destination = "/bin/ai";

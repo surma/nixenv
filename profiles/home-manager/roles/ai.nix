@@ -12,6 +12,10 @@
   # `herdr --skill` on every switch, so the skill matches the binary.
   programs.herdr.enable = true;
 
+  # The native herdr client. Machines without a Linux desktop turn it off:
+  # the flake has no macOS build, and headless machines cannot open it.
+  programs.herdr.gui.enable = lib.mkDefault true;
+
   defaultConfigs.herdr.enable = true;
 
   defaultConfigs.agents.enable = true;

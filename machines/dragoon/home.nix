@@ -30,6 +30,8 @@ in
 
   home.stateVersion = "24.05";
   programs.gitea-cli.enable = true;
+  # The herdr-gpui flake has no macOS build.
+  programs.herdr.gui.enable = false;
 
   agent.skills = [
     ../../assets/skills/orchestrator
