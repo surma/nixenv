@@ -45,5 +45,8 @@
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
+
+    # Headless: no desktop for the herdr GUI.
+    programs.herdr.gui.enable = false;
   };
 }

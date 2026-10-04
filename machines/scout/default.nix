@@ -117,6 +117,9 @@ in
     # programs.agent-browser is enabled by the AI profile.
     programs.brain.enable = true;
 
+    # Headless: no desktop for the herdr GUI.
+    programs.herdr.gui.enable = false;
+
     # Skills from the AI profile (brainstorming, planning, debugging,
     # surma-writer, triple-helix, preact-signals, web-development,
     # bro, rust) are inherited via the

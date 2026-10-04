@@ -8,10 +8,6 @@ let
   nixenvupdate = pkgs.callPackage ../../../scripts/nixenvupdate { };
 in
 {
-  # Set by profiles/home-manager/gui/gui-apps.nix, so other profiles can
-  # install graphical tools only on machines with a desktop.
-  options.nixenv.gui = lib.mkEnableOption "the graphical desktop profile";
-
   config = lib.mkIf (nixenv != null) {
     home.packages = [ nixenvupdate ];
 
