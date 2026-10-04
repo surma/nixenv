@@ -6,13 +6,13 @@
 }:
 buildGoModule rec {
   pname = "rmapi";
-  version = "0.0.34-unstable-2026-06-05";
+  version = "0.0.35";
 
   src = fetchFromGitHub {
     owner = "ddvk";
     repo = "rmapi";
-    rev = "434da60d178dd04e0659fb502ea1251600c5d6ef";
-    hash = "sha256-yRNYKsCzdmk9Oo5rsV7eH2bnmk1WlA7ahv3LL7BTSZU=";
+    rev = "v${version}";
+    hash = "sha256-mRJH0fQ8e4igR7IwcJdvUhrZDXvpTt/Dac7Pc9p7ITw=";
   };
 
   vendorHash = "sha256-Qisfw+lCFZns13jRe9NskCaCKVj5bV1CV8WPpGBhKFc=";
