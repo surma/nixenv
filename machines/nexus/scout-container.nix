@@ -172,6 +172,11 @@ in
 
     hardware.graphics.enable = true;
 
+    # GitHub's published host key. Pi clones its config from GitHub over
+    # SSH at each start, and a new home has no known_hosts entry for it.
+    programs.ssh.knownHosts."github.com".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+
     users.users.containeruser = {
       isNormalUser = true;
       group = "users";
