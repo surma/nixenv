@@ -27,6 +27,7 @@ in
     ./service-mosquitto.nix
     ./service-adguardhome.nix
     ./service-scout.nix
+    ./service-scout-dev.nix
     ./service-gitea.nix
     ./service-immich.nix
     ./service-nextcloud.nix

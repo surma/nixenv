@@ -63,6 +63,14 @@
       inputs.nixpkgs-rust.follows = "nixpkgs-unstable";
       inputs.flake-utils.follows = "flake-utils";
     };
+    # The dev instance of Scout follows its own branch, so a dev deploy
+    # does not change production Scout.
+    scout-dev = {
+      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/scout?ref=dev";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-rust.follows = "nixpkgs-unstable";
+      inputs.flake-utils.follows = "flake-utils";
+    };
     surmhosting = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git";
       inputs.nixpkgs.follows = "nixpkgs";
