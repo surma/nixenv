@@ -101,6 +101,10 @@ in
           "9.9.9.9"
           "149.112.112.112"
         ];
+        # Do not answer from Nexus's own /etc/hosts. It maps the bare name
+        # `nexus` to the loopback address 127.0.0.2, which is wrong for
+        # every other machine.
+        hostsfile_enabled = false;
       };
 
       # Native local-domain support: the DHCP server answers
@@ -115,17 +119,28 @@ in
         "15 text ${ips.domain}"
       ];
 
-      # Exactly one rewrite: Nexus has no DHCP lease (static server
-      # address), so the native local-domain feature cannot serve it.
       # Rewrites need enabled = true on this version (LegacyRewrite.Enabled
       # defaults to false and disabled entries are skipped).
+      #
+      # - nexus.<domain>: Nexus has no DHCP lease (static server address),
+      #   so the native local-domain feature cannot serve it.
+      # - *.<host>.<domain> for every registry host: surmhosting routes
+      #   apps by host prefix (`<app>.<host>`), so
+      #   <app>.<host>.<domain> reaches the host's internal Traefik
+      #   entrypoint, for example http://brain-serve.nexus.home.arpa:8081.
+      #   A wildcard does not match the bare host name itself.
       filtering.rewrites = [
         {
           domain = "nexus.${ips.domain}";
           answer = hosts.nexus.ip;
           enabled = true;
         }
-      ];
+      ]
+      ++ lib.mapAttrsToList (name: host: {
+        domain = "*.${name}.${ips.domain}";
+        answer = host.ip;
+        enabled = true;
+      }) hosts;
     };
   };
 
