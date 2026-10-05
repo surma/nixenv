@@ -59,17 +59,25 @@ in
     printf '%s\n' "$key" > /dump/state/scout/.ssh/id_repo_scout
     chown surma:users /dump/state/scout/.ssh/id_repo_scout
     chmod 0600 /dump/state/scout/.ssh/id_repo_scout
+  '';
 
-    # Brain serve container
-    mkdir -p /dump/state/brain-serve/.ssh
-    chown surma:users /dump/state/brain-serve/.ssh
-    chmod 0700 /dump/state/brain-serve/.ssh
+  # The shared deploy key of surma/brain, for the Scout container (Brain
+  # sync, see modules/home-manager/brain) and the brain-serve container.
+  secrets.items.brain-deploy-key.command = ''
+    if ! ${pkgs.systemd}/bin/systemctl is-active --quiet dump.mount; then
+      cat > /dev/null
+      exit 0
+    fi
+    key="$(cat)"
 
-    install -m 0644 ${../../assets/ssh-keys/id_repo_scout.pub} /dump/state/brain-serve/.ssh/id_repo_scout.pub
-    chown surma:users /dump/state/brain-serve/.ssh/id_repo_scout.pub
-    printf '%s\n' "$key" > /dump/state/brain-serve/.ssh/id_repo_scout
-    chown surma:users /dump/state/brain-serve/.ssh/id_repo_scout
-    chmod 0600 /dump/state/brain-serve/.ssh/id_repo_scout
+    for home in /dump/state/scout /dump/state/brain-serve; do
+      mkdir -p $home/.ssh
+      chown surma:users $home/.ssh
+      chmod 0700 $home/.ssh
+      install -m 0644 -o surma -g users ${../../assets/ssh-keys/id_brain.pub} $home/.ssh/id_brain.pub
+      install -m 0600 -o surma -g users /dev/null $home/.ssh/id_brain
+      printf '%s\n' "$key" > $home/.ssh/id_brain
+    done
   '';
 
   # Read stdin once, then write both consumers: the Scout container key

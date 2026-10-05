@@ -28,5 +28,19 @@ in
     home.activation.brain-skill = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run ${lib.getExe cfg.package} skill write --base "$HOME/.agents"
     '';
+
+    # In the Brain repo, git uses the shared deploy key ~/.ssh/id_brain
+    # and does not sign. `brain sync` rebases local commits, and the rebase
+    # signs them again when commit.gpgSign is on.
+    programs.git.includes = [
+      {
+        condition = "gitdir:${config.home.homeDirectory}/.local/state/brain/";
+        contents = {
+          core.sshCommand = "ssh -i ${config.home.homeDirectory}/.ssh/id_brain -o IdentitiesOnly=yes -o IdentityAgent=none";
+          commit.gpgSign = false;
+          tag.gpgSign = false;
+        };
+      }
+    ];
   };
 }
