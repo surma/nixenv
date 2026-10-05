@@ -75,6 +75,7 @@ in
             "home-manager-containeruser.service"
           ];
           path = [
+            pkgs.coreutils
             pkgs.git
             pkgs.openssh
           ];
@@ -84,10 +85,22 @@ in
             User = "containeruser";
             Group = "users";
           };
+          # DNS can fail for a short time after the container starts, so
+          # the clone retries.
           script = ''
-            if [ ! -d "$HOME/.local/state/brain/.git" ]; then
-              git clone ssh://containeruser@gitea.surma.technology:2222/surma/brain.git "$HOME/.local/state/brain"
-            fi
+            target="$HOME/.local/state/brain"
+            for attempt in $(seq 1 30); do
+              if [ -d "$target/.git" ]; then
+                exit 0
+              fi
+              rm -rf "$target"
+              if git clone ssh://containeruser@gitea.surma.technology:2222/surma/brain.git "$target"; then
+                exit 0
+              fi
+              echo "clone attempt $attempt failed; retrying in 5 s"
+              sleep 5
+            done
+            exit 1
           '';
         };
         systemd.services.scout.wants = [ "brain-clone.service" ];
