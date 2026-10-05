@@ -21,13 +21,13 @@
   ...
 }:
 let
-  revision = "76d07895a8aa5e4faaa0aa623262ddd6cefa7ecd"; # v0.17.0
+  revision = "6f3766a38328ad081120c91e95ae68cc7e7a3466"; # v0.19.0
 
   src = fetchFromGitHub {
     owner = "crmne";
     repo = "zapfast";
     rev = revision;
-    hash = "sha256-8ZdS8Y4YTjcOmAdDTSn2RSyf0NReYbsPIraNPV5doO4=";
+    hash = "sha256-FDB9iAkDL2uaHKpSam1ehc8yGbrYbZy2A5NqE2oXs8Q=";
   };
 
   # rust-toolchain.toml pins 1.98.0, newer than any rustc in this nixpkgs.
@@ -82,27 +82,30 @@ rustPlatform.buildRustPackage {
     # Git dependencies pinned in Cargo.lock; the vendored checkouts need
     # pinned hashes. Crates from the same repo revision share one hash.
     outputHashes = {
-      "dpi-0.1.1" = "sha256-x93WYXGAA6SifvOrayIQtyc7N8jT+atScx/R1YRT06k=";
-      "eframe-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "ecolor-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "egui-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "egui-wgpu-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "egui-winit-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "egui_extras-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "egui_glow-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "emath-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "epaint-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "epaint_default_fonts-0.36.1" = "sha256-uzNVqMeYdLI9jqvPxdsmOkJC17GiPWU0BpJ+aqDz5RM=";
-      "fastframe-fonts-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-i18n-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-icons-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-log-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-macos-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-shell-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-text-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-theme-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-tray-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
-      "fastframe-update-0.1.7" = "sha256-ZPpSX2j42BbBOu9W3VZ0H7mJKYgBLRoZ6MRWyEUj1bI=";
+      "dpi-0.1.1" = "sha256-5ioLeQqbyXFgbsE3Iik/FgtHYSIFv+35hGjP8UMQl9k=";
+      "eframe-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "ecolor-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "egui-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "egui-wgpu-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "egui-winit-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "egui_extras-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "egui_glow-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "emath-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "epaint-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "epaint_default_fonts-0.36.1" = "sha256-jF+5LjNkGAvdlwstYPVMIj0KKnnxHqpbcjC2ZgsUmoo=";
+      "fastframe-emoji-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-fonts-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-i18n-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-icons-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-instance-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-log-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-macos-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-scroll-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-shell-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-text-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-theme-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-tray-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
+      "fastframe-update-0.4.1" = "sha256-ztK6UbU+M5zfM0kByNgsv0gwpyGVtne+3GxNA1z6x5g=";
       "rodio-0.22.2" = "sha256-snwSU8P9iZeMSKJcX80FWl0IL32dCQqWGjNispeKlps=";
       "wacore-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
       "wacore-appstate-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
@@ -115,7 +118,7 @@ rustPlatform.buildRustPackage {
       "whatsapp-rust-sqlite-storage-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
       "whatsapp-rust-tokio-transport-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
       "whatsapp-rust-ureq-http-client-0.7.0" = "sha256-+hV1XKntNGClwBUH5t06LSP3YpKJXnP2pmhNXKm2lU0=";
-      "winit-0.30.13" = "sha256-x93WYXGAA6SifvOrayIQtyc7N8jT+atScx/R1YRT06k=";
+      "winit-0.30.13" = "sha256-5ioLeQqbyXFgbsE3Iik/FgtHYSIFv+35hGjP8UMQl9k=";
     };
   };
 
