@@ -54,7 +54,12 @@ in
     memoryMax = "8G";
 
     # Voice calls (Element Call) are on only in the dev instance.
-    extraEnvironment.SCOUT_MATRIX_VOICE_CALL_COMMAND = "scout-voice-call";
+    extraEnvironment = {
+      SCOUT_MATRIX_VOICE_CALL_COMMAND = "scout-voice-call";
+      # Debug: keeps the received caller audio of each call, to tune the
+      # keyword spotting on real call audio.
+      SCOUT_CALL_DEBUG_RECORD_DIR = "/home/containeruser/.local/state/scout/voice-call-debug";
+    };
 
     extraBindMounts.creds-dev = {
       mountPoint = "/var/lib/credentials/scout-dev";
