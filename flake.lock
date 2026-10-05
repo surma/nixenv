@@ -816,30 +816,6 @@
         "type": "github"
       }
     },
-    "pi-acp": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1787493283,
-        "narHash": "sha256-qMo6XnvhZdxLf2VOr6Ty1MadxUF8moc7b7P6VxdZAy4=",
-        "ref": "main",
-        "rev": "748789d87fd53e169d6e9feee2963c1b8bf4d52d",
-        "revCount": 27,
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
-      },
-      "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
-      }
-    },
     "pre-commit-hooks-nix": {
       "inputs": {
         "flake-compat": [
@@ -890,7 +866,6 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_6",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "pi-acp": "pi-acp",
         "scout": "scout",
         "scout-dev": "scout-dev",
         "shopify-framework": "shopify-framework",
