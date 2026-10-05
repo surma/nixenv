@@ -16,6 +16,8 @@
   # Scout acts only in rooms of this Space.
   matrixSpace,
   memoryMax,
+  # Extra environment variables of the Scout service.
+  extraEnvironment ? { },
   extraAllowedDevices ? [ ],
   extraBindMounts ? { },
 }:
@@ -94,7 +96,8 @@ in
                 SCOUT_MATRIX_ALLOWED_USERS = "@surma:matrix.surma.technology";
                 # Scout acts only in rooms of this Space.
                 SCOUT_MATRIX_SPACE = matrixSpace;
-              };
+              }
+              // extraEnvironment;
               serviceConfig = {
                 User = "containeruser";
                 Group = "users";

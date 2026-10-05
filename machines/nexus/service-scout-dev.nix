@@ -53,6 +53,9 @@ in
     matrixSpace = "!Zy3sLcgHz3Wlgaj2rB:matrix.surma.technology";
     memoryMax = "8G";
 
+    # Voice calls (Element Call) are on only in the dev instance.
+    extraEnvironment.SCOUT_MATRIX_VOICE_CALL_COMMAND = "scout-voice-call";
+
     extraBindMounts.creds-dev = {
       mountPoint = "/var/lib/credentials/scout-dev";
       hostPath = "/var/lib/scout-dev";
