@@ -137,22 +137,22 @@ async function cycleLayout() {
   await wm.layouts.set(layoutCycle[(index + 1) % layoutCycle.length], screen.id);
 }
 
-// meh+Left and meh+Right follow the layout. The Rolodex cycles through its
-// stack. In columns, focus moves to the column on the left or right, and it
-// stops at the edges.
+// meh+Left and meh+Right move focus to the previous or next window in open
+// order. The Rolodex and the columns both order windows this way. Focus stops
+// at the first and last window.
 async function focusNeighborWindow(step) {
   const state = await wm.state.get();
   const screen = activeScreen(state);
   if (!screen) return;
-  if (screen.layout !== "columns") {
-    await wm.windows.cycle(step < 0 ? "previous" : "next");
-    return;
-  }
-  const visible = state.windows
-    .filter((window) => window.screen === screen.id && !window.floating && !window.fullscreen)
-    .sort((a, b) => a.x - b.x);
-  const index = visible.findIndex((window) => window.focused);
-  const target = index === -1 ? visible.at(step < 0 ? -1 : 0) : visible[index + step];
+  // state.windows is in stack order, so the first tiled window is the
+  // Rolodex's current window.
+  const tiled = state.windows.filter(
+    (window) => window.screen === screen.id && !window.floating && !window.fullscreen,
+  );
+  const current = tiled.find((window) => window.focused) ?? tiled[0];
+  if (!current) return;
+  const ordered = [...tiled].sort((a, b) => a.id - b.id);
+  const target = ordered[ordered.indexOf(current) + step];
   if (target) await wm.windows.focus(target.id);
 }
 
