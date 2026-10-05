@@ -10,6 +10,13 @@
     hl.bind("SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), { locked = true, repeating = true })
   '';
 
+  defaultConfigs.sxwm.extraConfig = lib.mkIf config.defaultConfigs.sxwm.enable (
+    lib.mkAfter ''
+      wm.bind("Shift+XF86MonBrightnessUp", () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%+"), locked);
+      wm.bind("Shift+XF86MonBrightnessDown", () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), locked);
+    ''
+  );
+
   defaultConfigs.niri.binds = lib.mkIf config.defaultConfigs.niri.enable (
     lib.mkAfter ''
       Shift+XF86MonBrightnessUp allow-when-locked=true { spawn-sh "brightnessctl -d framework_laptop::kbd_backlight set 5%+"; }

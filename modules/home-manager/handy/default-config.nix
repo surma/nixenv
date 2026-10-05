@@ -21,6 +21,10 @@ with lib;
       hl.bind("SUPER + ALT + space", hl.dsp.exec_cmd("${getExe config.programs.handy.package} --toggle-transcription"))
     '');
 
+    defaultConfigs.sxwm.extraConfig = mkIf config.defaultConfigs.sxwm.enable (mkAfter ''
+      wm.bind("Super+Alt+space", () => spawn("${getExe config.programs.handy.package} --toggle-transcription"), once);
+    '');
+
     defaultConfigs.niri.binds = mkIf config.defaultConfigs.niri.enable (mkAfter ''
       Super+Alt+Space { spawn-sh "${getExe config.programs.handy.package} --toggle-transcription"; }
     '');

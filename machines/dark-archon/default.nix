@@ -26,6 +26,9 @@ in
     ../../profiles/nixos/home-printer.nix
   ];
 
+  # dark-archon is the first machine to run SXWM. archon stays on niri.
+  gui.compositor = "sxwm";
+
   # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
   # four CS35L57 speaker amps need for their spk-id-gpios, so the amps fail to
   # probe. The upstream fix is not in 7.2.y yet, so blacklist the module; the
