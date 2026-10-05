@@ -7,4 +7,10 @@
   adguardHomeWeb = 8083;
   nut = 3493;
   nixCache = 5000;
+  # MatrixRTC (Element Call). Pylon forwards the RTC ports to Nexus.
+  livekit = 7880;
+  livekitRtcTcp = 7881;
+  livekitRtcUdpStart = 50100;
+  livekitRtcUdpEnd = 50200;
+  lkJwtService = 8086;
 }

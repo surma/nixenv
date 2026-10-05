@@ -289,6 +289,13 @@
         "nexus"
       ];
     };
+    livekit-keys = {
+      contents = ../secrets/livekit-keys.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     scout-dev-matrix-password = {
       contents = ../secrets/scout-dev-matrix-password.age;
       keys = [
