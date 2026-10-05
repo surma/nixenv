@@ -9,21 +9,21 @@
 }:
 
 let
-  version = "0.87.1";
+  version = "1.0.4";
 
   src = fetchFromGitHub {
     owner = "badlogic";
     repo = "pi-mono";
     tag = "v${version}";
-    hash = "sha256-GUhlq6t+l6iiViOZ0bkV28v3ZDqcLvEwpZpYZ5JAyDk=";
+    hash = "sha256-twDmQRr7vsrYzhS8o3TrlqdBzRFCbOOn/4hbCXD/u3Q=";
   };
 
-  npmDepsHash = "sha256-JBIYoP2vvRNz1HONNvDJ1U3c+nmCJ7/VgNthRTkrkIA=";
+  npmDepsHash = "sha256-1H7z6y8czHF3Dewqqy5DA/RNeo2//J1eBYZqryX0MbU=";
 
   modelData = fetchzip {
     name = "pi-ai-model-data-${version}";
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${version}.tgz";
-    hash = "sha256-TC0jNS8xJj9aHfpFWgRi3eoz3eHz1m0+FoDYeQTo2iY=";
+    hash = "sha256-5Ss6xC3YH0MDbMDk//DqoePSOI8AIy2waVisCdTH+3U=";
   };
 in
 buildNpmPackage rec {
@@ -42,16 +42,9 @@ buildNpmPackage rec {
   buildPhase = ''
     runHook preBuild
 
-    npm run --workspace=packages/chord build
-    npm run --workspace=packages/tui build
-    npm run --workspace=packages/telemetry build
-    npm run --workspace=packages/ai build:offline
-    npm run --workspace=packages/agent build
-    npm run --workspace=packages/session-backends/sqlite-node build
-    npm run --workspace=packages/protocol build
-    npm run --workspace=packages/client build
-    npm run --workspace=packages/server build
-    npm run --workspace=packages/coding-agent build
+    # Upstream's script builds every workspace in dependency order and
+    # uses the bundled model data instead of the network.
+    npm run build:offline
 
     runHook postBuild
   '';
