@@ -25,11 +25,15 @@ let
       [
         "@fuzzel@"
         "@window-switcher@"
+        "@cursor-theme@"
+        "@cursor-size@"
         "@extraConfig@"
       ]
       [
         "${pkgs.fuzzel}/bin/fuzzel"
         (lib.getExe windowSwitcher)
+        cursorTheme
+        (toString cursorSize)
         config.defaultConfigs.sxwm.extraConfig
       ]
       (lib.readFile ./config.js)

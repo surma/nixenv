@@ -18,6 +18,7 @@ await wm.input.configure({
     { match: { type: "touchpad" }, natural_scroll: true, disable_while_typing: true },
     { match: { type: "mouse" }, natural_scroll: true },
   ],
+  cursor: { theme: "@cursor-theme@", size: @cursor-size@ },
 });
 
 // SXWM matches outputs by connector name or EDID description, like niri.
@@ -60,9 +61,67 @@ await wm.outputs.configure({
 // The fixed niri workspaces become the tags.
 const tags = ["U", "I", "O", "P", "J", "K", "L"];
 await wm.tags.define(tags.map((id) => ({ id, name: id })));
+
+const focusedWindow = (state) => state.windows.find((window) => window.focused);
+
+// The screen before (-1) or after (+1) the active screen. Screens go from
+// left to right by their centers, and the order wraps around.
+function neighborScreen(state, step) {
+  const center = (screen) => [screen.x + screen.width / 2, screen.y + screen.height / 2];
+  const screens = [...state.screens].sort((a, b) => {
+    const [ax, ay] = center(a);
+    const [bx, by] = center(b);
+    return ax - bx || ay - by;
+  });
+  const index = screens.findIndex((screen) => screen.id === state.active_screen);
+  if (screens.length < 2 || index === -1) return undefined;
+  return screens[(index + step + screens.length) % screens.length];
+}
+
+// meh+letter works like a niri workspace key. If another screen shows the
+// tag, focus moves to that screen. Otherwise the tag appears on the active
+// screen, or disappears from it.
+async function goToTag(tag) {
+  const state = await wm.state.get();
+  const screen = state.tags.find((candidate) => candidate.id === tag)?.screen ?? null;
+  if (screen !== null && screen !== state.active_screen) {
+    await wm.tags.focus(tag);
+  } else {
+    await wm.tags.toggle(tag);
+  }
+}
+
+async function focusScreen(step) {
+  const state = await wm.state.get();
+  const screen = neighborScreen(state, step);
+  if (screen) await wm.screens.focus(screen.id);
+}
+
+// The focused window gets the newest tag of the neighbor screen, and focus
+// follows it. If that screen shows no tag, the first hidden tag appears there.
+async function moveWindowToScreen(step) {
+  const state = await wm.state.get();
+  const window = focusedWindow(state);
+  const screen = neighborScreen(state, step);
+  if (!window || !screen) return;
+  let tag = screen.tags.at(-1);
+  if (tag === undefined) {
+    tag = state.tags.find((candidate) => candidate.screen === null)?.id;
+    if (tag === undefined) return;
+    await wm.tags.toggle(tag, screen.id);
+  }
+  await wm.windows.set_tag(tag, window.id);
+  await wm.windows.focus(window.id);
+}
+
+async function withFocusedWindow(action) {
+  const window = focusedWindow(await wm.state.get());
+  if (window) await action(window);
+}
+
 for (const tag of tags) {
   const key = tag.toLowerCase();
-  wm.bind(`${meh}+${key}`, () => wm.tags.toggle(tag));
+  wm.bind(`${meh}+${key}`, () => goToTag(tag));
   wm.bind(`${meh}+Shift+${key}`, () => wm.windows.set_tag(tag));
 }
 
@@ -70,6 +129,18 @@ wm.bind(`${meh}+w`, () => wm.windows.close());
 wm.bind(`${meh}+Shift+q`, () => wm.sxwm.quit());
 wm.bind(`${meh}+Left`, () => wm.windows.cycle("previous"));
 wm.bind(`${meh}+Right`, () => wm.windows.cycle("next"));
+wm.bind(`${meh}+comma`, () => focusScreen(-1));
+wm.bind(`${meh}+period`, () => focusScreen(1));
+wm.bind(`${meh}+Shift+comma`, () => moveWindowToScreen(-1));
+wm.bind(`${meh}+Shift+period`, () => moveWindowToScreen(1));
+// The focused window goes to the front of the Rolodex.
+wm.bind(`${meh}+Return`, () => withFocusedWindow((window) => wm.windows.focus(window.id)));
+wm.bind(`${meh}+Shift+slash`, () =>
+  withFocusedWindow((window) => wm.windows.set_floating(!window.floating, window.id)),
+);
+wm.bind(`${meh}+Shift+equal`, () =>
+  withFocusedWindow((window) => wm.windows.set_fullscreen(!window.fullscreen, window.id)),
+);
 
 wm.bind("Super+space", () => spawn("@fuzzel@"));
 wm.bind(`${meh}+space`, () => spawn("@window-switcher@"));
