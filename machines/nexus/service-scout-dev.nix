@@ -32,6 +32,13 @@ in
     install -m 0644 -o surma -g users /dump/state/scout/.ssh/id_surma.pub ${home}/.ssh/id_surma.pub
     install -m 0600 -o surma -g users /dump/state/scout/.ssh/id_surma ${home}/.ssh/id_surma
   '';
+  secrets.items.brain-deploy-key.command = lib.mkAfter ''
+    mkdir -p ${home}/.ssh
+    chown surma:users ${home}/.ssh
+    chmod 0700 ${home}/.ssh
+    install -m 0644 -o surma -g users /dump/state/scout/.ssh/id_brain.pub ${home}/.ssh/id_brain.pub
+    install -m 0600 -o surma -g users /dump/state/scout/.ssh/id_brain ${home}/.ssh/id_brain
+  '';
   secrets.items.scout-repo-ssh-key.command = lib.mkAfter ''
     mkdir -p ${home}/.ssh
     chown surma:users ${home}/.ssh

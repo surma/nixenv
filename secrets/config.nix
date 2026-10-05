@@ -174,6 +174,21 @@
         "citadel"
       ];
     };
+    # Deploy key of surma/brain with write access, shared by every machine
+    # that syncs Brain. nexus installs it for the Scout containers and
+    # brain-serve.
+    brain-deploy-key = {
+      contents = ../assets/ssh-keys/id_brain.age;
+      keys = [
+        "surma"
+        "dragoon"
+        "shopisurm"
+        "archon"
+        "dark-archon"
+        "citadel"
+        "nexus"
+      ];
+    };
     scout-repo-ssh-key = {
       contents = ../assets/ssh-keys/id_repo_scout.age;
       keys = [

@@ -42,6 +42,15 @@
     # build can turn it off with a plain `programs.brain.enable = false`.
     programs.brain.enable = lib.mkDefault true;
 
+    # The shared deploy key of surma/brain. modules/home-manager/brain makes
+    # git use it in the Brain repo.
+    secrets.items.brain-deploy-key.command = ''
+      mkdir -p ${config.home.homeDirectory}/.ssh
+      install -m 0644 ${../../../assets/ssh-keys/id_brain.pub} ${config.home.homeDirectory}/.ssh/id_brain.pub
+      install -m 0600 /dev/null ${config.home.homeDirectory}/.ssh/id_brain
+      cat > ${config.home.homeDirectory}/.ssh/id_brain
+    '';
+
     programs.iamb.enable = true;
     defaultConfigs.iamb.enable = true;
   };

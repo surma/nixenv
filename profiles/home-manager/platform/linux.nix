@@ -23,7 +23,7 @@
       Port = 2222;
       User = "containeruser";
       IdentitiesOnly = true;
-      IdentityFile = "${config.home.homeDirectory}/.ssh/id_machine";
+      IdentityFile = "${config.home.homeDirectory}/.ssh/id_brain";
       IdentityAgent = "none";
     };
   };

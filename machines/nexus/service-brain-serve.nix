@@ -16,7 +16,7 @@ let
       Hostname ${ips.hosts.nexus.ip}
       Port 2222
       User containeruser
-      IdentityFile /var/lib/brain-serve/.ssh/id_repo_scout
+      IdentityFile /var/lib/brain-serve/.ssh/id_brain
       IdentitiesOnly yes
       StrictHostKeyChecking accept-new
       HostKeyAlias gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
