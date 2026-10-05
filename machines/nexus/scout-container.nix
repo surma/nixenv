@@ -18,6 +18,8 @@
   memoryMax,
   # Extra environment variables of the Scout service.
   extraEnvironment ? { },
+  # Extra NixOS modules of the container.
+  extraModules ? [ ],
   extraAllowedDevices ? [ ],
   extraBindMounts ? { },
 }:
@@ -170,7 +172,8 @@ in
           };
         }
       )
-    ];
+    ]
+    ++ extraModules;
     system.stateVersion = "25.05";
 
     hardware.graphics.enable = true;

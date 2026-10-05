@@ -61,6 +61,39 @@ in
       SCOUT_CALL_DEBUG_RECORD_DIR = "/home/containeruser/.local/state/scout/voice-call-debug";
     };
 
+    # The dev home starts without the Brain clone that the topic-create hook
+    # and the brain-sync timer use. Production has a clone from its setup.
+    extraModules = [
+      {
+        systemd.services.brain-clone = {
+          description = "Clone the Brain repository once";
+          wantedBy = [ "multi-user.target" ];
+          before = [ "scout.service" ];
+          wants = [ "network-online.target" ];
+          after = [
+            "network-online.target"
+            "home-manager-containeruser.service"
+          ];
+          path = [
+            pkgs.git
+            pkgs.openssh
+          ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            User = "containeruser";
+            Group = "users";
+          };
+          script = ''
+            if [ ! -d "$HOME/.local/state/brain/.git" ]; then
+              git clone ssh://containeruser@gitea.surma.technology:2222/surma/brain.git "$HOME/.local/state/brain"
+            fi
+          '';
+        };
+        systemd.services.scout.wants = [ "brain-clone.service" ];
+      }
+    ];
+
     extraBindMounts.creds-dev = {
       mountPoint = "/var/lib/credentials/scout-dev";
       hostPath = "/var/lib/scout-dev";
