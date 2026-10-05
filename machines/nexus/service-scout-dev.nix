@@ -74,15 +74,8 @@ in
       {
         systemd.services.brain-clone = {
           description = "Clone the Brain repository once";
-          wantedBy = [ "multi-user.target" ];
-          before = [ "scout.service" ];
-          wants = [ "network-online.target" ];
-          after = [
-            "network-online.target"
-            "home-manager-containeruser.service"
-          ];
+          after = [ "home-manager-containeruser.service" ];
           path = [
-            pkgs.coreutils
             pkgs.git
             pkgs.openssh
           ];
@@ -92,25 +85,27 @@ in
             User = "containeruser";
             Group = "users";
           };
-          # DNS can fail for a short time after the container starts, so
-          # the clone retries.
           script = ''
             target="$HOME/.local/state/brain"
-            for attempt in $(seq 1 30); do
-              if [ -d "$target/.git" ]; then
-                exit 0
-              fi
-              rm -rf "$target"
-              if git clone ssh://containeruser@gitea.surma.technology:2222/surma/brain.git "$target"; then
-                exit 0
-              fi
-              echo "clone attempt $attempt failed; retrying in 5 s"
-              sleep 5
-            done
-            exit 1
+            if [ -d "$target/.git" ]; then
+              exit 0
+            fi
+            rm -rf "$target"
+            # The shared Brain deploy key, as in modules/home-manager/brain.
+            git -c core.sshCommand="ssh -i $HOME/.ssh/id_brain -o IdentitiesOnly=yes -o IdentityAgent=none" \
+              clone ssh://containeruser@gitea.surma.technology:2222/surma/brain.git "$target"
           '';
         };
-        systemd.services.scout.wants = [ "brain-clone.service" ];
+        # A timer, so that the clone never blocks the container boot. DNS
+        # does not work right after the container starts. Until the clone
+        # exists, the timer tries again every 10 minutes.
+        systemd.timers.brain-clone = {
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnBootSec = "1min";
+            OnUnitInactiveSec = "10min";
+          };
+        };
       }
     ];
 
