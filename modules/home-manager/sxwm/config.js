@@ -8,8 +8,10 @@ const { wm } = await import("sxwm");
 const environment =
   "export QT_QPA_PLATFORM=wayland ELECTRON_OZONE_PLATFORM_HINT=wayland GDK_BACKEND=wayland; ";
 const spawn = (command) => wm.process.spawn(environment + command);
-// meh is Super+Alt+Ctrl, as in the niri configuration.
+// meh is Super+Alt+Ctrl, as in the niri configuration, and hyper is
+// meh+Shift.
 const meh = "Super+Alt+Ctrl";
+const hyper = `${meh}+Shift`;
 
 await wm.input.configure({
   focus_follows_mouse: true,
@@ -62,33 +64,41 @@ await wm.outputs.configure({
 const tags = ["U", "I", "O", "P", "J", "K", "L"];
 await wm.tags.define(tags.map((id) => ({ id, name: id })));
 
+// Bindings repeat while held. These options turn that off for actions that
+// must not run twice: closing, quitting, starting programs, and toggles.
+const once = { repeat: false };
+const locked = { whenLocked: true };
+
 const focusedWindow = (state) => state.windows.find((window) => window.focused);
 
 // The screen before (-1) or after (+1) the active screen. Screens go from
-// left to right by their centers, and the order wraps around.
+// top to bottom by their centers, then from left to right, and the order
+// wraps around.
 function neighborScreen(state, step) {
-  const center = (screen) => [screen.x + screen.width / 2, screen.y + screen.height / 2];
+  const center = (screen) => [screen.y + screen.height / 2, screen.x + screen.width / 2];
   const screens = [...state.screens].sort((a, b) => {
-    const [ax, ay] = center(a);
-    const [bx, by] = center(b);
-    return ax - bx || ay - by;
+    const [ay, ax] = center(a);
+    const [by, bx] = center(b);
+    return ay - by || ax - bx;
   });
   const index = screens.findIndex((screen) => screen.id === state.active_screen);
   if (screens.length < 2 || index === -1) return undefined;
   return screens[(index + step + screens.length) % screens.length];
 }
 
-// meh+letter works like a niri workspace key. If another screen shows the
-// tag, focus moves to that screen. Otherwise the tag appears on the active
-// screen, or disappears from it.
-async function goToTag(tag) {
+// meh+letter switches to the tag. If a screen shows the tag, focus moves to
+// that screen. Otherwise the tag appears on the active screen, and the other
+// tags of that screen disappear.
+async function switchToTag(tag) {
   const state = await wm.state.get();
   const screen = state.tags.find((candidate) => candidate.id === tag)?.screen ?? null;
-  if (screen !== null && screen !== state.active_screen) {
+  if (screen !== null) {
     await wm.tags.focus(tag);
-  } else {
-    await wm.tags.toggle(tag);
+    return;
   }
+  const others = state.screens.find((candidate) => candidate.id === state.active_screen)?.tags ?? [];
+  // Send all requests at once, so that SXWM can handle them together.
+  await Promise.all([wm.tags.toggle(tag), ...others.map((other) => wm.tags.toggle(other))]);
 }
 
 async function focusScreen(step) {
@@ -121,45 +131,57 @@ async function withFocusedWindow(action) {
 
 for (const tag of tags) {
   const key = tag.toLowerCase();
-  wm.bind(`${meh}+${key}`, () => goToTag(tag));
-  wm.bind(`${meh}+Shift+${key}`, () => wm.windows.set_tag(tag));
+  wm.bind(`${meh}+${key}`, () => switchToTag(tag), once);
+  // hyper+letter moves the focused window to the tag and does not switch.
+  wm.bind(`${hyper}+${key}`, () => wm.windows.set_tag(tag), once);
+  // meh+t, then the letter alone, shows or hides the tag on the active screen.
+  wm.bind(`${meh}+t ${key}`, () => wm.tags.toggle(tag), once);
 }
 
-wm.bind(`${meh}+w`, () => wm.windows.close());
-wm.bind(`${meh}+Shift+q`, () => wm.sxwm.quit());
+wm.bind(`${meh}+w`, () => wm.windows.close(), once);
+wm.bind(`${hyper}+q`, () => wm.sxwm.quit(), once);
 wm.bind(`${meh}+Left`, () => wm.windows.cycle("previous"));
 wm.bind(`${meh}+Right`, () => wm.windows.cycle("next"));
-wm.bind(`${meh}+comma`, () => focusScreen(-1));
-wm.bind(`${meh}+period`, () => focusScreen(1));
-wm.bind(`${meh}+Shift+comma`, () => moveWindowToScreen(-1));
-wm.bind(`${meh}+Shift+period`, () => moveWindowToScreen(1));
+wm.bind(`${meh}+Up`, () => focusScreen(-1));
+wm.bind(`${meh}+Down`, () => focusScreen(1));
+wm.bind(`${hyper}+Up`, () => moveWindowToScreen(-1));
+wm.bind(`${hyper}+Down`, () => moveWindowToScreen(1));
 // The focused window goes to the front of the Rolodex.
-wm.bind(`${meh}+Return`, () => withFocusedWindow((window) => wm.windows.focus(window.id)));
-wm.bind(`${meh}+Shift+slash`, () =>
-  withFocusedWindow((window) => wm.windows.set_floating(!window.floating, window.id)),
+wm.bind(`${meh}+Return`, () => withFocusedWindow((window) => wm.windows.focus(window.id)), once);
+wm.bind(
+  `${hyper}+slash`,
+  () => withFocusedWindow((window) => wm.windows.set_floating(!window.floating, window.id)),
+  once,
 );
-wm.bind(`${meh}+Shift+equal`, () =>
-  withFocusedWindow((window) => wm.windows.set_fullscreen(!window.fullscreen, window.id)),
+wm.bind(
+  `${hyper}+equal`,
+  () => withFocusedWindow((window) => wm.windows.set_fullscreen(!window.fullscreen, window.id)),
+  once,
 );
 
-wm.bind("Super+space", () => spawn("@fuzzel@"));
-wm.bind(`${meh}+space`, () => spawn("@window-switcher@"));
+wm.bind("Super+space", () => spawn("@fuzzel@"), once);
+wm.bind(`${meh}+space`, () => spawn("@window-switcher@"), once);
 
-const locked = { whenLocked: true };
-const keys = {
+// Volume and brightness repeat while held. Media keys run once.
+const repeatingKeys = {
   XF86AudioRaiseVolume: "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+",
   XF86AudioLowerVolume: "wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-",
-  XF86AudioMute: "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
-  XF86AudioMicMute: "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
   XF86MonBrightnessUp: "brightnessctl -e4 -n2 set 5%+",
   XF86MonBrightnessDown: "brightnessctl -e4 -n2 set 5%-",
+};
+const onceKeys = {
+  XF86AudioMute: "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+  XF86AudioMicMute: "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
   XF86AudioNext: "playerctl next",
   XF86AudioPause: "playerctl play-pause",
   XF86AudioPlay: "playerctl play-pause",
   XF86AudioPrev: "playerctl previous",
 };
-for (const [key, command] of Object.entries(keys)) {
+for (const [key, command] of Object.entries(repeatingKeys)) {
   wm.bind(key, () => spawn(command), locked);
+}
+for (const [key, command] of Object.entries(onceKeys)) {
+  wm.bind(key, () => spawn(command), { ...locked, ...once });
 }
 
 @extraConfig@
