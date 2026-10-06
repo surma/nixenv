@@ -84,6 +84,8 @@ in
   programs.zoxide.enableZshIntegration = true;
   programs.zoxide.enableNushellIntegration = true;
   programs.fzf.enable = true;
+  programs.carapace.enable = true;
+  programs.carapace.enableNushellIntegration = true;
   programs.fzf.enableZshIntegration = true;
   programs.eza = {
     enable = true;
@@ -146,6 +148,7 @@ in
   };
 
   programs.nushell.enable = true;
+  programs.nushell.settings.completions.algorithm = "fuzzy";
   programs.nushell.shellAliases =
     config.programs.zsh.shellAliases
     |> lib.filterAttrs (
