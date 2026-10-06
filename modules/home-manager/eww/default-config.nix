@@ -56,16 +56,10 @@ let
       else
         [ pkgs.hyprland ];
     text =
-      # A tag that is active on the bar's screen gets focus. Any other tag
-      # becomes active on the bar's screen.
+      # config.js registers switch-to-tag with the same behavior as meh+letter.
       if sxwmEnabled then
         ''
-          tag_screen="$(sxwmctl state.get | jq -r --arg tag "$2" '.tags[] | select(.id == $tag) | .screen // ""')"
-          if [[ "$tag_screen" == "$1" ]]; then
-            sxwmctl tags.focus "$(jq -cn --arg tag "$2" '{tag: $tag}')"
-          else
-            sxwmctl tags.toggle "$(jq -cn --arg tag "$2" --arg screen "$1" '{tag: $tag, screen: $screen}')"
-          fi
+          sxwmctl commands.run "$(jq -cn --arg tag "$2" '{name: "switch-to-tag", args: {tag: $tag}}')"
         ''
       else if niriEnabled then
         ''
@@ -350,6 +344,7 @@ let
         "@POWER_PROFILE_CYCLE@"
         "@SUNSET_POLL@"
         "@SUNSET_WIDGET@"
+        "@WORKSPACE_CLASS@"
       ]
       [
         (lib.getExe workspaceScript)
@@ -366,6 +361,13 @@ let
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
         sunsetPoll
         sunsetWidget
+        # The SXWM script computes the class, because it also marks away tags.
+        (
+          if sxwmEnabled then
+            "{workspace.class}"
+          else
+            ''{workspace.active ? "workspace active" : "workspace"}''
+        )
       ]
       (builtins.readFile ./eww.yuck);
 in

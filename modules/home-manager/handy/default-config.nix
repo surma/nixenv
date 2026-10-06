@@ -22,7 +22,7 @@ with lib;
     '');
 
     defaultConfigs.sxwm.extraConfig = mkIf config.defaultConfigs.sxwm.enable (mkAfter ''
-      wm.bind("Super+Alt+space", () => spawn("${getExe config.programs.handy.package} --toggle-transcription"), once);
+      bindings["Super+Alt+space"] = () => spawn("${getExe config.programs.handy.package} --toggle-transcription");
     '');
 
     defaultConfigs.niri.binds = mkIf config.defaultConfigs.niri.enable (mkAfter ''
