@@ -75,11 +75,6 @@
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    pi-acp = {
-      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
-    };
     dashboard = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/dashboard.git?ref=main";
       inputs.nixpkgs.follows = "nixpkgs";

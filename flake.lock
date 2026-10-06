@@ -429,11 +429,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1789692157,
-        "narHash": "sha256-em98yvw+W6Nblx22cXJaPMMQ+WujM2EX0haRhdp6Ovw=",
+        "lastModified": 1791236783,
+        "narHash": "sha256-z1i72jg4QeR8+tQGaOalCT/jHxgbg3fTO9Y0EjWKWTQ=",
         "owner": "herdrdev",
         "repo": "herdr",
-        "rev": "da6bcd5969779bfe0396bcf89a8025d4375d611e",
+        "rev": "3d9d2b18dab139ba226ebc5a1c9a9f2c9c3ee4df",
         "type": "github"
       },
       "original": {
@@ -450,11 +450,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1791130233,
-        "narHash": "sha256-VW7AbaYB1bK4pROjOUlK6j4j0KsGTPvZnHFrcMUG5bM=",
+        "lastModified": 1791217719,
+        "narHash": "sha256-Pe5Zo3PNGQjWdC2M20jLhd3Ma+A0jwkx5kTD+BdH7TE=",
         "owner": "penso",
         "repo": "herdr-gpui",
-        "rev": "c02a21c0ee4b6e03511e91802609e11dce3f3540",
+        "rev": "22e2394105cda498e35eb2c5251b938ef9d383d8",
         "type": "github"
       },
       "original": {
@@ -816,30 +816,6 @@
         "type": "github"
       }
     },
-    "pi-acp": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1787493283,
-        "narHash": "sha256-qMo6XnvhZdxLf2VOr6Ty1MadxUF8moc7b7P6VxdZAy4=",
-        "ref": "main",
-        "rev": "748789d87fd53e169d6e9feee2963c1b8bf4d52d",
-        "revCount": 27,
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
-      },
-      "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/pi-acp"
-      }
-    },
     "pre-commit-hooks-nix": {
       "inputs": {
         "flake-compat": [
@@ -890,7 +866,6 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_6",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "pi-acp": "pi-acp",
         "scout": "scout",
         "scout-dev": "scout-dev",
         "shopify-framework": "shopify-framework",

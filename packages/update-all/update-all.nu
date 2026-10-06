@@ -41,7 +41,6 @@ def main [] {
     { name: "pi-coding-agent" nix_update_args: [ "--custom-dep" "modelData" ] }
     { name: "handy" }
     { name: "agent-browser" }
-    { name: "pi-acp" }
     { name: "tinycast" }
   ]
 

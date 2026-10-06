@@ -165,7 +165,7 @@ nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/src/
 
 Scout should proactively manage its environment this way. The only changes that require user intervention are:
 - Changes to the **Scout Rust service** itself (the binary that runs the container).
-- Changes to the **pi-acp / pi** configuration in `service-scout.nix`.
+- Changes to the **pi** configuration in `service-scout.nix`.
 
 ## Deploying host-level NixOS changes (Nexus / Citadel)
 
