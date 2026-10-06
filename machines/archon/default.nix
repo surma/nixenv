@@ -29,6 +29,8 @@
     inputs.shopify-framework.nixosModules.default
   ];
 
+  gui.compositor = "sxwm";
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernel.sysctl = {
