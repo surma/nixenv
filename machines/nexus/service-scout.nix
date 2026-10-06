@@ -233,6 +233,9 @@ in
     matrixSpace = "!vy1niBPRrx4gqowId1:matrix.surma.technology";
     memoryMax = "16G";
 
+    # Voice calls (Element Call) in topic rooms.
+    extraEnvironment.SCOUT_MATRIX_VOICE_CALL_COMMAND = "scout-voice-call";
+
     extraAllowedDevices = [
       # KVM acceleration for QEMU guests.
       {

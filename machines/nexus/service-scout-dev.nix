@@ -60,7 +60,7 @@ in
     matrixSpace = "!Zy3sLcgHz3Wlgaj2rB:matrix.surma.technology";
     memoryMax = "8G";
 
-    # Voice calls (Element Call) are on only in the dev instance.
+    # Voice calls (Element Call), plus the debug recording of the call audio.
     extraEnvironment = {
       SCOUT_MATRIX_VOICE_CALL_COMMAND = "scout-voice-call";
       # Debug: keeps the received caller audio of each call, to tune the
