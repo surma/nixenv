@@ -11,6 +11,7 @@
   rcodesign,
   inputs,
   alsa-lib,
+  dbus,
   libGL,
   wayland,
   libxkbcommon,
@@ -151,7 +152,9 @@ rustPlatform.buildRustPackage {
   # winit and glutin load these through dlopen at runtime (see
   # packaging/check-runtime-libs.c), so linking rpaths alone is not enough.
   # The final binary links with an empty RUNPATH, so the standard library
-  # from the C++ toolchain (openh264) rides along too.
+  # from the C++ toolchain (openh264) rides along too. rfd loads libdbus
+  # through dlopen to reach the file chooser portal.
+  # Without it, rfd falls back to zenity.
   postFixup =
     lib.optionalString stdenv.hostPlatform.isLinux ''
       wrapProgram "$out/bin/zapfast" \
@@ -159,6 +162,7 @@ rustPlatform.buildRustPackage {
           lib.makeLibraryPath [
             stdenv.cc.cc.lib
             alsa-lib
+            dbus
             libGL
             wayland
             libxkbcommon
