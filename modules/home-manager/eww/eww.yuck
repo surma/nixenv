@@ -36,7 +36,7 @@
        :spacing 0
     (for workspace in workspaces
       (button
-        :class {workspace.active ? "workspace active" : "workspace"}
+        :class @WORKSPACE_CLASS@
         :visible {workspace.output == screen}
         :onclick "@FOCUS_WORKSPACE@ ${workspace.output} ${workspace.index}"
         (label :text {workspace.label})))))

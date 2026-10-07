@@ -12,8 +12,16 @@
 
   defaultConfigs.sxwm.extraConfig = lib.mkIf config.defaultConfigs.sxwm.enable (
     lib.mkAfter ''
-      wm.bind("Shift+XF86MonBrightnessUp", () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%+"), locked);
-      wm.bind("Shift+XF86MonBrightnessDown", () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%-"), locked);
+      bindings["Shift+XF86MonBrightnessUp"] = {
+        run: () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%+"),
+        repeat: true,
+        ...locked,
+      };
+      bindings["Shift+XF86MonBrightnessDown"] = {
+        run: () => spawn("brightnessctl -d framework_laptop::kbd_backlight set 5%-"),
+        repeat: true,
+        ...locked,
+      };
     ''
   );
 

@@ -36,7 +36,9 @@
     };
   };
 
-  services.seatd.enable = true;
+  # Do not enable seatd. GDM controls the VTs through logind, and libseat
+  # picks seatd over logind when seatd runs. Two seat managers then reset the
+  # same VT at logout, and the screen can stay blank.
   security.polkit.enable = true;
   services.udisks2.enable = true;
 
@@ -61,13 +63,12 @@
     seahorse
   ];
 
-  # Seat, input and media access for the interactive user.
+  # Input and media access for the interactive user.
   users.users.surma.extraGroups = [
     "networkmanager"
     "input"
     "video"
     "audio"
-    "seat"
     "uinput"
   ];
 }
