@@ -6,7 +6,6 @@ import {
   bindAll,
   cycleLayout,
   focusedWindow,
-  focusNeighborWindow,
   focusScreen,
   moveActiveTagsToScreen,
   switchToTag,
@@ -83,7 +82,12 @@ await wm.outputs.configure({
 const tags = ["U", "I", "O", "P", "J", "K", "L"];
 await wm.tags.define(tags.map((id) => ({ id, name: id })));
 
-await wm.layout("columns", layouts.columns);
+// The Rolodex and the columns share one window order. They react to the
+// focus-window-* and move-window-* events of the bindings below.
+await wm.useLayouts(
+  { rolodex: layouts.rolodex, columns: layouts.columns },
+  { default: "rolodex", orderKey: "window-order" },
+);
 
 // The eww bar runs this command when a tag is clicked.
 await wm.command("switch-to-tag", ({ tag }) => switchToTag(wm, tag));
@@ -99,10 +103,12 @@ const bindings = {
   [`${meh}+w`]: () => wm.windows.close(),
   [`${hyper}+q`]: () => wm.sxwm.quit(),
 
-  // meh+Left and meh+Right step through the windows in open order, in the
-  // Rolodex and in the columns.
-  [`${meh}+Left`]: { run: () => focusNeighborWindow(wm, -1), repeat: true },
-  [`${meh}+Right`]: { run: () => focusNeighborWindow(wm, 1), repeat: true },
+  // The layout decides what these events do. The Rolodex and the columns
+  // step through their window order, and move the focused window in it.
+  [`${meh}+Left`]: { run: "focus-window-prev", repeat: true },
+  [`${meh}+Right`]: { run: "focus-window-next", repeat: true },
+  [`${hyper}+Left`]: { run: "move-window-prev", repeat: true },
+  [`${hyper}+Right`]: { run: "move-window-next", repeat: true },
   // The focused window goes to the front of the Rolodex.
   [`${meh}+Return`]: () => withFocusedWindow((window) => wm.windows.focus(window.id)),
   [`${meh}+b`]: () => cycleLayout(wm, ["rolodex", "columns"]),
