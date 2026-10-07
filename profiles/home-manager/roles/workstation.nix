@@ -5,6 +5,9 @@
   inputs,
   ...
 }:
+let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+in
 {
   imports = [
     ../../../modules/home-manager/ssh-keys
@@ -36,7 +39,9 @@
         wasmtime
         inputs.m.packages.${pkgs.stdenv.hostPlatform.system}.default
       ]
-    );
+    )
+    # Fractal is GTK/Linux-only. The Darwin workstations also use this role.
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs-unstable.fractal ];
 
     # Default-enabled on every workstation. A machine where brain does not
     # build can turn it off with a plain `programs.brain.enable = false`.
