@@ -1091,11 +1091,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791385977,
-        "narHash": "sha256-wXrv3Y+ZSuKh+vcJ2CL6U8ULKPzOQiAVRitO2AyvLYI=",
+        "lastModified": 1791398905,
+        "narHash": "sha256-tQ1BQQ2Hzcfzkr54h0MKOJ9jem/p3x0rpg74YbGlELM=",
         "ref": "main",
-        "rev": "3b1bbe5fa7be3c1f7ebff5518e2a80c7e2b74893",
-        "revCount": 105,
+        "rev": "fcc7168ef8779ef3041fa1100f74cac124f28a77",
+        "revCount": 108,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git"
       },
