@@ -15,6 +15,7 @@ in
     ../../modules/defaultConfigs/npm
     ../../modules/home-manager/brain
     ../../profiles/home-manager/roles/ai.nix
+    ../../profiles/home-manager/roles/rust-cache.nix
   ];
 
   config = {
