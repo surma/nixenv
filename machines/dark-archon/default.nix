@@ -129,6 +129,10 @@ in
   users.users.surma = {
     description = "Surma";
 
+    # Start user services such as herdr.service at boot, and keep them
+    # running after logout.
+    linger = true;
+
     # For flashing ESP32 boards over USB serial (e.g. the XIAO C6).
     extraGroups = [ "dialout" ];
 

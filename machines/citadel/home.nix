@@ -48,5 +48,9 @@
 
     # Headless: no desktop for the herdr GUI.
     programs.herdr.gui.enable = false;
+
+    # Run the herdr server as a user service. It starts at boot and does not
+    # depend on a login session.
+    programs.herdr.server.enable = true;
   };
 }

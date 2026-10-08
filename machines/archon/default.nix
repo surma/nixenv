@@ -197,6 +197,10 @@
   users.users.surma = {
     description = "Surma";
 
+    # Start user services such as herdr.service at boot, and keep them
+    # running after logout.
+    linger = true;
+
     # nexus runs services.key-poller and SSHes in as surma to read the
     # Shopify key when shopisurm is unreachable. Merges with the `surma`
     # key that profiles/nixos/base.nix already installs.

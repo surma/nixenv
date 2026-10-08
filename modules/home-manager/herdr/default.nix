@@ -51,6 +51,10 @@ in
         description = "The herdr-gpui package to use";
       };
     };
+    server.enable = mkEnableOption ''
+      a systemd user service for the herdr server (Linux only). The server then
+      lives in its own cgroup, so a restart of the graphical session does not
+      kill it and its panes. Enable linger to keep it running after logout'';
     settings = mkOption {
       type = types.attrsOf types.anything;
       default = { };
@@ -66,7 +70,32 @@ in
         assertion = cfg.gui.enable -> pkgs.stdenv.hostPlatform.isLinux;
         message = "programs.herdr.gui: the herdr-gpui flake builds only for Linux. On macOS, use the Homebrew cask.";
       }
+      {
+        assertion = cfg.server.enable -> pkgs.stdenv.hostPlatform.isLinux;
+        message = "programs.herdr.server: the service needs systemd, so it works only on Linux.";
+      }
     ];
+
+    systemd.user.services.herdr = mkIf cfg.server.enable {
+      Unit = {
+        Description = "herdr server";
+        # A restart kills every pane process. Keep the old server on a switch.
+        # `herdr status` then reports a stale server binary, and you restart
+        # the service when it suits you.
+        X-SwitchMethod = "keep-old";
+      };
+      Service = {
+        # Panes inherit the environment of the server. The default pane shell
+        # (nu) does not load the home-manager session variables, so start the
+        # server from an interactive login zsh, as a terminal does.
+        ExecStart = "${config.programs.zsh.package}/bin/zsh -lic 'exec ${lib.getExe' cfg.package "herdr"} server'";
+        # Send SIGTERM only to herdr, so it saves the session before it closes
+        # the panes. systemd kills the remaining processes after herdr exits.
+        KillMode = "mixed";
+        Restart = "on-failure";
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
 
     home.packages = [ cfg.package ] ++ optional cfg.gui.enable cfg.gui.package;
 

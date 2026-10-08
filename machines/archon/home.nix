@@ -116,5 +116,8 @@
     programs.pi.enable = true;
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
+
+    # Keep herdr sessions alive across restarts of the graphical session.
+    programs.herdr.server.enable = true;
   };
 }
