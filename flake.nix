@@ -25,6 +25,10 @@
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     flake-utils.url = "github:numtide/flake-utils";
+    kache = {
+      url = "github:kunobi-ninja/kache/stable";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     # Rust toolchains that are newer than the nixpkgs rustc, for packages that
     # pin a version in rust-toolchain.toml.
     fenix = {

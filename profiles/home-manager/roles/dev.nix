@@ -20,6 +20,7 @@ in
 {
   imports = [
     ./nixdev.nix
+    ./rust-cache.nix
     ../../../modules/defaultConfigs/npm
   ];
 
