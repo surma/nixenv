@@ -119,5 +119,8 @@
 
     # Keep herdr sessions alive across restarts of the graphical session.
     programs.herdr.server.enable = true;
+
+    # The Eww bar shows a button for this script.
+    customScripts.approve-prs.enable = true;
   };
 }

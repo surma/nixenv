@@ -327,6 +327,17 @@ let
     else
       ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
 
+  approvePrsEnabled = lib.attrByPath [ "customScripts" "approve-prs" "enable" ] false config;
+  approvePrsScript = lib.getExe' config.customScripts."approve-prs".package "approve-prs";
+  systemdRun = lib.getExe' pkgs.systemd "systemd-run";
+  # systemd-run keeps one run at a time and puts the logs in the journal.
+  approvePrsClick = "${setsidPath} -f ${systemdRun} --user --quiet --collect --unit=approve-prs ${approvePrsScript}";
+  approvePrsWidget =
+    if approvePrsEnabled then
+      ''(button :class "approve-prs" :tooltip "Approve PRs from Christian" :onclick "${approvePrsClick}" (label :text ""))''
+    else
+      "";
+
   yuckConfig =
     builtins.replaceStrings
       [
@@ -344,6 +355,7 @@ let
         "@POWER_PROFILE_CYCLE@"
         "@SUNSET_POLL@"
         "@SUNSET_WIDGET@"
+        "@APPROVE_PRS_WIDGET@"
         "@WORKSPACE_CLASS@"
       ]
       [
@@ -361,6 +373,7 @@ let
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
         sunsetPoll
         sunsetWidget
+        approvePrsWidget
         # The SXWM script computes the class, because it also marks away tags.
         (
           if sxwmEnabled then

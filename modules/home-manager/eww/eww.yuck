@@ -46,6 +46,7 @@
     (workspace_list :screen screen)
     (label :class "clock" :text {formattime(EWW_TIME, "%a, %F %H:%M")})
     (box :class "status" :orientation "h" :halign "end" :space-evenly false :spacing 4
+      @APPROVE_PRS_WIDGET@
       (stay_awake_button)
       @SUNSET_WIDGET@
       (volume_button)
