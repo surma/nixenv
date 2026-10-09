@@ -6,10 +6,10 @@
   ...
 }:
 let
-  # Like niri's screenshot action: select an area, save it to the same file
-  # as niri, and copy it to the clipboard.
-  sxwmScreenshot = pkgs.writeShellApplication {
-    name = "sxwm-screenshot";
+  # Select an area, save it to ~/Downloads/screenshot.png, and copy it to the
+  # clipboard. grim works on every compositor that we use.
+  screenshot = pkgs.writeShellApplication {
+    name = "screenshot";
     runtimeInputs = [
       pkgs.coreutils
       pkgs.grim
@@ -24,25 +24,12 @@ let
   screenshotHelper = pkgs.makeDesktopItem {
     name = "screenshot";
     desktopName = "Take screenshot";
-    exec =
-      if config.defaultConfigs.sxwm.enable then
-        lib.getExe sxwmScreenshot
-      else if config.defaultConfigs.niri.enable then
-        "${pkgs.niri}/bin/niri msg action screenshot"
-      else
-        "${pkgs.grimblast}/bin/grimblast save area ${config.home.homeDirectory}/Downloads/screenshot.png";
+    exec = lib.getExe screenshot;
   };
 in
 {
   # Screenshot tools are Linux-only (Wayland)
   config = lib.mkIf (systemManager == "home-manager" && pkgs.stdenv.isLinux) {
-    home.packages = with pkgs; [
-      grimblast
-      screenshotHelper
-    ];
-
-    defaultConfigs.niri.extraConfig = lib.mkIf config.defaultConfigs.niri.enable ''
-      screenshot-path "~/Downloads/screenshot.png"
-    '';
+    home.packages = [ screenshotHelper ];
   };
 }

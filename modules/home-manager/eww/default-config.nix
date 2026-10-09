@@ -334,6 +334,7 @@ let
   scriptButtonNames = lib.attrNames scriptButtons;
   ewwExe = lib.getExe pkgs.eww;
   systemdRun = lib.getExe' pkgs.systemd "systemd-run";
+  systemctl = lib.getExe' pkgs.systemd "systemctl";
   # The spinner shows while the condition is true.
   spinner =
     condition:
@@ -400,7 +401,17 @@ let
         (box :orientation "v" :space-evenly false
           ${lib.concatStrings (lib.mapAttrsToList scriptMenuRow scriptButtons)})))
   '';
+  # The bar shows the stop button of a script only while the script runs.
+  scriptStopButton =
+    name: button:
+    lib.optionalString (button.stopLabel != null) ''
+      (button :class "script-stop-button ${name}" :tooltip "Stop: ${button.text}"
+        :visible {scripts_running["${name}"]}
+        :onclick "${setsidPath} -f ${systemctl} --user stop eww-button-${name}"
+        (label :text "${button.stopLabel}"))
+    '';
   scriptMenuButton = lib.optionalString (scriptButtons != { }) ''
+    ${lib.concatStrings (lib.mapAttrsToList scriptStopButton scriptButtons)}
     (button :class "script-menu-button" :tooltip "Scripts"
       :onclick "${setsidPath} -f ${ewwExe} open --toggle --id script-menu-''${screen} --arg screen=''${screen} script_menu"
       (box
@@ -462,8 +473,8 @@ in
     scriptButtons = lib.mkOption {
       description = ''
         Scripts in the script menu. The bar shows the menu button left of the
-        stay-awake button. The menu shows the scripts in the order of their
-        names. The name sets the CSS class and the systemd unit
+        stay-awake button, and the stop buttons left of the menu button. The
+        menu shows the scripts in the order of their names. The name sets the CSS class and the systemd unit
         (eww-button-<name>).
       '';
       default = { };
@@ -484,6 +495,14 @@ in
               command = lib.mkOption {
                 type = lib.types.str;
                 description = "The shell command that a click runs.";
+              };
+              stopLabel = lib.mkOption {
+                type = lib.types.nullOr lib.types.str;
+                default = null;
+                description = ''
+                  If set, the bar shows a button with this label while the
+                  script runs. A click on the button stops the script.
+                '';
               };
             };
           }

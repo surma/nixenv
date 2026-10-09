@@ -149,6 +149,27 @@ in
   # and Wayland settings instead of replacing the entire config directory.
   xdg.configFile.fcitx5.recursive = true;
 
+  # Screen recordings from the Eww script menu. A red button in the bar stops
+  # a recording.
+  defaultConfigs.eww.scriptButtons =
+    let
+      recordScreen = lib.getExe' config.customScripts.record-screen.package "record-screen";
+    in
+    {
+      record-area = {
+        label = "";
+        text = "Record area";
+        command = recordScreen;
+        stopLabel = "";
+      };
+      record-area-audio = {
+        label = "";
+        text = "Record area with system sound";
+        command = "${recordScreen} --audio";
+        stopLabel = "";
+      };
+    };
+
   customScripts.stay-awake.enable = true;
   customScripts.toggle-sunset.enable = true;
   customScripts.toggle-sunset.asDesktopItem = true;

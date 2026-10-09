@@ -120,6 +120,12 @@ button.sunset.active {
   color: #2d3436;
 }
 
+button.script-stop-button {
+  padding: 0 10px;
+  background-color: #f53c3c;
+  color: #ffffff;
+}
+
 /* The script menu uses the colors of the notifications. */
 window.script_menu {
   padding: 5px 0;
