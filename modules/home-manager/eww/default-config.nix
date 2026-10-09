@@ -327,21 +327,86 @@ let
     else
       ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
 
+  # The script menu. A bar button opens a window with one row per script.
+  # A click on a row starts the script in a transient systemd unit. The unit
+  # allows only one run at a time and keeps the output in the journal.
+  scriptButtons = config.defaultConfigs.eww.scriptButtons;
+  scriptButtonNames = lib.attrNames scriptButtons;
+  ewwExe = lib.getExe pkgs.eww;
   systemdRun = lib.getExe' pkgs.systemd "systemd-run";
-  # Each click starts a transient systemd unit. The unit allows only one run
-  # at a time and keeps the output in the journal.
-  scriptButtons =
-    config.defaultConfigs.eww.scriptButtons
-    |> lib.mapAttrsToList (
-      name: button:
-      let
-        script = pkgs.writeShellScript "eww-button-${name}" button.command;
-        click = "${setsidPath} -f ${systemdRun} --user --quiet --collect --unit=eww-button-${name} ${script}";
-        tooltip = lib.optionalString (button.tooltip != null) '':tooltip "${button.tooltip}"'';
-      in
-      ''(button :class "script-button ${name}" ${tooltip} :onclick "${click}" (label :text "${button.label}"))''
-    )
-    |> lib.concatStringsSep "\n";
+  # The spinner shows while the condition is true.
+  spinner =
+    condition:
+    ''(image :class "spinner" :path "${./spinner.svg}" :image-width 14 :image-height 14 :visible {${condition}})'';
+
+  # This prints a JSON object, with true for each script that runs now.
+  scriptsRunning = pkgs.writeShellApplication {
+    name = "eww-scripts-running";
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.systemd
+    ];
+    text = ''
+      names=(${lib.escapeShellArgs scriptButtonNames})
+      # systemctl prints one state per unit, in the order of the arguments.
+      mapfile -t states < <(systemctl --user is-active "''${names[@]/#/eww-button-}")
+      jq -cn --argjson names ${lib.escapeShellArg (builtins.toJSON scriptButtonNames)} \
+        '[$names, $ARGS.positional] | transpose | map({(.[0]): (.[1] == "active")}) | add' \
+        --args "''${states[@]}"
+    '';
+  };
+  refreshScriptsRunning = pkgs.writeShellScript "eww-refresh-scripts-running" ''
+    ${ewwExe} poll scripts_running
+  '';
+  # The argument is the screen of the menu.
+  scriptClick =
+    name: button:
+    pkgs.writeShellScript "eww-button-${name}-click" ''
+      ${ewwExe} close "script-menu-$1"
+      ${systemdRun} --user --quiet --collect --unit=eww-button-${name} \
+        --property=ExecStopPost=${refreshScriptsRunning} \
+        ${pkgs.writeShellScript "eww-button-${name}" button.command}
+      ${refreshScriptsRunning}
+    '';
+  scriptMenuRow =
+    name: button:
+    let
+      running = ''scripts_running["${name}"]'';
+    in
+    ''
+      (button :class "script-menu-item ${name}" :onclick "${setsidPath} -f ${scriptClick name button} ''${screen}"
+        (box :orientation "h" :space-evenly false :spacing 10
+          (box :width 16
+            ${spinner running}
+            (label :text "${button.label}" :visible {!${running}}))
+          (label :text "${button.text}")))
+    '';
+  # Eww cannot place a window below a widget. This distance from the right
+  # edge of the screen puts the menu about below the menu button.
+  scriptMenuOffset = "500px";
+  anyScriptRunning = lib.concatMapStringsSep " || " (
+    name: ''scripts_running["${name}"]''
+  ) scriptButtonNames;
+  scriptMenuDefinitions = lib.optionalString (scriptButtons != { }) ''
+    (defpoll scripts_running :interval "60s" :initial '${
+      builtins.toJSON (lib.genAttrs scriptButtonNames (_: false))
+    }' "${lib.getExe scriptsRunning}")
+
+    (defwindow script_menu [screen]
+      :monitor screen
+      :stacking "overlay"
+      :geometry (geometry :x "${scriptMenuOffset}" :y "0px" :anchor "top right")
+      (eventbox :onhoverlost "${setsidPath} -f ${ewwExe} close script-menu-''${screen}"
+        (box :orientation "v" :space-evenly false
+          ${lib.concatStrings (lib.mapAttrsToList scriptMenuRow scriptButtons)})))
+  '';
+  scriptMenuButton = lib.optionalString (scriptButtons != { }) ''
+    (button :class "script-menu-button" :tooltip "Scripts"
+      :onclick "${setsidPath} -f ${ewwExe} open --toggle --id script-menu-''${screen} --arg screen=''${screen} script_menu"
+      (box
+        ${spinner anyScriptRunning}
+        (label :text "" :visible {!(${anyScriptRunning})})))
+  '';
 
   yuckConfig =
     builtins.replaceStrings
@@ -360,7 +425,8 @@ let
         "@POWER_PROFILE_CYCLE@"
         "@SUNSET_POLL@"
         "@SUNSET_WIDGET@"
-        "@SCRIPT_BUTTONS@"
+        "@SCRIPT_MENU_DEFINITIONS@"
+        "@SCRIPT_MENU_BUTTON@"
         "@WORKSPACE_CLASS@"
       ]
       [
@@ -378,7 +444,8 @@ let
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
         sunsetPoll
         sunsetWidget
-        scriptButtons
+        scriptMenuDefinitions
+        scriptMenuButton
         # The SXWM script computes the class, because it also marks away tags.
         (
           if sxwmEnabled then
@@ -394,29 +461,33 @@ in
     enable = lib.mkEnableOption "the Eww bar configuration";
     scriptButtons = lib.mkOption {
       description = ''
-        Buttons that run a shell command. The bar shows them left of the
-        stay-awake button, in the order of their names. The name sets the CSS
-        class and the systemd unit (eww-button-<name>).
+        Scripts in the script menu. The bar shows the menu button left of the
+        stay-awake button. The menu shows the scripts in the order of their
+        names. The name sets the CSS class and the systemd unit
+        (eww-button-<name>).
       '';
       default = { };
       type = lib.types.attrsOf (
-        lib.types.submodule {
-          options = {
-            label = lib.mkOption {
-              type = lib.types.str;
-              description = "The text or icon on the button.";
+        lib.types.submodule (
+          { name, ... }:
+          {
+            options = {
+              label = lib.mkOption {
+                type = lib.types.str;
+                description = "The icon of the menu row.";
+              };
+              text = lib.mkOption {
+                type = lib.types.str;
+                default = name;
+                description = "The text of the menu row.";
+              };
+              command = lib.mkOption {
+                type = lib.types.str;
+                description = "The shell command that a click runs.";
+              };
             };
-            tooltip = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
-              default = null;
-              description = "The tooltip of the button.";
-            };
-            command = lib.mkOption {
-              type = lib.types.str;
-              description = "The shell command that a click runs.";
-            };
-          };
-        }
+          }
+        )
       );
     };
   };

@@ -124,7 +124,7 @@
     customScripts.approve-prs.enable = true;
     defaultConfigs.eww.scriptButtons.approve-prs = {
       label = "";
-      tooltip = "Approve PRs from Christian";
+      text = "Approve PRs from Christian";
       command = lib.getExe' config.customScripts.approve-prs.package "approve-prs";
     };
   };

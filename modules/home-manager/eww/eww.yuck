@@ -7,6 +7,7 @@
 (defpoll power_profile_tooltip :interval "5s" "@POWER_PROFILE_TOOLTIP@")
 (defpoll stay_awake :interval "60s" "PATH=@STAY_AWAKE_PATH@ stay-awake status")
 @SUNSET_POLL@
+@SCRIPT_MENU_DEFINITIONS@
 
 (defwidget stay_awake_button []
   (button
@@ -46,7 +47,7 @@
     (workspace_list :screen screen)
     (label :class "clock" :text {formattime(EWW_TIME, "%a, %F %H:%M")})
     (box :class "status" :orientation "h" :halign "end" :space-evenly false :spacing 4
-      @SCRIPT_BUTTONS@
+      @SCRIPT_MENU_BUTTON@
       (stay_awake_button)
       @SUNSET_WIDGET@
       (volume_button)

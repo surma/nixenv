@@ -106,7 +106,7 @@ button.volume.muted:hover {
   color: #ffffff;
 }
 
-button.script-button,
+button.script-menu-button,
 button.stay-awake,
 button.sunset {
   padding: 0 10px;
@@ -118,6 +118,32 @@ button.stay-awake.active,
 button.sunset.active {
   background-color: #ecf0f1;
   color: #2d3436;
+}
+
+/* The script menu uses the colors of the notifications. */
+window.script_menu {
+  padding: 5px 0;
+  background-color: #2b303b;
+  border: 2px solid #64727d;
+}
+
+button.script-menu-item {
+  padding: 5px 15px;
+  color: #ffffff;
+}
+
+button.script-menu-item:hover {
+  background-color: #64727d;
+}
+
+@keyframes spin {
+  to {
+    -gtk-icon-transform: rotate(1turn);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
 }
 
 button.power-profile {
