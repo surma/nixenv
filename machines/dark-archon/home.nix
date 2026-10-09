@@ -59,6 +59,20 @@
 
     secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
 
+    defaultConfigs.eww.scriptButtons.connect-surmbeats =
+      let
+        bluetoothctl = lib.getExe' osConfig.hardware.bluetooth.package "bluetoothctl";
+      in
+      {
+        label = "";
+        text = "Connect SurmBeats";
+        command = toString (
+          pkgs.writers.writeNu "connect-surmbeats" ''
+            ${bluetoothctl} devices Paired | from ssv -m 1 -n | where column2 =~ SurmBeats | first | ${bluetoothctl} connect $in.column1
+          ''
+        );
+      };
+
     programs.handy.enable = true;
     defaultConfigs.handy.enable = true;
 
