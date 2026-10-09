@@ -120,7 +120,12 @@
     # Keep herdr sessions alive across restarts of the graphical session.
     programs.herdr.server.enable = true;
 
-    # The Eww bar shows a button for this script.
+    # The script is also on the PATH, for runs with other flags.
     customScripts.approve-prs.enable = true;
+    defaultConfigs.eww.scriptButtons.approve-prs = {
+      label = "";
+      tooltip = "Approve PRs from Christian";
+      command = lib.getExe' config.customScripts.approve-prs.package "approve-prs";
+    };
   };
 }

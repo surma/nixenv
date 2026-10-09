@@ -327,16 +327,21 @@ let
     else
       ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
 
-  approvePrsEnabled = lib.attrByPath [ "customScripts" "approve-prs" "enable" ] false config;
-  approvePrsScript = lib.getExe' config.customScripts."approve-prs".package "approve-prs";
   systemdRun = lib.getExe' pkgs.systemd "systemd-run";
-  # systemd-run keeps one run at a time and puts the logs in the journal.
-  approvePrsClick = "${setsidPath} -f ${systemdRun} --user --quiet --collect --unit=approve-prs ${approvePrsScript}";
-  approvePrsWidget =
-    if approvePrsEnabled then
-      ''(button :class "approve-prs" :tooltip "Approve PRs from Christian" :onclick "${approvePrsClick}" (label :text ""))''
-    else
-      "";
+  # Each click starts a transient systemd unit. The unit allows only one run
+  # at a time and keeps the output in the journal.
+  scriptButtons =
+    config.defaultConfigs.eww.scriptButtons
+    |> lib.mapAttrsToList (
+      name: button:
+      let
+        script = pkgs.writeShellScript "eww-button-${name}" button.command;
+        click = "${setsidPath} -f ${systemdRun} --user --quiet --collect --unit=eww-button-${name} ${script}";
+        tooltip = lib.optionalString (button.tooltip != null) '':tooltip "${button.tooltip}"'';
+      in
+      ''(button :class "script-button ${name}" ${tooltip} :onclick "${click}" (label :text "${button.label}"))''
+    )
+    |> lib.concatStringsSep "\n";
 
   yuckConfig =
     builtins.replaceStrings
@@ -355,7 +360,7 @@ let
         "@POWER_PROFILE_CYCLE@"
         "@SUNSET_POLL@"
         "@SUNSET_WIDGET@"
-        "@APPROVE_PRS_WIDGET@"
+        "@SCRIPT_BUTTONS@"
         "@WORKSPACE_CLASS@"
       ]
       [
@@ -373,7 +378,7 @@ let
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
         sunsetPoll
         sunsetWidget
-        approvePrsWidget
+        scriptButtons
         # The SXWM script computes the class, because it also marks away tags.
         (
           if sxwmEnabled then
@@ -385,7 +390,36 @@ let
       (builtins.readFile ./eww.yuck);
 in
 {
-  options.defaultConfigs.eww.enable = lib.mkEnableOption "the Eww bar configuration";
+  options.defaultConfigs.eww = {
+    enable = lib.mkEnableOption "the Eww bar configuration";
+    scriptButtons = lib.mkOption {
+      description = ''
+        Buttons that run a shell command. The bar shows them left of the
+        stay-awake button, in the order of their names. The name sets the CSS
+        class and the systemd unit (eww-button-<name>).
+      '';
+      default = { };
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            label = lib.mkOption {
+              type = lib.types.str;
+              description = "The text or icon on the button.";
+            };
+            tooltip = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "The tooltip of the button.";
+            };
+            command = lib.mkOption {
+              type = lib.types.str;
+              description = "The shell command that a click runs.";
+            };
+          };
+        }
+      );
+    };
+  };
 
   config = lib.mkIf config.defaultConfigs.eww.enable {
     home.packages = [ pkgs.pavucontrol ];
