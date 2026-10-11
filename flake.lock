@@ -180,11 +180,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1772799830,
-        "narHash": "sha256-e4ykGshQIylJk1FgUWkr7HvYpXopn9iqOnY137Nwi6s=",
+        "lastModified": 1791742453,
+        "narHash": "sha256-KFsfpb5Qe2tH6SSLKdi6Rz5mqsVVHsZJ9h5ozkMjw9Y=",
         "ref": "main",
-        "rev": "94798c169ab85e7d1416bfa2512bb53d394bd75b",
-        "revCount": 307,
+        "rev": "607d5bc844713447b89b578722147097019aa0a2",
+        "revCount": 313,
         "type": "git",
         "url": "ssh://git@github.com/surma/dump"
       },
