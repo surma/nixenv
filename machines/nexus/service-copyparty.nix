@@ -44,7 +44,7 @@
               access.r = "*";
             };
             volumes."/movies" = {
-              path = "/dump/Tovies";
+              path = "/dump/Movies";
               access.r = "*";
             };
             volumes."/music" = {
