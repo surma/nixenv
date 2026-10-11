@@ -31,6 +31,10 @@
           services.copyparty = {
             accounts.surma.passwordFile = "/var/lib/credentials/copyparty/surma.passwd";
             settings.p = [ 8080 ];
+            # Trust X-Forwarded-* from the surmhosting proxy. Without this,
+            # copyparty assumes http:// and rejects logins in the CORS check.
+            settings.xff-src = "10.201.0.0/16";
+            settings.rproxy = -1;
             volumes."/all" = {
               path = "/dump";
               access.A = [ "surma" ];
@@ -40,7 +44,7 @@
               access.r = "*";
             };
             volumes."/movies" = {
-              path = "/dump/Tovies";
+              path = "/dump/Movies";
               access.r = "*";
             };
             volumes."/music" = {
