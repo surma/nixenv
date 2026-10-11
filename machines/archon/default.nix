@@ -31,6 +31,8 @@
 
   gui.compositor = "sxwm";
 
+  services.sunshine.autoStart = true;
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernel.sysctl = {

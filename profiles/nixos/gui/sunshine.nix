@@ -16,10 +16,10 @@ in
   services.sunshine = {
     enable = true;
     package = pkgs-unstable.sunshine;
-    # The NixOS module's generic graphical-session.target also runs in the
-    # GDM greeter's user manager. Start Sunshine from compositor-specific
-    # targets instead.
-    autoStart = false;
+    # With autoStart, graphical-session.target starts Sunshine. The GDM
+    # greeter's user manager also reaches that target, so Sunshine also
+    # starts at the login screen. Machines set autoStart to true to opt in.
+    autoStart = lib.mkDefault false;
     openFirewall = true;
     settings = {
       capture = "wlr";
@@ -40,23 +40,11 @@ in
   # bar and its tray.
   systemd.user.services.sunshine.after = [ "eww-bar.service" ];
 
-  systemd.user.services.sunshine.wantedBy = lib.mkIf (config.gui.compositor == "niri") [
-    "niri.service"
-  ];
-
   environment.systemPackages = [ pkgs.moonlight-qt ];
 
   home-manager.users.surma =
-    { config, osConfig, ... }:
+    { config, ... }:
     {
       secrets.items.sunshine-password.target = "${config.home.homeDirectory}/.config/sunshine/password";
-
-      # Sunshine must follow the actual Hyprland session, not the generic
-      # graphical-session.target that GDM also exposes to its greeter user.
-      # The NixOS Sunshine unit remains the single service definition; this
-      # target dependency supplies the Hyprland-only autostart edge.
-      systemd.user.targets."hyprland-session" = lib.mkIf (osConfig.gui.compositor == "hyprland") {
-        Unit.Wants = [ "sunshine.service" ];
-      };
     };
 }
