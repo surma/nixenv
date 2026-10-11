@@ -52,6 +52,8 @@ let
 
       if [ -n "''${PI_PROXY_API_KEY:-}" ]; then
         export PI_PROXY_AUTH_HEADER="Bearer ''${PI_PROXY_API_KEY}"
+        # The extractive compaction extension in pi-config reads this.
+        export PI_DECISIONS_URL=${lib.escapeShellArg "${llmProxyCfg.vendorBaseURL}/openai-shopify-shopapp-chatgpt-prod/v1/decisions"}
       fi
     ''}
 
