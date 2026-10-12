@@ -7,7 +7,7 @@
 }:
 let
   pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  sxwm = inputs.sxwm.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
+  sxwm = inputs.sx.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
   sxwmctl = "${sxwm}/bin/sxwmctl";
   cursorTheme = "Bibata-Modern-Ice";
   cursorSize = 32;

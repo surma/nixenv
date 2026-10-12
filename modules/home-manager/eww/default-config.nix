@@ -8,7 +8,7 @@
 let
   niriEnabled = config.defaultConfigs.niri.enable;
   sxwmEnabled = config.defaultConfigs.sxwm.enable;
-  sxwm = inputs.sxwm.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
+  sxwm = inputs.sx.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
 
   hyprlandWorkspaces = pkgs.writeShellApplication {
     name = "eww-hyprland-workspaces";

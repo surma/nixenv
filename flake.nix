@@ -107,11 +107,9 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     shopify-framework.url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git?ref=main";
-    sxwm = {
-      # SXWM lives in the sx monorepo. Its flake exports the `sxwm` package and
-      # the NixOS module under the same names as the old sxwm repository did.
+    sx = {
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/sx.git?ref=main";
-      # SXWM builds and tests against nixos-unstable.
+      # sx, and SXWM in it, builds and tests against nixos-unstable.
       inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.flake-utils.follows = "flake-utils";
     };
