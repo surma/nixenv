@@ -3,8 +3,12 @@
   pkgs,
   lib,
   osConfig,
+  inputs,
   ...
 }:
+let
+  pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+in
 {
   imports = [
     ../../scripts
@@ -44,6 +48,7 @@
         vlc
         qview
         picocom
+        pkgs-unstable.ollama-vulkan
       ]
     );
 
