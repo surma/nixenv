@@ -85,9 +85,6 @@ in
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
 
-    # Allow user services (like herdr) to be started automatically at login.
-    systemd.user.startServices = "daemon-reload";
-
     # Keep herdr sessions alive across restarts of the graphical session.
     programs.herdr.server.enable = true;
 
