@@ -3,13 +3,13 @@
   osConfig,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 # SXWM-specific user settings. ./wayland.nix imports this profile.
 let
-  wallpapers = ../../../assets/wallpapers;
-  defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
-  defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
+  sxPalette = import ../../../lib/sx-palette.nix { inherit inputs; };
+  sxWallpaper = ../../../assets/sx/sx-wallpaper-light.png;
 in
 {
   config = lib.mkIf (osConfig.gui.compositor == "sxwm") {
@@ -22,7 +22,7 @@ in
         After = [ config.wayland.systemd.target ];
       };
       Install.WantedBy = [ config.wayland.systemd.target ];
-      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${defaultWallpaperPath} -m fill";
+      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${sxWallpaper} -m fit -c '${sxPalette.bone}'";
     };
   };
 }

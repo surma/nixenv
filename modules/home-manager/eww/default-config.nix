@@ -6,6 +6,7 @@
   ...
 }:
 let
+  sxPalette = import ../../../lib/sx-palette.nix { inherit inputs; };
   niriEnabled = config.defaultConfigs.niri.enable;
   sxwmEnabled = config.defaultConfigs.sxwm.enable;
   sxwm = inputs.sx.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
@@ -325,7 +326,7 @@ let
     if sunsetScript == null then
       ""
     else
-      ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
+      ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text ""))'';
 
   # The script menu. A bar button opens a window with one row per script.
   # A click on a row starts the script in a transient systemd unit. The unit
@@ -335,10 +336,13 @@ let
   ewwExe = lib.getExe pkgs.eww;
   systemdRun = lib.getExe' pkgs.systemd "systemd-run";
   systemctl = lib.getExe' pkgs.systemd "systemctl";
+  spinnerSvg = pkgs.writeText "eww-spinner.svg" (
+    builtins.replaceStrings [ "#ffffff" ] [ sxPalette.bone ] (builtins.readFile ./spinner.svg)
+  );
   # The spinner shows while the condition is true.
   spinner =
     condition:
-    ''(image :class "spinner" :path "${./spinner.svg}" :image-width 14 :image-height 14 :visible {${condition}})'';
+    ''(image :class "spinner" :path "${spinnerSvg}" :image-width 14 :image-height 14 :visible {${condition}})'';
 
   # This prints a JSON object, with true for each script that runs now.
   scriptsRunning = pkgs.writeShellApplication {
@@ -466,6 +470,33 @@ let
         )
       ]
       (builtins.readFile ./eww.yuck);
+  # Resolve palette tokens before Eww compiles the SCSS.
+  scssConfig = builtins.replaceStrings
+    [
+      "@sx_carbon"
+      "@sx_gunmetal"
+      "@sx_graphite"
+      "@sx_steel"
+      "@sx_concrete"
+      "@sx_bone"
+      "@sx_signal"
+      "@sx_caution"
+      "@sx_go"
+      "@sx_halt"
+    ]
+    [
+      sxPalette.carbon
+      sxPalette.gunmetal
+      sxPalette.graphite
+      sxPalette.steel
+      sxPalette.concrete
+      sxPalette.bone
+      sxPalette.signal
+      sxPalette.caution
+      sxPalette.go
+      sxPalette.halt
+    ]
+    (builtins.readFile ./eww.scss);
 in
 {
   options.defaultConfigs.eww = {
@@ -515,8 +546,7 @@ in
     home.packages = [ pkgs.pavucontrol ];
 
     programs.eww = {
-      inherit yuckConfig;
-      scssConfig = builtins.readFile ./eww.scss;
+      inherit yuckConfig scssConfig;
     };
 
     systemd.user.services.eww-bar = {

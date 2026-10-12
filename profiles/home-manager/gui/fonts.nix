@@ -9,6 +9,7 @@
 {
   home.packages = with pkgs; [
     fira-code
+    ibm-plex
     roboto
     font-awesome
   ];

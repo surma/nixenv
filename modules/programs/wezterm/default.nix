@@ -35,11 +35,11 @@ with lib;
     };
     dark-theme = mkOption {
       type = types.str;
-      default = "Gruvbox Dark (Gogh)";
+      default = "SX Dark";
     };
     light-theme = mkOption {
       type = types.str;
-      default = "Gruvbox (Gogh)";
+      default = "SX Light";
     };
     theme = mkOption {
       type =
