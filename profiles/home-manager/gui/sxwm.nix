@@ -3,13 +3,18 @@
   osConfig,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 # SXWM-specific user settings. ./wayland.nix imports this profile.
 let
-  wallpapers = ../../../assets/wallpapers;
-  defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
-  defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
+  sxPalette = import ../../../lib/sx-palette.nix { inherit inputs; };
+  # swaybg centers in output-buffer pixels, so keep the logo at its exact 795x360 size.
+  sxWallpaper = pkgs.runCommand "sx-wallpaper.png" {
+    nativeBuildInputs = [ pkgs.resvg ];
+  } ''
+    resvg --width 795 --height 360 ${inputs.sx}/assets/logo/sx-plate.svg "$out"
+  '';
 in
 {
   config = lib.mkIf (osConfig.gui.compositor == "sxwm") {
@@ -22,7 +27,7 @@ in
         After = [ config.wayland.systemd.target ];
       };
       Install.WantedBy = [ config.wayland.systemd.target ];
-      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${defaultWallpaperPath} -m fill";
+      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${sxWallpaper} -m center -c '${sxPalette.bone}'";
     };
   };
 }

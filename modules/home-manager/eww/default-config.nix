@@ -6,6 +6,7 @@
   ...
 }:
 let
+  sxPalette = import ../../../lib/sx-palette.nix { inherit inputs; };
   niriEnabled = config.defaultConfigs.niri.enable;
   sxwmEnabled = config.defaultConfigs.sxwm.enable;
   sxwm = inputs.sx.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
@@ -466,6 +467,33 @@ let
         )
       ]
       (builtins.readFile ./eww.yuck);
+  # Resolve palette tokens before Eww compiles the SCSS.
+  scssConfig = builtins.replaceStrings
+    [
+      "@sx_carbon"
+      "@sx_gunmetal"
+      "@sx_graphite"
+      "@sx_steel"
+      "@sx_concrete"
+      "@sx_bone"
+      "@sx_signal"
+      "@sx_caution"
+      "@sx_go"
+      "@sx_halt"
+    ]
+    [
+      sxPalette.carbon
+      sxPalette.gunmetal
+      sxPalette.graphite
+      sxPalette.steel
+      sxPalette.concrete
+      sxPalette.bone
+      sxPalette.signal
+      sxPalette.caution
+      sxPalette.go
+      sxPalette.halt
+    ]
+    (builtins.readFile ./eww.scss);
 in
 {
   options.defaultConfigs.eww = {
@@ -515,8 +543,7 @@ in
     home.packages = [ pkgs.pavucontrol ];
 
     programs.eww = {
-      inherit yuckConfig;
-      scssConfig = builtins.readFile ./eww.scss;
+      inherit yuckConfig scssConfig;
     };
 
     systemd.user.services.eww-bar = {

@@ -1,17 +1,26 @@
 * {
-  font-family: "Roboto Condensed", "Font Awesome 7 Free Solid", "Font Awesome 7 Free", "Font Awesome 7 Brands", sans-serif;
+  font-family: "IBM Plex Mono", "Font Awesome 7 Free Solid", "Font Awesome 7 Free", "Font Awesome 7 Brands", monospace;
   font-size: 13px;
 }
 
 window {
-  background-color: rgba(43, 48, 59, 0.5);
-  border-bottom: 3px solid rgba(100, 114, 125, 0.5);
-  color: #ffffff;
+  background-color: transparent;
+  background-image: none;
+  color: @sx_bone;
 }
 
 .bar {
   min-height: 30px;
-  padding: 0;
+  padding: 0 8px;
+  background-color: transparent;
+  background-image:
+    linear-gradient(135deg, transparent 5.5px, @sx_gunmetal 6.5px),
+    linear-gradient(225deg, transparent 5.5px, @sx_gunmetal 6.5px),
+    linear-gradient(315deg, transparent 5.5px, @sx_gunmetal 6.5px),
+    linear-gradient(45deg, transparent 5.5px, @sx_gunmetal 6.5px);
+  background-position: top left, top right, bottom right, bottom left;
+  background-size: 51% 51%;
+  background-repeat: no-repeat;
 }
 
 button {
@@ -36,110 +45,126 @@ button:hover {
 button.workspace {
   padding: 0 5px;
   background-color: transparent;
-  color: #ffffff;
+  color: @sx_bone;
   box-shadow: inset 0 -3px transparent;
 }
 
 button.workspace:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 -3px #ffffff;
+  background-color: @sx_gunmetal;
+  box-shadow: inset 0 -3px @sx_steel;
 }
 
 button.workspace.away {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-button.workspace.urgent {
-  background-color: #eb4d4b;
+  color: @sx_steel;
 }
 
 button.workspace.active {
-  background-color: #64727d;
-  box-shadow: inset 0 -3px #ffffff;
+  background-color: transparent;
+  background-image:
+    linear-gradient(135deg, transparent 3.5px, @sx_signal 4.5px),
+    linear-gradient(225deg, transparent 3.5px, @sx_signal 4.5px),
+    linear-gradient(315deg, transparent 3.5px, @sx_signal 4.5px),
+    linear-gradient(45deg, transparent 3.5px, @sx_signal 4.5px);
+  background-position: top left, top right, bottom right, bottom left;
+  background-size: 51% 51%;
+  background-repeat: no-repeat;
+  color: @sx_carbon;
+  box-shadow: none;
+}
+
+button.workspace.urgent {
+  background-color: @sx_halt;
+  color: @sx_carbon;
 }
 
 .clock {
   padding: 0 10px;
-  background-color: #64727d;
-  color: #ffffff;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.volume {
   padding: 0 10px;
-  background-color: #f1c40f;
-  color: #000000;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.volume:hover {
-  background-color: #a37800;
+  background-color: @sx_graphite;
+  color: @sx_bone;
 }
 
 button.volume.muted {
-  background-color: #90b1b1;
-  color: #2a5c45;
+  background-color: @sx_carbon;
+  color: @sx_steel;
 }
 
 button.volume.muted:hover {
-  background-color: #90b1b1;
+  background-color: @sx_carbon;
 }
 
 .battery {
   padding: 0 10px;
-  background-color: #ffffff;
-  color: #000000;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 .battery.charging,
 .battery.plugged {
-  background-color: #26a65b;
-  color: #ffffff;
+  background-color: @sx_go;
+  color: @sx_carbon;
+}
+
+.battery.warning:not(.charging) {
+  background-color: @sx_caution;
+  color: @sx_carbon;
 }
 
 .battery.critical:not(.charging) {
-  background-color: #f53c3c;
-  color: #ffffff;
+  background-color: @sx_halt;
+  color: @sx_carbon;
 }
 
 .tray {
   padding: 0 10px;
-  background-color: #2980b9;
-  color: #ffffff;
+  background-color: @sx_gunmetal;
+  color: @sx_steel;
 }
 
 button.script-menu-button,
 button.stay-awake,
 button.sunset {
   padding: 0 10px;
-  background-color: #2d3436;
-  color: #ffffff;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.stay-awake.active,
 button.sunset.active {
-  background-color: #ecf0f1;
-  color: #2d3436;
+  background-color: @sx_concrete;
+  color: @sx_carbon;
 }
 
 button.script-stop-button {
   padding: 0 10px;
-  background-color: #f53c3c;
-  color: #ffffff;
+  background-color: @sx_halt;
+  color: @sx_carbon;
 }
 
-/* The script menu uses the colors of the notifications. */
+/* The script menu uses the same dark surfaces as the bar. */
 window.script_menu {
   padding: 5px 0;
-  background-color: #2b303b;
-  border: 2px solid #64727d;
+  background-color: @sx_carbon;
+  border: 2px solid @sx_gunmetal;
 }
 
 button.script-menu-item {
   padding: 5px 15px;
-  color: #ffffff;
+  color: @sx_bone;
 }
 
 button.script-menu-item:hover {
-  background-color: #64727d;
+  background-color: @sx_gunmetal;
 }
 
 @keyframes spin {
@@ -155,20 +180,21 @@ button.script-menu-item:hover {
 button.power-profile {
   padding: 0 10px;
   padding-right: 15px;
-  color: #ffffff;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.power-profile.performance {
-  background-color: #f53c3c;
-  color: #ffffff;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.power-profile.balanced {
-  background-color: #2980b9;
-  color: #ffffff;
+  background-color: @sx_carbon;
+  color: @sx_steel;
 }
 
 button.power-profile.power-saver {
-  background-color: #2ecc71;
-  color: #000000;
+  background-color: @sx_go;
+  color: @sx_carbon;
 }
