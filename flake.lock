@@ -1136,18 +1136,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1791573957,
-        "narHash": "sha256-0RQWBUCHDJ4ms3EoF/xFZrkTzb6T3abwvxYH7f6qkHg=",
+        "lastModified": 1791814051,
+        "narHash": "sha256-cPGsVY9l/3CUcW3X0TTjosYX+6xG98Hnd5WhYpgj0nQ=",
         "ref": "main",
-        "rev": "e461d2b33b69896e5828ed4527c35a90b31b991a",
-        "revCount": 140,
+        "rev": "d67dbc18fa35594a15f373c1aa9a44f07282d932",
+        "revCount": 171,
         "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git"
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sx.git"
       },
       "original": {
         "ref": "main",
         "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git"
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sx.git"
       }
     },
     "system-manager": {
