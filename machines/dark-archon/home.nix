@@ -85,7 +85,26 @@ in
     defaultConfigs.pi.enable = true;
     defaultConfigs.pi.extensions.proxy.enable = true;
 
+    # Allow user services (like herdr) to be started automatically at login.
+    systemd.user.startServices = "daemon-reload";
+
     # Keep herdr sessions alive across restarts of the graphical session.
     programs.herdr.server.enable = true;
+
+    # No Install section, so the unit never starts by itself. Start it with
+    # `systemctl --user start ollama` when needed.
+    systemd.user.services.ollama = {
+      Unit.Description = "Ollama server";
+      Service = {
+        Environment = [
+          "OLLAMA_VULKAN=1"
+          "OLLAMA_IGPU_ENABLE=1"
+          "OLLAMA_CONTEXT_LENGTH=131072"
+          "OLLAMA_FLASH_ATTENTION=1"
+          "OLLAMA_KV_CACHE_TYPE=q8_0"
+        ];
+        ExecStart = "${pkgs-unstable.ollama-vulkan}/bin/ollama serve";
+      };
+    };
   };
 }
