@@ -35,6 +35,10 @@ in
   # cost is losing human-presence detection.
   boot.blacklistedKernelModules = [ "intel_cvs" ];
 
+  # Mesa has no VA-API driver for Intel GPUs. Without iHD, Moonlight and
+  # other VA-API clients fall back to software video decoding.
+  hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernel.sysctl = {
