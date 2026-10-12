@@ -24,6 +24,9 @@ in
     settings = {
       capture = "wlr";
       origin_web_ui_allowed = "wan";
+      # Also listen on IPv6. On archon, WARP takes some Tailscale IPv4
+      # routes, but Tailscale IPv6 still works.
+      address_family = "both";
     };
   };
 
