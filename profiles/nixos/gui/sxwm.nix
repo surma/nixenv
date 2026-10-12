@@ -7,7 +7,7 @@
 }:
 # SXWM-specific system settings for profiles/nixos/gui/wayland.nix.
 let
-  sxwm = inputs.sxwm.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
+  sxwm = inputs.sx.packages.${pkgs.stdenv.hostPlatform.system}.sxwm;
   # A switch does not restart GDM, so GDM keeps the session file of the
   # generation that it started with. With a store path in Exec, it then starts
   # an old sxwm-session against the new user units. The path in the system
@@ -20,7 +20,7 @@ let
   '';
 in
 {
-  imports = [ inputs.sxwm.nixosModules.default ];
+  imports = [ inputs.sx.nixosModules.sxwm ];
 
   config = lib.mkIf (config.gui.compositor == "sxwm") {
     programs.sxwm.enable = true;

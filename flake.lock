@@ -894,7 +894,7 @@
         "scout-dev": "scout-dev",
         "shopify-framework": "shopify-framework",
         "surmhosting": "surmhosting",
-        "sxwm": "sxwm",
+        "sx": "sx",
         "system-manager": "system-manager",
         "web-search-cli": "web-search-cli"
       }
@@ -1125,7 +1125,7 @@
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git"
       }
     },
-    "sxwm": {
+    "sx": {
       "inputs": {
         "crane": "crane_3",
         "flake-utils": [
@@ -1136,18 +1136,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1791573957,
-        "narHash": "sha256-0RQWBUCHDJ4ms3EoF/xFZrkTzb6T3abwvxYH7f6qkHg=",
+        "lastModified": 1791815342,
+        "narHash": "sha256-POI/R4Yq0XTPXmjJ52Ffk9mWd7+52+3pDMRSboVNZXo=",
         "ref": "main",
-        "rev": "e461d2b33b69896e5828ed4527c35a90b31b991a",
-        "revCount": 140,
+        "rev": "5214305a26986ff53fbff53aed3d1cf400184cab",
+        "revCount": 173,
         "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git"
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sx.git"
       },
       "original": {
         "ref": "main",
         "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sxwm.git"
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sx.git"
       }
     },
     "system-manager": {
