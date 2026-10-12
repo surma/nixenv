@@ -23,6 +23,7 @@ format_workspaces() {
               (if .screen == $screen.id then "workspace active"
                elif .screen != null then "workspace away"
                else "workspace" end)
+              + (if (.windows | length) > 0 then " occupied" else " empty" end)
               + (if any($windows[]; .tag == $tag.id and .urgent) then " urgent" else "" end)
             )
           }

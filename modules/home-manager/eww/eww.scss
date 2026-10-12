@@ -12,15 +12,8 @@ window {
 .bar {
   min-height: 30px;
   padding: 0 8px;
-  background-color: transparent;
-  background-image:
-    linear-gradient(135deg, transparent 5.5px, @sx_gunmetal 6.5px),
-    linear-gradient(225deg, transparent 5.5px, @sx_gunmetal 6.5px),
-    linear-gradient(315deg, transparent 5.5px, @sx_gunmetal 6.5px),
-    linear-gradient(45deg, transparent 5.5px, @sx_gunmetal 6.5px);
-  background-position: top left, top right, bottom right, bottom left;
-  background-size: 51% 51%;
-  background-repeat: no-repeat;
+  background-color: @sx_gunmetal;
+  background-image: none;
 }
 
 button {
@@ -45,41 +38,44 @@ button:hover {
 button.workspace {
   padding: 0 5px;
   background-color: transparent;
-  color: @sx_bone;
-  box-shadow: inset 0 -3px transparent;
-}
-
-button.workspace:hover {
-  background-color: @sx_gunmetal;
-  box-shadow: inset 0 -3px @sx_steel;
-}
-
-button.workspace.away {
-  color: @sx_steel;
-}
-
-button.workspace.active {
-  background-color: transparent;
-  background-image:
-    linear-gradient(135deg, transparent 3.5px, @sx_signal 4.5px),
-    linear-gradient(225deg, transparent 3.5px, @sx_signal 4.5px),
-    linear-gradient(315deg, transparent 3.5px, @sx_signal 4.5px),
-    linear-gradient(45deg, transparent 3.5px, @sx_signal 4.5px);
-  background-position: top left, top right, bottom right, bottom left;
-  background-size: 51% 51%;
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_carbon 6.5px);
+  background-position: top left;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
-  color: @sx_carbon;
+  color: @sx_bone;
   box-shadow: none;
 }
 
+button.workspace.empty:not(.active):not(.urgent) {
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_carbon 6.5px);
+  color: @sx_bone;
+}
+
+button.workspace.occupied:not(.active):not(.urgent),
+button.workspace.away:not(.urgent) {
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_graphite 6.5px);
+  color: @sx_bone;
+}
+
+button.workspace.active:not(.urgent) {
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_signal 6.5px);
+  color: @sx_carbon;
+}
+
 button.workspace.urgent {
-  background-color: @sx_halt;
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_halt 6.5px);
+  color: @sx_carbon;
+}
+
+button.workspace:hover:not(.active):not(.urgent),
+button.workspace.hover:not(.active):not(.urgent) {
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_concrete 6.5px);
   color: @sx_carbon;
 }
 
 .clock {
   padding: 0 10px;
-  background-color: @sx_gunmetal;
+  background-color: @sx_carbon;
   color: @sx_bone;
 }
 
@@ -90,8 +86,8 @@ button.volume {
 }
 
 button.volume:hover {
-  background-color: @sx_graphite;
-  color: @sx_bone;
+  background-color: @sx_concrete;
+  color: @sx_carbon;
 }
 
 button.volume.muted {
@@ -105,30 +101,34 @@ button.volume.muted:hover {
 
 .battery {
   padding: 0 10px;
-  background-color: @sx_gunmetal;
+  background-color: @sx_carbon;
   color: @sx_bone;
 }
 
-.battery.charging,
-.battery.plugged {
-  background-color: @sx_go;
-  color: @sx_carbon;
+.battery.plugged:not(.critical):not(.charging) {
+  background-color: @sx_graphite;
+  color: @sx_bone;
 }
 
-.battery.warning:not(.charging) {
+.battery.warning:not(.critical):not(.charging) {
   background-color: @sx_caution;
   color: @sx_carbon;
 }
 
-.battery.critical:not(.charging) {
+.battery.charging:not(.critical) {
+  background-color: @sx_go;
+  color: @sx_carbon;
+}
+
+.battery.critical {
   background-color: @sx_halt;
   color: @sx_carbon;
 }
 
 .tray {
   padding: 0 10px;
-  background-color: @sx_gunmetal;
-  color: @sx_steel;
+  background-color: @sx_carbon;
+  color: @sx_bone;
 }
 
 button.script-menu-button,
@@ -139,7 +139,11 @@ button.sunset {
   color: @sx_bone;
 }
 
-button.stay-awake.active,
+button.stay-awake.active {
+  background-color: @sx_concrete;
+  color: @sx_carbon;
+}
+
 button.sunset.active {
   background-color: @sx_concrete;
   color: @sx_carbon;
@@ -155,16 +159,19 @@ button.script-stop-button {
 window.script_menu {
   padding: 5px 0;
   background-color: @sx_carbon;
+  color: @sx_bone;
   border: 2px solid @sx_gunmetal;
 }
 
 button.script-menu-item {
   padding: 5px 15px;
+  background-color: @sx_carbon;
   color: @sx_bone;
 }
 
 button.script-menu-item:hover {
   background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 @keyframes spin {
@@ -185,13 +192,13 @@ button.power-profile {
 }
 
 button.power-profile.performance {
-  background-color: @sx_gunmetal;
+  background-color: @sx_graphite;
   color: @sx_bone;
 }
 
 button.power-profile.balanced {
-  background-color: @sx_carbon;
-  color: @sx_steel;
+  background-color: @sx_gunmetal;
+  color: @sx_bone;
 }
 
 button.power-profile.power-saver {

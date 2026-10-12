@@ -326,7 +326,7 @@ let
     if sunsetScript == null then
       ""
     else
-      ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text "🟧"))'';
+      ''(button :class {sunset_state == "activated" ? "sunset active" : "sunset"} :onclick "PATH=${sunsetPath} ${setsidPath} -f toggle-sunset" (label :text ""))'';
 
   # The script menu. A bar button opens a window with one row per script.
   # A click on a row starts the script in a transient systemd unit. The unit
@@ -336,10 +336,13 @@ let
   ewwExe = lib.getExe pkgs.eww;
   systemdRun = lib.getExe' pkgs.systemd "systemd-run";
   systemctl = lib.getExe' pkgs.systemd "systemctl";
+  spinnerSvg = pkgs.writeText "eww-spinner.svg" (
+    builtins.replaceStrings [ "#ffffff" ] [ sxPalette.bone ] (builtins.readFile ./spinner.svg)
+  );
   # The spinner shows while the condition is true.
   spinner =
     condition:
-    ''(image :class "spinner" :path "${./spinner.svg}" :image-width 14 :image-height 14 :visible {${condition}})'';
+    ''(image :class "spinner" :path "${spinnerSvg}" :image-width 14 :image-height 14 :visible {${condition}})'';
 
   # This prints a JSON object, with true for each script that runs now.
   scriptsRunning = pkgs.writeShellApplication {
