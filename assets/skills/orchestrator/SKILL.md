@@ -227,6 +227,10 @@ reporting `NEEDS_INPUT` will wait days for an answer you never sent.
 Report outcomes, not activity. No play-by-play. Blockers and decisions go to the user
 immediately; everything else is a short summary at milestones.
 
+In every message to the user, describe each task in words, such as “the CI workflow” or “the
+fix for the frozen VLC video.” Never identify a task by its board ID, such as `T17` or `T26`.
+Keep IDs in the board, briefs, reports, and messages to executors.
+
 Hold a backlog the user can change mid-flight. When something new arrives, first decide whether
 it invalidates running work — correct or interrupt that executor if it does. Otherwise add it
 to the board, say where it landed and what it waits on, and leave running work alone. A new
@@ -298,8 +302,9 @@ The user's client can drop while the executors keep running, and they come back 
 on your subagents and resume them". Sweep once, then reconcile the fleet against the board
 rather than against your memory of it: every `running` task whose executor is now ready for
 input either finished, in which case its report is on disk, or lost its turn. Read the report
-where there is one; otherwise send a one-line continue naming the task id and what remains. Tell
-the user which executors you resumed and which had already finished while they were away.
+where there is one; otherwise send that executor a one-line continue that names the task ID and
+what remains. Tell the user which executors you resumed and which had already finished while
+they were away.
 
 ## Retiring an executor
 
