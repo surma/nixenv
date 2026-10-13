@@ -27,6 +27,7 @@ let
         "@window-switcher@"
         "@cursor-theme@"
         "@cursor-size@"
+        "@hyprlock@"
         "@extraConfig@"
       ]
       [
@@ -34,6 +35,7 @@ let
         (lib.getExe windowSwitcher)
         cursorTheme
         (toString cursorSize)
+        (lib.getExe pkgs.hyprlock)
         config.defaultConfigs.sxwm.extraConfig
       ]
       (lib.readFile ./config.js)
@@ -52,6 +54,7 @@ let
       '';
   powerOn = "${sxwmctl} outputs.power '{\"on\": true}'";
   powerOff = "${sxwmctl} outputs.power '{\"on\": false}'";
+  lockSession = "${sxwmctl} session.lock";
 in
 {
   options.defaultConfigs.sxwm = {
@@ -82,8 +85,8 @@ in
 
     xdg.desktopEntries = {
       hyprlock = {
-        name = "Hyprlock";
-        exec = "${pkgs.hyprlock}/bin/hyprlock";
+        name = "Lock screen";
+        exec = lockSession;
       };
       hypridle = {
         name = "Hypridle";
@@ -98,8 +101,8 @@ in
       systemdTarget = config.wayland.systemd.target;
       settings = {
         general = {
-          lock_cmd = "pidof hyprlock || hyprlock";
-          before_sleep_cmd = "loginctl lock-session";
+          # SXWM locks the session itself before sleep and starts hyprlock.
+          lock_cmd = lockSession;
           after_sleep_cmd = powerOn;
         };
 
