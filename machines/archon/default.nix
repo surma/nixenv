@@ -30,6 +30,7 @@
   ];
 
   gui.compositor = "sxwm";
+  gui.wallpaper = ../../assets/wallpapers/61965a2a-7c2b-4ae2-947c-113d33ecda92.png;
 
   services.sunshine.autoStart = true;
 

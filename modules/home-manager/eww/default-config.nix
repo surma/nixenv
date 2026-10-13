@@ -208,31 +208,43 @@ let
     name = "eww-battery";
     runtimeInputs = [
       pkgs.coreutils
+      pkgs.dbus
+      pkgs.jq
       pkgs.systemd
     ];
     text = ''
       render() {
-        battery=""
-        for candidate in /sys/class/power_supply/BAT*; do
-          if [[ -r "$candidate/capacity" ]]; then
-            battery="$candidate"
-            break
-          fi
-        done
-        if [[ -z "$battery" ]]; then
+        local device=/org/freedesktop/UPower/devices/DisplayDevice
+        local interface=org.freedesktop.UPower.Device
+        local present percentage state on_battery capacity plugged
+
+        if ! present="$(busctl --system --json=short get-property \
+          org.freedesktop.UPower "$device" "$interface" IsPresent 2>/dev/null | jq -r '.data')"; then
+          return
+        fi
+        if [[ "$present" != "true" ]]; then
           printf '\n'
           return
         fi
+        if ! percentage="$(busctl --system --json=short get-property \
+          org.freedesktop.UPower "$device" "$interface" Percentage 2>/dev/null | jq -r '.data')"; then
+          return
+        fi
+        if ! state="$(busctl --system --json=short get-property \
+          org.freedesktop.UPower "$device" "$interface" State 2>/dev/null | jq -r '.data')"; then
+          return
+        fi
+        if ! on_battery="$(busctl --system --json=short get-property \
+          org.freedesktop.UPower /org/freedesktop/UPower \
+          org.freedesktop.UPower OnBattery 2>/dev/null | jq -r '.data')"; then
+          return
+        fi
 
-        capacity="$(<"$battery/capacity")"
-        status="$(<"$battery/status")"
+        printf -v capacity '%.0f' "$percentage"
         plugged=false
-        for supply in /sys/class/power_supply/*; do
-          if [[ -r "$supply/online" ]] && [[ "$(<"$supply/online")" == "1" ]]; then
-            plugged=true
-            break
-          fi
-        done
+        if [[ "$on_battery" == "false" ]]; then
+          plugged=true
+        fi
 
         icon_index=$(( capacity / 20 ))
         if (( icon_index > 4 )); then
@@ -241,7 +253,7 @@ let
         icons=("" "" "" "" "")
         icon="''${icons[$icon_index]}"
 
-        if [[ "$status" == "Charging" ]]; then
+        if (( state == 1 )); then
           format="$capacity% "
         elif [[ "$plugged" == true ]]; then
           format="$capacity% "
@@ -251,7 +263,7 @@ let
 
         if [[ "''${1:-}" == "--class" ]]; then
           class="battery"
-          if [[ "$status" == "Charging" ]]; then
+          if (( state == 1 )); then
             class="$class charging"
           fi
           if [[ "$plugged" == true ]]; then
@@ -272,11 +284,13 @@ let
         {
           render "$@"
           while IFS= read -r event; do
-            if [[ "$event" == "UDEV  "* ]]; then
+            if [[ "$event" == *"member=PropertiesChanged"* ]]; then
               render "$@"
             fi
           done
-        } < <(udevadm monitor --udev --subsystem-match=power_supply 2>/dev/null || true)
+        } < <(dbus-monitor --system \
+          "type='signal',sender='org.freedesktop.UPower',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged'" \
+          2>/dev/null || true)
         sleep 0.2
       done
     '';

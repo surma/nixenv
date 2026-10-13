@@ -52,6 +52,10 @@
 
     xdg.portal.enable = true;
 
+    # The battery of the Eww bar follows UPower. The kernel sends no event
+    # when the charge changes, so UPower reads the battery for the bar.
+    services.upower.enable = true;
+
     services.displayManager.gdm.enable = true;
   };
 }
