@@ -12,7 +12,8 @@ def main [] {
   } else {
     ^systemctl --user start $unit
   }
-  ^eww poll sunset_state | complete | ignore
+  let state = if (is-active) { "activated" } else { "deactivated" }
+  ^eww update $"sunset_state=($state)" | complete | ignore
 }
 
 def "main status" [] {

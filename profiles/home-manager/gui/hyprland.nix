@@ -20,6 +20,7 @@
 
     programs.hyprpaper.enable = true;
     defaultConfigs.hyprpaper.enable = true;
+    defaultConfigs.hyprpaper.wallpaper = osConfig.gui.wallpaper;
 
     customScripts.wallpaper-shuffle.enable = true;
     customScripts.wallpaper-shuffle.asDesktopItem = true;

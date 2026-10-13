@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   lib,
   pkgs,
   inputs,
@@ -43,12 +44,12 @@ in
       # Without widgets hyprlock renders nothing, so a locked session is
       # just a black screen. One input field per output (`monitor = ""`)
       # accepts both the password and the fingerprint sensor. It sits at
-      # the bottom, so it does not cover the logo of the SX wallpaper. The
+      # the bottom, so it does not cover the middle of the wallpaper. The
       # Bone color shows if the wallpaper cannot load.
       background = [
         {
           monitor = "";
-          path = "${../../../assets/sx/sx-wallpaper-light.png}";
+          path = "${osConfig.gui.wallpaper}";
           color = "rgb(${lib.removePrefix "#" sxPalette.bone})";
         }
       ];

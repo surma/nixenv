@@ -28,6 +28,7 @@ in
 
   # dark-archon is the first machine to run SXWM. archon stays on niri.
   gui.compositor = "sxwm";
+  gui.wallpaper = ../../assets/sx/sx-wallpaper-light.png;
 
   # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
   # four CS35L57 speaker amps need for their spk-id-gpios, so the amps fail to

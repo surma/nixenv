@@ -193,6 +193,12 @@ let
 
     export PI_PROXY_BASE_URL=${lib.escapeShellArg llmProxyCfg.vendorBaseURL}
     export PI_SKIP_VERSION_CHECK=1
+    # Offline mode stops the package update check at every start. The package
+    # commands need the network, so `pi install` and `pi update` stay online.
+    case "''${1:-}" in
+      install|update) unset PI_OFFLINE ;;
+      *) export PI_OFFLINE=1 ;;
+    esac
 
     exec ${inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent}/bin/pi "$@"
   '';
@@ -298,14 +304,8 @@ with lib;
       );
     }
 
-    (mkIf
-      (
-        isEnabled
-        && (llmProxyCfg.apiKeyFile != null || openRouterCfg.keyFile != null || proxyExtensionCfg.enable)
-      )
-      {
-        programs.pi.package = wrapper;
-      }
-    )
+    (mkIf isEnabled {
+      programs.pi.package = wrapper;
+    })
   ];
 }

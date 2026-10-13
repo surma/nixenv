@@ -28,5 +28,6 @@ def "main toggle" [] {
       sleep infinity)
   }
   # Refresh the Eww button after the inhibitor changes.
-  ^eww poll stay_awake | complete | ignore
+  let state = if (is-active) { "activated" } else { "deactivated" }
+  ^eww update $"stay_awake=($state)" | complete | ignore
 }

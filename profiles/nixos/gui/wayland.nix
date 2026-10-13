@@ -25,6 +25,16 @@
     description = "The Wayland compositor to use.";
   };
 
+  options.gui.wallpaper = lib.mkOption {
+    type = lib.types.path;
+    default =
+      let
+        wallpapers = ../../../assets/wallpapers;
+      in
+      "${wallpapers}/${builtins.head (lib.attrNames (builtins.readDir wallpapers))}";
+    description = "The wallpaper of the desktop and the lock screen.";
+  };
+
   config = {
     environment.systemPackages = with pkgs; [
       brightnessctl

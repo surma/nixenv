@@ -5,22 +5,23 @@
   ...
 }:
 let
-  src = ../../../assets/wallpapers;
-  wallpapers = builtins.readDir src;
-  defaultWallpaper = wallpapers |> lib.attrNames |> (l: lib.elemAt l 0);
-  defaultWallpaperPath = "${src}/${defaultWallpaper}";
+  wallpaper = config.defaultConfigs.hyprpaper.wallpaper;
 in
 with lib;
 {
   options = {
     defaultConfigs.hyprpaper = {
       enable = mkEnableOption "";
+      wallpaper = mkOption {
+        type = types.path;
+        description = "The wallpaper that hyprpaper shows at start.";
+      };
     };
   };
   config = mkIf (config.defaultConfigs.hyprpaper.enable) {
     xdg.configFile."hypr/hyprpaper.conf".text = ''
-      preload = ${defaultWallpaperPath}
-      wallpaper = ,${defaultWallpaperPath}
+      preload = ${wallpaper}
+      wallpaper = ,${wallpaper}
     '';
   };
 }

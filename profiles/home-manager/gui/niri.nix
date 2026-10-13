@@ -6,11 +6,6 @@
   ...
 }:
 # Niri-specific user settings. ./wayland.nix imports this profile.
-let
-  wallpapers = ../../../assets/wallpapers;
-  defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
-  defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
-in
 {
   config = lib.mkIf (osConfig.gui.compositor == "niri") {
     defaultConfigs.niri.enable = true;
@@ -22,7 +17,7 @@ in
         After = [ config.wayland.systemd.target ];
       };
       Install.WantedBy = [ config.wayland.systemd.target ];
-      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${defaultWallpaperPath} -m fill";
+      Service.ExecStart = "${lib.getExe pkgs.swaybg} -i ${osConfig.gui.wallpaper} -m fill";
     };
   };
 }

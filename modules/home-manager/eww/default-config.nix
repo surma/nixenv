@@ -109,6 +109,13 @@ let
         fi
         sleep 0.2
       done
+      eww update stay_awake="$(PATH=${stayAwakePath} stay-awake status)"
+      ${lib.optionalString (sunsetScript != null) ''
+        eww update sunset_state="$(PATH=${sunsetPath} toggle-sunset status)"
+      ''}
+      ${lib.optionalString (scriptButtons != { }) ''
+        eww update scripts_running="$(${lib.getExe scriptsRunning})"
+      ''}
       ${outputListCommand} | while IFS= read -r output; do
         eww open --id "bar-$output" --arg "screen=$output" bar
       done
@@ -125,7 +132,9 @@ let
   volume = pkgs.writeShellApplication {
     name = "eww-volume";
     runtimeInputs = [
+      pkgs.coreutils
       pkgs.gawk
+      pkgs.pulseaudio
       pkgs.wireplumber
     ];
     text = ''
@@ -137,164 +146,210 @@ let
         printf '%s %s\n' "$percentage" "$state"
       }
 
-      if [[ "''${1:-}" == "--state" ]]; then
-        if output="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)"; then
-          if [[ "$output" == *"[MUTED]"* ]]; then
-            printf 'muted\n'
+      render() {
+        if [[ "''${1:-}" == "--state" ]]; then
+          if output="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)"; then
+            if [[ "$output" == *"[MUTED]"* ]]; then
+              printf 'muted\n'
+            else
+              printf 'normal\n'
+            fi
           else
             printf 'normal\n'
           fi
-        else
-          printf 'normal\n'
+          return
         fi
-        exit 0
-      fi
 
-      if ! sink="$(read_volume @DEFAULT_AUDIO_SINK@)"; then
-        exit 0
-      fi
-      read -r sink_percentage sink_state <<< "$sink"
-
-      if [[ "$sink_state" == "[MUTED]" ]]; then
-        sink_format=""
-      else
-        if (( sink_percentage < 34 )); then
-          volume_icon=""
-        elif (( sink_percentage < 67 )); then
-          volume_icon=""
-        else
-          volume_icon=""
+        if ! sink="$(read_volume @DEFAULT_AUDIO_SINK@)"; then
+          return
         fi
-        sink_format="$sink_percentage% $volume_icon"
-      fi
+        read -r sink_percentage sink_state <<< "$sink"
 
-      if source="$(read_volume @DEFAULT_AUDIO_SOURCE@)"; then
-        read -r source_percentage source_state <<< "$source"
-        if [[ "$source_state" == "[MUTED]" ]]; then
-          source_format=""
+        if [[ "$sink_state" == "[MUTED]" ]]; then
+          sink_format=""
         else
-          source_format="$source_percentage% "
+          if (( sink_percentage < 34 )); then
+            volume_icon=""
+          elif (( sink_percentage < 67 )); then
+            volume_icon=""
+          else
+            volume_icon=""
+          fi
+          sink_format="$sink_percentage% $volume_icon"
         fi
-        printf '%s %s\n' "$sink_format" "$source_format"
-      else
-        printf '%s\n' "$sink_format"
-      fi
+
+        if source="$(read_volume @DEFAULT_AUDIO_SOURCE@)"; then
+          read -r source_percentage source_state <<< "$source"
+          if [[ "$source_state" == "[MUTED]" ]]; then
+            source_format=""
+          else
+            source_format="$source_percentage% "
+          fi
+          printf '%s %s\n' "$sink_format" "$source_format"
+        else
+          printf '%s\n' "$sink_format"
+        fi
+      }
+
+      while true; do
+        {
+          render "$@"
+          while IFS= read -r event; do
+            if [[ "$event" == *" on sink #"* || "$event" == *" on source #"* || "$event" == *" on server #"* ]]; then
+              render "$@"
+            fi
+          done
+        } < <(pactl subscribe 2>/dev/null || true)
+        sleep 0.2
+      done
     '';
   };
   battery = pkgs.writeShellApplication {
     name = "eww-battery";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
     text = ''
-      battery=""
-      for candidate in /sys/class/power_supply/BAT*; do
-        if [[ -r "$candidate/capacity" ]]; then
-          battery="$candidate"
-          break
+      render() {
+        battery=""
+        for candidate in /sys/class/power_supply/BAT*; do
+          if [[ -r "$candidate/capacity" ]]; then
+            battery="$candidate"
+            break
+          fi
+        done
+        if [[ -z "$battery" ]]; then
+          printf '\n'
+          return
         fi
-      done
-      [[ -n "$battery" ]] || exit 0
 
-      capacity="$(<"$battery/capacity")"
-      status="$(<"$battery/status")"
-      plugged=false
-      for supply in /sys/class/power_supply/*; do
-        if [[ -r "$supply/online" ]] && [[ "$(<"$supply/online")" == "1" ]]; then
-          plugged=true
-          break
+        capacity="$(<"$battery/capacity")"
+        status="$(<"$battery/status")"
+        plugged=false
+        for supply in /sys/class/power_supply/*; do
+          if [[ -r "$supply/online" ]] && [[ "$(<"$supply/online")" == "1" ]]; then
+            plugged=true
+            break
+          fi
+        done
+
+        icon_index=$(( capacity / 20 ))
+        if (( icon_index > 4 )); then
+          icon_index=4
         fi
-      done
+        icons=("" "" "" "" "")
+        icon="''${icons[$icon_index]}"
 
-      icon_index=$(( capacity / 20 ))
-      if (( icon_index > 4 )); then
-        icon_index=4
-      fi
-      icons=("" "" "" "" "")
-      icon="''${icons[$icon_index]}"
-
-      if [[ "$status" == "Charging" ]]; then
-        format="$capacity% "
-      elif [[ "$plugged" == true ]]; then
-        format="$capacity% "
-      else
-        format="$capacity% $icon"
-      fi
-
-      if [[ "''${1:-}" == "--class" ]]; then
-        class="battery"
         if [[ "$status" == "Charging" ]]; then
-          class="$class charging"
+          format="$capacity% "
+        elif [[ "$plugged" == true ]]; then
+          format="$capacity% "
+        else
+          format="$capacity% $icon"
         fi
-        if [[ "$plugged" == true ]]; then
-          class="$class plugged"
+
+        if [[ "''${1:-}" == "--class" ]]; then
+          class="battery"
+          if [[ "$status" == "Charging" ]]; then
+            class="$class charging"
+          fi
+          if [[ "$plugged" == true ]]; then
+            class="$class plugged"
+          fi
+          if (( capacity <= 15 )); then
+            class="$class critical"
+          elif (( capacity <= 30 )); then
+            class="$class warning"
+          fi
+          printf '%s\n' "$class"
+        else
+          printf '%s\n' "$format"
         fi
-        if (( capacity <= 15 )); then
-          class="$class critical"
-        elif (( capacity <= 30 )); then
-          class="$class warning"
-        fi
-        printf '%s\n' "$class"
-      else
-        printf '%s\n' "$format"
-      fi
+      }
+
+      while true; do
+        {
+          render "$@"
+          while IFS= read -r event; do
+            if [[ "$event" == "UDEV  "* ]]; then
+              render "$@"
+            fi
+          done
+        } < <(udevadm monitor --udev --subsystem-match=power_supply 2>/dev/null || true)
+        sleep 0.2
+      done
     '';
   };
   powerProfile = pkgs.writeShellApplication {
     name = "eww-power-profile";
     runtimeInputs = [
-      pkgs.gawk
-      pkgs.power-profiles-daemon
+      pkgs.coreutils
+      pkgs.dbus
+      pkgs.jq
+      pkgs.systemd
     ];
     text = ''
-      profile="$(powerprofilesctl get 2>/dev/null)" || exit 0
-      if [[ "''${1:-}" != "--tooltip" ]]; then
-        printf '%s\n' "$profile"
-        exit 0
-      fi
+      render() {
+        local active profiles driver
+        if ! active="$(
+          busctl --system --json=short get-property \
+            net.hadess.PowerProfiles /net/hadess/PowerProfiles \
+            net.hadess.PowerProfiles ActiveProfile | jq -r '.data'
+        )"; then
+          return
+        fi
+        if [[ "''${1:-}" != "--tooltip" ]]; then
+          printf '%s\n' "$active"
+          return
+        fi
 
-      profile_list="$(powerprofilesctl list 2>/dev/null)" || exit 0
-      driver="$(
-        awk -v profile="$profile" '
-          /^[[:space:]]*\*?[[:space:]]*(performance|balanced|power-saver):[[:space:]]*$/ {
-            current = $0
-            sub(/^[[:space:]]*\*?[[:space:]]*/, "", current)
-            sub(/:[[:space:]]*$/, "", current)
-            in_profile = current == profile
-            next
-          }
-          in_profile && /^[[:space:]]*Driver:[[:space:]]*/ {
-            sub(/^[[:space:]]*Driver:[[:space:]]*/, "")
-            print
-            exit
-          }
-        ' <<< "$profile_list"
-      )"
-      printf 'Power profile: %s\nDriver: %s\n' "$profile" "$driver"
+        if ! profiles="$(busctl --system --json=short get-property \
+          net.hadess.PowerProfiles /net/hadess/PowerProfiles \
+          net.hadess.PowerProfiles Profiles)"; then
+          return
+        fi
+        driver="$(jq -r --arg profile "$active" \
+          '.data[] | select(.Profile.data == $profile) | .Driver.data' <<< "$profiles")"
+        printf 'Power profile: %s (Driver: %s)\n' "$active" "$driver"
+      }
+
+      while true; do
+        {
+          render "$@"
+          while IFS= read -r event; do
+            if [[ "$event" == *"member=PropertiesChanged"* ]]; then
+              render "$@"
+            fi
+          done
+        } < <(dbus-monitor --system \
+          "type='signal',sender='net.hadess.PowerProfiles',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path='/net/hadess/PowerProfiles'" \
+          2>/dev/null || true)
+        sleep 0.2
+      done
     '';
   };
   cyclePowerProfile = pkgs.writeShellApplication {
     name = "eww-cycle-power-profile";
     runtimeInputs = [
-      pkgs.gawk
-      pkgs.power-profiles-daemon
+      pkgs.jq
+      pkgs.systemd
     ];
     text = ''
-      profile_list="$(powerprofilesctl list 2>/dev/null)" || exit 0
-      current="$(powerprofilesctl get 2>/dev/null)" || exit 0
-      mapfile -t profiles < <(
-        awk '
-          /^[[:space:]]*\*?[[:space:]]*(performance|balanced|power-saver):[[:space:]]*$/ {
-            profile = $0
-            sub(/^[[:space:]]*\*?[[:space:]]*/, "", profile)
-            sub(/:[[:space:]]*$/, "", profile)
-            print profile
-          }
-        ' <<< "$profile_list"
-      )
-      for index in "''${!profiles[@]}"; do
-        if [[ "''${profiles[$index]}" == "$current" ]]; then
-          next_index=$(( (index + 1) % ''${#profiles[@]} ))
-          exec powerprofilesctl set "''${profiles[$next_index]}"
-        fi
-      done
+      profiles="$(busctl --system --json=short get-property \
+        net.hadess.PowerProfiles /net/hadess/PowerProfiles \
+        net.hadess.PowerProfiles Profiles)"
+      current="$(busctl --system --json=short get-property \
+        net.hadess.PowerProfiles /net/hadess/PowerProfiles \
+        net.hadess.PowerProfiles ActiveProfile | jq -r '.data')"
+      next="$(jq -r --arg current "$current" '
+        [.data[].Profile.data] as $profiles
+        | ($profiles | index($current)) as $index
+        | $profiles[($index + 1) % ($profiles | length)]
+      ' <<< "$profiles")"
+      busctl --system set-property net.hadess.PowerProfiles \
+        /net/hadess/PowerProfiles net.hadess.PowerProfiles \
+        ActiveProfile s "$next"
     '';
   };
 
@@ -317,11 +372,11 @@ let
       pkgs.systemd
     ]
   );
-  sunsetPoll =
+  sunsetDefinition =
     if sunsetScript == null then
       ""
     else
-      ''(defpoll sunset_state :interval "60s" "PATH=${sunsetPath} toggle-sunset status")'';
+      ''(defvar sunset_state "deactivated")'';
   sunsetWidget =
     if sunsetScript == null then
       ""
@@ -361,7 +416,7 @@ let
     '';
   };
   refreshScriptsRunning = pkgs.writeShellScript "eww-refresh-scripts-running" ''
-    ${ewwExe} poll scripts_running
+    ${ewwExe} update scripts_running="$(${lib.getExe scriptsRunning})"
   '';
   # The argument is the screen of the menu.
   scriptClick =
@@ -393,9 +448,9 @@ let
     name: ''scripts_running["${name}"]''
   ) scriptButtonNames;
   scriptMenuDefinitions = lib.optionalString (scriptButtons != { }) ''
-    (defpoll scripts_running :interval "60s" :initial '${
+    (defvar scripts_running '${
       builtins.toJSON (lib.genAttrs scriptButtonNames (_: false))
-    }' "${lib.getExe scriptsRunning}")
+    }')
 
     (defwindow script_menu [screen]
       :monitor screen
@@ -431,14 +486,13 @@ let
         "@VOLUME_STATE@"
         "@BATTERY@"
         "@BATTERY_CLASS@"
-        "@STAY_AWAKE_PATH@"
         "@STAY_AWAKE_CLICK@"
         "@FOCUS_WORKSPACE@"
         "@PAVUCONTROL@"
         "@POWER_PROFILE@"
         "@POWER_PROFILE_TOOLTIP@"
         "@POWER_PROFILE_CYCLE@"
-        "@SUNSET_POLL@"
+        "@SUNSET_DEFINITION@"
         "@SUNSET_WIDGET@"
         "@SCRIPT_MENU_DEFINITIONS@"
         "@SCRIPT_MENU_BUTTON@"
@@ -450,14 +504,13 @@ let
         "${lib.getExe volume} --state"
         (lib.getExe battery)
         "${lib.getExe battery} --class"
-        stayAwakePath
         "PATH=${stayAwakePath} ${setsidPath} -f stay-awake toggle"
         "${setsidPath} -f ${lib.getExe focusWorkspace}"
         "${setsidPath} -f ${lib.getExe pkgs.pavucontrol}"
         (lib.getExe powerProfile)
         "${lib.getExe powerProfile} --tooltip"
         "${setsidPath} -f ${lib.getExe cyclePowerProfile}"
-        sunsetPoll
+        sunsetDefinition
         sunsetWidget
         scriptMenuDefinitions
         scriptMenuButton

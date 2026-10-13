@@ -1,12 +1,12 @@
 (deflisten workspaces :initial "[]" "@WORKSPACES@")
-(defpoll volume :interval "2s" "@VOLUME@")
-(defpoll volume_state :interval "2s" "@VOLUME_STATE@")
-(defpoll battery :interval "60s" "@BATTERY@")
-(defpoll battery_class :interval "60s" "@BATTERY_CLASS@")
-(defpoll power_profile :interval "5s" "@POWER_PROFILE@")
-(defpoll power_profile_tooltip :interval "5s" "@POWER_PROFILE_TOOLTIP@")
-(defpoll stay_awake :interval "60s" "PATH=@STAY_AWAKE_PATH@ stay-awake status")
-@SUNSET_POLL@
+(deflisten volume :initial "" "@VOLUME@")
+(deflisten volume_state :initial "normal" "@VOLUME_STATE@")
+(deflisten battery :initial "" "@BATTERY@")
+(deflisten battery_class :initial "" "@BATTERY_CLASS@")
+(deflisten power_profile :initial "" "@POWER_PROFILE@")
+(deflisten power_profile_tooltip :initial "" "@POWER_PROFILE_TOOLTIP@")
+(defvar stay_awake "deactivated")
+@SUNSET_DEFINITION@
 @SCRIPT_MENU_DEFINITIONS@
 
 (defwidget stay_awake_button []
