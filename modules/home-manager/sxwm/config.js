@@ -23,6 +23,9 @@ await wm.process.configure({
     GDK_BACKEND: "wayland",
   },
 });
+// SXWM owns the lock screen. It locks the session itself before sleep and
+// on session.lock, then starts this locker. No other client may lock.
+await wm.session.configure({ locker: ["@hyprlock@"] });
 const spawn = (command) => wm.process.spawn(command);
 // meh is Super+Alt+Ctrl, as in the niri configuration, and hyper is
 // meh+Shift.
