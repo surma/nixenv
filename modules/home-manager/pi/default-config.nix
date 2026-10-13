@@ -12,6 +12,134 @@ let
   openRouterCfg = piCfg.openRouter;
   proxyExtensionCfg = piCfg.extensions.proxy;
   mcpAdapterCfg = piCfg.packages.mcpAdapter;
+  palette = import ../../../lib/sx-palette.nix { inherit inputs; };
+  sxPaletteData = builtins.fromJSON (builtins.readFile "${inputs.sx}/assets/palette/palette.json");
+
+  sxDarkTheme = {
+    name = "sx-dark";
+    appearance = "dark";
+    colors = {
+      accent = palette.blue;
+      border = palette.graphite;
+      borderAccent = palette.steel;
+      borderMuted = palette.gunmetal;
+      success = palette.go;
+      error = palette.halt;
+      warning = palette.caution;
+      muted = palette.ash;
+      dim = palette.ash;
+      text = palette.bone;
+      thinkingText = palette.ash;
+      selectedBg = palette.gunmetal;
+      userMessageBg = palette.gunmetal;
+      userMessageText = palette.bone;
+      customMessageBg = palette.gunmetal;
+      customMessageText = palette.ash;
+      customMessageLabel = palette.magenta;
+      toolPendingBg = palette.gunmetal;
+      toolSuccessBg = sxPaletteData.ramps.green."33".srgb;
+      toolErrorBg = sxPaletteData.ramps.red."33".srgb;
+      toolTitle = palette.bone;
+      toolOutput = palette.ash;
+      mdHeading = palette.cyan;
+      mdLink = palette.blue;
+      mdLinkUrl = palette.ash;
+      mdCode = palette.cyan;
+      mdCodeBlock = palette.go;
+      mdCodeBlockBorder = palette.graphite;
+      mdQuote = palette.ash;
+      mdQuoteBorder = palette.graphite;
+      mdHr = palette.graphite;
+      mdListBullet = palette.magenta;
+      toolDiffAdded = palette.go;
+      toolDiffRemoved = palette.halt;
+      toolDiffContext = palette.ash;
+      syntaxComment = palette.ash;
+      syntaxKeyword = palette.magenta;
+      syntaxFunction = palette.blue;
+      syntaxVariable = palette.cyan;
+      syntaxString = palette.go;
+      syntaxNumber = palette.caution;
+      syntaxType = palette.magenta;
+      syntaxOperator = palette.cyan;
+      syntaxPunctuation = palette.ash;
+      thinkingOff = palette.gunmetal;
+      thinkingMinimal = palette.graphite;
+      thinkingLow = palette.blue;
+      thinkingMedium = palette.cyan;
+      thinkingHigh = palette.magenta;
+      thinkingXhigh = palette.magenta;
+      bashMode = palette.cyan;
+    };
+    export = {
+      pageBg = palette.carbon;
+      cardBg = palette.gunmetal;
+      infoBg = palette.gunmetal;
+    };
+  };
+
+  sxLightTheme = {
+    name = "sx-light";
+    appearance = "light";
+    colors = {
+      accent = palette."blue-deep";
+      border = palette.concrete;
+      borderAccent = palette.concrete;
+      borderMuted = palette.concrete;
+      success = palette."go-deep";
+      error = palette."halt-deep";
+      warning = palette."caution-deep";
+      muted = palette.graphite;
+      dim = palette.graphite;
+      text = palette.carbon;
+      thinkingText = palette.graphite;
+      selectedBg = palette.concrete;
+      userMessageBg = palette.concrete;
+      userMessageText = palette.carbon;
+      customMessageBg = palette.concrete;
+      customMessageText = palette.graphite;
+      customMessageLabel = palette."magenta-deep";
+      toolPendingBg = palette.concrete;
+      toolSuccessBg = sxPaletteData.ramps.green."96".srgb;
+      toolErrorBg = sxPaletteData.ramps.red."96".srgb;
+      toolTitle = palette.carbon;
+      toolOutput = palette.graphite;
+      mdHeading = palette."cyan-deep";
+      mdLink = palette."blue-deep";
+      mdLinkUrl = palette.graphite;
+      mdCode = palette."cyan-deep";
+      mdCodeBlock = palette."go-deep";
+      mdCodeBlockBorder = palette.concrete;
+      mdQuote = palette.graphite;
+      mdQuoteBorder = palette.concrete;
+      mdHr = palette.concrete;
+      mdListBullet = palette."magenta-deep";
+      toolDiffAdded = palette."go-deep";
+      toolDiffRemoved = palette."halt-deep";
+      toolDiffContext = palette.graphite;
+      syntaxComment = palette.graphite;
+      syntaxKeyword = palette."magenta-deep";
+      syntaxFunction = palette."blue-deep";
+      syntaxVariable = palette."cyan-deep";
+      syntaxString = palette."go-deep";
+      syntaxNumber = palette."caution-deep";
+      syntaxType = palette."magenta-deep";
+      syntaxOperator = palette."cyan-deep";
+      syntaxPunctuation = palette.graphite;
+      thinkingOff = palette.concrete;
+      thinkingMinimal = palette.concrete;
+      thinkingLow = palette."blue-deep";
+      thinkingMedium = palette."cyan-deep";
+      thinkingHigh = palette."magenta-deep";
+      thinkingXhigh = palette."magenta-deep";
+      bashMode = palette."cyan-deep";
+    };
+    export = {
+      pageBg = palette.bone;
+      cardBg = palette.concrete;
+      infoBg = palette.concrete;
+    };
+  };
 
   defaultSettings = {
     defaultProvider = "anthropic";
@@ -29,7 +157,7 @@ let
         prompts = [ ];
       }
     ];
-    theme = "gruvbox-dark-medium";
+    theme = "sx-light/sx-dark";
   };
 
   settings =
@@ -139,6 +267,8 @@ with lib;
             text = builtins.toJSON settings;
             mutable = true;
           };
+          ".pi/agent/themes/sx-dark.json".text = builtins.toJSON sxDarkTheme;
+          ".pi/agent/themes/sx-light.json".text = builtins.toJSON sxLightTheme;
           ".pi/agent/APPEND_SYSTEM.md".source = ../../../assets/pi/APPEND_SYSTEM.md;
         }
         // optionalAttrs (piCfg.mcpConfig != null) {

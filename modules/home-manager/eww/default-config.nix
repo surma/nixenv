@@ -479,7 +479,6 @@ let
       "@sx_steel"
       "@sx_concrete"
       "@sx_bone"
-      "@sx_signal"
       "@sx_caution"
       "@sx_go"
       "@sx_halt"
@@ -491,7 +490,6 @@ let
       sxPalette.steel
       sxPalette.concrete
       sxPalette.bone
-      sxPalette.signal
       sxPalette.caution
       sxPalette.go
       sxPalette.halt

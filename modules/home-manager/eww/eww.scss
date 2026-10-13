@@ -58,7 +58,7 @@ button.workspace.away:not(.urgent) {
 }
 
 button.workspace.active:not(.urgent) {
-  background-image: linear-gradient(135deg, transparent 5.5px, @sx_signal 6.5px);
+  background-image: linear-gradient(135deg, transparent 5.5px, @sx_bone 6.5px);
   color: @sx_carbon;
 }
 

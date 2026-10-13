@@ -2,16 +2,14 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 # My Wayland desktop shell: the bar, the lock screen, notifications, the
 # portal, and the input method. This is the user half of
 # profiles/nixos/gui/wayland.nix, so machines import both.
 let
-  # The same default wallpaper as swaybg (./niri.nix, ./sxwm.nix) and hyprpaper.
-  wallpapers = ../../../assets/wallpapers;
-  defaultWallpaper = builtins.readDir wallpapers |> lib.attrNames |> (names: builtins.head names);
-  defaultWallpaperPath = "${wallpapers}/${defaultWallpaper}";
+  sxPalette = import ../../../lib/sx-palette.nix { inherit inputs; };
 in
 {
   imports = [
@@ -44,24 +42,58 @@ in
       auth.fingerprint.enabled = true;
       # Without widgets hyprlock renders nothing, so a locked session is
       # just a black screen. One input field per output (`monitor = ""`)
-      # accepts both the password and the fingerprint sensor. The color
-      # shows if the wallpaper cannot load.
+      # accepts both the password and the fingerprint sensor. It sits at
+      # the bottom, so it does not cover the logo of the SX wallpaper. The
+      # Bone color shows if the wallpaper cannot load.
       background = [
         {
           monitor = "";
-          path = defaultWallpaperPath;
-          color = "rgba(25, 20, 20, 1.0)";
+          path = "${../../../assets/sx/sx-wallpaper-light.png}";
+          color = "rgb(${lib.removePrefix "#" sxPalette.bone})";
         }
       ];
       input-field = [
         {
           monitor = "";
           size = "300, 50";
+          position = "0, 80";
+          valign = "bottom";
           outline_thickness = 3;
           placeholder_text = "Password or fingerprint";
         }
       ];
     };
+  };
+
+  # The launcher (Super+Space) and the window switcher. Both use the dark
+  # surfaces of the bar: Carbon with a Gunmetal border and Bone text.
+  programs.fuzzel = {
+    enable = true;
+    settings =
+      let
+        rgba = color: "${lib.removePrefix "#" color}ff";
+      in
+      {
+        main.font = "IBM Plex Mono";
+        colors = {
+          background = rgba sxPalette.carbon;
+          text = rgba sxPalette.bone;
+          message = rgba sxPalette.bone;
+          prompt = rgba sxPalette.ash;
+          placeholder = rgba sxPalette.ash;
+          input = rgba sxPalette.bone;
+          match = rgba sxPalette.cyan;
+          selection = rgba sxPalette.gunmetal;
+          selection-text = rgba sxPalette.bone;
+          selection-match = rgba sxPalette.cyan;
+          counter = rgba sxPalette.ash;
+          border = rgba sxPalette.gunmetal;
+        };
+        border = {
+          width = 2;
+          radius = 0;
+        };
+      };
   };
 
   services.blueman-applet.enable = true;

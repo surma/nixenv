@@ -260,11 +260,33 @@
     "fenix_4": {
       "inputs": {
         "nixpkgs": [
+          "sx",
+          "nixpkgs"
+        ],
+        "rust-analyzer-src": "rust-analyzer-src_4"
+      },
+      "locked": {
+        "lastModified": 1791817077,
+        "narHash": "sha256-2Dwa/OfGTHPBzYPag037cz/sMx9kzggHlOTG1Nx+uTo=",
+        "owner": "nix-community",
+        "repo": "fenix",
+        "rev": "57e9e761d4f3f792dde5f11f2f883176c54e2118",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "fenix",
+        "type": "github"
+      }
+    },
+    "fenix_5": {
+      "inputs": {
+        "nixpkgs": [
           "web-search-cli",
           "naersk",
           "nixpkgs"
         ],
-        "rust-analyzer-src": "rust-analyzer-src_4"
+        "rust-analyzer-src": "rust-analyzer-src_5"
       },
       "locked": {
         "lastModified": 1752475459,
@@ -597,7 +619,7 @@
     },
     "naersk_3": {
       "inputs": {
-        "fenix": "fenix_4",
+        "fenix": "fenix_5",
         "nixpkgs": [
           "web-search-cli",
           "nixpkgs"
@@ -953,6 +975,23 @@
     "rust-analyzer-src_4": {
       "flake": false,
       "locked": {
+        "lastModified": 1791738546,
+        "narHash": "sha256-7lgPw///uSc9ujQIA9xiyZBQPjhVsUihZiI5ZmpXGCI=",
+        "owner": "rust-lang",
+        "repo": "rust-analyzer",
+        "rev": "2ad81e72b7e978cb800dffe1bcce5c9f98032acf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rust-lang",
+        "ref": "nightly",
+        "repo": "rust-analyzer",
+        "type": "github"
+      }
+    },
+    "rust-analyzer-src_5": {
+      "flake": false,
+      "locked": {
         "lastModified": 1752428706,
         "narHash": "sha256-EJcdxw3aXfP8Ex1Nm3s0awyH9egQvB2Gu+QEnJn2Sfg=",
         "owner": "rust-lang",
@@ -1128,6 +1167,7 @@
     "sx": {
       "inputs": {
         "crane": "crane_3",
+        "fenix": "fenix_4",
         "flake-utils": [
           "flake-utils"
         ],
@@ -1136,11 +1176,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791829889,
-        "narHash": "sha256-90P3clsmCGAGEqe9PGxt2bIScvZjms3P7SG8aeL7eZ8=",
+        "lastModified": 1791851527,
+        "narHash": "sha256-WS/pqsufIrZPS9/LpgWPjBoMmdu6ZKYbMPpTfFye+KU=",
         "ref": "main",
-        "rev": "827837702da38f304d589a2b0075c00db92a8ea3",
-        "revCount": 183,
+        "rev": "f314145eac6352745619f645ace63099883f787a",
+        "revCount": 190,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/sx.git"
       },
