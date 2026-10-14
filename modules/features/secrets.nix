@@ -87,6 +87,10 @@ let
     else if systemManager == "nixos" then
       {
         systemd.services.secrets = mkIf (config.secrets.items != { }) {
+          # Restart after the daemon reload instead of stopping before activation. Otherwise a
+          # unit that wants this one can start it again with the old definition in between, and
+          # new secrets are missing after the switch.
+          stopIfChanged = false;
           serviceConfig = {
             Type = "oneshot";
             ExecStart = "${writeSecretsScript}/bin/write-secrets";
