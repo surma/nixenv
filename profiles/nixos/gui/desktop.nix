@@ -34,7 +34,25 @@
         { name = "libpipewire-module-raop-discover"; }
       ];
     };
+    # WirePlumber lists all AirPlay sinks, but it uses one only when I select
+    # it. The script describes the rules.
+    wireplumber.extraScripts."airplay-manual-only.lua" =
+      builtins.readFile ./airplay-manual-only.lua;
+    wireplumber.extraConfig."50-airplay-manual-only" = {
+      "wireplumber.components" = [
+        {
+          name = "airplay-manual-only.lua";
+          type = "script/lua";
+          provides = "custom.airplay-manual-only";
+        }
+      ];
+      "wireplumber.profiles".main."custom.airplay-manual-only" = "required";
+    };
   };
+  # Each AirPlay sink costs PipeWire about 12 file descriptors. An office
+  # network has more receivers than the default limit of 1024 allows, and
+  # then PipeWire cannot create the local devices.
+  systemd.user.services.pipewire.serviceConfig.LimitNOFILE = 65536;
 
   # Do not enable seatd. GDM controls the VTs through logind, and libseat
   # picks seatd over logind when seatd runs. Two seat managers then reset the
