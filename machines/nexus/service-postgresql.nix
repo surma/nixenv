@@ -8,6 +8,8 @@ let
   ];
   nextcloudDatabase = "nextcloud";
   nextcloudPasswordFile = "/var/lib/postgres-nextcloud/password";
+  supplyDepotDatabase = "supply-depot";
+  supplyDepotPasswordFile = "/var/lib/postgres-supply-depot/password";
 
   # Each app gets two databases. The role name matches the app.
   dbs = lib.concatMap (app: [
@@ -37,6 +39,14 @@ in
         ${pkgs.coreutils}/bin/chown root:postgres ${nextcloudPasswordFile}
         ${pkgs.coreutils}/bin/chmod 0440 ${nextcloudPasswordFile}
       '';
+      # The Supply Depot container reads it as a systemd credential (see service-supply-depot.nix).
+      supply-depot-postgres-password.command = ''
+        ${pkgs.coreutils}/bin/install -d -m 0750 -o root -g postgres /var/lib/postgres-supply-depot
+        umask 0027
+        ${pkgs.coreutils}/bin/cat > ${supplyDepotPasswordFile}
+        ${pkgs.coreutils}/bin/chown root:postgres ${supplyDepotPasswordFile}
+        ${pkgs.coreutils}/bin/chmod 0440 ${supplyDepotPasswordFile}
+      '';
     };
 
   services.postgresql = {
@@ -57,11 +67,18 @@ in
         name = nextcloudDatabase;
         ensureDBOwnership = true;
       }
+      {
+        name = supplyDepotDatabase;
+        ensureDBOwnership = true;
+      }
     ];
 
     # The *arr ownership is fixed below because each role owns two databases.
     # Nextcloud uses ensureDBOwnership because its role and database names match.
-    ensureDatabases = dbs ++ [ nextcloudDatabase ];
+    ensureDatabases = dbs ++ [
+      nextcloudDatabase
+      supplyDepotDatabase
+    ];
 
     authentication = lib.mkOverride 10 ''
       # TYPE  DATABASE  USER  ADDRESS                 METHOD
@@ -196,6 +213,48 @@ in
       builtin printf '%s\n%s\n' "$PASSWORD" "$PASSWORD" |
         ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -d postgres \
           -c '\password ${nextcloudDatabase}'
+    '';
+  };
+
+  # Supply Depot needs its role password before the container starts. The password is hexadecimal.
+  systemd.services.postgres-supply-depot-setup = {
+    description = "Set the password for the Supply Depot PostgreSQL role";
+    restartTriggers = [
+      (builtins.hashFile "sha256" ../../secrets/supply-depot-postgres-password.age)
+    ];
+    # Restart in one transaction so the required container is not left stopped.
+    stopIfChanged = false;
+    after = [
+      "postgresql.service"
+      "postgresql-setup.service"
+      "secrets.service"
+    ];
+    # The container requires this unit. Soft dependencies here prevent a
+    # routine PostgreSQL restart from stopping the container transitively.
+    wants = [
+      "postgresql.service"
+      "postgresql-setup.service"
+      "secrets.service"
+    ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "postgres";
+      Group = "postgres";
+    };
+    script = ''
+      set -eu
+      # Keep the role password out of PostgreSQL statement logs on SQL errors.
+      export PGOPTIONS='-c log_statement=none -c log_min_error_statement=panic'
+      PASSWORD="$(${pkgs.coreutils}/bin/cat ${supplyDepotPasswordFile})"
+      if [[ ! "$PASSWORD" =~ ^[0-9a-f]{64}$ ]]; then
+        echo "invalid password in ${supplyDepotPasswordFile}" >&2
+        exit 1
+      fi
+      builtin printf '%s\n%s\n' "$PASSWORD" "$PASSWORD" |
+        ${pkgs.postgresql_17}/bin/psql -v ON_ERROR_STOP=1 -X -d postgres \
+          -c '\password ${supplyDepotDatabase}'
     '';
   };
 

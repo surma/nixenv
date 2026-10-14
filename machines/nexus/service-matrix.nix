@@ -25,12 +25,10 @@ in
     "d ${stateDirectory} - - - -"
   ];
 
-  # This key sorts after zz-nextcloud, which preserves every existing
-  # Surmhosting container and Podman address.
-  services.surmhosting.services."zz-tuwunel" = {
+  # Note for agents: container addresses may change when services are added or renamed.
+  # That is fine, because Surmhosting routes by name. Use the natural service key.
+  services.surmhosting.services.matrix = {
     backend."nixos-container" = {
-      name = "lc-matrix";
-
       service = {
         wants = [ "secrets.service" ];
         after = [ "secrets.service" ];

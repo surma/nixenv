@@ -915,6 +915,7 @@
         "scout": "scout",
         "scout-dev": "scout-dev",
         "shopify-framework": "shopify-framework",
+        "supply-depot": "supply-depot",
         "surmhosting": "surmhosting",
         "sx": "sx",
         "system-manager": "system-manager",
@@ -1142,6 +1143,27 @@
         "ref": "main",
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/shopify-framework.git"
+      }
+    },
+    "supply-depot": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792007856,
+        "narHash": "sha256-wLAAyFY1K3VtqbWR/0pSXvDS74ZM1OSH9FOgwsMmzxA=",
+        "ref": "main",
+        "rev": "bcfd3b540bf3e610b20c6a964f63fe6a93b72e77",
+        "revCount": 14,
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/supply-depot.git"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/supply-depot.git"
       }
     },
     "surmhosting": {
