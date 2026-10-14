@@ -13,4 +13,5 @@
   livekitRtcUdpStart = 50100;
   livekitRtcUdpEnd = 50200;
   lkJwtService = 8086;
+  tailscalePeerRelay = 40000;
 }

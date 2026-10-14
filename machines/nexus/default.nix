@@ -61,6 +61,7 @@ in
     ./service-llm-proxy.nix
     ./service-ha-proxy.nix
     ./service-tailscale-cf-dns.nix
+    ./service-tailscale-peer-relay.nix
     ./service-matrix.nix
     ./service-matrix-rtc.nix
 
