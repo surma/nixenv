@@ -4,9 +4,11 @@
 -- sink only in two cases:
 --
 -- * The user selects the sink as the default in this session. The selection
---   ends when the receiver disappears. Then the newest non-AirPlay sink from
---   the history becomes the selected sink again.
+--   ends when the receiver disappears or when WirePlumber starts again. Then
+--   the newest non-AirPlay node from the history becomes the selected node.
 -- * A stream has its own target for that sink (per-app memory).
+--
+-- This script must load before state-default-nodes.lua.
 
 lutils = require ("linking-utils")
 log = Log.open_topic ("s-airplay")
@@ -15,29 +17,66 @@ function isAirplay (name)
   return name ~= nil and name:find ("^raop_sink%.") ~= nil
 end
 
+-- The history of selected nodes from state-default-nodes.lua, newest first.
+-- The keys are KEY, KEY.0, KEY.1, and so on.
+function historyKey (key, position)
+  return position == 1 and key or key .. "." .. tostring (position - 2)
+end
+
+function loadHistory (state_table, key)
+  local history = {}
+  while state_table [historyKey (key, #history + 1)] do
+    table.insert (history, state_table [historyKey (key, #history + 1)])
+  end
+  return history
+end
+
+function newestLocal (history)
+  for _, name in ipairs (history) do
+    if not isAirplay (name) then
+      return name
+    end
+  end
+  return nil
+end
+
 function configuredName (metadata, def_node_type)
   local value = metadata:find (0, "default.configured." .. def_node_type)
   return value and Json.Raw (value):parse ().name
 end
 
--- Replace a configured AirPlay node with the newest non-AirPlay node from the
--- history of state-default-nodes.lua.
-function dropAirplaySelection (metadata, def_node_type)
-  local key = "default.configured." .. def_node_type
-  local stored = State ("default-nodes"):load ()
-  local name = stored [key]
-  local index = 0
-  while name ~= nil and isAirplay (name) do
-    name = stored [key .. "." .. tostring (index)]
-    index = index + 1
+-- A selection from the last session is not a selection in this session.
+-- Before state-default-nodes.lua restores it, move the newest non-AirPlay
+-- node to the top of the history.
+do
+  local state = State ("default-nodes")
+  local state_table = state:load ()
+  local changed = false
+
+  for _, def_node_type in ipairs { "audio.sink", "audio.source" } do
+    local key = "default.configured." .. def_node_type
+    local history = loadHistory (state_table, key)
+    if isAirplay (history [1]) then
+      local reordered = {}
+      local name = newestLocal (history)
+      if name then
+        table.insert (reordered, name)
+        for _, other in ipairs (history) do
+          if other ~= name then
+            table.insert (reordered, other)
+          end
+        end
+      end
+      for position = 1, #history do
+        state_table [historyKey (key, position)] = reordered [position]
+      end
+      log:notice ("drop AirPlay selection " .. history [1] .. " from the last session")
+      changed = true
+    end
   end
 
-  log:info ("drop AirPlay selection for " .. key .. ", use " .. tostring (name))
-  if name then
-    metadata:set (0, key, "Spa:String:JSON",
-        Json.Object { ["name"] = name }:to_string ())
-  else
-    metadata:set (0, key, nil, nil)
+  if changed then
+    state:save (state_table)
   end
 end
 
@@ -81,8 +120,17 @@ SimpleEventHook {
       end
     end
 
+    -- The selected receiver disappeared. End the selection.
     if isAirplay (configured) and not configured_available then
-      dropAirplaySelection (metadata, def_node_type)
+      local key = "default.configured." .. def_node_type
+      local name = newestLocal (loadHistory (State ("default-nodes"):load (), key))
+      log:notice ("drop AirPlay selection " .. configured .. ", use " .. tostring (name))
+      if name then
+        metadata:set (0, key, "Spa:String:JSON",
+            Json.Object { ["name"] = name }:to_string ())
+      else
+        metadata:set (0, key, nil, nil)
+      end
     end
 
     event:set_data ("available-nodes", Json.Array (kept))
@@ -121,7 +169,7 @@ SimpleEventHook {
       return
     end
 
-    log:info ("reject AirPlay sink " .. name .. " as best target")
+    log:notice ("reject AirPlay sink " .. name .. " as best target")
     event:set_data ("target", nil)
   end
 }:register ()

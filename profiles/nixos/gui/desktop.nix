@@ -38,16 +38,26 @@
     # it. The script describes the rules.
     wireplumber.extraScripts."airplay-manual-only.lua" =
       builtins.readFile ./airplay-manual-only.lua;
-    wireplumber.extraConfig."50-airplay-manual-only" = {
-      "wireplumber.components" = [
-        {
-          name = "airplay-manual-only.lua";
-          type = "script/lua";
-          provides = "custom.airplay-manual-only";
+    # The script must load before state-default-nodes.lua. WirePlumber
+    # compares the names in "before" with their quotes, so the JSON from
+    # extraConfig never matches. This fragment uses SPA-JSON without quotes.
+    wireplumber.configPackages = [
+      (pkgs.writeTextDir "share/wireplumber/wireplumber.conf.d/50-airplay-manual-only.conf" ''
+        wireplumber.components = [
+          {
+            name = airplay-manual-only.lua, type = script/lua
+            provides = custom.airplay-manual-only
+            before = [ hooks.default-nodes.state ]
+          }
+        ]
+
+        wireplumber.profiles = {
+          main = {
+            custom.airplay-manual-only = required
+          }
         }
-      ];
-      "wireplumber.profiles".main."custom.airplay-manual-only" = "required";
-    };
+      '')
+    ];
   };
   # Each AirPlay sink costs PipeWire about 12 file descriptors. An office
   # network has more receivers than the default limit of 1024 allows, and
