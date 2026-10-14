@@ -117,6 +117,24 @@ in
   customScripts.llm-proxy.enable = true;
   customScripts.transcribe.enable = true;
 
+  # Moonlight streaming host. Darwin support only exists in nixpkgs-unstable.
+  launchd.agents.sunshine = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        (lib.getExe inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.sunshine)
+        # Also listen on IPv6. WARP takes some Tailscale IPv4 routes, but
+        # Tailscale IPv6 still works. See profiles/nixos/gui/sunshine.nix.
+        "address_family=both"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ProcessType = "Interactive";
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/sunshine.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/sunshine.log";
+    };
+  };
+
   secrets.items.huggingface-token.target = "${config.home.homeDirectory}/.config/nixenv/huggingface-token";
   secrets.items.m-config.target = "${config.home.homeDirectory}/.config/m/config.yaml";
 
