@@ -37,6 +37,9 @@ await wm.input.configure({
   keyboard: { layout: "us", repeat_delay: 225, repeat_rate: 25 },
   pointers: [
     { match: { type: "touchpad" }, natural_scroll: true, disable_while_typing: true },
+    // dark-archon's built-in touchpad scrolls about twice as fast as the
+    // forwarded archon touchpad. libinput has no scroll speed setting.
+    { match: { name: "VEN_2C2F:00 2C2F:0034 Touchpad" }, scroll_factor: 0.5 },
     { match: { type: "mouse" }, natural_scroll: true },
   ],
   cursor: { theme: "@cursor-theme@", size: @cursor-size@ },
