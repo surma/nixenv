@@ -27,14 +27,10 @@ in
     '';
   };
 
-  # Keep new service keys after this key in Surmhosting's lexical allocation.
-  # This name prevents changes to existing container and Podman addresses.
-  # Note for agents: this is history, not a rule. Address changes are fine, because
-  # Surmhosting routes by name. Give new services their natural key and no `zz-` prefix.
-  services.surmhosting.services."zz-immich" = {
+  # Note for agents: container addresses may change when services are added or renamed.
+  # That is fine, because Surmhosting routes by name. Use the natural service key.
+  services.surmhosting.services.immich = {
     backend."nixos-container" = {
-      name = "lc-immich";
-
       service = {
         requires = [ "immich-state.service" ];
         after = [ "immich-state.service" ];
