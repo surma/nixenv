@@ -403,6 +403,13 @@
         "nexus"
       ];
     };
+    supply-depot-postgres-password = {
+      contents = ../secrets/supply-depot-postgres-password.age;
+      keys = [
+        "surma"
+        "nexus"
+      ];
+    };
     hetzner-cloud-api-token = {
       contents = ../secrets/hetzner-cloud-api-token.age;
       keys = [

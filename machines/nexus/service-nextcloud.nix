@@ -143,12 +143,10 @@ in
     serviceConfig.TimeoutStartSec = lib.mkForce "10min";
   };
 
-  # This key follows zz-immich, which preserves every existing Surmhosting
-  # container and Podman address.
-  services.surmhosting.services."zz-nextcloud" = {
+  # Note for agents: container addresses may change when services are added or renamed.
+  # That is fine, because Surmhosting routes by name. Use the natural service key.
+  services.surmhosting.services.nextcloud = {
     backend."nixos-container" = {
-      name = "lc-nextcloud";
-
       service = {
         requires = [
           "nextcloud-state.service"
