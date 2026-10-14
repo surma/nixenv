@@ -40,10 +40,6 @@ await wm.input.configure({
     { match: { type: "mouse" }, natural_scroll: true },
   ],
   cursor: { theme: "@cursor-theme@", size: @cursor-size@ },
-  // Handy types through wtype, a virtual keyboard with its own keymap.
-  // Smithay cannot pass that keymap on to the fcitx5 grab, so let
-  // virtual keyboards bypass the input method.
-  virtual_keyboards: { input_method: "bypass" },
 });
 
 // SXWM matches outputs by connector name or EDID description, like niri.
