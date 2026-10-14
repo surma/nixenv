@@ -16,6 +16,7 @@ in
     inputs.home-manager.nixosModules.home-manager
 
     ./hardware.nix
+    ./camera.nix
 
     ../../profiles/nixos/base.nix
     ../../profiles/nixos/nexus-cache.nix
@@ -29,12 +30,6 @@ in
   # dark-archon is the first machine to run SXWM. archon stays on niri.
   gui.compositor = "sxwm";
   gui.wallpaper = ../../assets/sx/sx-wallpaper-light.png;
-
-  # intel_cvs (Intel Vision Sensing Controller) claims the wake GPIO that all
-  # four CS35L57 speaker amps need for their spk-id-gpios, so the amps fail to
-  # probe. The upstream fix is not in 7.2.y yet, so blacklist the module; the
-  # cost is losing human-presence detection.
-  boot.blacklistedKernelModules = [ "intel_cvs" ];
 
   # Mesa has no VA-API driver for Intel GPUs. Without iHD, Moonlight and
   # other VA-API clients fall back to software video decoding.

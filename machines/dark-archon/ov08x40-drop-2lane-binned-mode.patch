@@ -1,0 +1,37 @@
+media: ov08x40: Leave out the 2-lane 1928x1088 binned mode
+
+On IPU7 the ISYS rejects every frame of this mode with a bad frame
+dimension error (error group 3 code 18), and the capture buffers stay at
+0xffff (intel/ipu7-drivers issue 70). Without the mode, libcamera uses
+the 3856x2176 mode, which works.
+
+---
+--- a/drivers/media/i2c/ov08x40.c	2026-10-14 21:23:22.874484144 +0100
++++ b/drivers/media/i2c/ov08x40.c	2026-10-14 21:23:41.942606354 +0100
+@@ -1282,21 +1282,11 @@
+ 		.exposure_shift = 1,
+ 		.exposure_margin = OV08X40_EXPOSURE_MAX_MARGIN,
+ 	},
+-	{
+-		.width = 1928,
+-		.height = 1088,
+-		.vts_def = OV08X40_VTS_BIN_30FPS,
+-		.vts_min = OV08X40_VTS_BIN_30FPS,
+-		.llp = 0x960,
+-		.lanes = 2,
+-		.reg_list = {
+-			.num_of_regs = ARRAY_SIZE(mode_1928x1088_regs_1500mbps),
+-			.regs = mode_1928x1088_regs_1500mbps,
+-		},
+-		.link_freq_index = OV08X40_LINK_FREQ_749MHZ_INDEX,
+-		.exposure_shift = 0,
+-		.exposure_margin = OV08X40_EXPOSURE_MAX_MARGIN,
+-	},
++	/*
++	 * The 2-lane 1928x1088 binned mode is left out. On IPU7 the ISYS
++	 * rejects its frames with a bad frame dimension error and the buffers
++	 * stay at 0xffff (intel/ipu7-drivers issue 70).
++	 */
+ };
+ 
+ static const char * const ov08x40_supply_names[] = {

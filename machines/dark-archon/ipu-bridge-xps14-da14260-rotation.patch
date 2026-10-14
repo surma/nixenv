@@ -1,0 +1,22 @@
+media: ipu-bridge: Report the XPS 14 DA14260 camera as upside down
+
+The OV08X40 (OVTI08F4) on the Dell XPS 14 DA14260 is mounted upside down,
+but neither the SSDB nor the _PLD reports a rotation of 180 degrees.
+
+---
+--- a/drivers/media/pci/intel/ipu-bridge.c	2026-10-14 21:23:22.870184010 +0100
++++ b/drivers/media/pci/intel/ipu-bridge.c	2026-10-14 21:23:41.942606354 +0100
+@@ -134,6 +134,13 @@
+ 		},
+ 		.driver_data = "OVTI02C1",
+ 	},
++	{
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
++			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "XPS 14 DA14260"),
++		},
++		.driver_data = "OVTI08F4",
++	},
+ 	{} /* Terminating entry */
+ };
+ 
