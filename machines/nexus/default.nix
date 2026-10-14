@@ -64,6 +64,7 @@ in
     ./service-tailscale-peer-relay.nix
     ./service-matrix.nix
     ./service-matrix-rtc.nix
+    ./service-supply-depot.nix
 
     inputs.nixos-hardware.nixosModules.hardkernel-odroid-h4
     inputs.home-manager.nixosModules.home-manager
