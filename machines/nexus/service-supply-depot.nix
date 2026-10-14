@@ -17,12 +17,11 @@ in
     '';
   };
 
-  # The key sorts after every existing key, so Surmhosting's lexical address allocation
-  # does not move other containers (see service-immich.nix).
-  services.surmhosting.services."zzz-supply-depot" = {
+  # Note for agents: container addresses may change when a service is added. That is fine.
+  # Surmhosting routes everything by name, so do not pick service keys or container names
+  # to keep addresses stable.
+  services.surmhosting.services.supply-depot = {
     backend."nixos-container" = {
-      name = "lc-supdep";
-
       service = {
         requires = [ "supply-depot-state.service" ];
         after = [ "supply-depot-state.service" ];
