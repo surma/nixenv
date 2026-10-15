@@ -1152,11 +1152,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792082380,
-        "narHash": "sha256-yFVOQz4g+fd/ELTGA4/uCNeOhn702RN1BrEyf4kgbts=",
+        "lastModified": 1792107423,
+        "narHash": "sha256-dgcbyeK7OvT+YsMczsMOR0yp+P2rnd0g8LIFUiwhCZc=",
         "ref": "main",
-        "rev": "aa41f324cd5fefdc5dfbcec1845a5d547b78f875",
-        "revCount": 19,
+        "rev": "84a7d459ebb1c9d272b35fc4d8ce87dab07668bf",
+        "revCount": 20,
         "type": "git",
         "url": "ssh://containeruser@gitea.surma.technology:2222/surma/supply-depot.git"
       },
