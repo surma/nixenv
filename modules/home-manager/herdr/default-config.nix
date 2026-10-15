@@ -111,7 +111,7 @@ with lib;
         switch_workspace = "";
         close_tab = "prefix+shift+x";
         rename_pane = "";
-        edit_scrollback = "";
+        edit_scrollback = "prefix+s";
         copy_mode = "";
         focus_pane_left = "prefix+left";
         focus_pane_down = "";
