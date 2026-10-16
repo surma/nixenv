@@ -10,9 +10,10 @@ in
 {
   networking.firewall.allowedTCPPorts = [ ports.giteaSsh ];
 
+  # Public: anyone can browse and clone public repos over HTTPS without the
+  # surmhosting login; private repos still need a Gitea account.
   services.surmhosting.services.gitea.expose.apps.gitea = {
-    access.mode = "allowlist";
-    access.seedUsers = [ "surma" ];
+    access.mode = "public";
     internal.access = "trusted-network";
     public.aliases = [ "gitea.surma.technology" ];
     ports = [
@@ -36,6 +37,8 @@ in
       services.gitea.settings.server.SSH_PORT = ports.giteaSsh;
       services.gitea.settings.server.START_SSH_SERVER = true;
       services.gitea.settings.database.SQLITE_JOURNAL_MODE = "WAL";
+      # Anonymous visitors may view (and clone) public repos.
+      services.gitea.settings.service.REQUIRE_SIGNIN_VIEW = false;
       # Gitea blocks webhooks to private addresses by default (`external`
       # only); also allow nixos-admin's hook host (resolves to the LAN
       # address of nexus).
