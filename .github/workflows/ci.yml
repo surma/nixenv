@@ -4,6 +4,8 @@ name: CI
 # (machines/nexus/service-github-runner.nix).
 #
 # - Pull requests: `nix flake check`.
+# - Pushes to agent branches (`card-*`): `nix flake check` as well, so
+#   agents without a GitHub token get checks for their branches.
 # - Pushes to main: build every x86_64 machine and pin the results as GC
 #   roots. The runner shares the Nexus Nix store, so Harmonia
 #   (machines/nexus/service-nix-cache.nix) serves the builds at once.
@@ -11,7 +13,7 @@ name: CI
 # This repository is public and the runner is self-hosted. Pull requests from
 # forks never run here: the check job skips them, and the repository setting
 # "Require approval for all outside collaborators" must stay on, because a
-# fork can change this file.
+# fork can change this file. Branch pushes need write access to the repository.
 
 on:
   pull_request:
@@ -20,6 +22,7 @@ on:
   push:
     branches:
       - main
+      - "card-*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +31,9 @@ concurrency:
 jobs:
   check:
     name: Nix flake check
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      || (github.event_name == 'push' && github.ref != 'refs/heads/main')
     runs-on: [self-hosted, nix, nixenv]
     timeout-minutes: 60
 
@@ -41,7 +46,7 @@ jobs:
 
   build:
     name: Build x86_64 machines
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, nix, nixenv]
     timeout-minutes: 240
 
