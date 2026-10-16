@@ -73,6 +73,9 @@ in
     inputs.surmhosting.nixosModules.default
     ../../modules/services/key-poller
     ../../modules/services/adguardhome-static-dhcp
+    # nexus.apps.<name>: app containers that run a per-app profile. Defines
+    # nothing until an app is declared.
+    ../../modules/services/nexus-apps
   ];
 
   nix.settings.trusted-users = [ "@wheel" ];
