@@ -1,13 +1,27 @@
-{ pkgs, ... }:
+{ ... }:
 let
   ips = import ../../ips.nix;
-  app = pkgs.callPackage ./jazzy-poisonous-plant-parlour { };
 in
 {
-  services.surmhosting.services.jazzy-poisonous-plant-parlour = {
-    backend."nixos-container".service = {
-      wants = [ "secrets.service" ];
-      after = [ "secrets.service" ];
+  nexus.apps.jazzy-poisonous-plant-parlour = {
+    flake = "git+ssh://containeruser@gitea.surma.technology:2222/surma/jazzy-poisonous-plant-parlour";
+
+    wants = [ "secrets.service" ];
+    after = [ "secrets.service" ];
+    secrets.hassio-token = "/var/lib/scout/hassio-token";
+
+    env = {
+      LISTEN_ADDRESS = "0.0.0.0:8080";
+      HOME_ASSISTANT_URL = "http://${ips.hosts.homeassistant.ip}:8123";
+      HOME_ASSISTANT_OFFICE_DOOR_ENTITY_ID = "binary_sensor.bean_office_door";
+      HOME_ASSISTANT_GARDEN_DOOR_ENTITY_ID = "binary_sensor.garden_door_sensor";
+      HOME_ASSISTANT_TOKEN_FILE = "%d/hassio-token";
+    };
+
+    containerConfig = {
+      systemd.services.app.serviceConfig.LoadCredential = [
+        "hassio-token:/run/app-secrets/hassio-token"
+      ];
     };
 
     expose.apps.jazzy = {
@@ -20,37 +34,6 @@ in
           hostname = "jazzy-poisonous-plant-parlour";
         }
       ];
-    };
-    backend."nixos-container" = {
-      config = {
-        system.stateVersion = "25.05";
-
-        systemd.services.jazzy-poisonous-plant-parlour = {
-          description = "Jazz safety question page";
-          wantedBy = [ "multi-user.target" ];
-          wants = [ "network-online.target" ];
-          after = [ "network-online.target" ];
-          environment = {
-            LISTEN_ADDRESS = "0.0.0.0:8080";
-            HOME_ASSISTANT_URL = "http://${ips.hosts.homeassistant.ip}:8123";
-            HOME_ASSISTANT_OFFICE_DOOR_ENTITY_ID = "binary_sensor.bean_office_door";
-            HOME_ASSISTANT_GARDEN_DOOR_ENTITY_ID = "binary_sensor.garden_door_sensor";
-            HOME_ASSISTANT_TOKEN_FILE = "/var/lib/credentials/hassio-token";
-          };
-          serviceConfig = {
-            ExecStart = "${app}/bin/jazzy-poisonous-plant-parlour";
-            User = "containeruser";
-            Restart = "always";
-            RestartSec = 5;
-          };
-        };
-      };
-
-      bindMounts.hassio-token = {
-        mountPoint = "/var/lib/credentials/hassio-token";
-        hostPath = "/var/lib/scout/hassio-token";
-        isReadOnly = true;
-      };
     };
   };
 }
