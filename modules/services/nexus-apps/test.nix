@@ -62,7 +62,7 @@ let
       flake = "git+ssh://git@github.com/surma/pinned-app";
       ref = "dev";
       rev = "0123456789abcdef0123456789abcdef01234567";
-      deployOn = "push";
+      deployOn = "ci";
       program = "pinned-server";
       stateDir = "/srv/pinned";
       healthUrl = "http://pinned.nexus.hosts:8081/health";
@@ -137,7 +137,7 @@ let
       flake = "git+ssh://containeruser@gitea.surma.technology:2222/surma/sample.git";
       ref = "main";
       rev = null;
-      deployOn = "ci";
+      deployOn = "push";
       package = "default";
       program = "sample";
       forge = "gitea";
@@ -163,7 +163,7 @@ let
       repo = "surma/pinned-app";
       ref = "dev";
       rev = "0123456789abcdef0123456789abcdef01234567";
-      deployOn = "push";
+      deployOn = "ci";
       program = "pinned-server";
       healthUrl = "http://pinned.nexus.hosts:8081/health";
     } "registry entry with overrides")
@@ -178,7 +178,7 @@ let
           flake = "git+ssh://git@github.com/surma/pinned-app";
           ref = "dev";
           rev = "0123456789abcdef0123456789abcdef01234567";
-          deploy_on = "push";
+          deploy_on = "ci";
           package = "default";
           forge = "github";
           forge_repo = "surma/pinned-app";
@@ -192,7 +192,7 @@ let
           flake = "git+ssh://containeruser@gitea.surma.technology:2222/surma/sample.git";
           ref = "main";
           rev = "";
-          deploy_on = "ci";
+          deploy_on = "push";
           package = "default";
           forge = "gitea";
           forge_repo = "surma/sample";

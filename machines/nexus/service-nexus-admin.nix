@@ -10,15 +10,6 @@ let
   port = 8092;
   stateDir = "/var/lib/nixos-admin";
 
-  # API token for the CI gate of app deploys on Gitea (the repos are
-  # private): a Gitea token with read access to the app repos
-  # (scope read:repository), stored age-encrypted as
-  # secrets/nixos-admin-gitea-token.age (recipients: secrets/config.nix).
-  # Until that file exists the secret item is skipped and Gitea apps with
-  # `deployOn = "ci"` fail their forge lookups (logged by nixos-admin).
-  giteaTokenSecret = ../../secrets/nixos-admin-gitea-token.age;
-  giteaTokenFile = "${stateDir}/forge/gitea-token";
-
   # SSH config for git+ssh:// flake inputs and remote deploys.
   # Repo key is populated by the scout-repo-ssh-key secret.
   # Deploy key is populated by the nixos-admin-deploy-key secret.
@@ -83,17 +74,12 @@ in
     appsConfigFile = config.nexus.appsAdminConfigFile;
   };
 
-  # Forge access for the CI gate. Gitea through the internal entrypoint
-  # (no login; nixos-admin runs on the host). GitHub: public API, no token.
-  nexus.appsForges.gitea = {
-    api = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081/api/v1";
-    tokenFile = giteaTokenFile;
-  };
-
-  secrets.items.nixos-admin-gitea-token = lib.mkIf (builtins.pathExists giteaTokenSecret) {
-    target = giteaTokenFile;
-    mode = "0600";
-  };
+  # App deploys default to `deployOn = "push"`: a push to the tracked branch
+  # deploys its head (merges to main are already CI-gated), so nixos-admin
+  # needs no forge token. Forge API only for apps that opt into
+  # `deployOn = "ci"`: Gitea through the internal entrypoint (no login;
+  # nixos-admin runs on the host). GitHub: public API, no token.
+  nexus.appsForges.gitea.api = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081/api/v1";
 
   # Overlay: SSH key + config deployment for git+ssh:// flake inputs.
   systemd.services.nixos-admin = {

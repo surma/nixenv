@@ -94,11 +94,12 @@ let
             "push"
             "ci"
           ];
-          default = "ci";
+          default = "push";
           description = ''
-            Deploy gate. `ci` (default): only commits on `ref` whose CI
-            passed deploy. `push`: per-app opt-out; every push to `ref`
-            deploys the branch head without waiting for CI.
+            Deploy gate. `push` (default): every push to `ref` deploys the
+            branch head right away; merges to `main` are already gated by
+            CI. `ci`: optional opt-in; only commits on `ref` whose CI passed
+            deploy (nixos-admin asks the forge, see `nexus.appsForges`).
           '';
         };
         package = mkOption {
@@ -378,8 +379,9 @@ in
       );
       default = { };
       description = ''
-        How nixos-admin reaches each forge (`gitea`, `github`) for the CI
-        gate: API base URL and token file, applied to every app on that forge.
+        How nixos-admin reaches each forge (`gitea`, `github`) for the
+        optional CI gate (`deployOn = "ci"`): API base URL and token file,
+        applied to every app on that forge.
       '';
     };
 

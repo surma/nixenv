@@ -207,16 +207,6 @@
         "pylon"
       ];
     };
-    # Gitea API token (read:repository) for nixos-admin's CI gate of app
-    # deploys (machines/nexus/service-nexus-admin.nix). Used once the .age
-    # file exists.
-    nixos-admin-gitea-token = {
-      contents = ../secrets/nixos-admin-gitea-token.age;
-      keys = [
-        "surma"
-        "nexus"
-      ];
-    };
     scout-gws-credentials = {
       contents = ../secrets/scout-gws-credentials.age;
       keys = [
