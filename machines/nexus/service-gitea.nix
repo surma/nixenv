@@ -39,6 +39,8 @@ in
       services.gitea.settings.database.SQLITE_JOURNAL_MODE = "WAL";
       # Anonymous visitors may view (and clone) public repos.
       services.gitea.settings.service.REQUIRE_SIGNIN_VIEW = false;
+      # Gitea is public: no self sign-up (accounts only via the admin).
+      services.gitea.settings.service.DISABLE_REGISTRATION = true;
       # Gitea blocks webhooks to private addresses by default (`external`
       # only); also allow nixos-admin's hook host (resolves to the LAN
       # address of nexus).
