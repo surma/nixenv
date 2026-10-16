@@ -92,10 +92,11 @@ let
             "push"
             "ci"
           ];
-          default = "push";
+          default = "ci";
           description = ''
-            `push`: every push to `ref` deploys the branch head. `ci`: only
-            SHAs that the app's CI reports green deploy.
+            Deploy gate. `ci` (default): only commits on `ref` whose CI
+            passed deploy. `push`: per-app opt-out; every push to `ref`
+            deploys the branch head without waiting for CI.
           '';
         };
         package = mkOption {
