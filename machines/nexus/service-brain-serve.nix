@@ -77,16 +77,24 @@ let
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
 
-    # Hard-reset to upstream before sync. brain-serve is a read-only
-    # mirror — any local state (stale rebase, uncommitted changes) is
-    # expendable and must not block startup.
-    echo "Resetting to origin/main..."
-    ${pkgs.git}/bin/git -C ${brainPath} fetch origin main
+    # brain-serve owns its checkout: it may hold local commits (failed
+    # push/rebase) and written-but-unsynced files from the write API, so
+    # never reset it. Only clean up a stale rebase; `brain sync` does the
+    # fetch, rebase (semantic merge driver) and push.
     ${pkgs.git}/bin/git -C ${brainPath} rebase --abort 2>/dev/null || true
-    ${pkgs.git}/bin/git -C ${brainPath} reset --hard origin/main
 
     echo "Running brain sync..."
     BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+  '';
+
+  # Hourly sync goes through the running server's sync queue, so the
+  # server stays the only writer of its checkout and keeps the models.
+  brainSyncViaServer = pkgs.writeShellScript "brain-serve-update" ''
+    set -euo pipefail
+    echo "POST http://localhost:8080/api/sync"
+    ${pkgs.curl}/bin/curl -sS --fail-with-body --max-time 900 \
+      -X POST http://localhost:8080/api/sync
+    echo
   '';
 
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
@@ -207,8 +215,10 @@ in
           GIT_COMMITTER_EMAIL = "surma@surma.dev";
         };
         serviceConfig = {
+          # "-": a failing sync (conflict, Gitea down) is logged but does
+          # not keep the server from starting.
           ExecStartPre = [
-            "${brainSync}"
+            "-${brainSync}"
             "${generateShareKeys}"
           ];
           ExecStart = "${brainServeStart}";
@@ -258,30 +268,17 @@ in
       };
 
       systemd.services.brain-serve-update = {
-        description = "Update brain repository";
-        path = [
-          pkgs.git
-          pkgs.openssh
-        ];
-        environment = {
-          GIT_SSH_COMMAND = gitSshCommand;
-          BRAIN_PATH = brainPath;
-          HOME = "/var/lib/brain-serve";
-          GIT_AUTHOR_NAME = "Surma";
-          GIT_AUTHOR_EMAIL = "surma@surma.dev";
-          GIT_COMMITTER_NAME = "Surma";
-          GIT_COMMITTER_EMAIL = "surma@surma.dev";
-        };
+        description = "Sync brain repository via brain-serve POST /api/sync";
         serviceConfig = {
           Type = "oneshot";
           User = "containeruser";
-          ExecStart = "${brainSync}";
+          ExecStart = "${brainSyncViaServer}";
           TimeoutStartSec = 900;
         };
       };
 
       systemd.timers.brain-serve-update = {
-        description = "Hourly brain repository update";
+        description = "Hourly brain sync via brain-serve";
         wantedBy = [ "timers.target" ];
         timerConfig = {
           OnCalendar = "hourly";
