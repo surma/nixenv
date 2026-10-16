@@ -19,6 +19,8 @@
 # - Secrets: each `secrets.<key>` host file is bound read-only to
 #   /run/app-secrets/<key>.
 # - Registry: /etc/nexus/apps.json (also `config.nexus.appsRegistryFile`).
+#   nixos-admin reads the same apps in its own format from
+#   `config.nexus.appsAdminConfigFile` (machines/nexus/service-nexus-admin.nix).
 #
 # With `nexus.apps = { }` (the default) the module defines nothing.
 {
@@ -266,6 +268,42 @@ let
   registry = lib.mapAttrs registryEntry cfg;
   registryFile = pkgs.writeText "nexus-apps.json" (builtins.toJSON registry);
 
+  # The same apps in nixos-admin's registry format (nixos-admin-web README,
+  # "App deploys" > "Registry"): `{ apps = [ ... ]; }` with snake_case keys.
+  # Forge API base and token come from `nexus.appsForges.<forge>`; without
+  # an entry nixos-admin derives the API from the flake URL.
+  adminEntry =
+    name: app:
+    let
+      forgeCfg =
+        if app.forge != null && config.nexus.appsForges ? ${app.forge} then
+          config.nexus.appsForges.${app.forge}
+        else
+          {
+            api = null;
+            tokenFile = null;
+          };
+    in
+    {
+      inherit name;
+      inherit (app) flake ref package;
+      container = app.containerName;
+      rev = if app.rev == null then "" else app.rev;
+      deploy_on = app.deployOn;
+      forge = app.forge;
+      forge_repo = app.repo;
+      service = "app.service";
+      profile = hostProfile app;
+    }
+    // lib.optionalAttrs (forgeCfg.api != null) { forge_api = forgeCfg.api; }
+    // lib.optionalAttrs (forgeCfg.tokenFile != null) { forge_token_file = forgeCfg.tokenFile; }
+    // lib.optionalAttrs (app.healthUrl != null) { health_url = app.healthUrl; };
+
+  adminConfig = {
+    apps = lib.mapAttrsToList adminEntry cfg;
+  };
+  adminConfigFile = pkgs.writeText "nixos-admin-apps.json" (builtins.toJSON adminConfig);
+
   appAssertions =
     name: app:
     let
@@ -318,6 +356,46 @@ in
       default = registryFile;
       defaultText = "JSON file of `nexus.appsRegistry`";
       description = "Store path of the registry JSON.";
+    };
+
+    appsForges = mkOption {
+      type = types.attrsOf (
+        types.submodule {
+          options = {
+            api = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              example = "http://gitea.nexus.hosts.10.0.0.2.nip.io:8081/api/v1";
+              description = "API base URL (Gitea: ending in `/api/v1`). Null: nixos-admin derives it from the flake URL.";
+            };
+            tokenFile = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Host file with an API token, needed for private repos.";
+            };
+          };
+        }
+      );
+      default = { };
+      description = ''
+        How nixos-admin reaches each forge (`gitea`, `github`) for the CI
+        gate: API base URL and token file, applied to every app on that forge.
+      '';
+    };
+
+    appsAdminConfig = mkOption {
+      type = types.anything;
+      readOnly = true;
+      default = adminConfig;
+      description = "`nexus.apps` in nixos-admin's registry format (`services.nixos-admin.appsConfigFile`).";
+    };
+
+    appsAdminConfigFile = mkOption {
+      type = types.path;
+      readOnly = true;
+      default = adminConfigFile;
+      defaultText = "JSON file of `nexus.appsAdminConfig`";
+      description = "Store path of `nexus.appsAdminConfig` as JSON; also written with no apps (`{\"apps\":[]}`).";
     };
   };
 

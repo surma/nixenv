@@ -1,6 +1,11 @@
 { ... }:
 let
+  ips = import ../../ips.nix;
   ports = import ./ports.nix;
+  # nixos-admin's webhook endpoint on the internal entrypoint (no login;
+  # managed containers may reach :8081, see default.nix). Repo webhooks for
+  # app deploys use http://${adminHooksHost}:8081/hooks/gitea.
+  adminHooksHost = "admin.nexus.hosts.${ips.hosts.nexus.ip}.nip.io";
 in
 {
   networking.firewall.allowedTCPPorts = [ ports.giteaSsh ];
@@ -31,6 +36,10 @@ in
       services.gitea.settings.server.SSH_PORT = ports.giteaSsh;
       services.gitea.settings.server.START_SSH_SERVER = true;
       services.gitea.settings.database.SQLITE_JOURNAL_MODE = "WAL";
+      # Gitea blocks webhooks to private addresses by default (`external`
+      # only); also allow nixos-admin's hook host (resolves to the LAN
+      # address of nexus).
+      services.gitea.settings.webhook.ALLOWED_HOST_LIST = "external,${adminHooksHost}";
       # services.openssh.enable = true;
     };
 

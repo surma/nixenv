@@ -1,8 +1,23 @@
-{ pkgs, inputs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
 let
   ips = import ../../ips.nix;
   port = 8092;
   stateDir = "/var/lib/nixos-admin";
+
+  # API token for the CI gate of app deploys on Gitea (the repos are
+  # private): a Gitea token with read access to the app repos
+  # (scope read:repository), stored age-encrypted as
+  # secrets/nixos-admin-gitea-token.age (recipients: secrets/config.nix).
+  # Until that file exists the secret item is skipped and Gitea apps with
+  # `deployOn = "ci"` fail their forge lookups (logged by nixos-admin).
+  giteaTokenSecret = ../../secrets/nixos-admin-gitea-token.age;
+  giteaTokenFile = "${stateDir}/forge/gitea-token";
 
   # SSH config for git+ssh:// flake inputs and remote deploys.
   # Repo key is populated by the scout-repo-ssh-key secret.
@@ -63,6 +78,21 @@ in
     listenAddress = "127.0.0.1:${toString port}";
     flakeURL = "github:surma/nixenv#nexus";
     sshConfigFile = "${stateDir}/.ssh/config";
+    # App deploys (nexus.apps, modules/services/nexus-apps): nixos-admin
+    # builds each app's flake into its per-app profile.
+    appsConfigFile = config.nexus.appsAdminConfigFile;
+  };
+
+  # Forge access for the CI gate. Gitea through the internal entrypoint
+  # (no login; nixos-admin runs on the host). GitHub: public API, no token.
+  nexus.appsForges.gitea = {
+    api = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081/api/v1";
+    tokenFile = giteaTokenFile;
+  };
+
+  secrets.items.nixos-admin-gitea-token = lib.mkIf (builtins.pathExists giteaTokenSecret) {
+    target = giteaTokenFile;
+    mode = "0600";
   };
 
   # Overlay: SSH key + config deployment for git+ssh:// flake inputs.
@@ -99,6 +129,22 @@ in
         {
           port = port;
           hostname = "admin";
+        }
+      ];
+    };
+    # Forge webhooks for app deploys, without the login: GitHub posts to
+    # https://admin-hooks.apps.surma.technology/hooks/github. Only /hooks/
+    # is routed; a hook only makes nixos-admin re-check the forge, so it
+    # needs no secret (nixos-admin-web README, "Webhooks"). Gitea uses the
+    # internal entrypoint instead (service-gitea.nix).
+    expose.apps.admin-hooks = {
+      access.mode = "public";
+      internal.enable = false;
+      ports = [
+        {
+          port = port;
+          hostname = "admin-hooks";
+          publicPathPrefixes = [ "/hooks/" ];
         }
       ];
     };

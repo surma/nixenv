@@ -25,6 +25,10 @@ let
             containeruser.uid = 1000;
           };
           nexus.apps = apps;
+          nexus.appsForges.gitea = {
+            api = "http://gitea.example:8081/api/v1";
+            tokenFile = "/var/lib/nixos-admin/forge/gitea-token";
+          };
         }
       ];
     };
@@ -165,6 +169,42 @@ let
     } "registry entry with overrides")
     (expectEq c.environment.etc."nexus/apps.json".source c.nexus.appsRegistryFile "registry in /etc/nexus/apps.json")
 
+    # nixos-admin registry (format: nixos-admin-web README, "Registry")
+    (expectEq c.nexus.appsAdminConfig {
+      apps = [
+        {
+          name = "pinned";
+          container = "lc-pinned";
+          flake = "git+ssh://git@github.com/surma/pinned-app";
+          ref = "dev";
+          rev = "0123456789abcdef0123456789abcdef01234567";
+          deploy_on = "push";
+          package = "default";
+          forge = "github";
+          forge_repo = "surma/pinned-app";
+          service = "app.service";
+          profile = "/nix/var/nix/profiles/per-container/lc-pinned/app";
+          health_url = "http://pinned.nexus.hosts:8081/health";
+        }
+        {
+          name = "sample";
+          container = "lc-sample";
+          flake = "git+ssh://containeruser@gitea.surma.technology:2222/surma/sample.git";
+          ref = "main";
+          rev = "";
+          deploy_on = "ci";
+          package = "default";
+          forge = "gitea";
+          forge_repo = "surma/sample";
+          forge_api = "http://gitea.example:8081/api/v1";
+          forge_token_file = "/var/lib/nixos-admin/forge/gitea-token";
+          service = "app.service";
+          profile = "/nix/var/nix/profiles/per-container/lc-sample/app";
+        }
+      ];
+    } "nixos-admin registry (forge settings only where configured)")
+    (expectEq emptyHost.config.nexus.appsAdminConfig { apps = [ ]; } "empty nixos-admin registry without apps")
+
     # without apps the module defines nothing
     (expect (!(emptyHost.config.environment.etc ? "nexus/apps.json")) "no registry file without apps")
     (expectEq emptyHost.config.services.surmhosting.services { } "no services without apps")
@@ -177,6 +217,8 @@ lib.throwIfNot (failures == [ ])
   "nexus-apps check failed:\n${lib.concatMapStringsSep "\n" (x: "  - ${x.msg}") failures}"
   (
     pkgs.runCommand "nexus-apps-check" { } ''
-      cp ${c.nexus.appsRegistryFile} $out
+      mkdir $out
+      cp ${c.nexus.appsRegistryFile} $out/nexus-apps.json
+      cp ${c.nexus.appsAdminConfigFile} $out/nixos-admin-apps.json
     ''
   )
