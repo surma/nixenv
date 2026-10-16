@@ -22,7 +22,8 @@ let
             enable = true;
             hostname = "nexus";
             externalInterface = "eth0";
-            containeruser.uid = 1000;
+            # Like nexus (users.users.surma.uid is unset): no host uid needed.
+            containeruser.uid = null;
           };
           nexus.apps = apps;
           nexus.appsForges.gitea = {
@@ -128,8 +129,11 @@ let
     (expectEq sampleApp.environment.PORT "8080" "env passed through")
     (expect (lib.elem "multi-user.target" sampleApp.wantedBy) "app.service starts at boot")
 
-    # host state folder
-    (expect (lib.elem "d /var/lib/apps/sample 0750 1000 users - -" c.systemd.tmpfiles.rules) "state folder created on the host")
+    # state folder: created on the host, owned by the container user from inside
+    (expect (lib.elem "d /var/lib/apps/sample - - - - -" c.systemd.tmpfiles.rules) "state folder created on the host")
+    (expect (lib.elem "d /var/lib/app 0750 ${c.services.surmhosting.containeruser.name} users - -"
+      sample.config.systemd.tmpfiles.rules
+    ) "container hands the state folder to its user")
 
     # registry
     (expectEq registry.sample {

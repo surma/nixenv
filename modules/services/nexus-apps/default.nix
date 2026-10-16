@@ -196,6 +196,11 @@ let
     {
       system.stateVersion = lib.mkDefault "26.05";
 
+      # The container owns its state folder: the host may not know the
+      # container user's uid (surmhosting.containeruser.uid can be null), so
+      # the container's own tmpfiles hands the bound folder to that user.
+      systemd.tmpfiles.rules = [ "d ${stateMount} 0750 ${containerUser.name} users - -" ];
+
       systemd.services.app = {
         description = "App ${name} (runs ${inContainerProfile})";
         wantedBy = [ "multi-user.target" ];
@@ -402,19 +407,14 @@ in
   };
 
   config = lib.mkIf (cfg != { }) {
-    assertions = [
-      {
-        assertion = containerUser.uid != null;
-        message = "nexus.apps needs services.surmhosting.containeruser.uid to own the state folders.";
-      }
-    ]
-    ++ lib.concatLists (lib.mapAttrsToList appAssertions cfg);
+    assertions = lib.concatLists (lib.mapAttrsToList appAssertions cfg);
 
     services.surmhosting.services = lib.mapAttrs surmhostingService cfg;
 
-    systemd.tmpfiles.rules = lib.mapAttrsToList (
-      _: app: "d ${app.stateDir} 0750 ${toString containerUser.uid} users - -"
-    ) cfg;
+    # Only create the host folder (root, 0755) for the bind mount; owner and
+    # mode are not specified, so tmpfiles never resets what the container's
+    # own rule set (see containerModule).
+    systemd.tmpfiles.rules = lib.mapAttrsToList (_: app: "d ${app.stateDir} - - - - -") cfg;
 
     environment.etc."nexus/apps.json".source = registryFile;
   };
