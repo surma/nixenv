@@ -145,6 +145,10 @@ in
       HOME = appHome;
       BRAIN_PATH = brainPath;
       GIT_SSH_COMMAND = gitSshCommand;
+      # The API's sync queue spawns `brain sync` by name; app.service is
+      # started by an absolute path, so expose the mutable per-app profile
+      # (and Git/SSH needed by sync) in its runtime PATH.
+      PATH = "${appProfile}/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
       # QMD would size its parallel embedding/rerank contexts from the
       # iGPU's "free VRAM" (shared system RAM): multiple contexts could
       # OOM-kill the service. Brain runs model work one job at a time.

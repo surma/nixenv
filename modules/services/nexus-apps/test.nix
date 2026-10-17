@@ -138,6 +138,7 @@ let
       forge = "github";
       repo = "surma/brain";
       stateDir = "/dump/state/brain-serve";
+      env.PATH = "/nix/var/nix/profiles/app/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
       expose = {
         apps.brain = {
           access.mode = "allowlist";
@@ -261,6 +262,8 @@ let
     (expectEq brainApp.serviceConfig.ExecStart "/nix/var/nix/profiles/app/bin/brain serve --port 8080"
       "Brain private app.service uses the per-app profile")
     (expectEq brainApp.wantedBy [ ] "Brain private service starts from its delayed timer")
+    (expectEq brainApp.environment.PATH "/nix/var/nix/profiles/app/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin"
+      "Brain API sync can locate the active app binary, Git, and SSH")
     (expect (lib.elem "timers.target" brainContainer.config.systemd.timers.app.wantedBy)
       "Brain delayed-start timer is enabled")
 
