@@ -146,30 +146,6 @@
         "type": "github"
       }
     },
-    "dashboard": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1773271477,
-        "narHash": "sha256-RrIVS+MbCbppIpnp12cbGa0lbkoD0Y9HrbVkspnNyfE=",
-        "ref": "main",
-        "rev": "62802968e7bf471be7390532441b31e155dc5bae",
-        "revCount": 16,
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/dashboard.git"
-      },
-      "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://containeruser@gitea.surma.technology:2222/surma/dashboard.git"
-      }
-    },
     "dump": {
       "inputs": {
         "flake-utils": [
@@ -894,7 +870,6 @@
         "bandsnatch": "bandsnatch",
         "brain": "brain",
         "copyparty": "copyparty",
-        "dashboard": "dashboard",
         "dump": "dump",
         "fenix": "fenix_2",
         "flake-parts": "flake-parts",

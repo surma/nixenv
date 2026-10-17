@@ -79,11 +79,6 @@
       url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/surmhosting.git";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    dashboard = {
-      url = "git+ssh://containeruser@gitea.surma.technology:2222/surma/dashboard.git?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
-    };
     llm-agents.url = "github:numtide/llm-agents.nix";
     brain = {
       url = "git+ssh://git@github.com/surma/brain?ref=main";
