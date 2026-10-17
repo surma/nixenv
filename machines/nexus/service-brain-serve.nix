@@ -148,7 +148,6 @@ in
       # The API's sync queue spawns `brain sync` by name; app.service is
       # started by an absolute path, so expose the mutable per-app profile
       # (and Git/SSH needed by sync) in its runtime PATH.
-      PATH = "${appProfile}/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
       # QMD would size its parallel embedding/rerank contexts from the
       # iGPU's "free VRAM" (shared system RAM): multiple contexts could
       # OOM-kill the service. Brain runs model work one job at a time.
@@ -181,6 +180,10 @@ in
         # activation; nixos-admin can still restart it after profile flips.
         wantedBy = lib.mkForce [ ];
         wants = [ "brain-serve-public.service" ];
+        # NixOS's generic unit PATH omits the mutable profile used by the
+        # API's queued `brain sync`; force the container's app/Git/SSH path.
+        environment.PATH = lib.mkForce
+          "${appProfile}/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
         serviceConfig = {
           ExecStartPre = [
             "-${brainSync}"

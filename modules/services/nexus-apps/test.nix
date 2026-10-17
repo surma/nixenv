@@ -138,7 +138,6 @@ let
       forge = "github";
       repo = "surma/brain";
       stateDir = "/dump/state/brain-serve";
-      env.PATH = "/nix/var/nix/profiles/app/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
       expose = {
         apps.brain = {
           access.mode = "allowlist";
@@ -157,6 +156,8 @@ let
       containerConfig = { lib, ... }: {
         systemd.services.app = {
           wantedBy = lib.mkForce [ ];
+          environment.PATH = lib.mkForce
+            "/nix/var/nix/profiles/app/bin:${lib.makeBinPath [ pkgs.git pkgs.openssh ]}:/run/current-system/sw/bin";
           serviceConfig.ExecStart = lib.mkForce "/nix/var/nix/profiles/app/bin/brain serve --port 8080";
         };
         systemd.timers.app.wantedBy = [ "timers.target" ];
