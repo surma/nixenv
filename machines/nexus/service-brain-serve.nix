@@ -1,26 +1,23 @@
-{
-  pkgs,
-  lib,
-  inputs,
-  ...
-}:
+{ pkgs, lib, ... }:
 let
-  system = pkgs.stdenv.hostPlatform.system;
   ips = import ../../ips.nix;
-  brainPkg = inputs.brain.packages.${system}.default;
+  appHome = "/var/lib/app";
+  appStateDir = "/dump/state/brain-serve";
+  brainPath = "${appHome}/brain";
+  appProfile = "/nix/var/nix/profiles/app";
+  brainBinary = "${appProfile}/bin/brain";
   brainRepoUrl = "ssh://containeruser@gitea.surma.technology:2222/surma/brain.git";
-  brainPath = "/var/lib/brain-serve/brain";
 
   sshConfig = pkgs.writeText "brain-serve-ssh-config" ''
     Host gitea.surma.technology
       Hostname ${ips.hosts.nexus.ip}
       Port 2222
       User containeruser
-      IdentityFile /var/lib/brain-serve/.ssh/id_brain
+      IdentityFile ${appHome}/.ssh/id_brain
       IdentitiesOnly yes
       StrictHostKeyChecking accept-new
       HostKeyAlias gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io
-      UserKnownHostsFile /var/lib/brain-serve/.ssh/known_hosts
+      UserKnownHostsFile ${appHome}/.ssh/known_hosts
   '';
 
   gitSshCommand = "ssh -F ${sshConfig}";
@@ -73,7 +70,7 @@ let
     export NO_COLOR=1
     if [ ! -d "${brainPath}/.git" ]; then
       echo "Cloning brain repository..."
-      rm -rf "${brainPath}"
+      ${pkgs.coreutils}/bin/rm -rf "${brainPath}"
       ${pkgs.git}/bin/git clone ${brainRepoUrl} ${brainPath}
     fi
 
@@ -84,7 +81,7 @@ let
     ${pkgs.git}/bin/git -C ${brainPath} rebase --abort 2>/dev/null || true
 
     echo "Running brain sync..."
-    BRAIN_PATH=${brainPath} ${brainPkg}/bin/brain sync
+    BRAIN_PATH=${brainPath} ${brainBinary} sync
   '';
 
   # Hourly sync goes through the running server's sync queue, so the
@@ -100,22 +97,26 @@ let
   brainServeStart = pkgs.writeShellScript "brain-serve-start" ''
     set -euo pipefail
     export NO_COLOR=1
-    LLM_FLAGS=""
+    args=(
+      --port 8080
+      --jwt-private-key-file "${sharePrivateKeyFile}"
+      --public-url "${publicUrl}"
+    )
     if [ -f "${llmApiKeyFile}" ]; then
       LLM_KEY="$(cat "${llmApiKeyFile}")"
-      LLM_FLAGS="--llm-endpoint ${llmEndpoint} --llm-api-key $LLM_KEY --llm-model ${llmModel}"
+      args+=(
+        --llm-endpoint "${llmEndpoint}"
+        --llm-api-key "$LLM_KEY"
+        --llm-model "${llmModel}"
+      )
     fi
-    exec ${brainPkg}/bin/brain serve \
-      --port 8080 \
-      --jwt-private-key-file "${sharePrivateKeyFile}" \
-      --public-url "${publicUrl}" \
-      $LLM_FLAGS
+    exec ${brainBinary} serve "''${args[@]}"
   '';
 
   brainServePublicStart = pkgs.writeShellScript "brain-serve-public-start" ''
     set -euo pipefail
     export NO_COLOR=1
-    exec ${brainPkg}/bin/brain serve \
+    exec ${brainBinary} serve \
       --port 8081 \
       --public \
       --jwt-public-key-file "${sharePublicKeyFile}"
@@ -126,143 +127,77 @@ in
     "d- /dump/state/brain-serve 0755 surma users - -"
   ];
 
-  services.surmhosting.services.brain-serve.backend."nixos-container".service = {
-    wants = [ "secrets.service" ];
-    after = [ "secrets.service" ];
-    # QMD model loading needs ~4GB; give headroom for the server + sync.
-    serviceConfig.MemoryMax = "8G";
-  };
+  nexus.apps.brain-serve = {
+    # This is a private GitHub repo; use SSH for nixos-admin's app build,
+    # while nexus.apps derives the webhook forge/repo below.
+    flake = "git+ssh://git@github.com/surma/brain";
+    ref = "main";
+    package = "default";
+    program = "brain";
+    forge = "github";
+    repo = "surma/brain";
 
-  # Brain runs two servers with separate policies: private (8080,
-  # allowlist) and public (8081, public). They are different logical
-  # apps and must never share a grant (auth-rework section 4.3).
-  services.surmhosting.services.brain-serve.expose.apps.brain = {
-    access.mode = "allowlist";
-    access.seedUsers = [ "surma" ];
-    internal.access = "trusted-network";
-    public.aliases = [ "brain.surma.technology" ];
-    ports = [
-      {
-        port = 8080;
-        hostname = "brain-serve";
-      }
-    ];
-  };
+    # Keep the existing checkout, QMD/SQLite data, and SSH identity in the
+    # same host directory; nexus.apps mounts it at /var/lib/app.
+    stateDir = appStateDir;
 
-  services.surmhosting.services.brain-serve.expose.apps.public-brain = {
-    access.mode = "public";
-    internal.access = "trusted-network";
-    public.aliases = [ "public-brain.surma.technology" ];
-    ports = [
-      {
-        port = 8081;
-        hostname = "public-brain";
-      }
-    ];
-  };
-  services.surmhosting.services.brain-serve.backend."nixos-container" = {
-    # GPU access for Vulkan-accelerated QMD inference (Intel iGPU).
-    allowedDevices = [
-      {
-        modifier = "rw";
-        node = "/dev/dri/renderD128";
-      }
-      {
-        modifier = "rw";
-        node = "/dev/dri/card1";
-      }
-    ];
-    bindMounts.dri = {
-      mountPoint = "/dev/dri";
-      hostPath = "/dev/dri";
-      isReadOnly = false;
+    env = {
+      HOME = appHome;
+      BRAIN_PATH = brainPath;
+      GIT_SSH_COMMAND = gitSshCommand;
+      # QMD would size its parallel embedding/rerank contexts from the
+      # iGPU's "free VRAM" (shared system RAM): multiple contexts could
+      # OOM-kill the service. Brain runs model work one job at a time.
+      BRAIN_QMD_MAX_CONTEXTS = "1";
+      # On this Intel ADL-N iGPU + 8 E-cores, expansion is faster on CPU,
+      # reranking on GPU, and reranking only the best 6 candidates keeps
+      # search latency manageable. Requests can still override this.
+      BRAIN_QMD_EXPAND_ON_CPU = "1";
+      BRAIN_QMD_RERANK = "6";
+      BRAIN_QMD_RERANK_CHARS = "800";
+      GIT_AUTHOR_NAME = "Surma";
+      GIT_AUTHOR_EMAIL = "surma@surma.dev";
+      GIT_COMMITTER_NAME = "Surma";
+      GIT_COMMITTER_EMAIL = "surma@surma.dev";
     };
 
-    config = {
+    containerConfig = { lib, ... }: {
       system.stateVersion = "25.05";
 
-      # Vulkan drivers for Intel iGPU — needed by node-llama-cpp for
-      # GPU-accelerated QMD inference.
+      # Vulkan drivers and /dev/dri access for Intel iGPU QMD inference.
       hardware.graphics.enable = true;
       hardware.graphics.extraPackages = [ pkgs.intel-compute-runtime ];
       environment.systemPackages = [ pkgs.vulkan-tools ];
 
-      # brain-serve is NOT wantedBy multi-user.target — it's started by
-      # a timer 10s after boot. This prevents the slow clone/sync from
-      # blocking container boot and causing the host container unit to
-      # time out during switch-to-configuration.
-      systemd.services.brain-serve = {
-        description = "Brain knowledge base web server";
-        wants = [
-          "network-online.target"
-          "brain-serve-public.service"
-        ];
-        after = [ "network-online.target" ];
-        path = [
-          brainPkg
-          pkgs.git
-          pkgs.openssh
-          pkgs.coreutils
-          pkgs.openssl
-        ];
-        environment = {
-          BRAIN_PATH = brainPath;
-          GIT_SSH_COMMAND = gitSshCommand;
-          HOME = "/var/lib/brain-serve";
-          # QMD would size its parallel embedding/rerank contexts from the
-          # iGPU's "free VRAM" (shared system RAM): up to 4 rerank contexts
-          # of ~1 GB+ each, which OOM-killed the service on the first
-          # semantic search. The server runs model work one job at a time,
-          # so one context each is enough.
-          BRAIN_QMD_MAX_CONTEXTS = "1";
-          # Semantic search speed on this box (Intel ADL-N iGPU + 8 E-cores;
-          # numbers in brain's README): query expansion (generation) is ~5x
-          # faster on the CPU than on the iGPU, reranking ~3x faster on the
-          # iGPU. So: expansion model on the CPU, the rest on the GPU, and
-          # rerank only the best 6 fused candidates with ~800-character
-          # passages (a full rerank of 40 chunks takes minutes). A request
-          # can still ask for more (/api/search ...&rerank=40&passage=0).
-          BRAIN_QMD_EXPAND_ON_CPU = "1";
-          BRAIN_QMD_RERANK = "6";
-          BRAIN_QMD_RERANK_CHARS = "800";
-          GIT_AUTHOR_NAME = "Surma";
-          GIT_AUTHOR_EMAIL = "surma@surma.dev";
-          GIT_COMMITTER_NAME = "Surma";
-          GIT_COMMITTER_EMAIL = "surma@surma.dev";
-        };
+      # The app profile supplies the executable, but app.service remains the
+      # private server on 8080. The public server is a second process from
+      # the same profile and follows app.service's lifecycle.
+      systemd.services.app = {
+        # Start 10 seconds after boot from app.timer, not during container
+        # activation; nixos-admin can still restart it after profile flips.
+        wantedBy = lib.mkForce [ ];
+        wants = [ "brain-serve-public.service" ];
         serviceConfig = {
-          # "-": a failing sync (conflict, Gitea down) is logged but does
-          # not keep the server from starting.
           ExecStartPre = [
             "-${brainSync}"
             "${generateShareKeys}"
           ];
-          ExecStart = "${brainServeStart}";
+          ExecStart = lib.mkForce "${brainServeStart}";
           RuntimeDirectory = "brain-serve";
           RuntimeDirectoryMode = "0700";
           RuntimeDirectoryPreserve = "no";
-          User = "containeruser";
-          Restart = "always";
-          RestartSec = 30;
+          RestartSec = lib.mkForce "30s";
           TimeoutStartSec = 900;
         };
       };
 
-      # Public brain-serve: read-only, serves only public: true docs.
-      # BindsTo brain-serve so it starts/stops together with it.
-      # brain-serve is timer-activated (not WantedBy multi-user.target),
-      # so this unit must be pulled in via Wants on brain-serve.
       systemd.services.brain-serve-public = {
         description = "Brain public web server";
-        bindsTo = [ "brain-serve.service" ];
-        after = [ "brain-serve.service" ];
-        path = [
-          brainPkg
-          pkgs.coreutils
-        ];
+        bindsTo = [ "app.service" ];
+        after = [ "app.service" ];
         environment = {
           BRAIN_PATH = brainPath;
-          HOME = "/var/lib/brain-serve";
+          HOME = appHome;
         };
         serviceConfig = {
           ExecStartPre = "${waitForShareKeys}";
@@ -273,14 +208,13 @@ in
         };
       };
 
-      # Start brain-serve 10s after boot, giving the container network
-      # time to come up without blocking the boot sequence.
-      systemd.timers.brain-serve = {
-        description = "Delayed start for brain-serve";
+      # The service's timer delays its clone/sync until the container has
+      # had 10 seconds to bring up networking. The app service itself is
+      # still restartable by nixos-admin on a new profile.
+      systemd.timers.app = {
+        description = "Delayed start for Brain's private server";
         wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "10s";
-        };
+        timerConfig.OnBootSec = "10s";
       };
 
       systemd.services.brain-serve-update = {
@@ -304,18 +238,75 @@ in
       };
     };
 
-    bindMounts.state = {
-      mountPoint = "/var/lib/brain-serve";
-      hostPath = "/dump/state/brain-serve";
-      isReadOnly = false;
-    };
+    expose = {
+      # Keep the Sausage `brain` actor's API on the private server at
+      # http://brain-serve.nexus.hosts.<nexus-ip>.nip.io:8081.
+      apps.brain = {
+        access.mode = "allowlist";
+        access.seedUsers = [ "surma" ];
+        internal.access = "trusted-network";
+        public.aliases = [ "brain.surma.technology" ];
+        ports = [
+          {
+            port = 8080;
+            hostname = "brain-serve";
+          }
+        ];
+      };
 
-    # Bind-mount the LLM proxy client key (provisioned by the host
-    # secrets service) into the container read-only.
-    bindMounts.llm-key = {
-      mountPoint = "/var/lib/credentials";
-      hostPath = "/var/lib/scout";
-      isReadOnly = true;
+      apps.public-brain = {
+        access.mode = "public";
+        internal.access = "trusted-network";
+        public.aliases = [ "public-brain.surma.technology" ];
+        ports = [
+          {
+            port = 8081;
+            hostname = "public-brain";
+          }
+        ];
+      };
+    };
+  };
+
+  # The host container unit still waits for the secrets service and keeps
+  # the existing 8G cgroup limit. The iGPU device nodes are also attached
+  # at the host/container boundary, as in the former standalone container.
+  services.surmhosting.services.brain-serve.backend."nixos-container" = {
+    service = {
+      wants = [ "secrets.service" ];
+      after = [ "secrets.service" ];
+      # QMD model loading needs ~4GB; give headroom for server + sync.
+      serviceConfig.MemoryMax = "8G";
+    };
+    allowedDevices = [
+      {
+        modifier = "rw";
+        node = "/dev/dri/renderD128";
+      }
+      {
+        modifier = "rw";
+        node = "/dev/dri/card1";
+      }
+    ];
+    # This backend freeform value is shallow-merged by surmhosting. Include
+    # nexus.apps' persistent-state mount explicitly alongside the extra mounts,
+    # or the DRI/credential bindings would replace it.
+    bindMounts = {
+      app-state = {
+        mountPoint = appHome;
+        hostPath = appStateDir;
+        isReadOnly = false;
+      };
+      dri = {
+        mountPoint = "/dev/dri";
+        hostPath = "/dev/dri";
+        isReadOnly = false;
+      };
+      llm-key = {
+        mountPoint = "/var/lib/credentials";
+        hostPath = "/var/lib/scout";
+        isReadOnly = true;
+      };
     };
   };
 }
