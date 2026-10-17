@@ -1,9 +1,36 @@
-{ pkgs }:
+{ pkgs, surmhosting }:
 # NixOS VM test: create a box from a prebuilt system, exec, files, ephemeral
 # root, reconfigure in place, TTL expiry -> reaped, delete, boot wipe.
 # The boxes use prebuilt systems ({"system": <store path>}) because the VM
 # has no network to build a NixOS config; live checks cover {nixos}/{flake}.
 let
+  # NAT contributions must merge with Surmhosting. Forced host overrides win.
+  evalNat =
+    modules:
+    (import "${pkgs.path}/nixos/lib/eval-config.nix" {
+      system = pkgs.stdenv.hostPlatform.system;
+      modules = [
+        ./default.nix
+        {
+          system.stateVersion = "26.05";
+          services.throwaway-containers.enable = true;
+        }
+      ]
+      ++ modules;
+    }).config.networking.nat.internalIPs;
+  surmhostingModules = [
+    surmhosting.nixosModules.default
+    {
+      services.surmhosting = {
+        enable = true;
+        hostname = "nat-check";
+        externalInterface = "eth0";
+        containeruser.uid = null;
+      };
+    }
+  ];
+  mergedNat = evalNat surmhostingModules;
+
   mkBox =
     version:
     (import "${pkgs.path}/nixos/lib/eval-config.nix" {
@@ -25,6 +52,21 @@ let
   box1 = mkBox "1";
   box2 = mkBox "2";
 in
+assert pkgs.lib.assertMsg (
+  builtins.sort builtins.lessThan mergedNat == [
+    "10.201.0.0/16"
+    "10.202.0.0/16"
+    "10.233.0.0/16"
+  ]
+) "Throwaway containers must preserve Surmhosting NAT ranges";
+assert pkgs.lib.assertMsg (
+  evalNat [ ] == [ "10.233.0.0/16" ]
+) "Standalone throwaway containers must retain their NAT range";
+assert pkgs.lib.assertMsg (
+  evalNat (
+    surmhostingModules ++ [ { networking.nat.internalIPs = pkgs.lib.mkForce [ "10.250.0.0/16" ]; } ]
+  ) == [ "10.250.0.0/16" ]
+) "Forced host NAT ranges must replace all contributions";
 pkgs.testers.runNixOSTest {
   name = "throwaway-containers";
 

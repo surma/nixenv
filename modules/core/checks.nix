@@ -10,7 +10,10 @@
           inherit (inputs) surmhosting;
         };
         # NixOS VM test of the throwaway containers service.
-        throwaway-containers = import ../services/throwaway-containers/test.nix { inherit pkgs; };
+        throwaway-containers = import ../services/throwaway-containers/test.nix {
+          inherit pkgs;
+          inherit (inputs) surmhosting;
+        };
       };
     };
 }

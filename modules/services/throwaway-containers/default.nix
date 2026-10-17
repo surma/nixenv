@@ -68,7 +68,7 @@ in
     boot.enableContainers = true;
 
     # Outbound internet for the boxes (nixos-container's default pool).
-    # Merges with other NAT users (surmhosting sets the external interface).
+    # Normal-priority lists merge with Surmhosting's NAT pools.
     networking.nat = {
       enable = true;
       internalIPs = [ "10.233.0.0/16" ];
