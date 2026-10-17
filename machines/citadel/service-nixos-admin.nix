@@ -70,7 +70,9 @@ in
   services.nixos-admin = {
     enable = true;
     package = inputs.nixos-admin-web.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    listenAddress = "127.0.0.1:${toString port}";
+    # All interfaces (citadel has no firewall), so nexus can proxy it as
+    # admin-citadel behind surm-auth (machines/nexus/service-nexus-admin.nix).
+    listenAddress = "0.0.0.0:${toString port}";
     # git+ssh (key id_repo_scout, see sshConfig), so it works when the repo
     # is private.
     flakeURL = "git+ssh://git@github.com/surma/nixenv?ref=main#citadel";

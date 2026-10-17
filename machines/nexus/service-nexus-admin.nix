@@ -144,4 +144,22 @@ in
       ];
     };
   };
+
+  # Citadel's nixos-admin (it deploys citadel and pylon), reachable from
+  # outside through nexus, behind the same surm-auth login as nexus's admin.
+  # Citadel listens on :${toString port} (machines/citadel/service-nixos-admin.nix).
+  services.surmhosting.services.admin-citadel = {
+    backend.host = ips.hosts.citadel.ip;
+    expose.apps.admin-citadel = {
+      access.mode = "allowlist";
+      access.seedUsers = [ "surma" ];
+      internal.access = "trusted-network";
+      ports = [
+        {
+          port = port;
+          hostname = "admin-citadel";
+        }
+      ];
+    };
+  };
 }
