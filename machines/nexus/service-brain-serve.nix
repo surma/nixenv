@@ -215,6 +215,16 @@ in
           # semantic search. The server runs model work one job at a time,
           # so one context each is enough.
           BRAIN_QMD_MAX_CONTEXTS = "1";
+          # Semantic search speed on this box (Intel ADL-N iGPU + 8 E-cores;
+          # numbers in brain's README): query expansion (generation) is ~5x
+          # faster on the CPU than on the iGPU, reranking ~3x faster on the
+          # iGPU. So: expansion model on the CPU, the rest on the GPU, and
+          # rerank only the best 6 fused candidates with ~800-character
+          # passages (a full rerank of 40 chunks takes minutes). A request
+          # can still ask for more (/api/search ...&rerank=40&passage=0).
+          BRAIN_QMD_EXPAND_ON_CPU = "1";
+          BRAIN_QMD_RERANK = "6";
+          BRAIN_QMD_RERANK_CHARS = "800";
           GIT_AUTHOR_NAME = "Surma";
           GIT_AUTHOR_EMAIL = "surma@surma.dev";
           GIT_COMMITTER_NAME = "Surma";
