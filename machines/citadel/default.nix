@@ -15,6 +15,7 @@
     ./service-zellij-web.nix
     ./service-minecraft.nix
     ./service-ups.nix
+    ../../modules/services/throwaway-containers
   ];
 
   networking.hostName = "citadel";
@@ -83,6 +84,14 @@
   services.surmhosting.hostname = "citadel";
   services.surmhosting.containeruser.uid = config.users.users.surma.uid;
   services.surmhosting.externalInterface = "enP4p65s0";
+
+  # Throwaway NixOS containers API (tc-* boxes with a TTL; for trying things
+  # out, never for services others depend on). Spec: Sausage site
+  # research/nixos-containers-api.
+  services.throwaway-containers = {
+    enable = true;
+    port = (import ./ports.nix).throwawayContainers;
+  };
 
   system.stateVersion = "25.05";
 

@@ -6,6 +6,7 @@
 }:
 let
   ips = import ../../ips.nix;
+  ports = import ./ports.nix;
   smartdNotifier =
     let
       noti = pkgs.callPackage ../../packages/noti { defaultMobileDevice = "surmpixel"; };
@@ -76,6 +77,10 @@ in
     # nexus.apps.<name>: app containers that run a per-app profile. Defines
     # nothing until an app is declared.
     ../../modules/services/nexus-apps
+    # Throwaway NixOS containers API (tc-* boxes with a TTL; for trying
+    # things out on x86_64, never for services others depend on). Spec:
+    # Sausage site research/nixos-containers-api.
+    ../../modules/services/throwaway-containers
   ];
 
   nix.settings.trusted-users = [ "@wheel" ];
@@ -264,7 +269,13 @@ in
   # fall inside 10/8. Not added to allowedTCPPorts (auth-rework section 3.2).
   networking.firewall.extraInputRules = ''
     ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport 8081 accept comment "surmhosting internal HTTP"
+    ip saddr { 10.0.0.0/8, 100.64.0.0/10 } tcp dport ${toString ports.throwawayContainers} accept comment "throwaway containers API"
   '';
+
+  services.throwaway-containers = {
+    enable = true;
+    port = ports.throwawayContainers;
+  };
 
   services.key-poller.enable = true;
   systemd.services.key-poller = {
