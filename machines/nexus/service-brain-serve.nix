@@ -209,6 +209,12 @@ in
           BRAIN_PATH = brainPath;
           GIT_SSH_COMMAND = gitSshCommand;
           HOME = "/var/lib/brain-serve";
+          # QMD would size its parallel embedding/rerank contexts from the
+          # iGPU's "free VRAM" (shared system RAM): up to 4 rerank contexts
+          # of ~1 GB+ each, which OOM-killed the service on the first
+          # semantic search. The server runs model work one job at a time,
+          # so one context each is enough.
+          BRAIN_QMD_MAX_CONTEXTS = "1";
           GIT_AUTHOR_NAME = "Surma";
           GIT_AUTHOR_EMAIL = "surma@surma.dev";
           GIT_COMMITTER_NAME = "Surma";
