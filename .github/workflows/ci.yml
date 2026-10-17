@@ -10,10 +10,12 @@ name: CI
 #   roots. The runner shares the Nexus Nix store, so Harmonia
 #   (machines/nexus/service-nix-cache.nix) serves the builds at once.
 #
-# This repository is public and the runner is self-hosted. Pull requests from
-# forks never run here: the check job skips them, and the repository setting
+# The runner is self-hosted. Pull requests from forks never run here: the
+# check job skips them, and while the repository is public the setting
 # "Require approval for all outside collaborators" must stay on, because a
 # fork can change this file. Branch pushes need write access to the repository.
+# Nothing here fetches the repository anonymously (checkout uses the job
+# token; flake inputs use SSH), so this works for a private repository too.
 
 on:
   pull_request:

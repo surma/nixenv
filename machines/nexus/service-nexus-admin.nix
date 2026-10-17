@@ -51,6 +51,11 @@ let
       IdentitiesOnly yes
       IdentityFile ${stateDir}/.ssh/id_deploy
       StrictHostKeyChecking accept-new
+
+    # Explicit, so the known hosts are found also when ssh runs with
+    # `-F <this file>` (nixos-admin's GIT_SSH_COMMAND) and not via HOME.
+    Host *
+      UserKnownHostsFile ${stateDir}/.ssh/known_hosts
   '';
 
   knownHosts = pkgs.writeText "nixos-admin-known-hosts" ''
@@ -67,7 +72,10 @@ in
     enable = true;
     package = inputs.nixos-admin-web.packages.${pkgs.stdenv.hostPlatform.system}.default;
     listenAddress = "127.0.0.1:${toString port}";
-    flakeURL = "github:surma/nixenv#nexus";
+    # git+ssh (key id_repo_scout, see sshConfig) instead of github:, so
+    # deploys keep working when the repo is private. Deploy requests pin a
+    # commit with git+ssh://git@github.com/surma/nixenv?rev=<sha>#nexus.
+    flakeURL = "git+ssh://git@github.com/surma/nixenv?ref=main#nexus";
     sshConfigFile = "${stateDir}/.ssh/config";
     # App deploys (nexus.apps, modules/services/nexus-apps): nixos-admin
     # builds each app's flake into its per-app profile.
@@ -78,7 +86,8 @@ in
   # deploys its head (merges to main are already CI-gated), so nixos-admin
   # needs no forge token. Forge API only for apps that opt into
   # `deployOn = "ci"`: Gitea through the internal entrypoint (no login;
-  # nixos-admin runs on the host). GitHub: public API, no token.
+  # nixos-admin runs on the host). GitHub: public API, no token, so a
+  # private GitHub app repo with `deployOn = "ci"` needs a forge token file.
   nexus.appsForges.gitea.api = "http://gitea.nexus.hosts.${ips.hosts.nexus.ip}.nip.io:8081/api/v1";
 
   # Overlay: SSH key + config deployment for git+ssh:// flake inputs.

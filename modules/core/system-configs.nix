@@ -51,7 +51,9 @@ let
   homeManagerModules = sharedFeatureModules ++ homeManagerFeatureModules ++ programModules;
 
   mkNixenvContext = configKind: machineName: {
-    flakeRef = "github:surma/nixenv";
+    # git+ssh, not github:, so nixenvupdate also works when the repo is
+    # private (uses the user's GitHub SSH key).
+    flakeRef = "git+ssh://git@github.com/surma/nixenv";
     inherit machineName configKind;
   };
 in

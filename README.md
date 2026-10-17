@@ -12,25 +12,34 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 
 ### Apply Configuration
 
+The repository may be private, so fetch it over SSH with a key that GitHub
+accepts for `surma` (`github:` URLs would need a GitHub token). Simplest on a
+fresh machine: clone it, then apply from the checkout.
+
 ```sh
+git clone git@github.com:surma/nixenv.git && cd nixenv
+
 # macOS
 nix --extra-experimental-features 'nix-command flakes pipe-operators' \
   run 'github:LnL7/nix-darwin' -- \
   --extra-experimental-features 'nix-command flakes pipe-operators' \
-  switch --flake 'github:surma/nixenv#generic-darwin'
+  switch --flake '.#generic-darwin'
 
 # Linux
 nix --extra-experimental-features 'nix-command flakes pipe-operators' \
   run 'github:nix-community/home-manager' -- \
   --extra-experimental-features 'nix-command flakes pipe-operators' \
-  switch --flake 'github:surma/nixenv#generic-linux'
+  switch --flake '.#generic-linux'
 
 # NixOS
 sudo nixos-rebuild switch \
   --impure \
   --extra-experimental-features 'nix-command flakes pipe-operators' \
-  --flake 'github:surma/nixenv#generic-nixos'
+  --flake '.#generic-nixos'
 ```
+
+Without a checkout, use `git+ssh://git@github.com/surma/nixenv#<config>` as
+the flake (`sudo` runs as root, so root needs the SSH key then).
 
 The `--impure` flag makes the generic output available and imports the generated local hardware file.
 

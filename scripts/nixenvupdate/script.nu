@@ -79,12 +79,12 @@ def activate-home-manager [generation_path: string] {
 }
 
 def main [
-  --flake: string # Flake ref to build. Defaults to $NIXENV_FLAKE_REF or github:surma/nixenv.
+  --flake: string # Flake ref to build. Defaults to $NIXENV_FLAKE_REF or git+ssh://git@github.com/surma/nixenv.
   --build-only # Build the target generation, but do not activate it.
   --refresh # Ask Nix to refresh flakes and other cached remote inputs before building.
 ] {
   let flake_ref = if $flake == null {
-    $env.NIXENV_FLAKE_REF? | default github:surma/nixenv
+    $env.NIXENV_FLAKE_REF? | default git+ssh://git@github.com/surma/nixenv
   } else {
     $flake
   }

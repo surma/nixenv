@@ -28,7 +28,7 @@ Deploying is a **high-impact, potentially destructive** operation.
 The deploy API runs `nixos-rebuild switch` **on the machine where the admin service is running** by default. To deploy to a DIFFERENT machine, you **MUST** pass `target_host` in the request body. Without it, the config will be applied to the machine running the admin API — which **WILL BRICK THE MACHINE** if it's the wrong config (wrong hostname, wrong network config, wrong services).
 
 **Deploy request fields:**
-- `flake_url` (string): The NixOS flake to deploy (e.g., `github:surma/nixenv#nexus`)
+- `flake_url` (string): The NixOS flake to deploy (e.g., `git+ssh://git@github.com/surma/nixenv?ref=main#nexus`). Use `git+ssh://`, not `github:`: nixenv may be private, and the admin hosts fetch it over SSH (key `id_repo_scout`); `github:` would need a GitHub token.
 - `target_host` (string, optional): SSH host to deploy to remotely. If omitted, deploys LOCALLY.
 - `use_remote_sudo` (boolean, optional): Use sudo on the remote host.
 
@@ -44,7 +44,7 @@ The deploy API runs `nixos-rebuild switch` **on the machine where the admin serv
 ```bash
 curl -X POST http://admin.citadel.hosts.10.0.0.32.nip.io/api/deploy \
   -H 'Content-Type: application/json' \
-  -d '{"flake_url":"github:surma/nixenv#pylon","target_host":"pylon"}'
+  -d '{"flake_url":"git+ssh://git@github.com/surma/nixenv?ref=main#pylon","target_host":"pylon"}'
 ```
 
 The SSH config on Citadel maps `pylon` to `root@surmedge.hosts.surma.link` with the deploy key.
@@ -60,13 +60,13 @@ All endpoints are relative to the base URL above. Use `curl` (via `nix run nixpk
 #### Start a deploy
 
 ```bash
-# Deploy from the default flake (github:surma/nixenv#nexus):
+# Deploy from the default flake (git+ssh://git@github.com/surma/nixenv?ref=main#nexus):
 curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy
 
-# Deploy from a specific branch:
+# Deploy from a specific branch (or a commit: ?rev=<full sha>):
 curl -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy \
   -H 'Content-Type: application/json' \
-  -d '{"flake_url":"github:surma/nixenv/my-branch#nexus"}'
+  -d '{"flake_url":"git+ssh://git@github.com/surma/nixenv?ref=my-branch#nexus"}'
 ```
 
 Returns `202 Accepted` with the deploy metadata:
@@ -74,7 +74,7 @@ Returns `202 Accepted` with the deploy metadata:
 ```json
 {
   "id": "01JSFQ...",
-  "flake_url": "github:surma/nixenv#nexus",
+  "flake_url": "git+ssh://git@github.com/surma/nixenv?ref=main#nexus",
   "status": "running",
   "started_at": "2026-04-22T12:00:00Z",
   "pre_generation": 42
@@ -103,7 +103,7 @@ Returns:
   "deploys": [
     {
       "id": "01JSFQ...",
-      "flake_url": "github:surma/nixenv#nexus",
+      "flake_url": "git+ssh://git@github.com/surma/nixenv?ref=main#nexus",
       "status": "success",
       "started_at": "2026-04-22T12:00:00Z",
       "finished_at": "2026-04-22T12:05:00Z",
@@ -292,7 +292,7 @@ Returns `200 OK` with `{"status":"ok"}`. Useful for verifying the service is up.
 ### Deploy from main
 
 ```bash
-# 1. Start the deploy (uses default flake: github:surma/nixenv#nexus)
+# 1. Start the deploy (uses default flake: git+ssh://git@github.com/surma/nixenv?ref=main#nexus)
 DEPLOY=$(curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy)
 ID=$(echo "$DEPLOY" | jq -r '.id')
 
@@ -305,7 +305,7 @@ curl -sN "http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy/$ID/stream"
 ```bash
 curl -s -X POST http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploy \
   -H 'Content-Type: application/json' \
-  -d '{"flake_url":"github:surma/nixenv/my-feature-branch#nexus"}'
+  -d '{"flake_url":"git+ssh://git@github.com/surma/nixenv?ref=my-feature-branch#nexus"}'
 ```
 
 ### Check what's running in a container
@@ -350,7 +350,7 @@ curl -s http://admin.nexus.hosts.10.0.0.2.nip.io:8081/api/deploys/<id>/log
 
 ## Tips
 
-- The default flake URL depends on the host: `github:surma/nixenv#nexus` for Nexus, `github:surma/nixenv#citadel` for Citadel. You only need to specify `flake_url` when deploying from a branch or a different flake.
+- The default flake URL depends on the host: `git+ssh://git@github.com/surma/nixenv?ref=main#nexus` for Nexus, `...#citadel` for Citadel. You only need to specify `flake_url` when deploying from a branch or a different flake.
 - Only one deploy can run at a time per host. Check `active_id` in the list response to see if one is in progress.
 - Deploy phases: the service runs `nixos-rebuild build` first, then `nixos-rebuild switch`. If switch fails, it automatically attempts rollback to the pre-deploy generation.
 - The web UI is available at the base URL in a browser for manual use.

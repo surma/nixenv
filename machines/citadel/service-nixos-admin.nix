@@ -50,6 +50,11 @@ let
       IdentitiesOnly yes
       IdentityFile ${stateDir}/.ssh/id_deploy
       StrictHostKeyChecking accept-new
+
+    # Explicit, so the known hosts are found also when ssh runs with
+    # `-F <this file>` (nixos-admin's GIT_SSH_COMMAND) and not via HOME.
+    Host *
+      UserKnownHostsFile ${stateDir}/.ssh/known_hosts
   '';
 
   knownHosts = pkgs.writeText "nixos-admin-known-hosts" ''
@@ -66,7 +71,9 @@ in
     enable = true;
     package = inputs.nixos-admin-web.packages.${pkgs.stdenv.hostPlatform.system}.default;
     listenAddress = "127.0.0.1:${toString port}";
-    flakeURL = "github:surma/nixenv#citadel";
+    # git+ssh (key id_repo_scout, see sshConfig), so it works when the repo
+    # is private.
+    flakeURL = "git+ssh://git@github.com/surma/nixenv?ref=main#citadel";
     sshConfigFile = "${stateDir}/.ssh/config";
   };
 
