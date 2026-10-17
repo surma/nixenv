@@ -116,6 +116,20 @@ in
 
   services.surmhosting.services.admin = {
     backend.host = "localhost";
+    # nexus-admin is the name; `admin` stays as an old alias because
+    # Gitea webhooks and Sausage agents still call
+    # admin.nexus.hosts.<ip>.nip.io:8081.
+    expose.apps.nexus-admin = {
+      access.mode = "allowlist";
+      access.seedUsers = [ "surma" ];
+      internal.access = "trusted-network";
+      ports = [
+        {
+          port = port;
+          hostname = "nexus-admin";
+        }
+      ];
+    };
     expose.apps.admin = {
       access.mode = "allowlist";
       access.seedUsers = [ "surma" ];
@@ -146,18 +160,18 @@ in
   };
 
   # Citadel's nixos-admin (it deploys citadel and pylon), reachable from
-  # outside through nexus, behind the same surm-auth login as nexus's admin.
+  # outside through nexus, behind the same surm-auth login as nexus-admin.
   # Citadel listens on :${toString port} (machines/citadel/service-nixos-admin.nix).
-  services.surmhosting.services.admin-citadel = {
+  services.surmhosting.services.citadel-admin = {
     backend.host = ips.hosts.citadel.ip;
-    expose.apps.admin-citadel = {
+    expose.apps.citadel-admin = {
       access.mode = "allowlist";
       access.seedUsers = [ "surma" ];
       internal.access = "trusted-network";
       ports = [
         {
           port = port;
-          hostname = "admin-citadel";
+          hostname = "citadel-admin";
         }
       ];
     };
